@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import { ChevronDown, Home, Pin, Settings } from 'lucide-react'
+import { ChevronDown, GitBranch, Home, Pin, Settings } from 'lucide-react'
 import * as Collapsible from '@radix-ui/react-collapsible'
 import { cn, TerminalProgressDot, PriorityIcon, getColumnStatusStyle } from '@slayzone/ui'
 import { type Task } from '@slayzone/task/shared'
@@ -80,6 +80,7 @@ export function TreeView({
   const treeShowSubtasks = useTabStore((s) => s.treeShowSubtasks)
   const treeIncludeAllSubtasks = useTabStore((s) => s.treeIncludeAllSubtasks)
   const treeCrossOutDone = useTabStore((s) => s.treeCrossOutDone)
+  const treeShowWorktree = useTabStore((s) => s.treeShowWorktree)
   const treePinnedTaskIds = useTabStore((s) => s.treePinnedTaskIds)
   const pinnedSet = useMemo(() => new Set(treePinnedTaskIds), [treePinnedTaskIds])
   const passesFilter = useCallback(
@@ -280,6 +281,13 @@ export function TreeView({
           >
             {task.title || 'Untitled'}
           </span>
+          {treeShowWorktree && task.worktree_path && (
+            <GitBranch
+              aria-label="Worktree"
+              className={cn('size-3.5 shrink-0', !task.worktree_color && 'text-muted-foreground/60')}
+              style={task.worktree_color ? { color: task.worktree_color } : undefined}
+            />
+          )}
           {pinnedSet.has(task.id) && (
             <Pin
               aria-label="Pinned"

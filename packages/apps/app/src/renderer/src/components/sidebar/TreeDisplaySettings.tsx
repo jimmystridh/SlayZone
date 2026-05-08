@@ -13,12 +13,14 @@ export function TreeDisplaySettings() {
   const treeShowSubtasks = useTabStore((s) => s.treeShowSubtasks)
   const treeIncludeAllSubtasks = useTabStore((s) => s.treeIncludeAllSubtasks)
   const treeCrossOutDone = useTabStore((s) => s.treeCrossOutDone)
+  const treeShowWorktree = useTabStore((s) => s.treeShowWorktree)
   const treeShowHeader = useTabStore((s) => s.treeShowHeader)
   const setTreeShowStatus = useTabStore((s) => s.setTreeShowStatus)
   const setTreeShowPriority = useTabStore((s) => s.setTreeShowPriority)
   const setTreeShowSubtasks = useTabStore((s) => s.setTreeShowSubtasks)
   const setTreeIncludeAllSubtasks = useTabStore((s) => s.setTreeIncludeAllSubtasks)
   const setTreeCrossOutDone = useTabStore((s) => s.setTreeCrossOutDone)
+  const setTreeShowWorktree = useTabStore((s) => s.setTreeShowWorktree)
   const setTreeShowHeader = useTabStore((s) => s.setTreeShowHeader)
 
   return (
@@ -85,6 +87,16 @@ export function TreeDisplaySettings() {
         >
           <span className="col-start-2">Cross over completed tasks</span>
           {treeCrossOutDone && <Check className="size-4 col-start-3" />}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault()
+            setTreeShowWorktree(!treeShowWorktree)
+          }}
+          className="cursor-pointer"
+        >
+          <span className="col-start-2">Show worktree</span>
+          {treeShowWorktree && <Check className="size-4 col-start-3" />}
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={(e) => {
