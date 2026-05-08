@@ -84,10 +84,15 @@ export function AppSidebar({
   const scheduleClose = useCallback(() => {
     cancelClose()
     const tick = () => {
-      // Keep card open as long as a dropdown / context menu / popover is open
-      // (Radix portals these to document.body so mouse leaves the card while
-      // interacting with them).
-      if (document.querySelector('[role="menu"], [role="dialog"]')) {
+      // Keep card open while a dropdown / context menu / popover / dialog is
+      // *actually open*. Radix lazy-mounted dialogs stay in DOM after close
+      // with data-state="closed", so filter by data-state="open" — otherwise
+      // any once-opened dialog blocks auto-close forever.
+      if (
+        document.querySelector(
+          '[role="menu"][data-state="open"], [role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]'
+        )
+      ) {
         closeTimerRef.current = setTimeout(tick, 200)
         return
       }
