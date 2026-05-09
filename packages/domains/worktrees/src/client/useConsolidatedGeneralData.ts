@@ -195,7 +195,15 @@ export function useConsolidatedGeneralData(
         ? await window.api.git.getDiffStats(targetPath, parentBranch)
         : null
 
-      const hash = JSON.stringify({ branch, result, stats })
+      // Hash only the values that drive setState — exclude `result.graph`
+      // which contains time-sensitive `relativeDate` strings on every commit.
+      const hash = JSON.stringify({
+        branch,
+        forkPoint: result?.forkPoint ?? null,
+        featureCount: result?.featureCount ?? 0,
+        baseCount: result?.baseCount ?? 0,
+        stats
+      })
       if (hash !== lastBranchHashRef.current) {
         lastBranchHashRef.current = hash
         setTaskBranch(branch)

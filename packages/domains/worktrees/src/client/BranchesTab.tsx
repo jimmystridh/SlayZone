@@ -119,7 +119,12 @@ export function useBranchGraph(
       const graph = await window.api.git.getResolvedCommitDag(
         projectPath, FETCH_LIMIT, [...branchSet], baseBranch
       )
-      const hash = JSON.stringify({ branch, graph })
+      // Hash excludes `relativeDate` — that string updates over time
+      // ("3 minutes ago") even when the commit hash is unchanged, which would
+      // defeat the dedup. Stale display dates are acceptable; they refresh on
+      // any real change (new commit / ref move).
+      const stableCommits = graph.commits.map(({ relativeDate: _r, ...rest }) => rest)
+      const hash = JSON.stringify({ branch, baseBranch: graph.baseBranch, branches: graph.branches, commits: stableCommits })
       if (hash !== lastHashRef.current) {
         lastHashRef.current = hash
         if (branch) setCurrentBranch(branch)
