@@ -4,6 +4,7 @@ import {
   IconButton, Switch, cn, toast,
   Popover, PopoverTrigger, PopoverContent,
   Label,
+  useStablePoll,
 } from '@slayzone/ui'
 import type { CommitGraphConfig, ResolvedGraph } from '../shared/types'
 import { CommitGraph } from './CommitGraph'
@@ -99,12 +100,12 @@ export function useBranchGraph(
     [config.baseBranch, defaultBaseBranch, currentBranch]
   )
 
+  const lastHashRef = useRef<string>('')
+
   const fetchData = useCallback(async () => {
-    if (!projectPath) return
+    if (!projectPath) return null
     try {
       const branch = await window.api.git.getCurrentBranch(projectPath)
-      if (branch) setCurrentBranch(branch)
-
       const baseBranch = config.baseBranch || defaultBaseBranch || branch || 'main'
 
       const branchSet = new Set<string>([baseBranch])
@@ -118,25 +119,32 @@ export function useBranchGraph(
       const graph = await window.api.git.getResolvedCommitDag(
         projectPath, FETCH_LIMIT, [...branchSet], baseBranch
       )
-      setDagGraph(graph)
-    } catch { /* polling error */ }
+      const hash = JSON.stringify({ branch, graph })
+      if (hash !== lastHashRef.current) {
+        lastHashRef.current = hash
+        if (branch) setCurrentBranch(branch)
+        setDagGraph(graph)
+      }
+      if (!initialLoad.current) {
+        setLoading(false)
+        initialLoad.current = true
+      }
+      return hash
+    } catch {
+      if (!initialLoad.current) {
+        setLoading(false)
+        initialLoad.current = true
+      }
+      return null
+    }
   }, [projectPath, config, defaultBaseBranch])
 
   useEffect(() => {
     initialLoad.current = false
+    setLoading(true)
   }, [projectPath])
 
-  useEffect(() => {
-    if (!visible || !projectPath) return
-    if (!initialLoad.current) {
-      setLoading(true)
-      fetchData().finally(() => { setLoading(false); initialLoad.current = true })
-    } else {
-      fetchData()
-    }
-    const timer = setInterval(fetchData, 10000)
-    return () => clearInterval(timer)
-  }, [visible, projectPath, fetchData])
+  useStablePoll(fetchData, { enabled: visible && !!projectPath, baseDelayMs: 10_000 })
 
   const handleFetch = useCallback(async () => {
     if (!projectPath) return
@@ -150,9 +158,12 @@ export function useBranchGraph(
     } finally {
       setFetching(false)
     }
+    // refresh is wrapped above
   }, [projectPath, fetchData])
 
-  return { dagGraph, loading, filter, setFilter, config, setConfig: updateConfig, resetConfig, effectiveBaseBranch, fetching, handleFetch, refresh: fetchData }
+  const refresh = useCallback(async (): Promise<void> => { await fetchData() }, [fetchData])
+
+  return { dagGraph, loading, filter, setFilter, config, setConfig: updateConfig, resetConfig, effectiveBaseBranch, fetching, handleFetch, refresh }
 }
 
 // --- Toolbar buttons (display, info, fetch) ---

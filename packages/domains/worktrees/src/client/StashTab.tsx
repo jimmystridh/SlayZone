@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Archive, FileText } from 'lucide-react'
-import { cn, PulseGrid } from '@slayzone/ui'
+import { cn, PulseGrid, useStablePoll } from '@slayzone/ui'
 import type { StashEntry } from '../shared/types'
 import { useGitPanelContext } from './UnifiedGitPanel'
 import { parseUnifiedDiff, type FileDiff } from './parse-diff'
@@ -38,34 +38,36 @@ export const StashTab = forwardRef<StashTabHandle, StashTabProps>(function Stash
   const [diffLoading, setDiffLoading] = useState(false)
   const [currentBranch, setCurrentBranch] = useState<string | null>(null)
 
+  const lastHashRef = useRef<string>('')
+
   const load = useCallback(async () => {
-    if (!repoPath) return
+    if (!repoPath) return null
     setLoading(true)
     try {
       const [list, branch] = await Promise.all([
         window.api.git.listStashes(repoPath),
         window.api.git.getCurrentBranch(repoPath).catch(() => null)
       ])
-      setStashes(list)
-      setCurrentBranch(branch)
-      setSelectedIndex((prev) => {
-        if (list.length === 0) return null
-        if (prev === null) return list[0].index
-        return list.some((s) => s.index === prev) ? prev : list[0].index
-      })
+      const hash = JSON.stringify({ list, branch })
+      if (hash !== lastHashRef.current) {
+        lastHashRef.current = hash
+        setStashes(list)
+        setCurrentBranch(branch)
+        setSelectedIndex((prev) => {
+          if (list.length === 0) return null
+          if (prev === null) return list[0].index
+          return list.some((s) => s.index === prev) ? prev : list[0].index
+        })
+      }
+      return hash
     } finally {
       setLoading(false)
     }
   }, [repoPath])
 
-  useImperativeHandle(ref, () => ({ refresh: load }), [load])
+  const { refetch } = useStablePoll(load, { enabled: visible && !!repoPath, baseDelayMs: pollIntervalMs })
 
-  useEffect(() => {
-    if (!visible) return
-    load()
-    const id = setInterval(load, pollIntervalMs)
-    return () => clearInterval(id)
-  }, [visible, load, pollIntervalMs])
+  useImperativeHandle(ref, () => ({ refresh: refetch }), [refetch])
 
   const filteredStashes = useMemo(() => {
     if (showAll || !currentBranch) return stashes

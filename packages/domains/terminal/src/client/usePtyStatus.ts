@@ -1,25 +1,25 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { useStablePoll } from '@slayzone/ui'
 
 /**
  * Returns Set of sessionIds with alive PTY sessions
  */
 export function usePtyStatus(): Set<string> {
   const [activeSessionIds, setActiveSessionIds] = useState<Set<string>>(new Set())
+  const lastHashRef = useRef<string>('')
 
   const refresh = useCallback(async () => {
     const list = await window.api.pty.list()
     const active = new Set(list.filter((p) => p.state !== 'dead').map((p) => p.sessionId))
-    setActiveSessionIds(active)
+    const hash = [...active].sort().join('|')
+    if (hash !== lastHashRef.current) {
+      lastHashRef.current = hash
+      setActiveSessionIds(active)
+    }
+    return hash
   }, [])
 
-  useEffect(() => {
-    refresh()
-  }, [refresh])
-
-  useEffect(() => {
-    const interval = setInterval(refresh, 5000)
-    return () => clearInterval(interval)
-  }, [refresh])
+  useStablePoll(refresh, { baseDelayMs: 5000 })
 
   return activeSessionIds
 }

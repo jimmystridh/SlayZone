@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { GitBranch, ChevronDown, Check, Loader2, Plus, Copy, FolderGit2 } from 'lucide-react'
-import { Button, IconButton, Input, Popover, PopoverContent, PopoverTrigger, cn, toast } from '@slayzone/ui'
+import { Button, IconButton, Input, Popover, PopoverContent, PopoverTrigger, cn, toast, useStablePoll } from '@slayzone/ui'
 import type { StatusSummary, AheadBehind } from '../shared/types'
 import { RemoteSection } from './RemoteSection'
 import { useBranchGraph, BranchGraphToolbar, BranchGraphCard } from './BranchesTab'
@@ -31,35 +31,42 @@ export function ProjectGeneralTab({ projectId, projectPath, visible, onSwitchToD
 
   const branchGraph = useBranchGraph(projectPath, visible && isGitRepo === true, undefined, `project:${projectId}`)
 
+  const lastHashRef = useRef<string>('')
+
   const fetchGitData = useCallback(async () => {
-    if (!projectPath) return
+    if (!projectPath) return null
     try {
       const isRepo = await window.api.git.isGitRepo(projectPath)
-      setIsGitRepo(isRepo)
-      if (!isRepo) return
+      if (!isRepo) {
+        const hash = JSON.stringify({ isRepo: false })
+        if (hash !== lastHashRef.current) {
+          lastHashRef.current = hash
+          setIsGitRepo(false)
+        }
+        return hash
+      }
       const [branch, status, remote] = await Promise.all([
         window.api.git.getCurrentBranch(projectPath),
         window.api.git.getStatusSummary(projectPath),
         window.api.git.getRemoteUrl(projectPath)
       ])
-      setCurrentBranch(branch)
-      setStatusSummary(status)
-      setRemoteUrl(remote)
-      if (branch) {
-        const uab = await window.api.git.getAheadBehindUpstream(projectPath, branch)
+      const uab = branch ? await window.api.git.getAheadBehindUpstream(projectPath, branch) : null
+      const hash = JSON.stringify({ isRepo: true, branch, status, remote, uab })
+      if (hash !== lastHashRef.current) {
+        lastHashRef.current = hash
+        setIsGitRepo(true)
+        setCurrentBranch(branch)
+        setStatusSummary(status)
+        setRemoteUrl(remote)
         setUpstreamAB(uab)
-      } else {
-        setUpstreamAB(null)
       }
-    } catch { /* polling error */ }
+      return hash
+    } catch {
+      return null
+    }
   }, [projectPath])
 
-  useEffect(() => {
-    if (!visible || !projectPath) return
-    fetchGitData()
-    const timer = setInterval(fetchGitData, 5000)
-    return () => clearInterval(timer)
-  }, [visible, projectPath, fetchGitData])
+  useStablePoll(fetchGitData, { enabled: visible && !!projectPath, baseDelayMs: 5000 })
 
   const handleBranchPopoverChange = (open: boolean) => {
     setBranchPopoverOpen(open)

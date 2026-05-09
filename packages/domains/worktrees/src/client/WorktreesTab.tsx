@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, useImperativeHandle, forwardRef } from 'react'
 import { useDialogStore } from '@slayzone/settings/client'
 import {
   FolderGit2,
@@ -34,7 +34,8 @@ import {
   TooltipTrigger,
   Input,
   PriorityIcon,
-  PulseGrid
+  PulseGrid,
+  useStablePoll
 } from '@slayzone/ui'
 import { type FilterState, groupTasksBy, getViewConfig, type Column } from '@slayzone/tasks'
 import { resolveColumns } from '@slayzone/projects/shared'
@@ -91,54 +92,61 @@ export const WorktreesTab = forwardRef<WorktreesTabHandle, WorktreesTabProps>(fu
     })
   }, [])
 
+  const lastWorktreesHashRef = useRef<string>('')
+
   const fetchWorktrees = useCallback(async () => {
-    if (!projectPath) return
+    if (!projectPath) return null
     try {
       const detected = await window.api.git.detectWorktrees(projectPath)
-      setWorktrees(detected)
-    } catch { /* polling error */ }
+      const hash = JSON.stringify(detected)
+      if (hash !== lastWorktreesHashRef.current) {
+        lastWorktreesHashRef.current = hash
+        setWorktrees(detected)
+      }
+      setLoading(false)
+      return hash
+    } catch {
+      setLoading(false)
+      return null
+    }
   }, [projectPath])
 
   useEffect(() => {
-    if (!visible || !projectPath) return
-    setLoading(true)
-    fetchWorktrees().finally(() => setLoading(false))
-    const timer = setInterval(fetchWorktrees, pollIntervalMs)
-    return () => clearInterval(timer)
-  }, [visible, projectPath, pollIntervalMs, fetchWorktrees])
+    if (visible && projectPath && worktrees.length === 0) setLoading(true)
+  }, [visible, projectPath, worktrees.length])
 
-  // Optimized dirty status polling
-  useEffect(() => {
-    if (!visible || worktrees.length === 0) return
+  useStablePoll(fetchWorktrees, { enabled: visible && !!projectPath, baseDelayMs: pollIntervalMs })
 
-    const pollDirty = async () => {
-      const activePath = activeTask?.worktree_path || (worktrees.find(wt => wt.isMain)?.path)
-      
-      // 1. Always prioritize active worktree
-      if (activePath) {
-        const isDirty = await window.api.git.isDirty(activePath)
-        setDirtyStatuses(prev => {
-          if (prev[activePath] === isDirty) return prev
-          return { ...prev, [activePath]: isDirty }
-        })
-      }
-
-      // 2. Stagger background worktrees (check one per poll)
-      const backgroundWts = worktrees.filter(wt => wt.path !== activePath)
-      if (backgroundWts.length > 0) {
-        const randomWt = backgroundWts[Math.floor(Math.random() * backgroundWts.length)]
-        const isDirty = await window.api.git.isDirty(randomWt.path)
-        setDirtyStatuses(prev => {
-          if (prev[randomWt.path] === isDirty) return prev
-          return { ...prev, [randomWt.path]: isDirty }
-        })
-      }
+  // Optimized dirty-status polling — already dedups setState via prev[path] check.
+  // Wrap in stable poll for backoff timing; the per-call fetch returns a string
+  // hash so the hook can detect identical results across ticks.
+  const pollDirty = useCallback(async () => {
+    if (worktrees.length === 0) return null
+    const activePath = activeTask?.worktree_path || (worktrees.find(wt => wt.isMain)?.path)
+    let activeDirty: boolean | null = null
+    if (activePath) {
+      activeDirty = await window.api.git.isDirty(activePath)
+      setDirtyStatuses(prev => {
+        if (prev[activePath] === activeDirty) return prev
+        return { ...prev, [activePath]: activeDirty as boolean }
+      })
     }
+    const backgroundWts = worktrees.filter(wt => wt.path !== activePath)
+    let bgKey: string | null = null
+    let bgDirty: boolean | null = null
+    if (backgroundWts.length > 0) {
+      const randomWt = backgroundWts[Math.floor(Math.random() * backgroundWts.length)]
+      bgKey = randomWt.path
+      bgDirty = await window.api.git.isDirty(randomWt.path)
+      setDirtyStatuses(prev => {
+        if (prev[randomWt.path] === bgDirty) return prev
+        return { ...prev, [randomWt.path]: bgDirty as boolean }
+      })
+    }
+    return JSON.stringify({ activePath, activeDirty, bgKey, bgDirty })
+  }, [worktrees, activeTask?.worktree_path])
 
-    pollDirty()
-    const timer = setInterval(pollDirty, 10000) // Poll every 10s
-    return () => clearInterval(timer)
-  }, [visible, worktrees, activeTask?.worktree_path])
+  useStablePoll(pollDirty, { enabled: visible && worktrees.length > 0, baseDelayMs: 10_000 })
 
   // Build hierarchical tree structure
   const tree = useMemo(() => {

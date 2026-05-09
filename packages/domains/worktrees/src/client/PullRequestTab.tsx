@@ -53,6 +53,7 @@ import {
   DialogTitle,
   DialogDescription,
   PulseGrid,
+  useStablePoll,
 } from '@slayzone/ui'
 import type { Task, UpdateTaskInput } from '@slayzone/task/shared'
 import type { GhPullRequest, GhPrComment, GhPrCommit, GhPrTimelineEvent, MergeStrategy } from '../shared/types'
@@ -99,22 +100,28 @@ export function PullRequestTab({ task, projectPath, visible, onUpdateTask, onTas
     return () => { cancelled = true }
   }, [visible, projectPath, task.pr_url])
 
+  const lastPrHashRef = useRef<string>('')
+
   // Single refresh function — used by poll, refresh button, and post-merge
   const refreshPr = useCallback(async () => {
-    if (!projectPath || !task.pr_url) return
+    if (!projectPath || !task.pr_url) return null
     try {
       const data = await window.api.git.getPrByUrl(projectPath, task.pr_url)
-      if (data) setPr(data)
-    } catch { /* ignore — background refresh */ }
+      const hash = JSON.stringify(data)
+      if (hash !== lastPrHashRef.current) {
+        lastPrHashRef.current = hash
+        if (data) setPr(data)
+      }
+      return hash
+    } catch { return null }
   }, [projectPath, task.pr_url])
 
   // Poll PR status when linked (faster when checks are pending)
-  useEffect(() => {
-    if (!visible || !projectPath || !task.pr_url || !ghInstalled) return
-    const interval = pr?.statusCheckRollup === 'PENDING' ? 10000 : 30000
-    const id = setInterval(refreshPr, interval)
-    return () => clearInterval(id)
-  }, [visible, projectPath, task.pr_url, ghInstalled, pr?.statusCheckRollup, refreshPr])
+  const prPollMs = pr?.statusCheckRollup === 'PENDING' ? 10000 : 30000
+  useStablePoll(refreshPr, {
+    enabled: visible && !!projectPath && !!task.pr_url && !!ghInstalled,
+    baseDelayMs: prPollMs,
+  })
 
   const handleUnlink = useCallback(async () => {
     const updated = await onUpdateTask({ id: task.id, prUrl: null })
@@ -174,7 +181,8 @@ export function PullRequestTab({ task, projectPath, visible, onUpdateTask, onTas
 
   // PR is linked — show status
   if (task.pr_url && pr) {
-    return <LinkedPrView pr={pr} projectPath={projectPath!} visible={visible} onUnlink={handleUnlink} onRefreshPr={refreshPr} />
+    const onRefreshPrVoid = async (): Promise<void> => { await refreshPr() }
+    return <LinkedPrView pr={pr} projectPath={projectPath!} visible={visible} onUnlink={handleUnlink} onRefreshPr={onRefreshPrVoid} />
   }
   if (task.pr_url && !pr) {
     return (
@@ -278,12 +286,22 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
     await Promise.all([onRefreshPr(), fetchComments()])
   }, [onRefreshPr, fetchComments])
 
-  useEffect(() => {
-    if (!visible) return
-    fetchComments()
-    const timer = setInterval(fetchComments, 30000)
-    return () => clearInterval(timer)
-  }, [visible, fetchComments])
+  const lastCommentsHashRef = useRef<string>('')
+
+  const fetchCommentsPoll = useCallback(async () => {
+    if (!projectPath) return null
+    try {
+      const data = await window.api.git.getPrComments(projectPath, pr.number)
+      const hash = JSON.stringify(data)
+      if (hash !== lastCommentsHashRef.current) {
+        lastCommentsHashRef.current = hash
+        setComments(data)
+      }
+      return hash
+    } catch { return null }
+  }, [projectPath, pr.number])
+
+  useStablePoll(fetchCommentsPoll, { enabled: visible, baseDelayMs: 30_000 })
 
   // Fetch gh user for edit button
   useEffect(() => {

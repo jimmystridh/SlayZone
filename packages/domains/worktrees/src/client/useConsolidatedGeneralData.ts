@@ -7,7 +7,7 @@ import {
   resolveWorktreeBasePathTemplate,
   slugify
 } from './utils'
-import { toast } from '@slayzone/ui'
+import { toast, useStablePoll } from '@slayzone/ui'
 
 export interface DetectedWorktreeItem {
   path: string
@@ -125,59 +125,97 @@ export function useConsolidatedGeneralData(
   const initialLoad = useRef(false)
 
 
-  // Fetch general git data
+  const lastGitHashRef = useRef<string>('')
+  const lastBranchHashRef = useRef<string>('')
+
+  // Fetch general git data — dedups setStates via hash; backoff via useStablePoll.
   const fetchGitData = useCallback(async () => {
-    if (!projectPath) return
+    if (!projectPath) return null
     try {
       const isRepo = await window.api.git.isGitRepo(projectPath)
-      setIsGitRepo(isRepo)
-      if (!isRepo) return
+      if (!isRepo) {
+        const hash = JSON.stringify({ isRepo: false })
+        if (hash !== lastGitHashRef.current) {
+          lastGitHashRef.current = hash
+          setIsGitRepo(false)
+        }
+        return hash
+      }
 
       const [branch, remote] = await Promise.all([
         window.api.git.getCurrentBranch(projectPath),
         window.api.git.getRemoteUrl(projectPath)
       ])
-      setCurrentBranch(branch)
-      setRemoteUrl(remote)
 
+      let status: StatusSummary | null = null
+      let uab: AheadBehind | null = null
       if (targetPath) {
         const activeBranch = hasWorktree ? worktreeBranch : branch
-        const [status, uab] = await Promise.all([
+        ;[status, uab] = await Promise.all([
           window.api.git.getStatusSummary(targetPath),
           activeBranch ? window.api.git.getAheadBehindUpstream(targetPath, activeBranch) : Promise.resolve(null)
         ])
-        setStatusSummary(status)
-        setUpstreamAB(uab)
       }
-    } catch { /* polling error */ }
+
+      const hash = JSON.stringify({ isRepo: true, branch, remote, status, uab })
+      if (hash !== lastGitHashRef.current) {
+        lastGitHashRef.current = hash
+        setIsGitRepo(true)
+        setCurrentBranch(branch)
+        setRemoteUrl(remote)
+        if (targetPath) {
+          setStatusSummary(status)
+          setUpstreamAB(uab)
+        }
+      }
+      return hash
+    } catch { return null }
   }, [projectPath, targetPath, hasWorktree, worktreeBranch])
 
   // Fetch branch comparison data
   const fetchBranchData = useCallback(async () => {
-    if (!targetPath || !parentBranch) return
+    if (!targetPath || !parentBranch) return null
     try {
       const branch = await window.api.git.getCurrentBranch(targetPath)
-      setTaskBranch(branch)
-      if (!branch) return
+      if (!branch) {
+        const hash = JSON.stringify({ branch: null })
+        if (hash !== lastBranchHashRef.current) {
+          lastBranchHashRef.current = hash
+          setTaskBranch(null)
+        }
+        return hash
+      }
 
       const repoPath = projectPath || targetPath
-
-      // Get fork point + counts for status display
       const result = await window.api.git.getResolvedForkGraph(
         targetPath, repoPath, branch, parentBranch,
         branch, parentBranch
       )
-      setForkPoint(result?.forkPoint ?? null)
-      setFeatureCount(result?.featureCount ?? 0)
-      setBaseCount(result?.baseCount ?? 0)
+      const stats = result?.forkPoint
+        ? await window.api.git.getDiffStats(targetPath, parentBranch)
+        : null
 
-      if (result?.forkPoint) {
-        const stats = await window.api.git.getDiffStats(targetPath, parentBranch)
+      const hash = JSON.stringify({ branch, result, stats })
+      if (hash !== lastBranchHashRef.current) {
+        lastBranchHashRef.current = hash
+        setTaskBranch(branch)
+        setForkPoint(result?.forkPoint ?? null)
+        setFeatureCount(result?.featureCount ?? 0)
+        setBaseCount(result?.baseCount ?? 0)
         setDiffStats(stats)
-      } else {
-        setDiffStats(null)
       }
-    } catch { /* polling error */ }
+      if (!initialLoad.current) {
+        setBranchLoading(false)
+        initialLoad.current = true
+      }
+      return hash
+    } catch {
+      if (!initialLoad.current) {
+        setBranchLoading(false)
+        initialLoad.current = true
+      }
+      return null
+    }
   }, [targetPath, projectPath, parentBranch])
 
   // Worktree branch
@@ -186,26 +224,12 @@ export function useConsolidatedGeneralData(
     window.api.git.getCurrentBranch(task.worktree_path).then(setWorktreeBranch).catch(() => setWorktreeBranch(null))
   }, [task.worktree_path])
 
-  // Poll general data
-  useEffect(() => {
-    if (!visible || !projectPath) return
-    fetchGitData()
-    const timer = setInterval(fetchGitData, pollIntervalMs)
-    return () => clearInterval(timer)
-  }, [visible, projectPath, pollIntervalMs, fetchGitData])
+  useStablePoll(fetchGitData, { enabled: visible && !!projectPath, baseDelayMs: pollIntervalMs })
+  useStablePoll(fetchBranchData, { enabled: visible && !!targetPath && !!parentBranch, baseDelayMs: pollIntervalMs })
 
-  // Poll branch data
-  useEffect(() => {
-    if (!visible || !targetPath || !parentBranch) return
-    if (!initialLoad.current) {
-      setBranchLoading(true)
-      fetchBranchData().finally(() => { setBranchLoading(false); initialLoad.current = true })
-    } else {
-      fetchBranchData()
-    }
-    const timer = setInterval(fetchBranchData, pollIntervalMs)
-    return () => clearInterval(timer)
-  }, [visible, targetPath, parentBranch, fetchBranchData, pollIntervalMs])
+  // External handle: drops the polling return value to fit the documented
+  // `() => Promise<void>` contract.
+  const fetchGitDataExternal = useCallback(async (): Promise<void> => { await fetchGitData() }, [fetchGitData])
 
   // PR — reactive fetch when pr_url or branch changes
   const activeBranch = hasWorktree ? worktreeBranch : currentBranch
@@ -475,7 +499,7 @@ export function useConsolidatedGeneralData(
     sluggedBranch: slugify(task.title) || `task-${task.id.slice(0, 8)}`,
     handleAddWorktree, handleAddWorktreeFromBranch, handleLinkWorktree, handleRemoveWorktree, handleInitGit,
     handleAction, handleConfirmedAction, handleMergeToParent, confirmMergeToParent, cancelMergeToParent,
-    handleCopyFilesConfirm, handleCopyFilesCancel, fetchGitData,
+    handleCopyFilesConfirm, handleCopyFilesCancel, fetchGitData: fetchGitDataExternal,
     detectedWorktrees, copyFilesDialog, mergeToParentDialog,
     creating, initializing, removing, actionLoading, createError
   }
