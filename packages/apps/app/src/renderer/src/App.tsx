@@ -765,14 +765,31 @@ function App(): React.JSX.Element {
     setActiveTabIndex(target)
   }, [tabCycleOrder, toVisibleIndex, setActiveTabIndex])
 
+  const cycleSidebarTreeItems = useCallback((direction: 1 | -1) => {
+    const items = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-sidebar-tree-item="task"][data-task-id]')
+    )
+    if (items.length === 0) return
+    const activeIdx = items.findIndex((el) => el.dataset.active === 'true')
+    const nextIdx = activeIdx === -1
+      ? (direction === 1 ? 0 : items.length - 1)
+      : (activeIdx + direction + items.length) % items.length
+    const id = items[nextIdx]?.dataset.taskId
+    if (id) openTaskRef.current(id)
+  }, [])
+
   useGuardedHotkeys(getKeys('next-tab'), (e) => {
     e.preventDefault()
-    navigateCycle(1)
+    const { sidebarView: sv, treeShowHeader: tsh } = useTabStore.getState()
+    if (sv === 'tree' && !tsh) cycleSidebarTreeItems(1)
+    else navigateCycle(1)
   }, { enableOnFormTags: true, enabled: !isRecording })
 
   useGuardedHotkeys(getKeys('prev-tab'), (e) => {
     e.preventDefault()
-    navigateCycle(-1)
+    const { sidebarView: sv, treeShowHeader: tsh } = useTabStore.getState()
+    if (sv === 'tree' && !tsh) cycleSidebarTreeItems(-1)
+    else navigateCycle(-1)
   }, { enableOnFormTags: true, enabled: !isRecording })
 
   useGuardedHotkeys(getKeys('reopen-closed-tab'), (e) => { e.preventDefault(); track('tab_reopened'); reopenClosedTab() }, { enableOnFormTags: true, enabled: !isRecording })

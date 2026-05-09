@@ -253,6 +253,9 @@ export function TreeView({
     const button = (
       <button
         type="button"
+        data-sidebar-tree-item="task"
+        data-task-id={task.id}
+        data-active={isActive ? 'true' : undefined}
         onClick={() => onTaskClick?.(task.id)}
         style={{ paddingLeft: tgPaddingLeft(depth), minHeight: TG_ROW_HEIGHT }}
         className="relative flex w-full items-center pr-1 text-sm text-left"
