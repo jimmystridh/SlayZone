@@ -30,6 +30,16 @@ function expect(actual: unknown) {
   }
 }
 
+console.log('\nClaudeAdapter config\n')
+
+test('transitionOnInput is not explicitly false (uses TUI default = idle clock gated by adapter activity)', () => {
+  // The 60s idle timer must actually fire on this full-screen TUI — otherwise
+  // cursor blink keeps lastOutputTime fresh and state stays 'running'. Default
+  // (undefined or true) gives that behavior; an explicit `false` would re-
+  // introduce the historical stuck-running bug.
+  expect(adapter.transitionOnInput !== false).toBe(true)
+})
+
 console.log('\nClaudeAdapter.detectActivity\n')
 
 test('detects spinner as working', () => {
