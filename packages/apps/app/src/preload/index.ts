@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { BrowserCreateTaskFromLinkIntent, ElectronAPI } from '@slayzone/types'
 import type { TerminalState, PromptInfo } from '@slayzone/terminal/shared'
-import { isIpcUnchangedSentinel } from '@slayzone/platform'
+import { isIpcUnchangedSentinel } from '@slayzone/platform/ipc'
 
 // Per-channel cache for handlers that opt into withResultDedup on the main side.
 // When main returns the IPC_UNCHANGED_SENTINEL, we return the cached previous

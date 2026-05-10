@@ -2,7 +2,7 @@ import type { IpcMain } from 'electron'
 import { BrowserWindow } from 'electron'
 import type { Database } from 'better-sqlite3'
 import { recordDiagnosticEvent } from '@slayzone/diagnostics/main'
-import { withResultDedup } from '@slayzone/platform'
+import { withResultDedup } from '@slayzone/platform/ipc'
 import { getGitWatcher } from './git-watcher'
 import {
   isGitRepo,
