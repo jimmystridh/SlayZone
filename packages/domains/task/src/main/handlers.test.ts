@@ -935,6 +935,29 @@ describe('needs_attention', () => {
     const set = handleAttentionTransition(h.db, 'no-such-task', 'idle', 'running')
     expect(set).toBe(false)
   })
+
+  test('handleAttentionTransition clears flag on idle → running', () => {
+    const id = seedAttnTask()
+    h.db.prepare('UPDATE tasks SET needs_attention = 1 WHERE id = ?').run(id)
+    const changed = handleAttentionTransition(h.db, id, 'running', 'idle')
+    expect(changed).toBe(true)
+    expect(readFlag(id)).toBe(0)
+  })
+
+  test('handleAttentionTransition clears flag on error → running', () => {
+    const id = seedAttnTask()
+    h.db.prepare('UPDATE tasks SET needs_attention = 1 WHERE id = ?').run(id)
+    const changed = handleAttentionTransition(h.db, id, 'running', 'error')
+    expect(changed).toBe(true)
+    expect(readFlag(id)).toBe(0)
+  })
+
+  test('handleAttentionTransition no-op on → running when flag already clear', () => {
+    const id = seedAttnTask()
+    const changed = handleAttentionTransition(h.db, id, 'running', 'idle')
+    expect(changed).toBe(false)
+    expect(readFlag(id)).toBe(0)
+  })
 })
 
 // --- Subtask worktree inheritance ---
