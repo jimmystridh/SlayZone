@@ -5,7 +5,11 @@ import { updateTask } from './ops/shared.js'
 /**
  * Maintains `needs_attention` on a task in response to PTY state transitions.
  *
- * - `running → idle | error`: set the flag (agent finished a turn).
+ * - `running → idle | error` AND session has had user input: set the flag
+ *   (agent finished a user-initiated turn).
+ * - `running → idle | error` with NO user input: skip — this is the
+ *   spawn/banner settle on auto-respawn (opening a task with no live PTY
+ *   auto-spawns one), not a real turn end.
  * - `* → running`: clear the flag (work resumed; transient idle blip should
  *   not leave a stale amber indicator behind).
  * - Renderer also clears it on tab focus.
@@ -17,6 +21,7 @@ export function handleAttentionTransition(
   sessionId: string,
   newState: TerminalState,
   oldState: TerminalState,
+  hasUserInput: boolean,
 ): boolean {
   const taskId = sessionId.split(':')[0]
   if (!taskId) return false
@@ -34,6 +39,7 @@ export function handleAttentionTransition(
 
   if (oldState !== 'running') return false
   if (newState !== 'idle' && newState !== 'error') return false
+  if (!hasUserInput) return false
   if (row.needs_attention) return false
 
   updateTask(db, { id: taskId, needsAttention: true })

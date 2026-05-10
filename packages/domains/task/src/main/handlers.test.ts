@@ -889,30 +889,44 @@ describe('needs_attention', () => {
     expect(readFlag(id)).toBe(0)
   })
 
-  test('handleAttentionTransition sets flag on running → idle', () => {
+  test('handleAttentionTransition sets flag on running → idle WITH user input', () => {
     const id = seedAttnTask()
-    const set = handleAttentionTransition(h.db, id, 'idle', 'running')
+    const set = handleAttentionTransition(h.db, id, 'idle', 'running', true)
     expect(set).toBe(true)
     expect(readFlag(id)).toBe(1)
   })
 
-  test('handleAttentionTransition sets flag on running → error', () => {
+  test('handleAttentionTransition sets flag on running → error WITH user input', () => {
     const id = seedAttnTask()
-    const set = handleAttentionTransition(h.db, id, 'error', 'running')
+    const set = handleAttentionTransition(h.db, id, 'error', 'running', true)
     expect(set).toBe(true)
     expect(readFlag(id)).toBe(1)
+  })
+
+  test('handleAttentionTransition does NOT set on running → idle WITHOUT user input (boot/banner)', () => {
+    const id = seedAttnTask()
+    const set = handleAttentionTransition(h.db, id, 'idle', 'running', false)
+    expect(set).toBe(false)
+    expect(readFlag(id)).toBe(0)
+  })
+
+  test('handleAttentionTransition does NOT set on running → error WITHOUT user input', () => {
+    const id = seedAttnTask()
+    const set = handleAttentionTransition(h.db, id, 'error', 'running', false)
+    expect(set).toBe(false)
+    expect(readFlag(id)).toBe(0)
   })
 
   test('handleAttentionTransition does NOT set on starting → idle', () => {
     const id = seedAttnTask()
-    const set = handleAttentionTransition(h.db, id, 'idle', 'starting')
+    const set = handleAttentionTransition(h.db, id, 'idle', 'starting', true)
     expect(set).toBe(false)
     expect(readFlag(id)).toBe(0)
   })
 
   test('handleAttentionTransition does NOT set on running → dead', () => {
     const id = seedAttnTask()
-    const set = handleAttentionTransition(h.db, id, 'dead', 'running')
+    const set = handleAttentionTransition(h.db, id, 'dead', 'running', true)
     expect(set).toBe(false)
     expect(readFlag(id)).toBe(0)
   })
@@ -920,26 +934,26 @@ describe('needs_attention', () => {
   test('handleAttentionTransition is no-op when flag already set', () => {
     const id = seedAttnTask()
     h.db.prepare('UPDATE tasks SET needs_attention = 1 WHERE id = ?').run(id)
-    const set = handleAttentionTransition(h.db, id, 'idle', 'running')
+    const set = handleAttentionTransition(h.db, id, 'idle', 'running', true)
     expect(set).toBe(false)
   })
 
   test('handleAttentionTransition strips tab suffix from sessionId', () => {
     const id = seedAttnTask()
-    const set = handleAttentionTransition(h.db, `${id}:tab1`, 'idle', 'running')
+    const set = handleAttentionTransition(h.db, `${id}:tab1`, 'idle', 'running', true)
     expect(set).toBe(true)
     expect(readFlag(id)).toBe(1)
   })
 
   test('handleAttentionTransition no-op for unknown task', () => {
-    const set = handleAttentionTransition(h.db, 'no-such-task', 'idle', 'running')
+    const set = handleAttentionTransition(h.db, 'no-such-task', 'idle', 'running', true)
     expect(set).toBe(false)
   })
 
-  test('handleAttentionTransition clears flag on idle → running', () => {
+  test('handleAttentionTransition clears flag on idle → running (regardless of user input)', () => {
     const id = seedAttnTask()
     h.db.prepare('UPDATE tasks SET needs_attention = 1 WHERE id = ?').run(id)
-    const changed = handleAttentionTransition(h.db, id, 'running', 'idle')
+    const changed = handleAttentionTransition(h.db, id, 'running', 'idle', false)
     expect(changed).toBe(true)
     expect(readFlag(id)).toBe(0)
   })
@@ -947,14 +961,14 @@ describe('needs_attention', () => {
   test('handleAttentionTransition clears flag on error → running', () => {
     const id = seedAttnTask()
     h.db.prepare('UPDATE tasks SET needs_attention = 1 WHERE id = ?').run(id)
-    const changed = handleAttentionTransition(h.db, id, 'running', 'error')
+    const changed = handleAttentionTransition(h.db, id, 'running', 'error', true)
     expect(changed).toBe(true)
     expect(readFlag(id)).toBe(0)
   })
 
   test('handleAttentionTransition no-op on → running when flag already clear', () => {
     const id = seedAttnTask()
-    const changed = handleAttentionTransition(h.db, id, 'running', 'idle')
+    const changed = handleAttentionTransition(h.db, id, 'running', 'idle', true)
     expect(changed).toBe(false)
     expect(readFlag(id)).toBe(0)
   })

@@ -7,3 +7,5 @@ export { registerChatHandlers, shutdownChatTransports, inspectPermissionFlags, b
 export { listSessions, getSessionState } from './session-registry'
 export { getAutoModeEligibility, type AutoModeEligibility } from './auto-mode-eligibility'
 export { supportsChatMode } from './agents/registry'
+export { hasSessionUserInput, markSessionUserInput, clearSessionUserInputMark } from './user-input-tracker'
+export { notifyGlobalStateListeners } from './pty-manager'

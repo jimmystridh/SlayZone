@@ -118,7 +118,7 @@ import { BlobStore, betterSqliteTxn, seedInitialVersions } from '@slayzone/task-
 import { getExtensionFromTitle } from '@slayzone/task/shared'
 import { registerTagHandlers } from '@slayzone/tags/main'
 import { registerSettingsHandlers, registerThemeHandlers } from '@slayzone/settings/main'
-import { registerPtyHandlers, registerUsageHandlers, killAllPtys, killPtysByTaskId, onTaskReachedTerminal, startIdleChecker, stopIdleChecker, syncTerminalModes, getPtyPids, onSessionChange, onGlobalStateChange, onPtyInputSubmit, registerChatHandlers, shutdownChatTransports, setOnHostKillHandler, broadcastRespawnRequest, backfillChatModes } from '@slayzone/terminal/main'
+import { registerPtyHandlers, registerUsageHandlers, killAllPtys, killPtysByTaskId, onTaskReachedTerminal, startIdleChecker, stopIdleChecker, syncTerminalModes, getPtyPids, onSessionChange, onGlobalStateChange, onPtyInputSubmit, registerChatHandlers, shutdownChatTransports, setOnHostKillHandler, broadcastRespawnRequest, backfillChatModes, hasSessionUserInput, markSessionUserInput, clearSessionUserInputMark, notifyGlobalStateListeners } from '@slayzone/terminal/main'
 import { setProviderLastKilledAt, type ProviderConfig } from '@slayzone/task/shared'
 import { attachFloatingAgent, setupFloatingAgent } from './floating-agent'
 import { attachTaskWindows, setupTaskWindows } from './task-windows'
@@ -1232,10 +1232,12 @@ app.whenReady().then(async () => {
   onGlobalStateChange((sessionId, newState, oldState) => {
     handleTerminalStateChange(db, sessionId, newState, oldState, notifyTasksChanged, onTaskReachedTerminal)
 
-    // Attention flag: PTY just finished a turn (running → idle|error). Renderer
-    // clears the flag when the user focuses the task tab.
+    // Attention flag: PTY just finished a turn (running → idle|error). Gated
+    // on hasSessionUserInput so that initial spawn/banner settle (which can
+    // trigger running → idle on auto-respawn after task open) does not flag
+    // the task. Renderer clears the flag when the user focuses the task tab.
     try {
-      if (handleAttentionTransition(db, sessionId, newState, oldState)) {
+      if (handleAttentionTransition(db, sessionId, newState, oldState, hasSessionUserInput(sessionId))) {
         notifyTasksChanged()
       }
     } catch (err) {
@@ -1247,6 +1249,9 @@ app.whenReady().then(async () => {
   if (isPlaywright) {
     ;(globalThis as Record<string, unknown>).__db = db
     ;(globalThis as Record<string, unknown>).__spawnProcess = spawnProcess
+    ;(globalThis as Record<string, unknown>).__notifyPtyState = notifyGlobalStateListeners
+    ;(globalThis as Record<string, unknown>).__markSessionUserInput = markSessionUserInput
+    ;(globalThis as Record<string, unknown>).__clearSessionUserInputMark = clearSessionUserInputMark
     ;(globalThis as Record<string, unknown>).__restorePtyHandlers = () => {
       for (const ch of [
         'terminalModes:list',

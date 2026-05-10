@@ -18,6 +18,7 @@ import { computeSyncQueryResponse, type TerminalTheme } from './sync-query-respo
 import { filterBufferData } from './filter-buffer-data'
 import { buildMcpEnv } from './mcp-env'
 import { killByTaskId as killChatsByTaskId } from './chat-transport-manager'
+import { markSessionUserInput, clearSessionUserInputMark } from './user-input-tracker'
 export { filterBufferData }
 
 // Database reference (held for future use; legacy from notification feature)
@@ -746,6 +747,7 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
         dataListeners.delete(sessionId)
         sessions.delete(sessionId)
         stateMachine.unregister(sessionId)
+        clearSessionUserInputMark(sessionId)
         notifySessionChange()
       }, 100)
       const exitWin = getWin()
@@ -1310,6 +1312,7 @@ export function writePty(sessionId: string, data: string): boolean {
     const submittedLine = session.inputBuffer
     if (submittedLine.trim().length > 0) {
       emitInputSubmit(sessionId, session.taskId, submittedLine)
+      markSessionUserInput(sessionId)
     }
     if (shouldFlipToRunningOnInput(session.adapter, session.state, session.inputBuffer.trim().length)) {
       session.activity = 'working'
