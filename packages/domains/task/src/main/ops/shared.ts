@@ -18,6 +18,10 @@ import {
   getWorktreeColor,
   ensureProjectWorktreeColors,
 } from '@slayzone/worktrees/main'
+import {
+  DEFAULT_WORKTREE_BASE_PATH_TEMPLATE,
+  resolveWorktreeBasePathTemplate,
+} from '@slayzone/worktrees/shared'
 
 export type DiagnosticLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -242,8 +246,6 @@ export async function cleanupTaskFull(db: Database, taskId: string, batchIds: st
   }
 }
 
-const DEFAULT_WORKTREE_BASE_PATH_TEMPLATE = '{project}/..'
-
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -257,11 +259,6 @@ function slugify(text: string): string {
 function parseBooleanSetting(value: string | null | undefined): boolean {
   if (!value) return false
   return value === '1' || value.toLowerCase() === 'true'
-}
-
-function resolveWorktreeBasePathTemplate(template: string, projectPath: string): string {
-  const expanded = template.replaceAll('{project}', projectPath.replace(/[\\/]+$/, ''))
-  return path.normalize(expanded)
 }
 
 function isAutoCreateWorktreeEnabled(db: Database, projectId: string): boolean {
