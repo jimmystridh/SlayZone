@@ -1,23 +1,96 @@
 # Changelog
 
 
-## v0.28.1
+## v0.29.0
 
-[compare changes](https://github.com/debuglebowski/slayzone/compare/v0.28.0...v0.28.1)
+[compare changes](https://github.com/debuglebowski/slayzone/compare/v0.28.1...v0.29.0)
 
 ### 🚀 Enhancements
 
-- **sidebar:** Pin tasks in tree view to keep them visible ([723cd523](https://github.com/debuglebowski/slayzone/commit/723cd523))
-- **sidebar:** Grid footer, sub-task toggle, ancestor inclusion, archive filter ([beabd168](https://github.com/debuglebowski/slayzone/commit/beabd168))
-- **sidebar:** Tree view honors per-project kanban sortBy ([fb45ec84](https://github.com/debuglebowski/slayzone/commit/fb45ec84))
+- **task-terminals:** Auto-focus chat composer on task open ([436e1fdf](https://github.com/debuglebowski/slayzone/commit/436e1fdf))
+- **editor:** Render mermaid in rich text w/ Preview/Raw switch ([6f7a41f2](https://github.com/debuglebowski/slayzone/commit/6f7a41f2))
+- **shortcuts:** Add sidebar auto-hide binding, fix period-key matching ([289d0cc0](https://github.com/debuglebowski/slayzone/commit/289d0cc0))
+- **markdown:** Canvas-based media viewer for SVG, mermaid, images ([beb5bde3](https://github.com/debuglebowski/slayzone/commit/beb5bde3))
+- **chat:** Restart button replaces footer pills on session end ([9ea4a54a](https://github.com/debuglebowski/slayzone/commit/9ea4a54a))
+- **sidebar:** Add Slay{logo}Zone wordmark to tree-view header ([cc6fa1ad](https://github.com/debuglebowski/slayzone/commit/cc6fa1ad))
+- **sidebar:** Tree opts — show all sub-tasks, cross out done ([d95c22a1](https://github.com/debuglebowski/slayzone/commit/d95c22a1))
+- **sidebar:** Worktree pill on tree-view tasks ([a97962bd](https://github.com/debuglebowski/slayzone/commit/a97962bd))
+- **skills:** Emoji prefix in slay-auto-title rules ([25c30621](https://github.com/debuglebowski/slayzone/commit/25c30621))
+- **sidebar:** Cycle tree tasks via Ctrl+Tab when header hidden ([991db859](https://github.com/debuglebowski/slayzone/commit/991db859))
+- **task:** Hide panels for completed tasks, show empty-state w/ status switcher ([ccbe1853](https://github.com/debuglebowski/slayzone/commit/ccbe1853))
+- **sidebar:** Regroup tree display settings + tri-mode sub-tasks ([2fe3dcc5](https://github.com/debuglebowski/slayzone/commit/2fe3dcc5))
+- **task:** Per-task needs_attention flag for unseen idle agents ([76fccbc1](https://github.com/debuglebowski/slayzone/commit/76fccbc1))
+- **updater:** Check for updates on power resume ([2e6ec647](https://github.com/debuglebowski/slayzone/commit/2e6ec647))
+- **ui:** UseStablePoll hook — content-hash dedup + exponential backoff ([1e2c27dd](https://github.com/debuglebowski/slayzone/commit/1e2c27dd))
+- **sidebar:** Show temporary terminals in tree view ([2869df4f](https://github.com/debuglebowski/slayzone/commit/2869df4f))
+- **task:** Subtasks inherit parent worktree ([ae9e280e](https://github.com/debuglebowski/slayzone/commit/ae9e280e))
+- **ui:** Spinner in TerminalProgressDot for running, share dot in kanban ([2ad0b678](https://github.com/debuglebowski/slayzone/commit/2ad0b678))
+- **sidebar+search:** Tree group-by-status, row close/bg-open, header relocation, search overhaul ([57c33fac](https://github.com/debuglebowski/slayzone/commit/57c33fac))
+- **sidebar-tree:** Own group for temporary tasks when grouped ([134f9653](https://github.com/debuglebowski/slayzone/commit/134f9653))
+- **sidebar:** Attention pill on tree task rows ([c18273e8](https://github.com/debuglebowski/slayzone/commit/c18273e8))
+- **projects:** Add weekday selection to scheduled lock ([9c868c67](https://github.com/debuglebowski/slayzone/commit/9c868c67))
+- **task:** Persist dev-URL toast dismissal per task ([5aae49a9](https://github.com/debuglebowski/slayzone/commit/5aae49a9))
+- **sidebar:** Compact tree footer + shared active-terminals dialog ([6b9d01bc](https://github.com/debuglebowski/slayzone/commit/6b9d01bc))
+- **chat:** Add Cancel button to plan + question prompts ([989d9f63](https://github.com/debuglebowski/slayzone/commit/989d9f63))
+- **sidebar:** Projects label + view settings hub ([f1a27947](https://github.com/debuglebowski/slayzone/commit/f1a27947))
+- **sidebar:** Expose Show header toggle in tree footer layout menu ([54b8820f](https://github.com/debuglebowski/slayzone/commit/54b8820f))
+- **sidebar:** Add Context Manager icon to project header ([e1dd4fc3](https://github.com/debuglebowski/slayzone/commit/e1dd4fc3))
+- **terminal:** Persist scrollback to disk + lazy load + Load more ([7e2ad37a](https://github.com/debuglebowski/slayzone/commit/7e2ad37a))
+- **chat:** Rank exact name matches first in autocomplete ([6e1bac1e](https://github.com/debuglebowski/slayzone/commit/6e1bac1e))
+- **terminal:** Chat/terminal toggle icon left of main tab ([695ed949](https://github.com/debuglebowski/slayzone/commit/695ed949))
+- **terminal:** Impl codex detectPrompt + idle flip on approval modal ([74261398](https://github.com/debuglebowski/slayzone/commit/74261398))
+- **task-terminals:** Provider logos on agent tabs ([73d75df8](https://github.com/debuglebowski/slayzone/commit/73d75df8))
+- **terminal:** Flip idle + gate queue drain on permission-request ([2c2077ef](https://github.com/debuglebowski/slayzone/commit/2c2077ef))
+
+### 🔥 Performance
+
+- **diagnostics:** Skip hot-channel ipc logs + always-run retention ([f700ee54](https://github.com/debuglebowski/slayzone/commit/f700ee54))
+- **chat:** Stabilize sendMessage ref to break autocomplete poll loop ([ad01b0dd](https://github.com/debuglebowski/slayzone/commit/ad01b0dd))
+- Migrate 9 pollers to useStablePoll + memo CommitGraph ([e6785d75](https://github.com/debuglebowski/slayzone/commit/e6785d75))
+- **ipc:** Main-side result dedup for heavy git read handlers ([35fb8c3d](https://github.com/debuglebowski/slayzone/commit/35fb8c3d))
+
+### 🩹 Fixes
+
+- **subtasks:** Unclip drag handle so reorder works ([a4c7f9a3](https://github.com/debuglebowski/slayzone/commit/a4c7f9a3))
+- **chat:** Heal orphaned turns so "Writing…" can't stick ([deea4170](https://github.com/debuglebowski/slayzone/commit/deea4170))
+- **chat:** Stage events on tentative --resume, drop on failure ([dbb9a01f](https://github.com/debuglebowski/slayzone/commit/dbb9a01f))
+- **sidebar:** Auto-close ignores closed-but-mounted dialogs ([56b34adc](https://github.com/debuglebowski/slayzone/commit/56b34adc))
+- **ui:** Destructive btn use text-white not undefined token ([7096ebcb](https://github.com/debuglebowski/slayzone/commit/7096ebcb))
+- **chat:** Hide typing indicator while AskUserQuestion parks turn ([e3c6e4be](https://github.com/debuglebowski/slayzone/commit/e3c6e4be))
+- **terminal:** Claude adapter false-positive working on completion stamp ([321f8c3e](https://github.com/debuglebowski/slayzone/commit/321f8c3e))
+- **worktrees:** Exclude relativeDate from poll dedup hash ([81f09f81](https://github.com/debuglebowski/slayzone/commit/81f09f81))
+- **ipc-dedup:** HashFn option + stable hash for graph payloads ([e5e962fe](https://github.com/debuglebowski/slayzone/commit/e5e962fe))
+- **terminal:** Filter dead PTY/chat from active-session set ([19191369](https://github.com/debuglebowski/slayzone/commit/19191369))
+- **chat:** Decouple stick lock from at-bottom indicator ([a7bb4ed4](https://github.com/debuglebowski/slayzone/commit/a7bb4ed4))
+- **attention:** Clear flag on * → running ([9e3bd0db](https://github.com/debuglebowski/slayzone/commit/9e3bd0db))
+- **chat:** Plan approve footer only on last plan, hide after press ([32e561df](https://github.com/debuglebowski/slayzone/commit/32e561df))
+- **updater:** Keep polling after download ([a34b772c](https://github.com/debuglebowski/slayzone/commit/a34b772c))
+- **shortcuts:** Resolve `mod` to meta/ctrl so Ctrl+. doesn't fire mod+. bindings ([20fcd650](https://github.com/debuglebowski/slayzone/commit/20fcd650))
+- **attention:** Only flag on user-initiated turn end ([5140617e](https://github.com/debuglebowski/slayzone/commit/5140617e))
+- **chat:** Replay perm-request side-channel on tab hydrate ([080272e5](https://github.com/debuglebowski/slayzone/commit/080272e5))
+- **terminal:** Active idle signal + tighter timeout for claude adapter ([e8212723](https://github.com/debuglebowski/slayzone/commit/e8212723))
+- **codex:** Replace removed --full-auto with --sandbox workspace-write ([7cb86859](https://github.com/debuglebowski/slayzone/commit/7cb86859))
 
 ### 💅 Refactors
 
-- **sidebar:** Full-bleed auto-hide overlay matches inline content ([0e139cd7](https://github.com/debuglebowski/slayzone/commit/0e139cd7))
+- **file-editor:** Replace markdown settings banner with Display popover ([3c63c13a](https://github.com/debuglebowski/slayzone/commit/3c63c13a))
+- **chat:** Replace use-stick-to-bottom w/ in-house useFollowBottom ([25a8a17f](https://github.com/debuglebowski/slayzone/commit/25a8a17f))
+- **worktrees:** Extract path-template, add {project-folder-name} token ([9b67c760](https://github.com/debuglebowski/slayzone/commit/9b67c760))
+- **platform:** Expose ipc-dedup as ./ipc subpath ([b05856b8](https://github.com/debuglebowski/slayzone/commit/b05856b8))
+- **terminal:** Adapter-driven idle-clock policy via pure helpers ([38a8ae18](https://github.com/debuglebowski/slayzone/commit/38a8ae18))
+- **use-stable-poll:** Refetch-only, drop unused data/isLoading ([19b250f5](https://github.com/debuglebowski/slayzone/commit/19b250f5))
+- Rename Agent panel → Global Agent panel ([738a6633](https://github.com/debuglebowski/slayzone/commit/738a6633))
+- **terminal:** Drop disk-mirrored scrollback archive ([bd0969b3](https://github.com/debuglebowski/slayzone/commit/bd0969b3))
+- **task:** Drop manager_mode + orchestrator sidebar ([c88e3f8e](https://github.com/debuglebowski/slayzone/commit/c88e3f8e))
 
 ### 🏡 Chore
 
-- **nix:** Update sources to 0.28.0 ([2d94ba61](https://github.com/debuglebowski/slayzone/commit/2d94ba61))
+- **nix:** Update sources to 0.28.1 ([cd924dcb](https://github.com/debuglebowski/slayzone/commit/cd924dcb))
+- **skills:** Always-update auto-title w/ unique emoji prefix ([b8b6d9f0](https://github.com/debuglebowski/slayzone/commit/b8b6d9f0))
+
+### 🎨 Styles
+
+- **md:** Bump markdown paragraph spacing ([307eb8a5](https://github.com/debuglebowski/slayzone/commit/307eb8a5))
 
 ### ❤️ Contributors
 
@@ -31,6 +104,7 @@
 
 - **sidebar:** Pin tasks in tree view to keep them visible ([723cd523](https://github.com/debuglebowski/slayzone/commit/723cd523))
 - **sidebar:** Grid footer, sub-task toggle, ancestor inclusion, archive filter ([beabd168](https://github.com/debuglebowski/slayzone/commit/beabd168))
+- **sidebar:** Tree view honors per-project kanban sortBy ([fb45ec84](https://github.com/debuglebowski/slayzone/commit/fb45ec84))
 
 ### 💅 Refactors
 

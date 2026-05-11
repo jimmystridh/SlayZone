@@ -1,5 +1,107 @@
 [
   {
+    "version": "0.29.0",
+    "date": "2026-05-11",
+    "tagline": "Attention, scrollback, tree power",
+    "items": [
+      {
+        "category": "breaking",
+        "title": "Manager mode + orchestrator sidebar removed",
+        "description": "The manager_mode task option and the orchestrator sidebar have been removed. Use sub-tasks and worktree inheritance instead."
+      },
+      {
+        "category": "feature",
+        "title": "Per-task attention flag for unseen idle agents",
+        "description": "Tasks now track a needs-attention flag that flips on when an agent goes idle while you're not watching; attention pills surface in the tree view and clear once the run resumes."
+      },
+      {
+        "category": "feature",
+        "title": "Persistent terminal scrollback with lazy load",
+        "description": "Terminal scrollback persists across restarts; older lines lazy-load with a Load more button so reopening a task picks up where you left off."
+      },
+      {
+        "category": "feature",
+        "title": "Tree-view sidebar overhaul",
+        "description": "Group by status, attention pills, worktree pills, Ctrl+Tab task cycling, temporary-task group, view-settings hub, header relocation, and richer display toggles (show-all sub-tasks, cross-out done, tri-mode sub-tasks)."
+      },
+      {
+        "category": "feature",
+        "title": "Worktree path template with project-folder token",
+        "description": "Worktree paths now use a configurable template with a {project-folder-name} token, and sub-tasks inherit their parent's worktree by default."
+      },
+      {
+        "category": "feature",
+        "title": "Mermaid + canvas-based media viewer",
+        "description": "Rich-text editor renders mermaid diagrams with a Preview/Raw switch, and a new canvas-based viewer handles SVG, mermaid, and images in markdown."
+      },
+      {
+        "category": "feature",
+        "title": "Chat: restart, cancel, and provider logos",
+        "description": "Restart button replaces the footer pills when a session ends, plan and question prompts get a Cancel button, and agent tabs now show provider logos."
+      },
+      {
+        "category": "feature",
+        "title": "Project header Context Manager + weekday lock",
+        "description": "New Context Manager icon in the project header, and the project scheduled-lock setting now supports weekday selection."
+      },
+      {
+        "category": "feature",
+        "title": "Completed-task empty state with status switcher",
+        "description": "Opening a completed task hides the task panels and shows a clean empty state with a quick status switcher."
+      },
+      {
+        "category": "improvement",
+        "title": "Smarter terminal idle + permission detection",
+        "description": "Adapter-driven idle policy: idle flips on permission prompts and approval modals, codex detectPrompt is wired up, queue drain gates on permission requests, and the claude adapter no longer false-positives on completion stamps."
+      },
+      {
+        "category": "improvement",
+        "title": "Cheaper polling across the app",
+        "description": "Migrated nine pollers to a content-hash useStablePoll hook with exponential backoff, added main-side IPC result dedup for heavy git reads, and memoized the commit graph — noticeably less CPU during long sessions."
+      },
+      {
+        "category": "improvement",
+        "title": "Updater keeps polling and checks on power resume",
+        "description": "Update checks resume automatically when your machine wakes from sleep, and the updater keeps polling after a download so subsequent releases aren't missed."
+      },
+      {
+        "category": "improvement",
+        "title": "Auto-focus chat composer on task open",
+        "description": "Opening a task drops focus straight into the chat composer so you can start typing immediately."
+      },
+      {
+        "category": "improvement",
+        "title": "Agent panel renamed to Global Agent panel",
+        "description": "Clarifies that the panel operates across all tasks, distinct from per-task agent tabs."
+      },
+      {
+        "category": "improvement",
+        "title": "Smarter chat autocomplete + UI polish",
+        "description": "Exact-name matches rank first in chat autocomplete; tree footer is more compact, plan-approve footer only shows on the latest plan, and the markdown settings banner moved into a Display popover."
+      },
+      {
+        "category": "fix",
+        "title": "Codex CLI flag updated",
+        "description": "Replaced the removed --full-auto flag with --sandbox workspace-write so codex sessions start again."
+      },
+      {
+        "category": "fix",
+        "title": "Chat: stuck typing indicators and orphaned turns",
+        "description": "Typing indicator no longer sticks during AskUserQuestion or after orphaned turns; perm-request side-channels replay on tab hydrate; tentative --resume now stages events and drops them on failure."
+      },
+      {
+        "category": "fix",
+        "title": "Sub-task drag handles + sidebar auto-close",
+        "description": "Drag handles for sub-tasks are no longer clipped, and sidebar auto-close ignores closed-but-mounted dialogs."
+      },
+      {
+        "category": "fix",
+        "title": "Shortcut resolution for Ctrl+.",
+        "description": "Resolved 'mod' to meta/ctrl correctly so Ctrl+. no longer triggers mod+. bindings."
+      }
+    ]
+  },
+  {
     "version": "0.28.1",
     "date": "2026-05-07",
     "tagline": "Sidebar polish",
