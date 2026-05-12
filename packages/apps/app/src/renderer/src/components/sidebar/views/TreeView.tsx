@@ -613,7 +613,7 @@ export function TreeView({
           onClick={() => setShowAll((v) => !v)}
           className="flex items-center justify-center gap-1 px-2 py-2 text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
         >
-          <span>{showAll ? 'Hide inactive' : 'Show all'}</span>
+          <span>{showAll ? 'Hide inactive' : 'Show all projects'}</span>
           <ChevronDown className={cn('size-3 transition-transform', showAll && 'rotate-180')} />
         </button>
       )}
