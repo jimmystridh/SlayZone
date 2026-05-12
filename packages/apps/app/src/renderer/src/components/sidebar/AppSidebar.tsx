@@ -17,7 +17,6 @@ import { SidebarFooterIcons } from './SidebarFooterIcons'
 import { SidebarViewSwitcher } from './SidebarViewSwitcher'
 import { SidebarResizeHandle } from './SidebarResizeHandle'
 import { getView } from './views/registry'
-import logo from '@/assets/logo.svg'
 
 interface AppSidebarProps {
   projects: Project[]
@@ -128,22 +127,7 @@ export function AppSidebar({
         autoHideActive && 'shadow-[0_0_60px_-10px_rgba(0,0,0,0.6)]'
       )}
     >
-      {sidebarView === 'tree' && (
-        <div className="absolute top-0 left-0 right-0 h-11 flex items-center justify-center gap-1 pr-3 z-20 pointer-events-none">
-          <div className="flex items-center gap-1 select-none text-xs font-medium tracking-wide text-foreground">
-            <span>Slay</span>
-            <img
-              src={logo}
-              alt=""
-              aria-hidden
-              draggable={false}
-              className="h-4 w-auto"
-            />
-            <span>Zone</span>
-          </div>
-        </div>
-      )}
-      <SidebarContent className="pb-4 pt-11 scrollbar-hide">
+      <SidebarContent className={cn('pb-4 scrollbar-hide', sidebarView === 'tree' ? '' : 'pt-11')}>
         <SidebarGroup>
           <SidebarGroupContent>
             {view.render({

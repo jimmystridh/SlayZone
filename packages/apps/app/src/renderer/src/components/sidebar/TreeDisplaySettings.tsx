@@ -57,7 +57,7 @@ export function TreeDisplaySettings() {
           type="button"
           aria-label="View settings"
           title="View settings"
-          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
         >
           <SlidersHorizontal className="size-3.5" />
         </button>

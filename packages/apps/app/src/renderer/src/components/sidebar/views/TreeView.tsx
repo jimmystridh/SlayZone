@@ -6,8 +6,21 @@ import { type Task } from '@slayzone/task/shared'
 import { useDialogStore, useTabStore } from '@slayzone/settings'
 import { useFilterStateMap, sortTasks, getViewConfig } from '@slayzone/tasks'
 import { useActiveSessionTaskIds } from '@/components/agent-status/useIdleTasks'
+import { useStaleSkillCounts } from '@slayzone/ai-config/client'
 import { TreeDisplaySettings } from '../TreeDisplaySettings'
+import logo from '@/assets/logo.svg'
 import type { SidebarViewContext } from './types'
+
+function ContextStaleDot({ count }: { count: number }) {
+  if (count <= 0) return null
+  return (
+    <span
+      aria-label={`${count} stale skill${count === 1 ? '' : 's'}`}
+      data-testid="context-manager-stale-dot"
+      className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-amber-500"
+    />
+  )
+}
 
 // Tree guide layout (mirrors EditorToc / ManagerSidebar).
 const TG_INDENT = 22
@@ -252,6 +265,8 @@ export function TreeView({
   )
   const visibleProjects = showAll ? sortedProjects : activeProjects
 
+  const { counts: staleSkillCounts } = useStaleSkillCounts(visibleProjects)
+
   const renderTask = (task: Task, depth: number, ancestorFlags: boolean[]): ReactNode => {
     const isActive = activeTaskId === task.id
     const isOpenTab = openTabTaskIds.has(task.id)
@@ -455,11 +470,6 @@ export function TreeView({
     const isContextActive = selectedProjectId === project.id && activeView === 'context'
     const isHomeActive =
       selectedProjectId === project.id && activeTabType === 'home' && !isContextActive
-    const anyActive = isHomeActive || isContextActive
-    const visClasses = anyActive
-      ? 'opacity-100'
-      : 'opacity-0 group-hover/projectrow:opacity-100 focus-visible:opacity-100'
-
     return (
       <Collapsible.Root
         key={project.id}
@@ -471,7 +481,7 @@ export function TreeView({
           style={{
             backgroundColor: `color-mix(in oklch, ${project.color} ${projectIsActive(project.id) ? 22 : 10}%, transparent)`
           }}
-          className="group/projectrow relative flex h-10 items-center gap-0.5 transition-[filter] hover:brightness-125"
+          className="group/projectrow relative flex h-10 items-center transition-[filter] hover:brightness-125"
         >
           <Collapsible.Trigger
             aria-label={isOpen ? `Collapse ${project.name}` : `Expand ${project.name}`}
@@ -487,7 +497,7 @@ export function TreeView({
           <Collapsible.Trigger asChild>
             <button
               type="button"
-              className="flex flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm min-w-0"
+              className="flex flex-1 items-center gap-2 rounded-md py-1.5 text-sm font-semibold min-w-0"
             >
               <span className="truncate flex-1 text-left">{project.name}</span>
             </button>
@@ -497,8 +507,7 @@ export function TreeView({
             onClick={() => onSelectProject(project.id)}
             aria-label={`Open ${project.name} home`}
             className={cn(
-              'inline-flex size-7 shrink-0 items-center justify-center rounded-md transition-[color,opacity,background-color]',
-              visClasses,
+              'inline-flex size-7 shrink-0 items-center justify-center rounded-md transition-[color,background-color]',
               isHomeActive
                 ? 'bg-foreground text-background shadow-sm hover:bg-foreground/90'
                 : 'text-muted-foreground/70 hover:text-foreground'
@@ -514,23 +523,20 @@ export function TreeView({
             }}
             aria-label={`Context Manager for ${project.name}`}
             className={cn(
-              'inline-flex size-7 shrink-0 items-center justify-center rounded-md transition-[color,opacity,background-color]',
-              visClasses,
+              'relative inline-flex size-7 shrink-0 items-center justify-center rounded-md transition-[color,background-color]',
               isContextActive
                 ? 'bg-foreground text-background shadow-sm hover:bg-foreground/90'
                 : 'text-muted-foreground/70 hover:text-foreground'
             )}
           >
             <BookOpen className="size-3.5" />
+            <ContextStaleDot count={staleSkillCounts.get(project.id) ?? 0} />
           </button>
           <button
             type="button"
             onClick={() => onProjectSettings(project)}
             aria-label={`Settings for ${project.name}`}
-            className={cn(
-              'inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground/70 hover:text-foreground transition-[color,opacity] mr-0.5',
-              visClasses
-            )}
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground/70 hover:text-foreground transition-colors mr-0.5"
           >
             <Settings className="size-3.5" />
           </button>
@@ -554,34 +560,50 @@ export function TreeView({
   const searchShortcut = useShortcutDisplay('search')
 
   return (
-    <div className="flex flex-col gap-3 px-1">
-      <div className="py-3">
-        <button
-          type="button"
-          onClick={() => openSearch()}
-          aria-label="Search"
-          className="flex w-full items-center gap-2 rounded-xl bg-surface-1 px-3 h-10 text-xs text-muted-foreground/60 hover:text-foreground transition-colors"
+    <div className="@container flex flex-col gap-3 px-1">
+      {/* Top icon row — sits in same horizontal hierarchy as project rows so
+          rightmost button aligns with project Settings icon by construction.
+          pl clears macOS traffic lights (80px total - SidebarGroup p-2 (8) -
+          this wrapper's px-1 (4) = 68px). */}
+      <div className="relative flex items-center h-10" style={{ paddingLeft: 68 }}>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 flex items-center gap-1 select-none text-xs font-medium tracking-wide text-foreground @max-[300px]:hidden"
         >
-          <Search className="size-3.5 shrink-0" />
-          <span className="flex-1 text-left">Search files, folders, tasks…</span>
-          {searchShortcut && (
-            <span className="shrink-0 text-[10px] text-muted-foreground/50">{searchShortcut}</span>
-          )}
-        </button>
-      </div>
-      <div className="flex items-end justify-between gap-1.5 px-2 pt-2 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
-        <span className="leading-none pb-1">Projects</span>
-        <div className="flex items-end gap-1">
+          <span>Slay</span>
+          <img src={logo} alt="" draggable={false} className="h-4 w-auto" />
+          <span>Zone</span>
+        </div>
+        <div className="flex items-center ml-auto">
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => openSearch()}
+                aria-label="Search"
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+              >
+                <Search className="size-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">
+              {searchShortcut ? `Search (${searchShortcut})` : 'Search'}
+            </TooltipContent>
+          </Tooltip>
           <TreeDisplaySettings />
-          <button
-            type="button"
-            aria-label="Add project"
-            title="Add project"
-            onClick={() => useDialogStore.getState().openCreateProject()}
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
-          >
-            <Plus className="size-3.5" />
-          </button>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label="Add project"
+                onClick={() => useDialogStore.getState().openCreateProject()}
+                className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors mr-0.5"
+              >
+                <Plus className="size-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-xs">Add project</TooltipContent>
+          </Tooltip>
         </div>
       </div>
       {visibleProjects.map(renderProject)}
