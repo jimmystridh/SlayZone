@@ -2185,51 +2185,35 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                   ) : undefined}
                   mainTabContextMenu={
                     <>
-                      <ContextMenuSub>
-                        <ContextMenuSubTrigger>
-                          {(() => {
-                            const CurrentIcon = MODE_ICONS[task.terminal_mode] ?? TerminalIcon
-                            const currentLabel = getModeLabel(modes.find((m) => m.id === task.terminal_mode) ?? { id: task.terminal_mode, label: task.terminal_mode })
+                      <ContextMenuRadioGroup
+                        value={task.terminal_mode}
+                        onValueChange={(value) => {
+                          if (modes.some((m) => m.id === value)) handleModeChange(value as TerminalMode)
+                        }}
+                      >
+                        {(() => {
+                          const visibleModes = getVisibleModes(modes, task.terminal_mode)
+                          const { builtin, custom } = groupTerminalModes(visibleModes)
+                          const renderItem = (mode: typeof visibleModes[number]) => {
+                            const ModeIcon = MODE_ICONS[mode.id as TerminalMode] ?? TerminalIcon
                             return (
-                              <span className="flex items-center gap-2">
-                                <CurrentIcon className="size-3.5" />
-                                {currentLabel}
-                              </span>
+                              <ContextMenuRadioItem key={mode.id} value={mode.id}>
+                                <span className="flex items-center gap-2">
+                                  <ModeIcon className="size-3.5" />
+                                  {getModeLabel(mode)}
+                                </span>
+                              </ContextMenuRadioItem>
                             )
-                          })()}
-                        </ContextMenuSubTrigger>
-                        <ContextMenuSubContent>
-                          <ContextMenuRadioGroup
-                            value={task.terminal_mode}
-                            onValueChange={(value) => {
-                              if (modes.some((m) => m.id === value)) handleModeChange(value as TerminalMode)
-                            }}
-                          >
-                            {(() => {
-                              const visibleModes = getVisibleModes(modes, task.terminal_mode)
-                              const { builtin, custom } = groupTerminalModes(visibleModes)
-                              const renderItem = (mode: typeof visibleModes[number]) => {
-                                const ModeIcon = MODE_ICONS[mode.id as TerminalMode] ?? TerminalIcon
-                                return (
-                                  <ContextMenuRadioItem key={mode.id} value={mode.id}>
-                                    <span className="flex items-center gap-2">
-                                      <ModeIcon className="size-3.5" />
-                                      {getModeLabel(mode)}
-                                    </span>
-                                  </ContextMenuRadioItem>
-                                )
-                              }
-                              return (
-                                <>
-                                  {builtin.map(renderItem)}
-                                  {custom.length > 0 && builtin.length > 0 && <ContextMenuSeparator />}
-                                  {custom.map(renderItem)}
-                                </>
-                              )
-                            })()}
-                          </ContextMenuRadioGroup>
-                        </ContextMenuSubContent>
-                      </ContextMenuSub>
+                          }
+                          return (
+                            <>
+                              {builtin.map(renderItem)}
+                              {custom.map(renderItem)}
+                            </>
+                          )
+                        })()}
+                      </ContextMenuRadioGroup>
+                      <ContextMenuSeparator />
                       <ContextMenuItem onSelect={() => setFlagsPopoverOpen(true)}>
                         <span className="flex items-center gap-2">
                           <Flag className="size-3.5" />
@@ -2239,7 +2223,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                     </>
                   }
                   mainTabAccessories={
-                    <div data-testid="terminal-mode-trigger" className="flex items-center gap-1" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
+                    <div data-testid="terminal-mode-trigger" className="flex items-center gap-1" onDoubleClick={(e) => e.stopPropagation()}>
                       <span className="truncate text-sm">
                         {getModeLabel(modes.find((m) => m.id === task.terminal_mode) ?? { id: task.terminal_mode, label: task.terminal_mode })}
                       </span>

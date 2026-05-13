@@ -199,7 +199,20 @@ export const TerminalTabBar = forwardRef<TerminalTabBarHandle, TerminalTabBarPro
                       : 'text-muted-foreground dark:text-muted-foreground',
                     isDragOver && 'bg-tab-active shadow-[inset_0_-2px_0_0_var(--border)]'
                   )}
-                  onClick={() => onGroupSelect(group.id)}
+                  onClick={(e) => {
+                    onGroupSelect(group.id)
+                    if (group.isMain && mainTabContextMenu) {
+                      const target = e.currentTarget
+                      const rect = target.getBoundingClientRect()
+                      target.dispatchEvent(new MouseEvent('contextmenu', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window,
+                        clientX: rect.left,
+                        clientY: rect.bottom,
+                      }))
+                    }
+                  }}
                   onDragOver={(e) => handleGroupDragOver(e, group.id)}
                   onDragLeave={handleGroupDragLeave}
                   onDrop={(e) => handleGroupDrop(e, group.id)}
