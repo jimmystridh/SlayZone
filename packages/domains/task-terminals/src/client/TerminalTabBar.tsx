@@ -6,7 +6,7 @@ import GeminiColor from '@lobehub/icons/es/Gemini/components/Color'
 import CopilotColor from '@lobehub/icons/es/Copilot/components/Color'
 import CursorMono from '@lobehub/icons/es/Cursor/components/Mono'
 import OpenCodeMono from '@lobehub/icons/es/OpenCode/components/Mono'
-import { cn, useShortcutDisplay, withShortcut, Tooltip, TooltipTrigger, TooltipContent } from '@slayzone/ui'
+import { cn, useShortcutDisplay, withShortcut, Tooltip, TooltipTrigger, TooltipContent, ContextMenu, ContextMenuTrigger, ContextMenuContent } from '@slayzone/ui'
 import type { TerminalTab, TerminalGroup, TabDisplayMode } from '../shared/types'
 import type { TerminalMode } from '@slayzone/terminal/shared'
 import { isChatSupported } from '../shared/chat-modes'
@@ -25,6 +25,13 @@ interface TerminalTabBarProps {
   onGroupRename: (tabId: string, label: string | null) => void
   terminalTitles?: Map<string, string>
   rightContent?: React.ReactNode
+  /** Replaces the main tab's static label with caller-rendered content (provider
+   *  dropdown trigger + flags popover trigger). Click events inside this slot
+   *  are stopped from bubbling so they don't toggle group selection. */
+  mainTabAccessories?: React.ReactNode
+  /** Right-click context menu items for the main tab group. ContextMenuItem
+   *  nodes rendered inside a Radix ContextMenuContent. */
+  mainTabContextMenu?: React.ReactNode
   onMainDisplayModeToggle?: (current: TabDisplayMode) => void
 }
 
@@ -59,6 +66,8 @@ export const TerminalTabBar = forwardRef<TerminalTabBarHandle, TerminalTabBarPro
   onGroupRename,
   terminalTitles,
   rightContent,
+  mainTabAccessories,
+  mainTabContextMenu,
   onMainDisplayModeToggle
 }: TerminalTabBarProps, ref: React.Ref<TerminalTabBarHandle>) {
   const terminalSplitShortcut = useShortcutDisplay('terminal-split')
@@ -208,82 +217,93 @@ export const TerminalTabBar = forwardRef<TerminalTabBarHandle, TerminalTabBarPro
                 </TooltipContent>
               </Tooltip>
             )}
-            <div
-              data-testid={`terminal-tab-${group.id}`}
-              data-tab-id={group.id}
-              data-tab-main={group.isMain ? 'true' : 'false'}
-              data-tab-active={isActive ? 'true' : 'false'}
-              className={cn(
-                'group flex items-center h-7 rounded-md cursor-pointer transition-all select-none shrink-0',
-                'bg-surface-2 dark:bg-surface-2/50 hover:bg-accent/80 dark:hover:bg-accent/50',
-                isActive
-                  ? 'bg-tab-active border border-border'
-                  : 'text-muted-foreground dark:text-muted-foreground',
-                isDragOver && 'bg-tab-active shadow-[inset_0_-2px_0_0_var(--border)]'
-              )}
-              onClick={() => onGroupSelect(group.id)}
-              onDragOver={(e) => handleGroupDragOver(e, group.id)}
-              onDragLeave={handleGroupDragLeave}
-              onDrop={(e) => handleGroupDrop(e, group.id)}
-            >
-              {group.tabs.map((tab, i) => {
-                const Icon = MODE_ICONS[tab.mode] ?? TerminalIcon
-                const isEditing = editingTabId === tab.id
-                const isDragging = draggingTabId === tab.id
-
-                return (
-                  <div key={tab.id} className={cn('flex items-center', isDragging && 'opacity-50')}>
-                    {i > 0 && (
-                      <div className="w-px h-3.5 bg-accent dark:bg-accent shrink-0" />
-                    )}
-                    <div
-                      draggable
-                      className="flex items-center gap-1.5 px-2.5 cursor-grab active:cursor-grabbing"
-                      onDragStart={(e) => handleDragStart(e, tab)}
-                      onDragEnd={handleDragEnd}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation()
-                        handleDoubleClick(tab)
-                      }}
-                    >
-                      <Icon className="size-3.5 shrink-0" />
-                      {isEditing ? (
-                        <input
-                          ref={inputRef}
-                          value={editValue}
-                          onChange={e => setEditValue(e.target.value)}
-                          onBlur={() => handleRenameSubmit(tab.id)}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') handleRenameSubmit(tab.id)
-                            if (e.key === 'Escape') setEditingTabId(null)
-                          }}
-                          className="w-20 bg-transparent border-none outline-none text-xs"
-                          onClick={e => e.stopPropagation()}
-                        />
-                      ) : (
-                        <span className="truncate text-sm">{displayLabels.get(tab.id)}</span>
-                      )}
-                      {!tab.isMain && (
-                        <button
-                          data-testid={`terminal-pane-close-${tab.id}`}
-                          className="h-4 w-4 rounded hover:bg-accent/50 dark:hover:bg-accent/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={e => {
+            {(() => {
+              const tabBody = (
+                <div
+                  data-testid={`terminal-tab-${group.id}`}
+                  data-tab-id={group.id}
+                  data-tab-main={group.isMain ? 'true' : 'false'}
+                  data-tab-active={isActive ? 'true' : 'false'}
+                  className={cn(
+                    'group flex items-center h-7 rounded-md cursor-pointer transition-all select-none shrink-0',
+                    'bg-surface-2 dark:bg-surface-2/50 hover:bg-accent/80 dark:hover:bg-accent/50',
+                    isActive
+                      ? 'bg-tab-active border border-border'
+                      : 'text-muted-foreground dark:text-muted-foreground',
+                    isDragOver && 'bg-tab-active shadow-[inset_0_-2px_0_0_var(--border)]'
+                  )}
+                  onClick={() => onGroupSelect(group.id)}
+                  onDragOver={(e) => handleGroupDragOver(e, group.id)}
+                  onDragLeave={handleGroupDragLeave}
+                  onDrop={(e) => handleGroupDrop(e, group.id)}
+                >
+                  {group.tabs.map((tab, i) => {
+                    const Icon = MODE_ICONS[tab.mode] ?? TerminalIcon
+                    const isEditing = editingTabId === tab.id
+                    const isDragging = draggingTabId === tab.id
+                    return (
+                      <div key={tab.id} className={cn('flex items-center', isDragging && 'opacity-50')}>
+                        {i > 0 && (
+                          <div className="w-px h-3.5 bg-accent dark:bg-accent shrink-0" />
+                        )}
+                        <div
+                          draggable
+                          className="flex items-center gap-1.5 px-2.5 cursor-grab active:cursor-grabbing"
+                          onDragStart={(e) => handleDragStart(e, tab)}
+                          onDragEnd={handleDragEnd}
+                          onDoubleClick={(e) => {
                             e.stopPropagation()
-                            if (isSinglePane) {
-                              onGroupClose(group.id)
-                            } else {
-                              onPaneClose(tab.id)
-                            }
+                            handleDoubleClick(tab)
                           }}
                         >
-                          <X className="size-3" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                          <Icon className="size-3.5 shrink-0" />
+                          {isEditing ? (
+                            <input
+                              ref={inputRef}
+                              value={editValue}
+                              onChange={e => setEditValue(e.target.value)}
+                              onBlur={() => handleRenameSubmit(tab.id)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') handleRenameSubmit(tab.id)
+                                if (e.key === 'Escape') setEditingTabId(null)
+                              }}
+                              className="w-20 bg-transparent border-none outline-none text-xs"
+                              onClick={e => e.stopPropagation()}
+                            />
+                          ) : tab.isMain && mainTabAccessories ? (
+                            mainTabAccessories
+                          ) : (
+                            <span className="truncate text-sm">{displayLabels.get(tab.id)}</span>
+                          )}
+                          {!tab.isMain && (
+                            <button
+                              data-testid={`terminal-pane-close-${tab.id}`}
+                              className="h-4 w-4 rounded hover:bg-accent/50 dark:hover:bg-accent/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={e => {
+                                e.stopPropagation()
+                                if (isSinglePane) {
+                                  onGroupClose(group.id)
+                                } else {
+                                  onPaneClose(tab.id)
+                                }
+                              }}
+                            >
+                              <X className="size-3" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+              return group.isMain && mainTabContextMenu ? (
+                <ContextMenu>
+                  <ContextMenuTrigger asChild>{tabBody}</ContextMenuTrigger>
+                  <ContextMenuContent>{mainTabContextMenu}</ContextMenuContent>
+                </ContextMenu>
+              ) : tabBody
+            })()}
             </Fragment>
           )
         })}

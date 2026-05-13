@@ -88,12 +88,20 @@ export async function switchTerminalMode(page: Page, mode: TerminalMode): Promis
   })
 
   const trigger = activeModeTrigger(page)
-  await trigger.click()
+  // terminal-mode-trigger is the wrapper holding the label + chevron button.
+  // Click the chevron specifically (clicking the wrapper would land on the
+  // label span which has no handler).
+  const dropdownBtn = trigger.locator('[data-testid="terminal-mode-dropdown"], button').first()
+  await dropdownBtn.click()
 
-  const optionByValue = page.locator(`[role="option"][data-value="${mode}"]`).first()
-  if (await optionByValue.isVisible({ timeout: 2_000 }).catch(() => false)) {
-    const selectedLabel = (await optionByValue.textContent())?.trim()
-    await optionByValue.click()
+  // Provider switcher uses DropdownMenu (role=menuitem). Older Select-based
+  // markup is still tolerated for backwards-compat with stale snapshots.
+  const itemByValue = page.locator(
+    `[role="menuitem"][data-value="${mode}"], [role="option"][data-value="${mode}"]`
+  ).first()
+  if (await itemByValue.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    const selectedLabel = (await itemByValue.textContent())?.trim().replace(/\s*✓\s*$/, '')
+    await itemByValue.click()
     if (selectedLabel) {
       await expect(trigger).toContainText(selectedLabel)
       return
@@ -101,8 +109,14 @@ export async function switchTerminalMode(page: Page, mode: TerminalMode): Promis
   }
 
   for (const label of labels[mode] ?? [mode]) {
+    const itemByRole = page.getByRole('menuitem', { name: new RegExp(`^${label}(\\s*✓)?$`) }).first()
+    if (await itemByRole.isVisible({ timeout: 800 }).catch(() => false)) {
+      await itemByRole.click()
+      await expect(trigger).toContainText(label)
+      return
+    }
     const option = page.getByRole('option', { name: label, exact: true })
-    if (await option.isVisible({ timeout: 800 }).catch(() => false)) {
+    if (await option.isVisible({ timeout: 400 }).catch(() => false)) {
       await option.click()
       await expect(trigger).toContainText(label)
       return

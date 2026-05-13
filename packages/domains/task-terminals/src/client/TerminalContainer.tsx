@@ -45,6 +45,8 @@ interface TerminalContainerProps {
   onOpenFile?: (filePath: string, options?: { position?: { line: number; col?: number } }) => void
   onMainReset?: () => void
   rightContent?: React.ReactNode
+  mainTabAccessories?: React.ReactNode
+  mainTabContextMenu?: React.ReactNode
   overlay?: React.ReactNode
 }
 
@@ -74,6 +76,8 @@ export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalCon
   onOpenFile,
   onMainReset,
   rightContent,
+  mainTabAccessories,
+  mainTabContextMenu,
   overlay,
 }: TerminalContainerProps, ref) {
   const {
@@ -390,6 +394,8 @@ export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalCon
           onPaneMove={movePane}
           onGroupRename={renameTab}
           rightContent={rightContent}
+          mainTabAccessories={mainTabAccessories}
+          mainTabContextMenu={mainTabContextMenu}
           onMainDisplayModeToggle={onMainDisplayModeToggleRequest}
         />
         <div className="flex-1 min-h-0 relative">

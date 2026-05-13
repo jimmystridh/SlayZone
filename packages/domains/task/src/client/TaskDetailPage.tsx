@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { MoreHorizontal, Archive, Trash2, AlertTriangle, Loader2, Terminal as TerminalIcon, Globe, Settings2, GitBranch, FileCode, ChevronRight, Plus, GripVertical, X, Info, CheckCircle2, XCircle, Stethoscope, Cpu, Circle, Repeat, LayoutTemplate, Paperclip } from 'lucide-react'
+import { MoreHorizontal, Archive, Trash2, AlertTriangle, Loader2, Terminal as TerminalIcon, Globe, Settings2, GitBranch, FileCode, ChevronDown, ChevronRight, Flag, Plus, GripVertical, X, Info, CheckCircle2, XCircle, Stethoscope, Cpu, Circle, Repeat, LayoutTemplate, Paperclip } from 'lucide-react'
 import { IconArrowsVertical, IconArrowsMaximize } from '@tabler/icons-react'
 import { DescriptionDialog } from './DescriptionDialog'
 import { ArtifactsPanel, type ArtifactsPanelHandle } from './ArtifactsPanel'
@@ -31,7 +31,6 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectSeparator,
   SelectTrigger,
   SelectValue
 } from '@slayzone/ui'
@@ -81,11 +80,29 @@ import { useSubTasks } from './useSubTasks'
 import { usePanelOwnership } from './usePanelOwnership'
 import { PanelOwnerStub } from './PanelOwnerStub'
 import { SquareArrowOutUpRight } from 'lucide-react'
+import ClaudeColor from '@lobehub/icons/es/Claude/components/Color'
+import CodexColor from '@lobehub/icons/es/Codex/components/Color'
+import GeminiColor from '@lobehub/icons/es/Gemini/components/Color'
+import CopilotColor from '@lobehub/icons/es/Copilot/components/Color'
+import CursorMono from '@lobehub/icons/es/Cursor/components/Mono'
+import OpenCodeMono from '@lobehub/icons/es/OpenCode/components/Mono'
 import { useTaskTagIds } from './useTaskTagIds'
 import { WebPanelView } from './WebPanelView'
 import { ResizeHandle } from './ResizeHandle'
 import { ProcessesPanel } from './ProcessesPanel'
 import { TaskSettingsPanel } from './TaskSettingsPanel'
+
+type IconComponent = React.ComponentType<{ className?: string }>
+const PROVIDER_ICONS: Partial<Record<TerminalMode, IconComponent>> = {
+  'claude-code': ClaudeColor as IconComponent,
+  codex: CodexColor as IconComponent,
+  'cursor-agent': CursorMono as IconComponent,
+  gemini: GeminiColor as IconComponent,
+  opencode: OpenCodeMono as IconComponent,
+  copilot: CopilotColor as IconComponent,
+  ccs: ClaudeColor as IconComponent,
+  terminal: TerminalIcon
+}
 
 function TaskOverviewRow({ sub, columns, statusOptions, onNavigate, onUpdate, onDelete, dragHandle, rowRef, rowStyle, isDragging }: {
   sub: Task
@@ -418,9 +435,8 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   // Track if the main terminal tab is active (for bottom bar visibility)
   const [isMainTabActive, setIsMainTabActive] = useState(true)
   const [flagsInputValue, setFlagsInputValue] = useState('')
-  const [isEditingFlags, setIsEditingFlags] = useState(false)
+  const [flagsPopoverOpen, setFlagsPopoverOpen] = useState(false)
   const [ccsProfiles, setCcsProfiles] = useState<string[]>([])
-  const flagsInputRef = useRef<HTMLInputElement>(null)
 
   // Panel visibility state. Initial value sourced from initialData (secondary lifts via parent).
   const defaultPanelVisibility: PanelVisibility = isSecondaryWindow
@@ -965,12 +981,6 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     setTerminalKey((k) => k + 1)
   }, [task])
 
-  // Sync Claude session name with task title
-  const handleSyncSessionName = useCallback(async () => {
-    if (!task || !terminalApiRef.current) return
-    await terminalApiRef.current.sendInput(`/rename ${task.title}\r`)
-  }, [task])
-
   // Inject task title into terminal (no execute)
   const handleInjectTitle = useCallback(async () => {
     if (!task || !terminalApiRef.current) return
@@ -1207,16 +1217,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   useEffect(() => {
     if (!task) return
     setFlagsInputValue(getProviderFlagsForMode(task))
-    setIsEditingFlags(false)
   }, [task, getProviderFlagsForMode])
-
-  useEffect(() => {
-    if (!isEditingFlags) return
-    requestAnimationFrame(() => {
-      flagsInputRef.current?.focus()
-      flagsInputRef.current?.select()
-    })
-  }, [isEditingFlags])
 
   // Handle panel visibility toggle
   const handlePanelToggle = useCallback(
@@ -2200,6 +2201,97 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                       onEditConfig={() => setLoopDialogOpen(true)}
                     />
                   ) : undefined}
+                  mainTabContextMenu={
+                    <>
+                      <ContextMenuSub>
+                        <ContextMenuSubTrigger>
+                          {(() => {
+                            const CurrentIcon = PROVIDER_ICONS[task.terminal_mode] ?? TerminalIcon
+                            const currentLabel = getModeLabel(modes.find((m) => m.id === task.terminal_mode) ?? { id: task.terminal_mode, label: task.terminal_mode })
+                            return (
+                              <span className="flex items-center gap-2">
+                                <CurrentIcon className="size-3.5" />
+                                {currentLabel}
+                              </span>
+                            )
+                          })()}
+                        </ContextMenuSubTrigger>
+                        <ContextMenuSubContent>
+                          <ContextMenuRadioGroup
+                            value={task.terminal_mode}
+                            onValueChange={(value) => {
+                              if (modes.some((m) => m.id === value)) handleModeChange(value as TerminalMode)
+                            }}
+                          >
+                            {(() => {
+                              const visibleModes = getVisibleModes(modes, task.terminal_mode)
+                              const { builtin, custom } = groupTerminalModes(visibleModes)
+                              const renderItem = (mode: typeof visibleModes[number]) => {
+                                const ModeIcon = PROVIDER_ICONS[mode.id as TerminalMode] ?? TerminalIcon
+                                return (
+                                  <ContextMenuRadioItem key={mode.id} value={mode.id}>
+                                    <span className="flex items-center gap-2">
+                                      <ModeIcon className="size-3.5" />
+                                      {getModeLabel(mode)}
+                                    </span>
+                                  </ContextMenuRadioItem>
+                                )
+                              }
+                              return (
+                                <>
+                                  {builtin.map(renderItem)}
+                                  {custom.length > 0 && builtin.length > 0 && <ContextMenuSeparator />}
+                                  {custom.map(renderItem)}
+                                </>
+                              )
+                            })()}
+                          </ContextMenuRadioGroup>
+                        </ContextMenuSubContent>
+                      </ContextMenuSub>
+                      <ContextMenuItem onSelect={() => setFlagsPopoverOpen(true)}>
+                        <span className="flex items-center gap-2">
+                          <Flag className="size-3.5" />
+                          Edit flags
+                        </span>
+                      </ContextMenuItem>
+                    </>
+                  }
+                  mainTabAccessories={
+                    <div data-testid="terminal-mode-trigger" className="flex items-center gap-1" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
+                      <span className="truncate text-sm">
+                        {getModeLabel(modes.find((m) => m.id === task.terminal_mode) ?? { id: task.terminal_mode, label: task.terminal_mode })}
+                      </span>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            data-testid="terminal-mode-dropdown"
+                            aria-label="Open provider menu"
+                            className="flex items-center justify-center size-5 rounded text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              const tab = (e.currentTarget as HTMLElement).closest('[data-tab-main="true"]')
+                              if (!tab) return
+                              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                              tab.dispatchEvent(new MouseEvent('contextmenu', {
+                                bubbles: true,
+                                cancelable: true,
+                                view: window,
+                                clientX: rect.left,
+                                clientY: rect.bottom,
+                              }))
+                            }}
+                          >
+                            <ChevronDown className="size-3" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Provider menu — click or right-click tab
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  }
                   rightContent={
                     <Tooltip open={!isMainTabActive && !task.is_temporary ? undefined : false}>
                       <TooltipTrigger asChild>
@@ -2207,156 +2299,6 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                           "flex items-center gap-2 transition-opacity",
                           !isMainTabActive && !task.is_temporary && "opacity-40 pointer-events-none"
                         )}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                          <Select
-                            value={task.terminal_mode}
-                            onValueChange={(value) => {
-                              if (modes.some(m => m.id === value)) handleModeChange(value as TerminalMode)
-                            }}
-                          >
-                            <SelectTrigger
-                              data-testid="terminal-mode-trigger"
-                              size="sm"
-                              className="min-w-32 !h-7 py-0 text-xs"
-                            >
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent position="popper" className="min-w-[var(--radix-select-trigger-width)] max-h-none">
-                              {(() => {
-                                const visibleModes = getVisibleModes(modes, task.terminal_mode)
-                                const { builtin, custom } = groupTerminalModes(visibleModes)
-                                return (
-                                  <>
-                                    {builtin.map(mode => (
-                                      <SelectItem key={mode.id} value={mode.id}>
-                                        {getModeLabel(mode)}
-                                      </SelectItem>
-                                    ))}
-                                    {custom.length > 0 && builtin.length > 0 && <SelectSeparator />}
-                                    {custom.map(mode => (
-                                      <SelectItem key={mode.id} value={mode.id}>
-                                        {getModeLabel(mode)}
-                                      </SelectItem>
-                                    ))}
-                                  </>
-                                )
-                              })()}
-                            </SelectContent>
-                          </Select>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">
-                              AI provider for this task. Each provider tracks its own conversation history separately.
-                            </TooltipContent>
-                          </Tooltip>
-
-                          {task.terminal_mode === 'ccs' && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Select
-                                  value={getProviderFlags(task.provider_config, 'ccs') || '__none__'}
-                                  onValueChange={async (val) => {
-                                    const profile = val === '__none__' ? '' : val
-                                    const updated = await window.api.db.updateTask({
-                                      id: task.id,
-                                      providerConfig: setProviderFlags(task.provider_config, 'ccs', profile)
-                                    })
-                                    if (updated) {
-                                      onTaskUpdated(updated)
-                                    }
-                                  }}
-                                >
-                                  <SelectTrigger className="h-7 text-xs w-28">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="__none__">Default</SelectItem>
-                                    {ccsProfiles.map((p) => (
-                                      <SelectItem key={p} value={p}>{p}</SelectItem>
-                                    ))}
-                                    {(() => {
-                                      const currentProfile = getProviderFlags(task.provider_config, 'ccs')
-                                      return currentProfile && !ccsProfiles.includes(currentProfile) ? (
-                                        <SelectItem value={currentProfile}>{currentProfile}</SelectItem>
-                                      ) : null
-                                    })()}
-                                  </SelectContent>
-                                </Select>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom">
-                                CCS profile
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-
-                          {task.terminal_mode !== 'ccs' && (
-                            isEditingFlags ? (
-                              <Input
-                                ref={flagsInputRef}
-                                value={flagsInputValue}
-                                onChange={(e) => setFlagsInputValue(e.target.value)}
-                                onBlur={() => {
-                                  setIsEditingFlags(false)
-                                  void handleFlagsSave(flagsInputValue)
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    setIsEditingFlags(false)
-                                    void handleFlagsSave(flagsInputValue)
-                                  } else if (e.key === 'Escape') {
-                                    e.preventDefault()
-                                    setFlagsInputValue(getProviderFlagsForMode(task))
-                                    setIsEditingFlags(false)
-                                  }
-                                }}
-                                placeholder="Flags"
-                                className="h-7 text-xs w-72"
-                              />
-                            ) : (
-                              flagsInputValue.trim().length === 0 ? (
-                                <div className="flex items-center gap-2">
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button variant="outline" size="sm" className="!h-7 !min-h-7 text-xs" onClick={() => setIsEditingFlags(true)}>
-                                        Set flags
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="bottom" className="max-w-64">
-                                      CLI flags passed to the provider on startup (e.g. --no-cache). Overrides the defaults set in settings.
-                                    </TooltipContent>
-                                  </Tooltip>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button variant="outline" size="sm" className="!h-7 !min-h-7 text-xs" onClick={() => { void handleSetDefaultFlags() }}>
-                                        Set default flags
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="bottom" className="max-w-64">
-                                      Copy the default flags from settings into this task.
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                              ) : (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div
-                                      className="h-7 w-fit max-w-72 px-2 flex items-center cursor-pointer rounded hover:bg-muted/50"
-                                      onClick={() => setIsEditingFlags(true)}
-                                    >
-                                      <div className="text-xs text-foreground dark:text-foreground truncate">
-                                        {flagsInputValue}
-                                      </div>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="bottom" className="max-w-64">
-                                    CLI flags for {task.terminal_mode}. Click to edit.
-                                  </TooltipContent>
-                                </Tooltip>
-                              )
-                            )
-                          )}
-
                           {loopModeAvailable && task.terminal_mode !== 'terminal' && mainTabDisplayMode !== 'chat' && (
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -2387,11 +2329,6 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                               </IconButton>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-60">
-                              {task.terminal_mode === 'claude-code' && (
-                                <DropdownMenuItem onClick={handleSyncSessionName}>
-                                  Sync name
-                                </DropdownMenuItem>
-                              )}
                               <DropdownMenuItem onClick={handleInjectTitle}>
                                 Inject title
                                 <span className="ml-auto text-xs text-muted-foreground">{terminalInjectTitleShortcut}</span>
@@ -2467,6 +2404,88 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                             }}
                             onCancel={() => setPendingChatDisable(false)}
                           />
+                          <Dialog open={flagsPopoverOpen} onOpenChange={setFlagsPopoverOpen}>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>
+                                  {task.terminal_mode === 'ccs' ? 'CCS profile' : `CLI flags for ${task.terminal_mode}`}
+                                </DialogTitle>
+                              </DialogHeader>
+                              {task.terminal_mode === 'ccs' ? (
+                                <div className="space-y-2">
+                                  <Select
+                                    value={getProviderFlags(task.provider_config, 'ccs') || '__none__'}
+                                    onValueChange={async (val) => {
+                                      const profile = val === '__none__' ? '' : val
+                                      const updated = await window.api.db.updateTask({
+                                        id: task.id,
+                                        providerConfig: setProviderFlags(task.provider_config, 'ccs', profile)
+                                      })
+                                      if (updated) onTaskUpdated(updated)
+                                    }}
+                                  >
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="__none__">Default</SelectItem>
+                                      {ccsProfiles.map((p) => (
+                                        <SelectItem key={p} value={p}>{p}</SelectItem>
+                                      ))}
+                                      {(() => {
+                                        const currentProfile = getProviderFlags(task.provider_config, 'ccs')
+                                        return currentProfile && !ccsProfiles.includes(currentProfile) ? (
+                                          <SelectItem value={currentProfile}>{currentProfile}</SelectItem>
+                                        ) : null
+                                      })()}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
+                                  <div className="text-xs text-muted-foreground">
+                                    Passed to the provider on startup (e.g. --no-cache). Overrides defaults in settings.
+                                  </div>
+                                  <Input
+                                    autoFocus
+                                    value={flagsInputValue}
+                                    onChange={(e) => setFlagsInputValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault()
+                                        void handleFlagsSave(flagsInputValue)
+                                        setFlagsPopoverOpen(false)
+                                      } else if (e.key === 'Escape') {
+                                        e.preventDefault()
+                                        setFlagsInputValue(getProviderFlagsForMode(task))
+                                        setFlagsPopoverOpen(false)
+                                      }
+                                    }}
+                                    placeholder="Flags"
+                                  />
+                                  <div className="flex gap-2 justify-end">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => { void handleSetDefaultFlags() }}
+                                      disabled={task.terminal_mode === 'terminal'}
+                                    >
+                                      Reset to default
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => {
+                                        void handleFlagsSave(flagsInputValue)
+                                        setFlagsPopoverOpen(false)
+                                      }}
+                                    >
+                                      Save
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </DialogContent>
+                          </Dialog>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>Switch to Main tab to use these controls</TooltipContent>
