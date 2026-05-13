@@ -3,6 +3,7 @@ import { BookOpen, ChevronDown, Clock, GitBranch, Home, Pin, Plus, Power, Search
 import * as Collapsible from '@radix-ui/react-collapsible'
 import { cn, TerminalProgressDot, PriorityIcon, getColumnStatusStyle, TASK_STATUS_ORDER, Tooltip, TooltipContent, TooltipTrigger, useShortcutDisplay } from '@slayzone/ui'
 import { type Task } from '@slayzone/task/shared'
+import { isTerminalStatus } from '@slayzone/projects/shared'
 import { useDialogStore, useTabStore } from '@slayzone/settings'
 import { useFilterStateMap, sortTasks, getViewConfig } from '@slayzone/tasks'
 import { useActiveSessionTaskIds } from '@/components/agent-status/useIdleTasks'
@@ -98,6 +99,7 @@ export function TreeView({
   const treeShowSubtasks = treeSubtaskMode !== 'hide'
   const treeIncludeAllSubtasks = treeSubtaskMode === 'all'
   const treeCrossOutDone = useTabStore((s) => s.treeCrossOutDone)
+  const treeHideClosed = useTabStore((s) => s.treeHideClosed)
   const treeShowWorktree = useTabStore((s) => s.treeShowWorktree)
   const treePinnedTaskIds = useTabStore((s) => s.treePinnedTaskIds)
   const pinnedSet = useMemo(() => new Set(treePinnedTaskIds), [treePinnedTaskIds])
@@ -110,13 +112,20 @@ export function TreeView({
   }, [tabs])
 
   const passesFilter = useCallback(
-    (t: Task) =>
-      !t.archived_at &&
-      (statusFilter.has(t.status) ||
+    (t: Task) => {
+      if (t.archived_at) return false
+      if (treeHideClosed) {
+        const cols = columnsByProjectId?.get(t.project_id) ?? null
+        if (isTerminalStatus(t.status, cols)) return false
+      }
+      return (
+        statusFilter.has(t.status) ||
         pinnedSet.has(t.id) ||
         t.is_temporary ||
-        openTabTaskIds.has(t.id)),
-    [statusFilter, pinnedSet, openTabTaskIds]
+        openTabTaskIds.has(t.id)
+      )
+    },
+    [statusFilter, pinnedSet, openTabTaskIds, treeHideClosed, columnsByProjectId]
   )
 
   // A task is "visible" if it passes the filter OR if any descendant in the same
@@ -145,6 +154,10 @@ export function TreeView({
         while (stack.length > 0) {
           const cur = stack.pop()!
           if (set.has(cur.id) || cur.archived_at) continue
+          if (treeHideClosed) {
+            const cols = columnsByProjectId?.get(cur.project_id) ?? null
+            if (isTerminalStatus(cur.status, cols)) continue
+          }
           set.add(cur.id)
           const kids = childrenOf.get(cur.id)
           if (kids) for (const k of kids) stack.push(k)
@@ -159,13 +172,17 @@ export function TreeView({
       if (!treeShowSubtasks && t.parent_id) continue
       let cur: Task | undefined = t
       while (cur && !set.has(cur.id)) {
+        if (treeHideClosed) {
+          const cols = columnsByProjectId?.get(cur.project_id) ?? null
+          if (isTerminalStatus(cur.status, cols)) break
+        }
         set.add(cur.id)
         if (!treeShowSubtasks) break
         cur = cur.parent_id ? taskById.get(cur.parent_id) : undefined
       }
     }
     return set
-  }, [tasks, passesFilter, treeShowSubtasks, treeIncludeAllSubtasks])
+  }, [tasks, passesFilter, treeShowSubtasks, treeIncludeAllSubtasks, treeHideClosed, columnsByProjectId])
 
   // Per-project filters (mirrors kanban). Live-updates when user changes
   // sortBy / groupBy in the kanban filter bar.

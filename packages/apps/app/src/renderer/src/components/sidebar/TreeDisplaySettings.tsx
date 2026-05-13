@@ -30,12 +30,14 @@ export function TreeDisplaySettings() {
   const treeShowPriority = useTabStore((s) => s.treeShowPriority)
   const treeSubtaskMode = useTabStore((s) => s.treeSubtaskMode)
   const treeCrossOutDone = useTabStore((s) => s.treeCrossOutDone)
+  const treeHideClosed = useTabStore((s) => s.treeHideClosed)
   const treeShowWorktree = useTabStore((s) => s.treeShowWorktree)
   const treeStatusFilter = useTabStore((s) => s.treeStatusFilter)
   const setTreeShowStatus = useTabStore((s) => s.setTreeShowStatus)
   const setTreeShowPriority = useTabStore((s) => s.setTreeShowPriority)
   const setTreeSubtaskMode = useTabStore((s) => s.setTreeSubtaskMode)
   const setTreeCrossOutDone = useTabStore((s) => s.setTreeCrossOutDone)
+  const setTreeHideClosed = useTabStore((s) => s.setTreeHideClosed)
   const setTreeShowWorktree = useTabStore((s) => s.setTreeShowWorktree)
   const setTreeStatusFilter = useTabStore((s) => s.setTreeStatusFilter)
 
@@ -94,6 +96,13 @@ export function TreeDisplaySettings() {
               hint="Strikethrough done tasks"
               checked={treeCrossOutDone}
               onChange={setTreeCrossOutDone}
+            />
+            <Row
+              id="tree-hide-closed"
+              label="Hide closed"
+              hint="Hide done and canceled tasks (roots and sub-tasks)"
+              checked={treeHideClosed}
+              onChange={setTreeHideClosed}
             />
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
