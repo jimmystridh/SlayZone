@@ -15,7 +15,7 @@ import { RichTextEditor, MarkdownSettingsPopover } from '@slayzone/editor'
 import type { EditorView as CMEditorView } from '@codemirror/view'
 import type { RenderMode, TaskArtifact, ArtifactFolder } from '@slayzone/task/shared'
 import { getEffectiveRenderMode, getExtensionFromTitle, RENDER_MODE_INFO, isBinaryRenderMode, canExportAsPdf, canExportAsPng, canExportAsHtml } from '@slayzone/task/shared'
-import { Markdown, MermaidBlock, CanvasMediaView } from '@slayzone/markdown/client'
+import { Markdown, MermaidBlock, MediaView } from '@slayzone/markdown/client'
 import { useAppearance, getThemeEditorColors, type EditorThemeColors } from '@slayzone/ui'
 import { useTheme } from '@slayzone/settings/client'
 import { SearchableCodeView, type SearchableCodeViewHandle } from '@slayzone/file-editor/client/SearchableCodeView'
@@ -74,7 +74,7 @@ function ImageViewer({ artifactId, contentVersion, getFilePath }: { artifactId: 
 
   return (
     <div className="flex-1 relative bg-muted/20 overflow-hidden">
-      <CanvasMediaView source={{ kind: 'image', src }} className="absolute inset-0" />
+      <MediaView source={{ kind: 'image', src }} className="absolute inset-0" />
     </div>
   )
 }
@@ -432,10 +432,9 @@ function ArtifactContentEditor({ artifact, viewMode, readContent, saveContent, g
 
 function ArtifactPreview({ renderMode, content, artifactId, contentVersion, getFilePath }: { renderMode: RenderMode; content: string; artifactId: string; contentVersion: number; getFilePath: (id: string) => Promise<string | null> }) {
   if (renderMode === 'html-preview') return <HtmlPreviewFrame artifactId={artifactId} contentVersion={contentVersion} getFilePath={getFilePath} />
-  // svg-preview + mermaid-preview share the same svg-pan-zoom-driven viewer.
   if (renderMode === 'svg-preview') return (
     <div className="flex-1 min-h-0 overflow-hidden bg-muted/30 relative">
-      <CanvasMediaView source={{ kind: 'svg', svg: content }} className="absolute inset-0" />
+      <MediaView source={{ kind: 'svg', svg: content }} className="absolute inset-0" />
     </div>
   )
   if (renderMode === 'mermaid-preview' && content.trim()) return <MermaidBlock code={content} fill />

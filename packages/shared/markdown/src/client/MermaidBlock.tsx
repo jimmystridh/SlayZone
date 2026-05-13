@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useSyncExternalStore, useMemo } from 'react'
-import { CanvasMediaView } from './CanvasMediaView'
+import { MediaView } from './MediaView'
 
 /**
  * Reads `dark`/`light` from the `<html>` element and re-subscribes when the
@@ -131,7 +131,7 @@ function FillMermaid({ svg }: { svg: string }) {
   const source = useMemo(() => ({ kind: 'svg' as const, svg }), [svg])
   return (
     <div className="flex-1 min-h-0 bg-muted/30 relative overflow-hidden">
-      <CanvasMediaView source={source} className="absolute inset-0" />
+      <MediaView source={source} className="absolute inset-0" />
     </div>
   )
 }

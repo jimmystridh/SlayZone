@@ -4,8 +4,8 @@ Shared markdown helpers consumed by `file-editor`, `worktrees`, and `task` domai
 
 ## Exports
 
-- `MermaidBlock` — pure-React component that lazy-loads mermaid, caches rendered SVGs (FIFO 50, theme-keyed). With `fill` prop, delegates to `CanvasMediaView`.
-- `CanvasMediaView` — unified canvas-based viewer for raster images and SVG strings. Rasterizes SVG once at oversample (2×) for crispness, blits with `ctx.drawImage` + `setTransform`. Pan/zoom via pointer/wheel/pinch. Fit + Full buttons.
+- `MermaidBlock` — pure-React component that lazy-loads mermaid, caches rendered SVGs (FIFO 50, theme-keyed). With `fill` prop, delegates to `MediaView`.
+- `MediaView` — viewer for raster images and SVG strings, dispatched by `source.kind`. SVG renders inline (browser rasterizes vector natively; sidesteps Chromium's `<foreignObject>` block on `<img>`-loaded SVG that breaks mermaid). Raster goes through a canvas `drawImage` + `setTransform` pipeline. Pan/zoom via pointer/wheel/pinch. Fit + Full buttons.
 - `mermaidCodeOverride` — drop-in `code` component override for `react-markdown`. Renders mermaid for `language-mermaid` fences and auto-detects bare fences whose body matches mermaid keywords.
 - `MERMAID_KEYWORDS` — exported regex used by `mermaidCodeOverride` for auto-detection.
 
