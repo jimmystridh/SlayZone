@@ -3,6 +3,7 @@ import type { CliProvider, McpTarget, McpServerConfig, ProviderPathMapping } fro
 /** Maps terminal mode IDs to their corresponding Context Manager provider kind */
 export const TERMINAL_MODE_TO_PROVIDER: Partial<Record<string, CliProvider>> = {
   'claude-code': 'claude',
+  'claude-chat': 'claude',
   'codex': 'codex',
   'gemini': 'gemini',
   'cursor-agent': 'cursor',

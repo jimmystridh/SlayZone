@@ -1,14 +1,7 @@
 import type { IpcMain } from 'electron'
 import type { Database } from 'better-sqlite3'
-import { supportsChatMode } from '@slayzone/terminal/main'
 import type { PtyInfo } from '@slayzone/terminal/shared'
-import type { TabDisplayMode, TerminalTab, CreateTerminalTabInput, UpdateTerminalTabInput } from '../shared/types'
-
-function resolveDisplayMode(db: Database, mode: string): TabDisplayMode {
-  const row = db.prepare('SELECT value FROM settings WHERE key = ?')
-    .get('default_tab_display_mode') as { value: string } | undefined
-  return row?.value === 'chat' && supportsChatMode(mode) ? 'chat' : 'xterm'
-}
+import type { TerminalTab, CreateTerminalTabInput, UpdateTerminalTabInput } from '../shared/types'
 
 interface TabRow {
   id: string
@@ -16,7 +9,6 @@ interface TabRow {
   group_id: string | null
   label: string | null
   mode: string
-  display_mode: string | null
   is_main: number
   position: number
   created_at: string
@@ -30,7 +22,6 @@ function rowToTab(row: TabRow): TerminalTab {
     groupId: row.group_id || row.id,
     label: row.label,
     mode: row.mode as TerminalTab['mode'],
-    displayMode: (row.display_mode === 'chat' ? 'chat' : 'xterm') as TabDisplayMode,
     isMain: row.is_main === 1,
     position: row.position,
     createdAt: row.created_at,
@@ -66,13 +57,12 @@ export function createTabRow(db: Database, input: CreateTerminalTabInput): Termi
   const position = maxPos.max_pos + 1
 
   const label = input.label ?? null
-  const displayMode = resolveDisplayMode(db, mode)
 
   const now = new Date().toISOString()
   db.prepare(`
-    INSERT INTO terminal_tabs (id, task_id, label, mode, display_mode, is_main, position, group_id, created_at)
-    VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)
-  `).run(id, input.taskId, label, mode, displayMode, position, id, now)
+    INSERT INTO terminal_tabs (id, task_id, label, mode, is_main, position, group_id, created_at)
+    VALUES (?, ?, ?, ?, 0, ?, ?, ?)
+  `).run(id, input.taskId, label, mode, position, id, now)
 
   return {
     id,
@@ -80,7 +70,6 @@ export function createTabRow(db: Database, input: CreateTerminalTabInput): Termi
     groupId: id,
     label,
     mode: mode as TerminalTab['mode'],
-    displayMode,
     isMain: false,
     position,
     createdAt: now,
@@ -123,17 +112,15 @@ export function updateTabRow(db: Database, input: UpdateTerminalTabInput): Termi
   if (!existing) return null
 
   const mode = input.mode ?? existing.mode
-  const displayMode = input.displayMode ?? (existing.display_mode === 'chat' ? 'chat' : 'xterm')
   const label = input.label !== undefined ? input.label : existing.label
 
   db.prepare(`
     UPDATE terminal_tabs
     SET label = ?,
         mode = ?,
-        display_mode = ?,
         position = COALESCE(?, position)
     WHERE id = ?
-  `).run(label, mode, displayMode, input.position, input.id)
+  `).run(label, mode, input.position, input.id)
 
   const updated = db.prepare('SELECT * FROM terminal_tabs WHERE id = ?').get(input.id) as TabRow
   return rowToTab(updated)
@@ -154,12 +141,11 @@ export function splitTabRow(db: Database, tabId: string): TerminalTab | null {
   ).get(target.task_id, groupId) as { max_pos: number }
   const position = maxPos.max_pos + 1
 
-  const displayMode = resolveDisplayMode(db, 'terminal')
   const now = new Date().toISOString()
   db.prepare(`
-    INSERT INTO terminal_tabs (id, task_id, label, mode, display_mode, is_main, position, group_id, created_at)
-    VALUES (?, ?, NULL, 'terminal', ?, 0, ?, ?, ?)
-  `).run(id, target.task_id, displayMode, position, groupId, now)
+    INSERT INTO terminal_tabs (id, task_id, label, mode, is_main, position, group_id, created_at)
+    VALUES (?, ?, NULL, 'terminal', 0, ?, ?, ?)
+  `).run(id, target.task_id, position, groupId, now)
 
   return {
     id,
@@ -167,7 +153,6 @@ export function splitTabRow(db: Database, tabId: string): TerminalTab | null {
     groupId,
     label: null,
     mode: 'terminal',
-    displayMode,
     isMain: false,
     position,
     createdAt: now,
@@ -242,12 +227,11 @@ export function registerTerminalTabsHandlers(ipcMain: IpcMain, db: Database): vo
     }
 
     // Create main tab - use taskId as id (unique since one main per task)
-    const displayMode = resolveDisplayMode(db, mode)
     const now = new Date().toISOString()
     db.prepare(`
-      INSERT INTO terminal_tabs (id, task_id, label, mode, display_mode, is_main, position, group_id, created_at)
-      VALUES (?, ?, NULL, ?, ?, 1, 0, ?, ?)
-    `).run(taskId, taskId, mode, displayMode, taskId, now)
+      INSERT INTO terminal_tabs (id, task_id, label, mode, is_main, position, group_id, created_at)
+      VALUES (?, ?, NULL, ?, 1, 0, ?, ?)
+    `).run(taskId, taskId, mode, taskId, now)
 
     return {
       id: taskId,
@@ -255,7 +239,6 @@ export function registerTerminalTabsHandlers(ipcMain: IpcMain, db: Database): vo
       groupId: taskId,
       label: null,
       mode: mode as TerminalTab['mode'],
-      displayMode,
       isMain: true,
       position: 0,
       createdAt: now,

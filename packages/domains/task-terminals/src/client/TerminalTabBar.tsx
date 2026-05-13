@@ -1,15 +1,14 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle, Fragment } from 'react'
-import { Plus, X, Columns2, Terminal as TerminalIcon, MessageSquare, TerminalSquare } from 'lucide-react'
+import { Plus, X, Columns2, Terminal as TerminalIcon } from 'lucide-react'
 import ClaudeColor from '@lobehub/icons/es/Claude/components/Color'
 import CodexColor from '@lobehub/icons/es/Codex/components/Color'
 import GeminiColor from '@lobehub/icons/es/Gemini/components/Color'
 import CopilotColor from '@lobehub/icons/es/Copilot/components/Color'
 import CursorMono from '@lobehub/icons/es/Cursor/components/Mono'
 import OpenCodeMono from '@lobehub/icons/es/OpenCode/components/Mono'
-import { cn, useShortcutDisplay, withShortcut, Tooltip, TooltipTrigger, TooltipContent, ContextMenu, ContextMenuTrigger, ContextMenuContent } from '@slayzone/ui'
-import type { TerminalTab, TerminalGroup, TabDisplayMode } from '../shared/types'
+import { cn, useShortcutDisplay, withShortcut, ContextMenu, ContextMenuTrigger, ContextMenuContent } from '@slayzone/ui'
+import type { TerminalTab, TerminalGroup } from '../shared/types'
 import type { TerminalMode } from '@slayzone/terminal/shared'
-import { isChatSupported } from '../shared/chat-modes'
 
 type IconComponent = React.ComponentType<{ className?: string }>
 
@@ -32,11 +31,11 @@ interface TerminalTabBarProps {
   /** Right-click context menu items for the main tab group. ContextMenuItem
    *  nodes rendered inside a Radix ContextMenuContent. */
   mainTabContextMenu?: React.ReactNode
-  onMainDisplayModeToggle?: (current: TabDisplayMode) => void
 }
 
 export const MODE_ICONS: Partial<Record<TerminalMode, IconComponent>> = {
   'claude-code': ClaudeColor as IconComponent,
+  'claude-chat': ClaudeColor as IconComponent,
   'codex': CodexColor as IconComponent,
   'cursor-agent': CursorMono as IconComponent,
   'gemini': GeminiColor as IconComponent,
@@ -67,8 +66,7 @@ export const TerminalTabBar = forwardRef<TerminalTabBarHandle, TerminalTabBarPro
   terminalTitles,
   rightContent,
   mainTabAccessories,
-  mainTabContextMenu,
-  onMainDisplayModeToggle
+  mainTabContextMenu
 }: TerminalTabBarProps, ref: React.Ref<TerminalTabBarHandle>) {
   const terminalSplitShortcut = useShortcutDisplay('terminal-split')
   const [editingTabId, setEditingTabId] = useState<string | null>(null)
@@ -183,40 +181,9 @@ export const TerminalTabBar = forwardRef<TerminalTabBarHandle, TerminalTabBarPro
           const isActive = group.id === activeGroupId
           const isSinglePane = group.tabs.length === 1
           const isDragOver = dragOverGroupId === group.id
-          const mainTab = group.isMain ? group.tabs.find(t => t.isMain) : undefined
-          const showDisplayModeToggle =
-            !!mainTab && isChatSupported(mainTab.mode) && !!onMainDisplayModeToggle
-          const displayMode: TabDisplayMode = mainTab?.displayMode ?? 'xterm'
-          const DisplayModeIcon = displayMode === 'chat' ? TerminalSquare : MessageSquare
 
           return (
             <Fragment key={group.id}>
-            {showDisplayModeToggle && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    data-testid="main-tab-display-mode-toggle"
-                    aria-label={displayMode === 'chat' ? 'Switch to terminal view' : 'Switch to chat view (beta)'}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onMainDisplayModeToggle?.(displayMode)
-                    }}
-                    className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-foreground transition-colors shrink-0"
-                  >
-                    <DisplayModeIcon className="size-3.5" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="flex items-center gap-1.5">
-                  <span>{displayMode === 'chat' ? 'Switch to terminal' : 'Switch to chat'}</span>
-                  {displayMode !== 'chat' && (
-                    <span className="text-[9px] uppercase tracking-wide leading-none px-1 py-0.5 rounded-full bg-amber-400/20 text-amber-300 dark:bg-amber-500/20 dark:text-amber-700">
-                      beta
-                    </span>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            )}
             {(() => {
               const tabBody = (
                 <div

@@ -3,7 +3,7 @@ import { ChevronRight, Copy, HelpCircle, Plus, RefreshCw, Trash2, CheckCircle2, 
 import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, IconButton, Input, Label, Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue, Switch, Tooltip, TooltipTrigger, TooltipContent, toast } from '@slayzone/ui'
 import { getVisibleModes, getModeLabel, groupTerminalModes } from '@slayzone/terminal'
 import type { TerminalMode, TerminalModeInfo, CreateTerminalModeInput, UpdateTerminalModeInput, UsageProviderConfig, UsageWindow } from '@slayzone/terminal/shared'
-import { DETECTION_ENGINES } from '@slayzone/terminal/shared'
+import { DETECTION_ENGINES, isChatSupported } from '@slayzone/terminal/shared'
 import { SettingsTabIntro } from './SettingsTabIntro'
 import { PanelBreadcrumb } from './PanelBreadcrumb'
 
@@ -836,129 +836,91 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
               </div>
 
               <div className="space-y-4">
-                <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                  <Label className={`text-sm ${mode.isBuiltin ? 'text-muted-foreground' : ''}`}>Label</Label>
-                  {mode.isBuiltin ? (
-                    <Input
-                      value={mode.label}
-                      readOnly
-                      disabled
-                      className="bg-muted/50 cursor-not-allowed opacity-70"
-                    />
-                  ) : (
-                    <DebouncedInput
-                      value={mode.label}
-                      onValueCommit={(v) => updateMode(mode.id, { label: v })}
-                    />
-                  )}
-                </div>
-                <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
-                  <div className="space-y-0.5 pt-2">
-                    <Label className={`text-sm ${mode.isBuiltin ? 'text-muted-foreground' : ''}`}>Initial Command</Label>
-                    {!mode.isBuiltin && <p className="text-[10px] text-muted-foreground">Run on first launch</p>}
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      {mode.isBuiltin ? (
-                        <Input
-                          className="font-mono text-xs flex-1 bg-muted/50 cursor-not-allowed opacity-70"
-                          value={mode.initialCommand ?? ''}
-                          readOnly
-                          disabled
-                        />
-                      ) : (
-                        <DebouncedInput
-                          className="font-mono text-xs flex-1"
-                          value={mode.initialCommand ?? ''}
-                          onValueCommit={(v) => {
-                            updateMode(mode.id, { initialCommand: v })
-                            if (testResults[mode.id]) setTestResults(prev => { const n = { ...prev }; delete n[mode.id]; return n })
-                          }}
-                        />
-                      )}
-                      {!mode.isBuiltin && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-9"
-                          aria-label="Test command"
-                          disabled={testingId === mode.id || !mode.initialCommand}
-                          onClick={() => handleTest(mode.id, (mode.initialCommand ?? '').split(/\s+/)[0] || '')}
-                        >
-                          {testingId === mode.id ? (
-                            <RefreshCw className="size-3.5 mr-1.5 animate-spin" />
-                          ) : testResults[mode.id]?.ok ? (
-                            <CheckCircle2 className="size-3.5 mr-1.5 text-green-500" />
-                          ) : testResults[mode.id]?.error ? (
-                            <AlertCircle className="size-3.5 mr-1.5 text-destructive" />
-                          ) : (
-                            <RefreshCw className="size-3.5 mr-1.5" />
-                          )}
-                          Test
-                        </Button>
-                      )}
+                {!mode.isBuiltin && (
+                  <>
+                    <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
+                      <Label className="text-sm">Label</Label>
+                      <DebouncedInput
+                        value={mode.label}
+                        onValueCommit={(v) => updateMode(mode.id, { label: v })}
+                      />
                     </div>
-                    {!mode.isBuiltin && (
-                      <p className="text-[10px] text-muted-foreground">
-                        Use <code className="px-1 bg-muted rounded">{'{flags}'}</code> for task flags and <code className="px-1 bg-muted rounded">{'{id}'}</code> for session ID.
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
-                  <div className="space-y-0.5 pt-2">
-                    <Label className={`text-sm ${mode.isBuiltin ? 'text-muted-foreground' : ''}`}>Resume Command</Label>
-                    {!mode.isBuiltin && <p className="text-[10px] text-muted-foreground">Run when session exists</p>}
-                  </div>
-                  <div className="space-y-1">
-                    {mode.isBuiltin ? (
-                      <Input
-                        className="font-mono text-xs bg-muted/50 cursor-not-allowed opacity-70"
-                        value={mode.resumeCommand ?? ''}
-                        readOnly
-                        disabled
-                      />
-                    ) : (
-                      <DebouncedInput
-                        className="font-mono text-xs"
-                        placeholder="e.g. my-cli {flags} --resume {id}"
-                        value={mode.resumeCommand ?? ''}
-                        onValueCommit={(v) => updateMode(mode.id, { resumeCommand: v || null })}
-                      />
-                    )}
-                    {!mode.isBuiltin && (
-                      <p className="text-[10px] text-muted-foreground">
-                        Optional. Same variables as initial command.
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
-                  <div className="space-y-0.5 pt-2">
-                    <Label className={`text-sm ${mode.isBuiltin ? 'text-muted-foreground' : ''}`}>Headless Command</Label>
-                    {!mode.isBuiltin && <p className="text-[10px] text-muted-foreground">Run for one-shot AI actions</p>}
-                  </div>
-                  <div className="space-y-1">
-                    {mode.isBuiltin ? (
-                      <Input
-                        className="font-mono text-xs bg-muted/50 cursor-not-allowed opacity-70"
-                        value={mode.headlessCommand ?? ''}
-                        readOnly
-                        disabled
-                      />
-                    ) : (
-                      <DebouncedInput
-                        className="font-mono text-xs"
-                        placeholder="e.g. my-cli -p {prompt} {flags}"
-                        value={mode.headlessCommand ?? ''}
-                        onValueCommit={(v) => updateMode(mode.id, { headlessCommand: v || null })}
-                      />
-                    )}
-                    <p className="text-[10px] text-muted-foreground">
-                      Optional. Use <code className="px-1 bg-muted rounded">{'{prompt}'}</code> (auto-quoted) and <code className="px-1 bg-muted rounded">{'{flags}'}</code>. Required to use this provider in automation AI actions.
-                    </p>
-                  </div>
-                </div>
+                    <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
+                      <div className="space-y-0.5 pt-2">
+                        <Label className="text-sm">Initial Command</Label>
+                        <p className="text-[10px] text-muted-foreground">Run on first launch</p>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <DebouncedInput
+                            className="font-mono text-xs flex-1"
+                            value={mode.initialCommand ?? ''}
+                            onValueCommit={(v) => {
+                              updateMode(mode.id, { initialCommand: v })
+                              if (testResults[mode.id]) setTestResults(prev => { const n = { ...prev }; delete n[mode.id]; return n })
+                            }}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9"
+                            aria-label="Test command"
+                            disabled={testingId === mode.id || !mode.initialCommand}
+                            onClick={() => handleTest(mode.id, (mode.initialCommand ?? '').split(/\s+/)[0] || '')}
+                          >
+                            {testingId === mode.id ? (
+                              <RefreshCw className="size-3.5 mr-1.5 animate-spin" />
+                            ) : testResults[mode.id]?.ok ? (
+                              <CheckCircle2 className="size-3.5 mr-1.5 text-green-500" />
+                            ) : testResults[mode.id]?.error ? (
+                              <AlertCircle className="size-3.5 mr-1.5 text-destructive" />
+                            ) : (
+                              <RefreshCw className="size-3.5 mr-1.5" />
+                            )}
+                            Test
+                          </Button>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                          Use <code className="px-1 bg-muted rounded">{'{flags}'}</code> for task flags and <code className="px-1 bg-muted rounded">{'{id}'}</code> for session ID.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
+                      <div className="space-y-0.5 pt-2">
+                        <Label className="text-sm">Resume Command</Label>
+                        <p className="text-[10px] text-muted-foreground">Run when session exists</p>
+                      </div>
+                      <div className="space-y-1">
+                        <DebouncedInput
+                          className="font-mono text-xs"
+                          placeholder="e.g. my-cli {flags} --resume {id}"
+                          value={mode.resumeCommand ?? ''}
+                          onValueCommit={(v) => updateMode(mode.id, { resumeCommand: v || null })}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                          Optional. Same variables as initial command.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
+                      <div className="space-y-0.5 pt-2">
+                        <Label className="text-sm">Headless Command</Label>
+                        <p className="text-[10px] text-muted-foreground">Run for one-shot AI actions</p>
+                      </div>
+                      <div className="space-y-1">
+                        <DebouncedInput
+                          className="font-mono text-xs"
+                          placeholder="e.g. my-cli -p {prompt} {flags}"
+                          value={mode.headlessCommand ?? ''}
+                          onValueCommit={(v) => updateMode(mode.id, { headlessCommand: v || null })}
+                        />
+                        <p className="text-[10px] text-muted-foreground">
+                          Optional. Use <code className="px-1 bg-muted rounded">{'{prompt}'}</code> (auto-quoted) and <code className="px-1 bg-muted rounded">{'{flags}'}</code>. Required to use this provider in automation AI actions.
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
                   <Label className="text-sm">Default Flags</Label>
                   <div className="space-y-1">
@@ -970,6 +932,11 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
                     <p className="text-[10px] text-muted-foreground">
                       Default value for <code className="px-1 bg-muted rounded">{'{flags}'}</code>. Editable per task.
                     </p>
+                    {isChatSupported(mode.id) && (
+                      <p className="text-[10px] text-muted-foreground">
+                        Note: chat sessions ignore this — applies only to automation runs (headless command). Chat permissions are controlled via the per-session permission mode.
+                      </p>
+                    )}
                   </div>
                 </div>
 

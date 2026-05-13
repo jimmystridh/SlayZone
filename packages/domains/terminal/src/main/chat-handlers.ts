@@ -241,10 +241,12 @@ export function backfillChatModes(db: Database): { scanned: number; updated: num
       }
     }
     let dirty = false
-    // Patch existing entries.
+    // Patch existing entries — only chat-capable modes. Non-chat modes (PTY-only
+    // like 'claude-code' after the chat split) don't carry chatMode semantics.
     for (const mode of Object.keys(cfg)) {
       const entry = cfg[mode]
       if (!entry || entry.chatMode != null) continue
+      if (!supportsChatMode(mode)) continue
       cfg[mode] = { ...entry, chatMode: DEFAULT_CHAT_MODE_LEGACY }
       dirty = true
     }

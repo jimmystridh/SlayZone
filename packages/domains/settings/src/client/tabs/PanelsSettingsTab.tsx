@@ -10,7 +10,6 @@ import { DEFAULT_PANEL_CONFIG, DEFAULT_GIT_TAB_ORDER, GIT_TAB_LABELS, isGitTabEn
 import { getVisibleModes, getModeLabel, groupTerminalModes } from '@slayzone/terminal'
 import { SettingsTabIntro } from './SettingsTabIntro'
 import { PanelBreadcrumb } from './PanelBreadcrumb'
-import type { DefaultDisplayMode } from '../UserSettingsDialog'
 
 interface PanelsSettingsTabProps {
   activeTab: string
@@ -18,9 +17,6 @@ interface PanelsSettingsTabProps {
   modes: TerminalModeInfo[]
   defaultTerminalMode: TerminalMode
   onDefaultTerminalModeChange: (mode: TerminalMode) => void
-  defaultTabDisplayMode: DefaultDisplayMode
-  onDefaultTabDisplayModeChange: (mode: DefaultDisplayMode) => void
-  providerSupportsChat: boolean
 }
 
 interface PanelRowDescriptor {
@@ -197,7 +193,7 @@ function SortablePanelRow({ id, descriptor }: { id: string; descriptor: PanelRow
   )
 }
 
-export function PanelsSettingsTab({ activeTab, navigateTo, modes, defaultTerminalMode, onDefaultTerminalModeChange, defaultTabDisplayMode, onDefaultTabDisplayModeChange, providerSupportsChat }: PanelsSettingsTabProps) {
+export function PanelsSettingsTab({ activeTab, navigateTo, modes, defaultTerminalMode, onDefaultTerminalModeChange }: PanelsSettingsTabProps) {
   const [panelConfig, setPanelConfig] = useState<PanelConfig>(DEFAULT_PANEL_CONFIG)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -553,19 +549,6 @@ export function PanelsSettingsTab({ activeTab, navigateTo, modes, defaultTermina
                 })()}
               </SelectContent>
             </Select>
-          </div>
-          <div className="space-y-3">
-            <Label className="text-sm font-medium">Default mode</Label>
-            <Select value={defaultTabDisplayMode} onValueChange={(v) => onDefaultTabDisplayModeChange(v as DefaultDisplayMode)}>
-              <SelectTrigger className="max-w-sm"><SelectValue /></SelectTrigger>
-              <SelectContent position="popper" align="start" className="min-w-[var(--radix-select-trigger-width)]">
-                <SelectItem value="xterm">Terminal</SelectItem>
-                <SelectItem value="chat" disabled={!providerSupportsChat}>Chat</SelectItem>
-              </SelectContent>
-            </Select>
-            {!providerSupportsChat && (
-              <p className="text-xs text-muted-foreground">Chat available only for chat-capable providers (e.g. Claude Code).</p>
-            )}
           </div>
           <div className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-3">
             <span className="text-sm text-muted-foreground">Font family</span>

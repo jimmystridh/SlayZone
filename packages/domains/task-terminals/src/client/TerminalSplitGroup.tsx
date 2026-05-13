@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Terminal, type TerminalHandle } from '@slayzone/terminal/client/LazyTerminal'
-import type { TabDisplayMode, TerminalTab } from '../shared/types'
+import type { TerminalTab } from '../shared/types'
+import { isChatSupported } from '../shared/chat-modes'
 import { TerminalContextMenu } from './TerminalContextMenu'
 import { ChatPanel, type ChatPanelHandle } from './chat/ChatPanel'
 import { TerminalStarter } from './TerminalStarter'
@@ -33,7 +34,6 @@ interface PaneProps {
   onClose?: (() => void) | null
   onRename?: (() => void) | null
   onResetSession?: (() => void) | null
-  onSetDisplayMode?: (target: TabDisplayMode) => void
 }
 
 export interface TerminalSplitGroupHandle {
@@ -57,8 +57,7 @@ export const TerminalSplitGroup = forwardRef<TerminalSplitGroupHandle, TerminalS
   const paneRefs = useRef<Record<string, React.RefObject<TerminalHandle | null>>>({})
   const chatRefs = useRef<Record<string, React.RefObject<ChatPanelHandle | null>>>({})
 
-  const isChatPane = (pane: PaneProps): boolean =>
-    pane.tab.displayMode === 'chat' && pane.tab.mode === 'claude-code'
+  const isChatPane = (pane: PaneProps): boolean => isChatSupported(pane.tab.mode)
 
   // Ensure a ref exists for each pane
   for (const pane of panes) {
@@ -152,7 +151,6 @@ export const TerminalSplitGroup = forwardRef<TerminalSplitGroupHandle, TerminalS
           isActive={isActive}
           providerFlagsOverride={pane.providerFlags ?? null}
           permissionNotice={pane.permissionNotice ?? null}
-          onSetDisplayMode={pane.onSetDisplayMode}
           onOpenUrl={onOpenUrl}
           onOpenFile={onOpenFile}
           wasSpawned={pane.tab.wasSpawned}
@@ -207,7 +205,6 @@ export const TerminalSplitGroup = forwardRef<TerminalSplitGroupHandle, TerminalS
         onClose={pane.onClose ?? null}
         onRename={pane.onRename ?? null}
         onResetSession={pane.onResetSession ?? null}
-        onSetDisplayMode={pane.onSetDisplayMode}
       >
         <div className="h-full">{terminal}</div>
       </TerminalContextMenu>

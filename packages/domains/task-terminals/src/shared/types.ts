@@ -1,14 +1,11 @@
 import type { TerminalMode } from '@slayzone/terminal/shared'
 
-export type TabDisplayMode = 'xterm' | 'chat'
-
 export interface TerminalTab {
   id: string           // UUID or "main"
   taskId: string
   groupId: string      // tabs with same groupId render side-by-side
   label: string | null
   mode: TerminalMode
-  displayMode: TabDisplayMode
   isMain: boolean
   position: number
   createdAt: string
@@ -36,6 +33,5 @@ export interface UpdateTerminalTabInput {
   id: string
   label?: string | null
   mode?: TerminalMode
-  displayMode?: TabDisplayMode
   position?: number
 }

@@ -40,8 +40,6 @@ import {
   Switch,
   useAppearance,
 } from '@slayzone/ui'
-import { ConfirmDisplayModeDialog } from '../ConfirmDisplayModeDialog'
-import type { TabDisplayMode } from '../../shared/types'
 import { useChatSession, BackgroundJobsBanner, PulseGrid, deriveLoadingLabel, isAwaitingUserQuestion, type TimelineItem } from '@slayzone/terminal/client'
 import { useImagePasteDrop, useArtifactUpload, type ArtifactRef } from '@slayzone/editor'
 import { AutocompleteMenu } from './autocomplete/AutocompleteMenu'
@@ -67,7 +65,6 @@ export interface ChatPanelProps {
   isActive?: boolean
   providerFlagsOverride?: string | null
   permissionNotice?: string | null
-  onSetDisplayMode?: (target: TabDisplayMode) => void
   /** Cmd+Click on a URL → in-app slay browser. Cmd+Shift+Click always external. */
   onOpenUrl?: (url: string) => void
   /** Cmd+Click on a file:line:col reference → editor pane. */
@@ -89,7 +86,7 @@ const SUGGESTED_PROMPTS = [
 ]
 
 export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(function ChatPanel(props, ref) {
-  const { tabId, taskId, mode, cwd, isActive = true, providerFlagsOverride, permissionNotice: overrideNotice, onSetDisplayMode, onOpenUrl, onOpenFile, wasSpawned } = props
+  const { tabId, taskId, mode, cwd, isActive = true, providerFlagsOverride, permissionNotice: overrideNotice, onOpenUrl, onOpenFile, wasSpawned } = props
   const { state, timeline, inFlight, hydrating, permissionMode, permissionRequests, sendMessage, sendToolResult, respondPermission, abortAndPop, reset: resetTimeline } = useChatSession({
     tabId,
     taskId,
@@ -694,7 +691,6 @@ export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(function Ch
 
   const [resetting, setResetting] = useState(false)
   const [restarting, setRestarting] = useState(false)
-  const [pendingChatDisable, setPendingChatDisable] = useState(false)
   // Suppress "Session ended" UI during a reset/restart — process-exit fires between kill and
   // the new session's turn-init, creating a brief flash of the ended state. Also suppress
   // on `notStarted` (lazy-mount with no spawn yet) — there's nothing to restart, and the
@@ -934,14 +930,6 @@ export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(function Ch
           <ContextMenuItem onSelect={() => { void handleReset() }} disabled={resetting}>
             Reset chat
           </ContextMenuItem>
-          {onSetDisplayMode && (
-            <>
-              <ContextMenuSeparator />
-              <ContextMenuItem onSelect={() => setPendingChatDisable(true)}>
-                Disable chat
-              </ContextMenuItem>
-            </>
-          )}
         </ContextMenuContent>
       </ContextMenu>
 
@@ -1194,15 +1182,6 @@ export const ChatPanel = forwardRef<ChatPanelHandle, ChatPanelProps>(function Ch
         </div>
       </div>
 
-      <ConfirmDisplayModeDialog
-        open={pendingChatDisable}
-        target="xterm"
-        onConfirm={() => {
-          onSetDisplayMode?.('xterm')
-          setPendingChatDisable(false)
-        }}
-        onCancel={() => setPendingChatDisable(false)}
-      />
     </div>
     </ChatViewContext.Provider>
   )

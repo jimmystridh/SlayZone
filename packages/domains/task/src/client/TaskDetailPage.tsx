@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { MoreHorizontal, Archive, Trash2, AlertTriangle, Loader2, Terminal as TerminalIcon, Globe, Settings2, GitBranch, FileCode, ChevronDown, ChevronRight, Flag, Plus, GripVertical, X, Info, CheckCircle2, XCircle, Stethoscope, Cpu, Circle, Repeat, LayoutTemplate, Paperclip } from 'lucide-react'
+import { MoreHorizontal, Archive, Trash2, AlertTriangle, Loader2, Terminal as TerminalIcon, Globe, Settings2, GitBranch, FileCode, ChevronDown, ChevronRight, Flag, Plus, GripVertical, X, Info, CheckCircle2, XCircle, Stethoscope, Cpu, Circle, Repeat, LayoutTemplate, Paperclip, Power } from 'lucide-react'
 import { IconArrowsVertical, IconArrowsMaximize } from '@tabler/icons-react'
 import { DescriptionDialog } from './DescriptionDialog'
 import { ArtifactsPanel, type ArtifactsPanelHandle } from './ArtifactsPanel'
@@ -67,7 +67,7 @@ import { normalizeDescription, stripMarkdown, getExtensionFromTitle, getEffectiv
 import { useTheme, useDialogStore, type SearchFileContext } from '@slayzone/settings/client'
 import { markSkipCache, usePty, useTerminalModes, getVisibleModes, getModeLabel, groupTerminalModes, useLoopMode, isLoopActive, stripAnsi, serializeTerminalHistory, LoopModeBanner, LoopModeDialog, SlayNudgeBanner, useSlayNudge, PtyStateDot, PtyProgressDot } from '@slayzone/terminal'
 import type { LoopConfig } from '@slayzone/terminal/shared'
-import { TerminalContainer, type TerminalContainerHandle, ConfirmDisplayModeDialog, type TabDisplayMode, isChatSupported } from '@slayzone/task-terminals'
+import { TerminalContainer, type TerminalContainerHandle, MODE_ICONS } from '@slayzone/task-terminals'
 import { UnifiedGitPanel, type UnifiedGitPanelHandle, type GitTabId, useProjectRepos } from '@slayzone/worktrees'
 import { buildStatusOptions, cn, getColumnStatusStyle, PriorityIcon, useAppearance, matchesShortcut, useShortcutStore, useShortcutDisplay, withModalGuard, getThemeEditorColors, type EditorThemeColors } from '@slayzone/ui'
 import { BrowserPanel, type BrowserPanelHandle } from '@slayzone/task-browser'
@@ -80,29 +80,11 @@ import { useSubTasks } from './useSubTasks'
 import { usePanelOwnership } from './usePanelOwnership'
 import { PanelOwnerStub } from './PanelOwnerStub'
 import { SquareArrowOutUpRight } from 'lucide-react'
-import ClaudeColor from '@lobehub/icons/es/Claude/components/Color'
-import CodexColor from '@lobehub/icons/es/Codex/components/Color'
-import GeminiColor from '@lobehub/icons/es/Gemini/components/Color'
-import CopilotColor from '@lobehub/icons/es/Copilot/components/Color'
-import CursorMono from '@lobehub/icons/es/Cursor/components/Mono'
-import OpenCodeMono from '@lobehub/icons/es/OpenCode/components/Mono'
 import { useTaskTagIds } from './useTaskTagIds'
 import { WebPanelView } from './WebPanelView'
 import { ResizeHandle } from './ResizeHandle'
 import { ProcessesPanel } from './ProcessesPanel'
 import { TaskSettingsPanel } from './TaskSettingsPanel'
-
-type IconComponent = React.ComponentType<{ className?: string }>
-const PROVIDER_ICONS: Partial<Record<TerminalMode, IconComponent>> = {
-  'claude-code': ClaudeColor as IconComponent,
-  codex: CodexColor as IconComponent,
-  'cursor-agent': CursorMono as IconComponent,
-  gemini: GeminiColor as IconComponent,
-  opencode: OpenCodeMono as IconComponent,
-  copilot: CopilotColor as IconComponent,
-  ccs: ClaudeColor as IconComponent,
-  terminal: TerminalIcon
-}
 
 function TaskOverviewRow({ sub, columns, statusOptions, onNavigate, onUpdate, onDelete, dragHandle, rowRef, rowStyle, isDragging }: {
   sub: Task
@@ -631,9 +613,6 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   }, [task?.id])
   const fileEditorRef = useRef<FileEditorViewHandle>(null)
   const terminalContainerRef = useRef<TerminalContainerHandle>(null)
-  const [mainTabDisplayMode, setMainTabDisplayMode] = useState<TabDisplayMode>('xterm')
-  const [pendingChatEnable, setPendingChatEnable] = useState(false)
-  const [pendingChatDisable, setPendingChatDisable] = useState(false)
   const browserPanelRef = useRef<BrowserPanelHandle>(null)
   const artifactsPanelRef = useRef<ArtifactsPanelHandle>(null)
   const pendingEditorFileRef = useRef<string | null>(null)
@@ -865,6 +844,14 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     await new Promise((r) => setTimeout(r, 100))
     markSkipCache(mainSessionId)
     setTerminalKey((k) => k + 1)
+  }, [task, resetTaskState, getMainSessionId])
+
+  // Power-off agent (kill PTY only — no remount; user clicks Retry to resume)
+  const handleStopAgent = useCallback(async () => {
+    if (!task) return
+    const mainSessionId = getMainSessionId(task.id)
+    resetTaskState(mainSessionId)
+    await window.api.pty.kill(mainSessionId)
   }, [task, resetTaskState, getMainSessionId])
 
   // Reset terminal (kill PTY, clear session ID, remount fresh)
@@ -2181,15 +2168,10 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                   onRetry={handleRestartTerminal}
                   onFocusRequestHandled={handleTerminalFocusRequestHandled}
                   onMainTabActiveChange={setIsMainTabActive}
-                  onMainDisplayModeChange={setMainTabDisplayMode}
-                  onMainDisplayModeToggleRequest={(current) => {
-                    if (current === 'chat') setPendingChatDisable(true)
-                    else setPendingChatEnable(true)
-                  }}
                   onOpenUrl={openDevServerInBrowser}
                   onOpenFile={handleQuickOpenFile}
                   onMainReset={handleResetTerminal}
-                  overlay={isActive && loopConfigured && mainTabDisplayMode !== 'chat' ? (
+                  overlay={isActive && loopConfigured ? (
                     <LoopModeBanner
                       config={task.loop_config!}
                       status={loopStatus}
@@ -2206,7 +2188,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                       <ContextMenuSub>
                         <ContextMenuSubTrigger>
                           {(() => {
-                            const CurrentIcon = PROVIDER_ICONS[task.terminal_mode] ?? TerminalIcon
+                            const CurrentIcon = MODE_ICONS[task.terminal_mode] ?? TerminalIcon
                             const currentLabel = getModeLabel(modes.find((m) => m.id === task.terminal_mode) ?? { id: task.terminal_mode, label: task.terminal_mode })
                             return (
                               <span className="flex items-center gap-2">
@@ -2227,7 +2209,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                               const visibleModes = getVisibleModes(modes, task.terminal_mode)
                               const { builtin, custom } = groupTerminalModes(visibleModes)
                               const renderItem = (mode: typeof visibleModes[number]) => {
-                                const ModeIcon = PROVIDER_ICONS[mode.id as TerminalMode] ?? TerminalIcon
+                                const ModeIcon = MODE_ICONS[mode.id as TerminalMode] ?? TerminalIcon
                                 return (
                                   <ContextMenuRadioItem key={mode.id} value={mode.id}>
                                     <span className="flex items-center gap-2">
@@ -2261,33 +2243,26 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                       <span className="truncate text-sm">
                         {getModeLabel(modes.find((m) => m.id === task.terminal_mode) ?? { id: task.terminal_mode, label: task.terminal_mode })}
                       </span>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <ChevronDown
-                            data-testid="terminal-mode-dropdown"
-                            aria-label="Open provider menu"
-                            role="button"
-                            className="size-3 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              const tab = (e.currentTarget as unknown as HTMLElement).closest('[data-tab-main="true"]')
-                              if (!tab) return
-                              const rect = (e.currentTarget as unknown as HTMLElement).getBoundingClientRect()
-                              tab.dispatchEvent(new MouseEvent('contextmenu', {
-                                bubbles: true,
-                                cancelable: true,
-                                view: window,
-                                clientX: rect.left,
-                                clientY: rect.bottom,
-                              }))
-                            }}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          Provider menu — click or right-click tab
-                        </TooltipContent>
-                      </Tooltip>
+                      <ChevronDown
+                        data-testid="terminal-mode-dropdown"
+                        aria-label="Open provider menu"
+                        role="button"
+                        className="size-3 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          const tab = (e.currentTarget as unknown as HTMLElement).closest('[data-tab-main="true"]')
+                          if (!tab) return
+                          const rect = (e.currentTarget as unknown as HTMLElement).getBoundingClientRect()
+                          tab.dispatchEvent(new MouseEvent('contextmenu', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window,
+                            clientX: rect.left,
+                            clientY: rect.bottom,
+                          }))
+                        }}
+                      />
                     </div>
                   }
                   rightContent={
@@ -2297,7 +2272,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                           "flex items-center gap-2 transition-opacity",
                           !isMainTabActive && !task.is_temporary && "opacity-40 pointer-events-none"
                         )}>
-                          {loopModeAvailable && task.terminal_mode !== 'terminal' && mainTabDisplayMode !== 'chat' && (
+                          {loopModeAvailable && task.terminal_mode !== 'terminal' && (
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <IconButton
@@ -2317,6 +2292,23 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                                 </IconButton>
                               </TooltipTrigger>
                               <TooltipContent side="bottom">Loop command</TooltipContent>
+                            </Tooltip>
+                          )}
+
+                          {task.terminal_mode !== 'terminal' && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <IconButton
+                                  data-testid="agent-power-off"
+                                  variant="ghost"
+                                  className="size-7"
+                                  aria-label="Shut down agent"
+                                  onClick={() => void handleStopAgent()}
+                                >
+                                  <Power className="size-3.5" />
+                                </IconButton>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom">Shut down agent</TooltipContent>
                             </Tooltip>
                           )}
 
@@ -2366,42 +2358,8 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                                   </DropdownMenuItem>
                                 </>
                               )}
-                              {isChatSupported(task.terminal_mode) && mainTabDisplayMode !== 'chat' && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => setPendingChatEnable(true)}>
-                                    Enable chat (beta)
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {isChatSupported(task.terminal_mode) && mainTabDisplayMode === 'chat' && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => setPendingChatDisable(true)}>
-                                    Disable chat
-                                  </DropdownMenuItem>
-                                </>
-                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
-                          <ConfirmDisplayModeDialog
-                            open={pendingChatEnable}
-                            target="chat"
-                            onConfirm={() => {
-                              void terminalContainerRef.current?.setMainDisplayMode('chat')
-                              setPendingChatEnable(false)
-                            }}
-                            onCancel={() => setPendingChatEnable(false)}
-                          />
-                          <ConfirmDisplayModeDialog
-                            open={pendingChatDisable}
-                            target="xterm"
-                            onConfirm={() => {
-                              void terminalContainerRef.current?.setMainDisplayMode('xterm')
-                              setPendingChatDisable(false)
-                            }}
-                            onCancel={() => setPendingChatDisable(false)}
-                          />
                           <Dialog open={flagsPopoverOpen} onOpenChange={setFlagsPopoverOpen}>
                             <DialogContent className="max-w-md">
                               <DialogHeader>

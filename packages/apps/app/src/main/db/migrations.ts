@@ -2596,6 +2596,32 @@ const migrations: Migration[] = [
       // this column to auto-restart agents that were warm when the app died.
       db.exec(`ALTER TABLE terminal_tabs ADD COLUMN was_spawned INTEGER NOT NULL DEFAULT 0`)
     }
+  },
+  {
+    version: 137,
+    up: (db) => {
+      // Chat became its own provider (`claude-chat`) — `display_mode` is gone.
+      // Flip tabs that were in chat view to the new mode before dropping the column.
+      db.exec(`
+        UPDATE terminal_tabs SET mode = 'claude-chat'
+          WHERE mode = 'claude-code' AND display_mode = 'chat';
+        ALTER TABLE terminal_tabs DROP COLUMN display_mode;
+        DELETE FROM settings WHERE key = 'default_tab_display_mode';
+      `)
+    }
+  },
+  {
+    version: 138,
+    up: (db) => {
+      // Seed claude-chat's defaultFlags only if the row landed with NULL from
+      // the v137-era introduction. Interactive chat ignores this field; it
+      // matters only for automation headless runs (buildAiHeadlessCommand).
+      db.exec(`
+        UPDATE terminal_modes
+          SET default_flags = '--allow-dangerously-skip-permissions'
+          WHERE id = 'claude-chat' AND default_flags IS NULL;
+      `)
+    }
   }
 ]
 

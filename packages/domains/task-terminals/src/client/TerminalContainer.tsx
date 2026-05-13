@@ -6,11 +6,9 @@ import { useTheme } from '@slayzone/settings/client'
 import { useTaskTerminals } from './useTaskTerminals'
 import { TerminalTabBar, type TerminalTabBarHandle } from './TerminalTabBar'
 import { TerminalSplitGroup, type TerminalSplitGroupHandle } from './TerminalSplitGroup'
-import type { TabDisplayMode } from '../shared/types'
 
 export interface TerminalContainerHandle {
   closeActiveGroup: () => Promise<boolean>
-  setMainDisplayMode: (target: TabDisplayMode) => Promise<void>
 }
 
 interface TerminalContainerProps {
@@ -39,8 +37,6 @@ interface TerminalContainerProps {
   onRetry?: () => void
   onFocusRequestHandled?: (requestId: number) => void
   onMainTabActiveChange?: (isMainActive: boolean) => void
-  onMainDisplayModeChange?: (mode: TabDisplayMode) => void
-  onMainDisplayModeToggleRequest?: (current: TabDisplayMode) => void
   onOpenUrl?: (url: string) => void
   onOpenFile?: (filePath: string, options?: { position?: { line: number; col?: number } }) => void
   onMainReset?: () => void
@@ -70,8 +66,6 @@ export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalCon
   onRetry,
   onFocusRequestHandled,
   onMainTabActiveChange,
-  onMainDisplayModeChange,
-  onMainDisplayModeToggleRequest,
   onOpenUrl,
   onOpenFile,
   onMainReset,
@@ -90,7 +84,6 @@ export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalCon
     closeTab,
     movePane,
     renameTab,
-    setTabDisplayMode,
     getSessionId
   } = useTaskTerminals(taskId, defaultMode)
 
@@ -122,12 +115,6 @@ export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalCon
   useEffect(() => {
     onMainTabActiveChange?.(activeGroup?.isMain ?? false)
   }, [activeGroup?.isMain, onMainTabActiveChange])
-
-  // Notify parent when main tab display mode changes
-  const mainTabDisplayMode = tabs.find(t => t.isMain)?.displayMode
-  useEffect(() => {
-    if (mainTabDisplayMode) onMainDisplayModeChange?.(mainTabDisplayMode)
-  }, [mainTabDisplayMode, onMainDisplayModeChange])
 
   // Forward main tab state changes to task-level callbacks
   useEffect(() => {
@@ -300,11 +287,6 @@ export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalCon
   }, [groups, closeGroup, setActiveGroupId])
 
   useImperativeHandle(ref, () => ({
-    setMainDisplayMode: async (target: TabDisplayMode): Promise<void> => {
-      const mainTab = tabs.find(t => t.isMain)
-      if (!mainTab) return
-      await setTabDisplayMode(mainTab.id, target)
-    },
     closeActiveGroup: async (): Promise<boolean> => {
       const active = document.activeElement as HTMLElement | null
       const paneEl = active?.closest('[data-session-id]')
@@ -337,7 +319,7 @@ export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalCon
         return true
       }
     }
-  }), [taskId, tabs, groups, closeTab, closeGroupAndFocusAdjacent, activeGroupId, setTabDisplayMode])
+  }), [taskId, tabs, groups, closeTab, closeGroupAndFocusAdjacent, activeGroupId])
 
   // Build pane props for the active group
   const paneProps = useMemo(() => {
@@ -372,11 +354,9 @@ export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalCon
         } : null,
         onRename: tab.isMain ? null : () => tabBarRef.current?.startRename(tab.id),
         onResetSession: tab.isMain && onMainReset ? onMainReset : null,
-        onSetDisplayMode: (target: import('../shared/types').TabDisplayMode) =>
-          setTabDisplayMode(tab.id, target),
       }
     })
-  }, [activeGroup, getSessionId, cwd, taskId, conversationId, existingConversationId, supportsSessionId, initialPrompt, providerFlags, executionContext, handleConversationCreated, onSessionInvalid, handleTerminalReady, onFirstInput, onRetry, handleSplitGroup, createTab, closeGroup, closeTab, onMainReset, setTabDisplayMode])
+  }, [activeGroup, getSessionId, cwd, taskId, conversationId, existingConversationId, supportsSessionId, initialPrompt, providerFlags, executionContext, handleConversationCreated, onSessionInvalid, handleTerminalReady, onFirstInput, onRetry, handleSplitGroup, createTab, closeGroup, closeTab, onMainReset])
 
   return (
     <div className="h-full flex" style={terminalPanelStyle as React.CSSProperties | undefined}>
@@ -396,7 +376,6 @@ export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalCon
           rightContent={rightContent}
           mainTabAccessories={mainTabAccessories}
           mainTabContextMenu={mainTabContextMenu}
-          onMainDisplayModeToggle={onMainDisplayModeToggleRequest}
         />
         <div className="flex-1 min-h-0 relative">
           <TerminalSplitGroup
