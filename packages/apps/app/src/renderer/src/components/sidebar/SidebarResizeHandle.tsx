@@ -59,7 +59,9 @@ export function SidebarResizeHandle({
       aria-label="Resize sidebar"
       onMouseDown={handleMouseDown}
       onDoubleClick={onReset}
-      className="absolute right-0 top-0 z-20 h-full w-1 -mr-0.5 cursor-col-resize hover:bg-primary/40 active:bg-primary/60 transition-colors"
-    />
+      className="group absolute right-0.5 top-0 z-20 flex h-full w-2 cursor-col-resize items-center justify-center"
+    >
+      <div className="h-10 w-1 rounded-full bg-primary/30 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-active:bg-primary/70 group-active:opacity-100" />
+    </div>
   )
 }
