@@ -53,6 +53,7 @@ import {
   loadBoardDataOp,
   removeBlockerOp,
   reorderTasksOp,
+  setBrowserTabLockedOp,
   restoreTaskOp,
   setBlockersOp,
   unarchiveTaskOp,
@@ -142,6 +143,10 @@ export function registerTaskHandlers(ipcMain: IpcMain, db: Database, onMutation?
   ipcMain.handle('db:tasks:archiveMany', (_, ids: string[]) => archiveManyTasksOp(db, ids, deps))
   ipcMain.handle('db:tasks:unarchive', (_, id: string) => unarchiveTaskOp(db, id, deps))
   ipcMain.handle('db:tasks:reorder', (_, taskIds: string[]) => reorderTasksOp(db, taskIds))
+  ipcMain.handle(
+    'db:tasks:setBrowserTabLocked',
+    (_, taskId: string, tabId: string, locked: boolean) => setBrowserTabLockedOp(db, taskId, tabId, locked, deps),
+  )
 
   // Task Dependencies
   ipcMain.handle('db:taskDependencies:getBlockers', (_, taskId: string) => getBlockersOp(db, taskId))

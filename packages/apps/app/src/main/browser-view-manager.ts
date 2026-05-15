@@ -61,6 +61,10 @@ interface ViewEntry {
   desktopHandoffPolicy: DesktopHandoffPolicy | null
   /** Window currently hosting this WCV. null = use the manager's mainWindow. */
   currentWindow: BrowserWindow | null
+  /** Agent-lock: drop OS-origin input via CDP Input.setIgnoreInputEvents while true. */
+  locked: boolean
+  /** True if the lock attached the debugger itself (so unlock must detach). */
+  debuggerAttachedByLock: boolean
 }
 
 interface BrowserViewEvent {
@@ -174,6 +178,8 @@ export class BrowserViewManager {
       kind,
       desktopHandoffPolicy: initialPolicy,
       currentWindow: null,
+      locked: false,
+      debuggerAttachedByLock: false,
     }
 
     this.views.set(viewId, entry)
@@ -293,6 +299,58 @@ export class BrowserViewManager {
     } else {
       this.removeFromWindow(entry)
     }
+  }
+
+  /**
+   * Agent lock: silence OS-origin keyboard/mouse/wheel input via CDP
+   * `Input.setIgnoreInputEvents`. CDP-dispatched events and `executeJavaScript`
+   * / `loadURL` bypass the gate, so agent CLI ops keep working while the user
+   * cannot interact. The WCV stays visible and rendering.
+   *
+   * Cross-process navigation drops the CDP session and the ignore flag, so a
+   * `did-navigate` / `render-process-gone` listener (in `attachEventListeners`)
+   * calls `reapplyLockIfNeeded` to re-attach and re-send the ignore command.
+   */
+  async setLocked(viewId: string, locked: boolean): Promise<void> {
+    const entry = this.views.get(viewId)
+    if (!entry) return
+    if (entry.locked === locked) return
+    entry.locked = locked
+    await this.syncLockState(entry)
+  }
+
+  /** Re-apply the current lock state to CDP. Idempotent; called by setLocked + nav listeners. */
+  private async syncLockState(entry: ViewEntry): Promise<void> {
+    const wc = entry.view.webContents
+    if (wc.isDestroyed()) return
+
+    try {
+      if (entry.locked) {
+        if (!wc.debugger.isAttached()) {
+          wc.debugger.attach('1.3')
+          entry.debuggerAttachedByLock = true
+        }
+        await wc.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: true })
+      } else {
+        if (wc.debugger.isAttached()) {
+          try { await wc.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: false }) } catch { /* ignore */ }
+        }
+        if (entry.debuggerAttachedByLock && wc.debugger.isAttached()) {
+          try { wc.debugger.detach() } catch { /* ignore */ }
+        }
+        entry.debuggerAttachedByLock = false
+      }
+    } catch (err) {
+      console.warn('[browser-view-manager] syncLockState failed:', err)
+      if (entry.debuggerAttachedByLock && wc.debugger.isAttached()) {
+        try { wc.debugger.detach() } catch { /* ignore */ }
+      }
+      entry.debuggerAttachedByLock = false
+    }
+  }
+
+  isLocked(viewId: string): boolean {
+    return this.views.get(viewId)?.locked ?? false
   }
 
   hideAll(): void {
@@ -1030,6 +1088,9 @@ export class BrowserViewManager {
         canGoBack: wc.navigationHistory.canGoBack(),
         canGoForward: wc.navigationHistory.canGoForward(),
       })
+      // Cross-process navigation drops the CDP session and the ignore flag —
+      // re-apply lock so OS-origin input stays blocked.
+      if (entry.locked) void this.syncLockState(entry)
     })
 
     wc.on('did-navigate-in-page', (_e, url) => {
@@ -1083,6 +1144,9 @@ export class BrowserViewManager {
     })
 
     wc.on('render-process-gone', () => {
+      // The CDP session died with the renderer; mark the bookkeeping flag so a
+      // future syncLockState re-attaches cleanly when the process recovers.
+      entry.debuggerAttachedByLock = false
       send({ viewId, type: 'crashed' })
     })
 

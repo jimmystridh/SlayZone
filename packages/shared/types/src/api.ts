@@ -297,6 +297,8 @@ export interface ElectronAPI {
     archiveTasks: (ids: string[]) => Promise<void>
     unarchiveTask: (id: string) => Promise<Task>
     reorderTasks: (taskIds: string[]) => Promise<void>
+    /** Dedicated write path for per-tab lock flag — bypasses updateTask which strips `locked` to prevent stale writeback clobber. */
+    setBrowserTabLocked: (taskId: string, tabId: string, locked: boolean) => Promise<boolean>
   }
   tags: {
     getTags: () => Promise<Tag[]>
@@ -1031,6 +1033,8 @@ export interface ElectronAPI {
     // Bounds & visibility
     setBounds: (viewId: string, bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
     setVisible: (viewId: string, visible: boolean) => Promise<void>
+    /** Agent lock: drop OS-origin input while keeping the view rendering. */
+    setLocked: (viewId: string, locked: boolean) => Promise<void>
     hideAll: () => Promise<void>
     showAll: () => Promise<void>
     setHandoffPolicy: (viewId: string, policy: DesktopHandoffPolicy | null) => Promise<void>
@@ -1090,6 +1094,10 @@ export interface ElectronAPI {
       type: string
       [key: string]: unknown
     }) => void) => () => void
+    /** Fires when a `slay tasks browser` mutation hits a tab. Renderer should
+     *  stamp `agentTouched: true` on its local tabs state to avoid stale
+     *  writebacks clobbering the server's flag. */
+    onAgentTouched: (cb: (payload: { taskId: string; tabId: string }) => void) => () => void
   }
   integrations: {
     connectGithub: (input: ConnectGithubInput) => Promise<IntegrationConnectionPublic>

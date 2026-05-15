@@ -32,6 +32,10 @@ export interface BrowserTab {
   multiDeviceMode?: boolean
   multiDeviceConfig?: MultiDeviceConfig
   multiDeviceLayout?: GridLayout
+  /** Sticky: set true the first time an agent CLI mutation hits this tab. Never cleared. */
+  agentTouched?: boolean
+  /** Persisted user-facing lock state. Driven by user toggle + auto-lock on agentTouched transition. */
+  locked?: boolean
 }
 
 export interface BrowserTabsState {

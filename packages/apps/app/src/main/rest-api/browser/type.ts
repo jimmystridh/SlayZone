@@ -1,8 +1,9 @@
 import type { Express } from 'express'
 import { ensureBrowserWc, execJs } from './shared'
+import { markTabAgentTouched } from './mark-touched'
 import type { RestApiDeps } from '../types'
 
-export function registerBrowserTypeRoute(app: Express, _deps: RestApiDeps): void {
+export function registerBrowserTypeRoute(app: Express, deps: RestApiDeps): void {
   app.post('/api/browser/type', async (req, res) => {
     const { taskId, selector, text, panel = 'hidden', tabId } = req.body ?? {}
     if (!selector || text == null) { res.status(400).json({ error: 'selector and text required' }); return }
@@ -23,6 +24,7 @@ export function registerBrowserTypeRoute(app: Express, _deps: RestApiDeps): void
         return { ok: true };
       })()`)
       if (!result.ok) { res.status(404).json(result); return }
+      markTabAgentTouched(deps.db, deps.notifyRenderer, taskId, bwc.tabId)
       res.json(result)
     } catch (err) {
       res.status(500).json({ error: err instanceof Error ? err.message : String(err) })

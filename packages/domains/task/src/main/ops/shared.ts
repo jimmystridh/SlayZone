@@ -541,7 +541,42 @@ export function updateTask(db: Database, data: UpdateTaskInput): Task | null {
   if (data.baseDir !== undefined) { fields.push('base_dir = ?'); values.push(data.baseDir) }
   if (data.browserUrl !== undefined) { fields.push('browser_url = ?'); values.push(data.browserUrl) }
   if (data.prUrl !== undefined) { fields.push('pr_url = ?'); values.push(data.prUrl) }
-  if (data.browserTabs !== undefined) { fields.push('browser_tabs = ?'); values.push(data.browserTabs ? JSON.stringify(data.browserTabs) : null) }
+  if (data.browserTabs !== undefined) {
+    // Preserve server-authoritative per-tab flags (`agentTouched`, `locked`)
+    // when the renderer writes back tabs via generic updates (URL/title from
+    // did-navigate, etc.). Those flags have dedicated write paths
+    // (`markTabAgentTouched` in REST, `setTabLockedOp` in IPC) and must not
+    // be clobbered by stale renderer state.
+    const merged = data.browserTabs
+      ? (() => {
+        if (!data.browserTabs) return null
+        const existingRow = db.prepare('SELECT browser_tabs FROM tasks WHERE id = ?').get(data.id) as
+          | { browser_tabs: string | null }
+          | undefined
+        let existingTabs: { id: string; agentTouched?: boolean; locked?: boolean }[] = []
+        if (existingRow?.browser_tabs) {
+          try {
+            const parsed = JSON.parse(existingRow.browser_tabs) as { tabs?: typeof existingTabs }
+            if (Array.isArray(parsed.tabs)) existingTabs = parsed.tabs
+          } catch { /* ignore */ }
+        }
+        const existingById = new Map(existingTabs.map(t => [t.id, t]))
+        return {
+          ...data.browserTabs,
+          tabs: data.browserTabs.tabs.map(t => {
+            const prev = existingById.get(t.id)
+            if (!prev) return t
+            return {
+              ...t,
+              ...(prev.agentTouched !== undefined ? { agentTouched: prev.agentTouched } : {}),
+              ...(prev.locked !== undefined ? { locked: prev.locked } : {}),
+            }
+          }),
+        }
+      })()
+      : null
+    fields.push('browser_tabs = ?'); values.push(merged ? JSON.stringify(merged) : null)
+  }
   if (data.webPanelUrls !== undefined) { fields.push('web_panel_urls = ?'); values.push(data.webPanelUrls ? JSON.stringify(data.webPanelUrls) : null) }
   if (data.editorOpenFiles !== undefined) { fields.push('editor_open_files = ?'); values.push(data.editorOpenFiles ? JSON.stringify(data.editorOpenFiles) : null) }
   if (data.diffCollapsedFiles !== undefined) { fields.push('diff_collapsed_files = ?'); values.push(data.diffCollapsedFiles && data.diffCollapsedFiles.length ? JSON.stringify(data.diffCollapsedFiles) : null) }

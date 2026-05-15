@@ -27,13 +27,15 @@ interface BrowserTabPlaceholderProps {
   visible: boolean
   hidden?: boolean
   isResizing?: boolean
+  /** Agent lock: when true, OS-origin input is silenced for this WCV. */
+  locked?: boolean
   className?: string
   onStateChange?: (state: BrowserViewState) => void
   onOverlayChange?: (hidden: boolean) => void
 }
 
 export const BrowserTabPlaceholder = forwardRef<BrowserTabPlaceholderHandle, BrowserTabPlaceholderProps>(
-  function BrowserTabPlaceholder({ tabId, taskId, url, partition, visible, hidden, isResizing, className, onStateChange, onOverlayChange }, ref) {
+  function BrowserTabPlaceholder({ tabId, taskId, url, partition, visible, hidden, isResizing, locked, className, onStateChange, onOverlayChange }, ref) {
     const { viewId, state, actions, placeholderRef, hiddenByOverlay } = useBrowserView({
       tabId,
       taskId,
@@ -70,6 +72,13 @@ export const BrowserTabPlaceholder = forwardRef<BrowserTabPlaceholderHandle, Bro
         void window.api.webview.unregisterBrowserTab(taskId, tabId)
       }
     }, [taskId, tabId, viewId])
+
+    // Sync agent-lock state to the main process. Owns its own viewId, so this
+    // runs as soon as the WCV is registered — no race with parent state.
+    useEffect(() => {
+      if (!viewId) return
+      void window.api.browser.setLocked(viewId, !!locked)
+    }, [viewId, locked])
 
     return (
       <div

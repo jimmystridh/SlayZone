@@ -1,8 +1,9 @@
 import type { Express } from 'express'
 import { ensureBrowserWc, ALLOWED_NAVIGATE_SCHEMES } from './shared'
+import { markTabAgentTouched } from './mark-touched'
 import type { RestApiDeps } from '../types'
 
-export function registerBrowserNavigateRoute(app: Express, _deps: RestApiDeps): void {
+export function registerBrowserNavigateRoute(app: Express, deps: RestApiDeps): void {
   app.post('/api/browser/navigate', async (req, res) => {
     const { taskId, url, panel = 'visible', tabId } = req.body ?? {}
     if (!url) { res.status(400).json({ error: 'url required' }); return }
@@ -19,6 +20,9 @@ export function registerBrowserNavigateRoute(app: Express, _deps: RestApiDeps): 
     try {
       // Skip loadURL when panel was just auto-opened — the renderer already created a tab with this URL
       if (!result.autoOpened) await result.wc.loadURL(url)
+      // Auto-open counts as "opening" the tab, not interacting with it. Skip
+      // the trip flag so first-navigate-that-opens-panel doesn't auto-lock.
+      if (!result.autoOpened) markTabAgentTouched(deps.db, deps.notifyRenderer, taskId, result.tabId)
       res.json({ ok: true, url: result.wc.getURL() })
     } catch (err) {
       res.status(500).json({ error: err instanceof Error ? err.message : String(err) })

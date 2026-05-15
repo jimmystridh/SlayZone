@@ -1,5 +1,5 @@
 import type { Response } from 'express'
-import { getBrowserWebContents, listBrowserTabs, waitForBrowserRegistration } from '../../browser-registry'
+import { getBrowserWebContents, getResolvedBrowserTabId, listBrowserTabs, waitForBrowserRegistration } from '../../browser-registry'
 import { broadcastToWindows } from '../../broadcast-to-windows'
 
 export const BROWSER_JS_TIMEOUT = 10_000
@@ -22,13 +22,13 @@ export async function ensureBrowserWc(
 ): Promise<BrowserWcResult | null> {
   if (!taskId) { res.status(400).json({ error: 'taskId required' }); return null }
   const wc = getBrowserWebContents(taskId, tabId)
-  if (wc) return { wc, autoOpened: false, tabId: tabId ?? null }
+  if (wc) return { wc, autoOpened: false, tabId: getResolvedBrowserTabId(taskId, tabId) }
 
   if (panel === 'visible') {
     broadcastToWindows('browser:ensure-panel-open', taskId, url, tabId)
     try {
       const resolved = await waitForBrowserRegistration(taskId, { tabId })
-      return { wc: resolved, autoOpened: !!url, tabId: tabId ?? null }
+      return { wc: resolved, autoOpened: !!url, tabId: getResolvedBrowserTabId(taskId, tabId) }
     } catch (err) {
       res.status(408).json({ error: err instanceof Error ? err.message : String(err) })
       return null

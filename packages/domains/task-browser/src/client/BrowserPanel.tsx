@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle, createRef } from 'react'
 import { track } from '@slayzone/telemetry/client'
-import { ArrowLeft, ArrowRight, RotateCw, X, Plus, Import, Smartphone, Monitor, Tablet, LayoutGrid, ChevronDown, ChevronUp, Crosshair, Camera, Bug, Sun, Moon, PaintbrushVertical, Keyboard, Puzzle, Trash2, Download, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, ArrowRight, RotateCw, X, Plus, Import, Smartphone, Monitor, Tablet, LayoutGrid, ChevronDown, ChevronUp, Crosshair, Camera, Bug, Sun, Moon, PaintbrushVertical, Keyboard, Puzzle, Trash2, Download, TriangleAlert, Lock, Unlock } from 'lucide-react'
 import type { BrowserTabTheme } from '../shared'
 import { BrowserTabPlaceholder, type BrowserTabPlaceholderHandle } from './BrowserTabPlaceholder'
 import { BrowserLoadingAnimation } from './BrowserLoadingAnimation'
@@ -373,12 +373,13 @@ interface SortableBrowserTabProps {
   tab: BrowserTab
   isActive: boolean
   isPickingElement: boolean
+  isLocked: boolean
   onSwitch: (id: string) => void
   onClose: (id: string) => void
   onRename: (id: string, name: string) => void
 }
 
-function SortableBrowserTab({ tab, isActive, isPickingElement, onSwitch, onClose, onRename }: SortableBrowserTabProps): React.JSX.Element {
+function SortableBrowserTab({ tab, isActive, isPickingElement, isLocked, onSwitch, onClose, onRename }: SortableBrowserTabProps): React.JSX.Element {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: tab.id })
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -432,9 +433,16 @@ function SortableBrowserTab({ tab, isActive, isPickingElement, onSwitch, onClose
         'bg-surface-2 dark:bg-surface-2/50 hover:bg-accent/80 dark:hover:bg-accent/50',
         'max-w-[300px]',
         isActive ? 'bg-tab-active border border-border' : 'text-muted-foreground dark:text-muted-foreground',
-        isActive && isPickingElement && 'ring-2 ring-amber-500/70 border-amber-500/70'
+        isActive && isPickingElement && 'ring-2 ring-amber-500/70 border-amber-500/70',
+        isLocked && 'ring-1 ring-amber-500/60'
       )}
     >
+      {isLocked && (
+        <Lock
+          aria-label="Browser controlled by agent"
+          className="size-3 shrink-0 text-amber-500"
+        />
+      )}
       {isEditing ? (
         <input
           ref={inputRef}
@@ -504,6 +512,15 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   const containerRef = useRef<HTMLDivElement>(null)
   const darkModeCSSKeyRef = useRef<string | null>(null)
 
+  // Per-tab agent lock = `tab.locked` (persisted in browser_tabs JSON).
+  // Toggle + auto-lock both write through `onTabsChange` so the DB stays the
+  // source of truth. Restart → tab opens locked iff it was locked when saved.
+  // Previous agentTouched value per tab id. We auto-lock only on a live
+  // `false → true` transition (i.e. observed during this session). First-time
+  // observation of an already-touched tab (e.g. after app restart) records the
+  // value silently so the user's previous unlock survives the restart.
+  const prevTouchedRef = useRef<Map<string, boolean>>(new Map())
+
   // Per-tab view refs — each BrowserTabPlaceholder exposes its viewId/state/actions
   const tabRefsRef = useRef<Map<string, React.RefObject<BrowserTabPlaceholderHandle | null>>>(new Map())
   const getTabRef = useCallback((tabId: string) => {
@@ -567,6 +584,42 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     if (!activeViewId) return
     void window.api.browser.setKeyboardPassthrough(activeViewId, captureShortcuts)
   }, [activeViewId, captureShortcuts])
+
+  // Auto-lock on observed `agentTouched: false → true` transition per tab.
+  // The flag is sticky in the DB, but auto-lock fires only on live transitions
+  // during this renderer session — app restarts that re-open already-touched
+  // tabs record the value silently so the user's previous unlock survives.
+  // BrowserTabPlaceholder owns the IPC sync to main, so backgrounded tabs
+  // whose viewId isn't registered yet still lock once their placeholder mounts.
+  useEffect(() => {
+    if (!taskId) return
+    for (const tab of tabs.tabs) {
+      const curr = !!tab.agentTouched
+      const prev = prevTouchedRef.current.get(tab.id)
+      prevTouchedRef.current.set(tab.id, curr)
+      if (prev === false && curr && !tab.locked) {
+        void window.api.db.setBrowserTabLocked(taskId, tab.id, true)
+      }
+    }
+  }, [taskId, tabs])
+
+  // Listen for server-side trip events. The server also persists to DB and
+  // notifies via tasks:changed, but renderer-local tabs state may have stale
+  // values in flight that would clobber the flag on next writeback — stamp it
+  // locally now so any pending update preserves it.
+  useEffect(() => {
+    if (!taskId) return
+    const off = window.api.browser.onAgentTouched(({ taskId: evtTaskId, tabId }) => {
+      if (evtTaskId !== taskId) return
+      const target = tabs.tabs.find(t => t.id === tabId)
+      if (!target || target.agentTouched === true) return
+      onTabsChange({
+        ...tabs,
+        tabs: tabs.tabs.map(t => (t.id === tabId ? { ...t, agentTouched: true } : t)),
+      })
+    })
+    return off
+  }, [taskId, tabs, onTabsChange])
 
   // Fetch URLs from other tasks in the same project when dropdown opens
   useEffect(() => {
@@ -944,6 +997,13 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     return () => container.removeEventListener('keydown', handleKeyDown)
   }, [isFocused, captureShortcuts, tabs, createNewTab, closeTab, switchToNextTab, switchToPrevTab])
 
+  const activeLocked = !!activeTab?.locked
+
+  const toggleActiveLock = () => {
+    if (!activeTab || !taskId) return
+    void window.api.db.setBrowserTabLocked(taskId, activeTab.id, !activeTab.locked)
+  }
+
   const handleNavigate = () => {
     if (extensionsManagerOpen || !inputUrl.trim()) return
 
@@ -1191,6 +1251,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
                 tab={tab}
                 isActive={tab.id === tabs.activeTabId}
                 isPickingElement={isPickingElement}
+                isLocked={!!tab.locked}
                 onSwitch={switchToTab}
                 onClose={closeTab}
                 onRename={renameTab}
@@ -1207,7 +1268,31 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
       </div>
 
       {/* URL Bar / Find Bar */}
-      <div className="shrink-0 p-2 border-b flex items-center gap-1">
+      <div className="shrink-0 p-2 border-b flex items-center gap-1 relative">
+        {activeLocked && !findMode && (
+          <div
+            data-testid="browser-agent-lock-banner"
+            data-locked="true"
+            className="absolute inset-2 z-10 rounded-md border border-amber-500/60 bg-background overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-amber-500/10 pointer-events-none" />
+            <div className="relative h-full flex items-center gap-2 px-2 text-sm text-amber-600 dark:text-amber-400 min-w-0">
+              <Lock className="size-3.5 shrink-0" />
+              <span className="font-medium shrink-0">Browser controlled by agent</span>
+              <span className="truncate text-xs opacity-70 font-mono">{activeViewState.url || activeTab?.url || ''}</span>
+              <button
+                type="button"
+                data-testid="browser-agent-lock-toggle"
+                data-locked="true"
+                onClick={toggleActiveLock}
+                className="ml-auto shrink-0 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500"
+                aria-label="Unlock tab (resume user input)"
+              >
+                <Unlock className="size-3.5" /> Unlock
+              </button>
+            </div>
+          </div>
+        )}
         {findMode ? (<>
           <Input
             ref={findInputRef}
@@ -1263,7 +1348,8 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
             </TooltipTrigger>
             <TooltipContent>Close (Esc)</TooltipContent>
           </Tooltip>
-        </>) : (<>
+        </>) : (
+        <div className="contents" {...(activeLocked ? { inert: '' as unknown as undefined } : {})}>
         <Tooltip>
           <TooltipTrigger asChild>
             <span>
@@ -1342,6 +1428,25 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
           disabled={extensionsManagerOpen}
           className="flex-1 h-7 text-sm"
         />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className={cn(!activeTab?.agentTouched && 'invisible pointer-events-none')}>
+              <IconButton
+                aria-label="Lock tab (block user input, agent unaffected)"
+                data-testid="browser-agent-lock-toggle"
+                data-locked="false"
+                variant="ghost"
+                size="icon-sm"
+                disabled={extensionsManagerOpen || !activeTab?.agentTouched}
+                onClick={toggleActiveLock}
+                tabIndex={activeTab?.agentTouched ? 0 : -1}
+              >
+                <Unlock className="size-4" />
+              </IconButton>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Agent controlled this tab. Click to lock user input.</TooltipContent>
+        </Tooltip>
 
         {taskId && (
           <DropdownMenu open={importDropdownOpen} onOpenChange={setImportDropdownOpen}>
@@ -1541,7 +1646,8 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
             <TooltipContent>{extensionsManagerOpen ? 'Close extensions manager' : 'Extensions'}</TooltipContent>
           </Tooltip>
         )}
-        </>)}
+        </div>
+        )}
       </div>
 
       {pickError && !multiDeviceMode && !extensionsManagerOpen && (
@@ -1636,6 +1742,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
               visible={tab.id === tabs.activeTabId && isActive !== false && !extensionsManagerOpen}
               hidden={!!loadError || extensionsManagerOpen || !activeViewState.hasLoadedRealPage}
               isResizing={isResizing}
+              locked={!!tab.locked}
               className="absolute inset-0"
               onStateChange={tab.id === tabs.activeTabId ? setActiveViewState : undefined}
               onOverlayChange={tab.id === tabs.activeTabId ? setHiddenByOverlay : undefined}

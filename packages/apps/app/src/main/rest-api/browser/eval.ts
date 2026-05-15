@@ -1,8 +1,9 @@
 import type { Express } from 'express'
 import { ensureBrowserWc, execJs } from './shared'
+import { markTabAgentTouched } from './mark-touched'
 import type { RestApiDeps } from '../types'
 
-export function registerBrowserEvalRoute(app: Express, _deps: RestApiDeps): void {
+export function registerBrowserEvalRoute(app: Express, deps: RestApiDeps): void {
   app.post('/api/browser/eval', async (req, res) => {
     const { taskId, code, panel = 'hidden', tabId } = req.body ?? {}
     if (!code) { res.status(400).json({ error: 'code required' }); return }
@@ -10,6 +11,7 @@ export function registerBrowserEvalRoute(app: Express, _deps: RestApiDeps): void
     if (!bwc) return
     try {
       const result = await execJs(bwc.wc, code)
+      markTabAgentTouched(deps.db, deps.notifyRenderer, taskId, bwc.tabId)
       res.json({ ok: true, result })
     } catch (err) {
       res.status(500).json({ error: err instanceof Error ? err.message : String(err) })

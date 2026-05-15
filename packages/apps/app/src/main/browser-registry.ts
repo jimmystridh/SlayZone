@@ -107,6 +107,12 @@ export function getBrowserWebContents(taskId: string, tabId?: string): Electron.
   return resolveWc(taskId, tabId)
 }
 
+/** Returns the resolved tab id for a request — explicit when given, else the registry's active tab. */
+export function getResolvedBrowserTabId(taskId: string, tabId?: string): string | null {
+  if (tabId) return tabId
+  return registry.get(taskId)?.activeTabId ?? null
+}
+
 export interface BrowserTabInfo {
   tabId: string
   active: boolean

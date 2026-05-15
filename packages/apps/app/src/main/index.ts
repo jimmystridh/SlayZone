@@ -2027,6 +2027,7 @@ div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:1
   // Bounds & visibility
   ipcMain.handle('browser:set-bounds', (_, viewId: string, bounds: ViewBounds) => browserViewManager.setBounds(viewId, bounds))
   ipcMain.handle('browser:set-visible', (_, viewId: string, visible: boolean) => browserViewManager.setVisible(viewId, visible))
+  ipcMain.handle('browser:set-locked', (_, viewId: string, locked: boolean) => browserViewManager.setLocked(viewId, locked))
   ipcMain.handle('browser:hide-all', () => browserViewManager.hideAll())
   ipcMain.handle('browser:show-all', () => browserViewManager.showAll())
   ipcMain.handle('browser:set-handoff-policy', (_, viewId: string, policy: DesktopHandoffPolicy | null) => browserViewManager.setHandoffPolicy(viewId, policy))
@@ -2248,6 +2249,7 @@ div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:1
     ipcMain.handle('browser:is-view-natively-visible', (_, viewId: string) => browserViewManager.isViewNativelyVisible(viewId))
     ipcMain.handle('browser:get-partition', (_, viewId: string) => browserViewManager.getPartition(viewId))
     ipcMain.handle('browser:get-native-child-view-count', () => browserViewManager.getNativeChildViewCount())
+    ipcMain.handle('browser:is-locked', (_, viewId: string) => browserViewManager.isLocked(viewId))
   }
 
   initProcessManager(db)

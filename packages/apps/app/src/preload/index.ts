@@ -66,7 +66,8 @@ const api: ElectronAPI = {
     archiveTask: (id) => ipcRenderer.invoke('db:tasks:archive', id),
     archiveTasks: (ids) => ipcRenderer.invoke('db:tasks:archiveMany', ids),
     unarchiveTask: (id) => ipcRenderer.invoke('db:tasks:unarchive', id),
-    reorderTasks: (taskIds) => ipcRenderer.invoke('db:tasks:reorder', taskIds)
+    reorderTasks: (taskIds) => ipcRenderer.invoke('db:tasks:reorder', taskIds),
+    setBrowserTabLocked: (taskId, tabId, locked) => ipcRenderer.invoke('db:tasks:setBrowserTabLocked', taskId, tabId, locked)
   },
   tags: {
     getTags: () => ipcRenderer.invoke('db:tags:getAll'),
@@ -958,6 +959,7 @@ const api: ElectronAPI = {
     listViews: () => ipcRenderer.invoke('browser:list-views'),
     setBounds: (viewId, bounds) => ipcRenderer.invoke('browser:set-bounds', viewId, bounds),
     setVisible: (viewId, visible) => ipcRenderer.invoke('browser:set-visible', viewId, visible),
+    setLocked: (viewId, locked) => ipcRenderer.invoke('browser:set-locked', viewId, locked),
     hideAll: () => ipcRenderer.invoke('browser:hide-all'),
     showAll: () => ipcRenderer.invoke('browser:show-all'),
     setHandoffPolicy: (viewId, policy) => ipcRenderer.invoke('browser:set-handoff-policy', viewId, policy),
@@ -999,6 +1001,11 @@ const api: ElectronAPI = {
       const handler = (_event: unknown, intent: BrowserCreateTaskFromLinkIntent) => cb(intent)
       ipcRenderer.on('browser:create-task-from-link', handler)
       return () => ipcRenderer.removeListener('browser:create-task-from-link', handler)
+    },
+    onAgentTouched: (cb) => {
+      const handler = (_event: unknown, payload: { taskId: string; tabId: string }) => cb(payload)
+      ipcRenderer.on('browser:agent-touched', handler)
+      return () => ipcRenderer.removeListener('browser:agent-touched', handler)
     },
     onEvent: (cb) => {
       const handler = (_event: unknown, data: { viewId: string; type: string; [key: string]: unknown }) => cb(data)
