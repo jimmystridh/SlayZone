@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { MoreHorizontal, Archive, Trash2, AlertTriangle, Loader2, Terminal as TerminalIcon, Globe, Settings2, GitBranch, FileCode, ChevronDown, ChevronRight, Flag, Plus, GripVertical, X, Info, CheckCircle2, XCircle, Stethoscope, Cpu, Circle, Repeat, LayoutTemplate, Paperclip, Power, Eye, Trophy, Award, Sparkles, PartyPopper, Shuffle, Swords, Flame, LayoutGrid } from 'lucide-react'
+import { MoreHorizontal, Archive, Trash2, AlertTriangle, Loader2, Terminal as TerminalIcon, Globe, Settings2, GitBranch, FileCode, ChevronDown, ChevronRight, Flag, Plus, GripVertical, X, Info, CheckCircle2, XCircle, Stethoscope, Cpu, Circle, Repeat, LayoutTemplate, Paperclip, Power, Eye, Trophy, Award, Sparkles, PartyPopper, Shuffle, Swords, Flame, PanelsTopLeft } from 'lucide-react'
 import { IconArrowsVertical, IconArrowsMaximize } from '@tabler/icons-react'
 import { DescriptionDialog } from './DescriptionDialog'
 import { ArtifactsPanel, type ArtifactsPanelHandle } from './ArtifactsPanel'
@@ -1945,7 +1945,10 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
             )}
 
 
-            <div className="flex items-center gap-1 min-w-0">
+            <div className={cn(
+              'flex items-center gap-1 min-w-0',
+              taskHeaderPanelAlign === 'left' && 'flex-row-reverse'
+            )}>
               {task && (isSecondaryWindow || !hasOpenSecondary) && (
                 taskHeaderPanelMode === 'menu' ? (
                   <Tooltip>
@@ -2016,7 +2019,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                               aria-label="Panels"
                               className="inline-flex items-center gap-1.5 rounded-md bg-surface-2 hover:bg-surface-3 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                             >
-                              <LayoutGrid className="size-4" />
+                              <PanelsTopLeft className="size-4" />
                               {activeCount > 0 && (
                                 <span className="tabular-nums text-[10px] text-muted-foreground/80">{activeCount}</span>
                               )}

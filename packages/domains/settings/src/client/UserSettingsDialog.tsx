@@ -9,6 +9,7 @@ import type { ContextManagerSection } from '../../../ai-config/src/client/Contex
 // Import autonomous tabs
 import { McpSettingsTab } from './tabs/McpSettingsTab'
 import { AppearanceSettingsTab } from './tabs/AppearanceSettingsTab'
+import { LayoutSettingsTab } from './tabs/LayoutSettingsTab'
 import { PanelsSettingsTab } from './tabs/PanelsSettingsTab'
 import { AiProvidersSettingsTab } from './tabs/AiProvidersSettingsTab'
 import { DataSettingsTab } from './tabs/DataSettingsTab'
@@ -74,7 +75,13 @@ export function UserSettingsDialog({
   }
 
   const navItems = [
-    { key: 'appearance', label: 'Appearance' },
+    {
+      key: 'appearance',
+      label: 'Appearance',
+      children: [
+        { key: 'appearance/layout', label: 'Layout' },
+      ]
+    },
     { key: 'worktrees', label: 'Worktrees' },
     { key: 'ai-providers', label: 'Providers' },
     {
@@ -115,6 +122,8 @@ export function UserSettingsDialog({
             {activeTab === 'appearance' && (
               <AppearanceSettingsTab />
             )}
+
+            {activeTab === 'appearance/layout' && <LayoutSettingsTab />}
 
             {(activeTab === 'ai-providers' || activeTab.startsWith('ai-providers/')) && (
               <AiProvidersSettingsTab
