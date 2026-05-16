@@ -593,15 +593,26 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   // whose viewId isn't registered yet still lock once their placeholder mounts.
   useEffect(() => {
     if (!taskId) return
+    let toLock: string | null = null
     for (const tab of tabs.tabs) {
       const curr = !!tab.agentTouched
       const prev = prevTouchedRef.current.get(tab.id)
       prevTouchedRef.current.set(tab.id, curr)
       if (prev === false && curr && !tab.locked) {
+        toLock = tab.id
         void window.api.db.setBrowserTabLocked(taskId, tab.id, true)
       }
     }
-  }, [taskId, tabs])
+    if (toLock) {
+      // Stamp locked locally too — the DB write goes through tasks:changed,
+      // but local tabs state can lag behind for a tick, leaving the lock
+      // banner stale. Pre-applying here keeps the UI in sync immediately.
+      onTabsChange({
+        ...tabs,
+        tabs: tabs.tabs.map(t => t.id === toLock ? { ...t, locked: true } : t),
+      })
+    }
+  }, [taskId, tabs, onTabsChange])
 
   // Listen for server-side trip events. The server also persists to DB and
   // notifies via tasks:changed, but renderer-local tabs state may have stale
@@ -1001,7 +1012,14 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
 
   const toggleActiveLock = () => {
     if (!activeTab || !taskId) return
-    void window.api.db.setBrowserTabLocked(taskId, activeTab.id, !activeTab.locked)
+    const next = !activeTab.locked
+    void window.api.db.setBrowserTabLocked(taskId, activeTab.id, next)
+    // Stamp locked locally (same reason as the auto-lock effect above) so
+    // the banner shows/hides immediately rather than waiting for tasks:changed.
+    onTabsChange({
+      ...tabs,
+      tabs: tabs.tabs.map(t => t.id === activeTab.id ? { ...t, locked: next } : t),
+    })
   }
 
   const handleNavigate = () => {
@@ -1129,6 +1147,16 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   // Shortcuts from WebContentsView are forwarded via before-input-event → browser-view:shortcut IPC → synthetic KeyboardEvent
 
   // --- Find-in-page ---
+  const focusFindInput = useCallback((select = false) => {
+    void window.api.browser.focusRenderer().finally(() => {
+      requestAnimationFrame(() => {
+        const input = findInputRef.current
+        input?.focus()
+        if (select) input?.select()
+      })
+    })
+  }, [])
+
   const closeFindMode = useCallback(() => {
     setFindMode(false)
     setFindText('')
@@ -1143,8 +1171,11 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     setFindMode(true)
     setFindText('')
     setFindResult(null)
-    requestAnimationFrame(() => findInputRef.current?.focus())
   }, [multiDeviceMode, extensionsManagerOpen])
+
+  useEffect(() => {
+    if (findMode) focusFindInput()
+  }, [findMode, focusFindInput])
 
   const findNext = useCallback((forward: boolean) => {
     if (!activeViewId || !findText) return
@@ -1187,8 +1218,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   // ([data-browser-panel] focusin) and WCV focus (browser-view:shortcut IPC).
   useShortcutAction('browser-find', () => {
     if (findMode) {
-      findInputRef.current?.focus()
-      findInputRef.current?.select()
+      focusFindInput(true)
     } else {
       openFindMode()
     }
