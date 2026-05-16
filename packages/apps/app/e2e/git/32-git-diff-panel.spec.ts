@@ -194,7 +194,8 @@ test.describe('Git diff panel', () => {
 
     // Clean working tree: prior tests left untracked files (e.g. newfile.txt
     // from test 83) — sweep them so the "Working tree clean" assertion holds.
-    git('git checkout -- base.txt')
+    try { git('git checkout -- base.txt') } catch { /* not tracked yet — ignore */ }
+    try { git('git reset --hard HEAD') } catch { /* no HEAD — ignore */ }
     git('git clean -fd')
     await refresh(mainWindow)
     await expect(p.getByText('Working tree clean')).toBeVisible({ timeout: 5_000 })
