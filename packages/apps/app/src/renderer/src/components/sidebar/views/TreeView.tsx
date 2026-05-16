@@ -591,6 +591,8 @@ export function TreeView({
 
   const treeStatusFilter = useTabStore((s) => s.treeStatusFilter)
   const statusFilter = useMemo(() => new Set(treeStatusFilter), [treeStatusFilter])
+  const treePriorityFilter = useTabStore((s) => s.treePriorityFilter)
+  const priorityFilter = useMemo(() => new Set(treePriorityFilter), [treePriorityFilter])
   const treeShowStatus = useTabStore((s) => s.treeShowStatus)
   const treeShowPriority = useTabStore((s) => s.treeShowPriority)
   const treeShowSubtasks = useTabStore((s) => s.treeShowSubtasks)
@@ -599,6 +601,7 @@ export function TreeView({
   const treeCrossOutDone = useTabStore((s) => s.treeCrossOutDone)
   const treeShowOnlyActive = useTabStore((s) => s.treeShowOnlyActive)
   const treeShowTemporary = useTabStore((s) => s.treeShowTemporary)
+  const treeShowAllOpen = useTabStore((s) => s.treeShowAllOpen)
   const treeShowWorktree = useTabStore((s) => s.treeShowWorktree)
   const treePinnedTaskIds = useTabStore((s) => s.treePinnedTaskIds)
   const pinnedSet = useMemo(() => new Set(treePinnedTaskIds), [treePinnedTaskIds])
@@ -620,20 +623,20 @@ export function TreeView({
   const passesFilter = useCallback(
     (t: Task) => {
       if (t.archived_at) return false
+      // Priority filter is universal — applies even to pinned/open-tab/session
+      // tasks. Empty set = no constraint.
+      const priorityOk = priorityFilter.size === 0 || priorityFilter.has(t.priority)
+      if (!priorityOk) return false
+      // Shortcuts: any of these passes the task straight through, bypassing
+      // temp, show-only-active, and status filters.
+      if (pinnedSet.has(t.id)) return true
+      if (sessionTaskIds.has(t.id)) return true
+      if (treeShowAllOpen && openTabTaskIds.has(t.id)) return true
       if (!treeShowTemporary && t.is_temporary) return false
-      if (treeShowOnlyActive) {
-        if (!sessionTaskIds.has(t.id) && !pinnedSet.has(t.id)) return false
-      }
-      // Temp tasks ignore the open-tab bypass: a done temp scratch session
-      // with a lingering tab is stale, not active work.
-      return (
-        statusFilter.has(t.status) ||
-        pinnedSet.has(t.id) ||
-        (!t.is_temporary && openTabTaskIds.has(t.id)) ||
-        sessionTaskIds.has(t.id)
-      )
+      if (treeShowOnlyActive) return false
+      return statusFilter.has(t.status)
     },
-    [statusFilter, pinnedSet, openTabTaskIds, sessionTaskIds, treeShowOnlyActive, treeShowTemporary]
+    [statusFilter, priorityFilter, pinnedSet, openTabTaskIds, sessionTaskIds, treeShowOnlyActive, treeShowTemporary, treeShowAllOpen]
   )
 
   // A task is "visible" if it passes the filter OR if any descendant in the same
@@ -658,7 +661,13 @@ export function TreeView({
       }
       for (const t of tasks) {
         if (t.parent_id) continue
-        if (!passesFilter(t)) continue
+        if (t.archived_at) continue
+        if (!treeShowTemporary && t.is_temporary) continue
+        // Strict root check — must directly match status + priority. Bypasses
+        // (open tab, pinned, session) don't qualify a root to pull in its
+        // subtree.
+        if (priorityFilter.size > 0 && !priorityFilter.has(t.priority)) continue
+        if (!statusFilter.has(t.status)) continue
         const stack: Task[] = [t]
         while (stack.length > 0) {
           const cur = stack.pop()!
@@ -666,9 +675,23 @@ export function TreeView({
           // Root passes filter, so include regardless of done. Descendants only
           // gated by excludeDone — keeps a matching root visible even if done.
           if (excludeDone && cur.id !== t.id && doneTaskIds?.has(cur.id)) continue
+          // Priority filter applies to descendants too.
+          if (cur.id !== t.id && priorityFilter.size > 0 && !priorityFilter.has(cur.priority)) continue
           set.add(cur.id)
           const kids = childrenOf.get(cur.id)
           if (kids) for (const k of kids) stack.push(k)
+        }
+      }
+      // Individual tasks (root or sub-task) that pass via bypass (e.g.
+      // open-tab) but whose strict-root subtree wasn't pulled in. Include the
+      // task itself + parent chain so the row shows and stays connected.
+      for (const t of tasks) {
+        if (set.has(t.id) || t.archived_at) continue
+        if (!passesFilter(t)) continue
+        let cur: Task | undefined = t
+        while (cur && !set.has(cur.id) && !cur.archived_at) {
+          set.add(cur.id)
+          cur = cur.parent_id ? taskById.get(cur.parent_id) : undefined
         }
       }
       return set
@@ -686,7 +709,7 @@ export function TreeView({
       }
     }
     return set
-  }, [tasks, passesFilter, treeShowSubtasks, treeIncludeAllSubtasks, treeIncludeAllUndoneSubtasks, doneTaskIds])
+  }, [tasks, passesFilter, treeShowSubtasks, treeIncludeAllSubtasks, treeIncludeAllUndoneSubtasks, doneTaskIds, priorityFilter, statusFilter, treeShowTemporary])
 
   // Visible tasks bucketed and sorted per project using the tree-local order
   // (no coupling to kanban filter). orderTreeRows always tiebreaks by `order`

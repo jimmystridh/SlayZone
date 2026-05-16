@@ -110,10 +110,12 @@ test.describe('TreeView setting combinations', () => {
       sidebarView: 'tree',
       selectedProjectId: projectId,
       treeStatusFilter: ['in_progress'],
+      treePriorityFilter: [1, 2, 3, 4, 5],
       treeShowSubtasks: true,
       treeShowAllSubtasks: false,
       treeShowOnlyActive: false,
       treeShowTemporary: true,
+      treeShowAllOpen: true,
       treePinnedTaskIds: [],
       treeCrossOutDone: false,
       treeShowStatus: false,
@@ -153,8 +155,93 @@ test.describe('TreeView setting combinations', () => {
     await expect(taskRow(mainWindow, rootDone)).toHaveCount(0)
   })
 
-  test('open tab bypasses status filter', async ({ mainWindow }) => {
+  test('open tab bypasses status filter (treeShowAllOpen on)', async ({ mainWindow }) => {
     await setTabs(mainWindow, [rootInProgress, rootDone])
+    await expect(taskRow(mainWindow, rootDone)).toBeVisible()
+  })
+
+  test('treeShowAllOpen off: open tab does NOT bypass status filter', async ({ mainWindow }) => {
+    await patchStore(mainWindow, { treeShowAllOpen: false, treeShowSubtasks: false })
+    await setTabs(mainWindow, [rootInProgress, rootDone])
+    await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
+    await expect(taskRow(mainWindow, rootDone)).toHaveCount(0)
+  })
+
+  test('priority filter always applies — even to open-tab tasks', async ({ mainWindow }) => {
+    await seed(mainWindow).updateTask({ id: rootDone, priority: 1 })
+    await seed(mainWindow).refreshData()
+    await patchStore(mainWindow, { treePriorityFilter: [4] })
+    await setTabs(mainWindow, [rootInProgress, rootDone])
+    // rootDone has open tab + treeShowAllOpen=true but its priority (1) is
+    // not in the filter ([4]) → hidden. Priority is the one universal filter.
+    await expect(taskRow(mainWindow, rootDone)).toHaveCount(0)
+  })
+
+  test('treeShowAllOpen on: open-tab task bypasses show-only-active', async ({ mainWindow }) => {
+    await patchStore(mainWindow, { treeShowOnlyActive: true })
+    await setTabs(mainWindow, [rootInProgress, rootDone])
+    await killAllPtys(mainWindow)
+    await expect(taskRow(mainWindow, rootDone)).toBeVisible()
+  })
+
+  test('treeShowAllOpen on: open-tab temp task bypasses temp filter', async ({ mainWindow }) => {
+    await patchStore(mainWindow, { treeShowTemporary: false, treeShowSubtasks: false })
+    await setTabs(mainWindow, [rootInProgress, tempInProgress])
+    await expect(taskRow(mainWindow, tempInProgress)).toBeVisible()
+  })
+
+  test('priority filter limits visible tasks to selected priorities', async ({ mainWindow }) => {
+    await seed(mainWindow).updateTask({ id: rootInProgress, priority: 1 })
+    await seed(mainWindow).updateTask({ id: rootTodo, priority: 4 })
+    await seed(mainWindow).refreshData()
+    await patchStore(mainWindow, {
+      treeStatusFilter: ['in_progress', 'todo'],
+      treePriorityFilter: [1],
+      treeShowSubtasks: false,
+    })
+    await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
+    await expect(taskRow(mainWindow, rootTodo)).toHaveCount(0)
+  })
+
+  test('show-all-subtasks: bypass adds task + parent chain only (not full subtree)', async ({ mainWindow }) => {
+    // Empty status filter → nothing strict-matches. But open tab on
+    // childDone bypasses → childDone + rootInProgress (parent chain) shown.
+    // childTodo (sibling, no open tab) should NOT be pulled in.
+    await patchStore(mainWindow, {
+      treeStatusFilter: [],
+      treeShowSubtasks: true,
+      treeShowAllSubtasks: true,
+    })
+    await setTabs(mainWindow, [rootInProgress, childDone])
+    await expect(taskRow(mainWindow, childDone)).toBeVisible()
+    await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
+    await expect(taskRow(mainWindow, childTodo)).toHaveCount(0)
+  })
+
+  test('priority filter applies to descendants in show-all-subtasks mode', async ({ mainWindow }) => {
+    // Root passes filter; child has different priority → child should be hidden.
+    await seed(mainWindow).updateTask({ id: rootInProgress, priority: 1 })
+    await seed(mainWindow).updateTask({ id: childTodo, priority: 3 })
+    await seed(mainWindow).refreshData()
+    await patchStore(mainWindow, {
+      treeStatusFilter: ['in_progress'],
+      treePriorityFilter: [1],
+      treeShowSubtasks: true,
+      treeShowAllSubtasks: true,
+    })
+    await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
+    await expect(taskRow(mainWindow, childTodo)).toHaveCount(0)
+  })
+
+  test('priority filter empty = no constraint (all priorities pass)', async ({ mainWindow }) => {
+    await patchStore(mainWindow, {
+      treeStatusFilter: ['in_progress', 'todo', 'done'],
+      treePriorityFilter: [],
+      treeShowSubtasks: false,
+      treeShowAllOpen: false,
+    })
+    await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
+    await expect(taskRow(mainWindow, rootTodo)).toBeVisible()
     await expect(taskRow(mainWindow, rootDone)).toBeVisible()
   })
 
@@ -216,9 +303,8 @@ test.describe('TreeView setting combinations', () => {
   test('show only active: open tab alone does not save inactive task', async ({ mainWindow }) => {
     await setTabs(mainWindow, [rootInProgress, rootDone])
     await killAllPtys(mainWindow)
-    await patchStore(mainWindow, { treeShowOnlyActive: true })
-    // rootInProgress has anchor tab AND no active session → hidden by show-only-active
-    // (open tab is NOT a bypass).
+    // Disable show-all-open so open-tab no longer bypasses filters.
+    await patchStore(mainWindow, { treeShowOnlyActive: true, treeShowAllOpen: false })
     await expect(taskRow(mainWindow, rootInProgress)).toHaveCount(0)
     await expect(taskRow(mainWindow, rootDone)).toHaveCount(0)
   })
@@ -235,6 +321,7 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowOnlyActive: true,
       treeStatusFilter: ['in_progress', 'todo', 'done'],
+      treeShowAllOpen: false,
     })
     await expect(taskRow(mainWindow, rootInProgress)).toHaveCount(0)
     await expect(taskRow(mainWindow, rootTodo)).toHaveCount(0)
@@ -305,12 +392,59 @@ test.describe('TreeView setting combinations', () => {
     await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
   })
 
-  test('temporary done task stays hidden even with open tab', async ({ mainWindow }) => {
-    // Open-tab bypass does NOT apply to temporary tasks — done temp scratch
-    // sessions are stale work, not active.
+  test('pinned task is shortcut: bypasses temp filter when temp hidden', async ({ mainWindow }) => {
+    // Per diagram: Pinned? -> Visible. Pinned bypasses every filter except
+    // archived + priority. So a pinned temp task shows even with temp hidden.
+    await patchStore(mainWindow, {
+      treeShowSubtasks: false,
+      treeShowTemporary: false,
+      treePinnedTaskIds: [tempInProgress],
+    })
+    await expect(taskRow(mainWindow, tempInProgress)).toBeVisible()
+  })
+
+  test('pinned task is shortcut: bypasses show-only-active', async ({ mainWindow }) => {
+    await patchStore(mainWindow, {
+      treeShowSubtasks: false,
+      treeShowOnlyActive: true,
+      treeShowAllOpen: false,
+      treePinnedTaskIds: [rootDone],
+    })
+    await expect(taskRow(mainWindow, rootDone)).toBeVisible()
+  })
+
+  test('pinned task is shortcut: bypasses status filter', async ({ mainWindow }) => {
+    await patchStore(mainWindow, {
+      treeShowSubtasks: false,
+      treeStatusFilter: ['in_progress'],
+      treePinnedTaskIds: [rootDone],
+    })
+    await expect(taskRow(mainWindow, rootDone)).toBeVisible()
+  })
+
+  test('priority filter applies to pinned tasks (universal — no shortcut)', async ({ mainWindow }) => {
+    // Diagram: Priority check comes BEFORE Pinned shortcut, so priority
+    // always applies. Pinned with non-matching priority -> drop.
+    await seed(mainWindow).updateTask({ id: rootDone, priority: 1 })
+    await seed(mainWindow).refreshData()
+    await patchStore(mainWindow, {
+      treeShowSubtasks: false,
+      treePriorityFilter: [4],
+      treePinnedTaskIds: [rootDone],
+    })
+    await expect(taskRow(mainWindow, rootDone)).toHaveCount(0)
+  })
+
+  test('temporary done task stays hidden when treeShowAllOpen off', async ({ mainWindow }) => {
+    // With the toggle off, open-tab bypass is disabled — temp done task with
+    // a tab is filtered out by status filter like any other task.
     await setTabs(mainWindow, [rootInProgress, tempDone])
     await killAllPtys(mainWindow)
-    await patchStore(mainWindow, { treeShowSubtasks: false, treeStatusFilter: ['in_progress'] })
+    await patchStore(mainWindow, {
+      treeShowSubtasks: false,
+      treeStatusFilter: ['in_progress'],
+      treeShowAllOpen: false,
+    })
     await expect(taskRow(mainWindow, tempDone)).toHaveCount(0)
   })
 

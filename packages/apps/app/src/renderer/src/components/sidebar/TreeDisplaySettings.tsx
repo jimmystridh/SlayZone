@@ -16,8 +16,10 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
+  PriorityIcon,
 } from '@slayzone/ui'
 import { useTabStore, type TreeGroupBy, type TreeOrderBy, type TreeOrderDir } from '@slayzone/settings'
+import { PRIORITY_LABELS } from '@slayzone/tasks'
 
 export function TreeDisplaySettings() {
   const treeShowStatus = useTabStore((s) => s.treeShowStatus)
@@ -28,8 +30,10 @@ export function TreeDisplaySettings() {
   const treeCrossOutDone = useTabStore((s) => s.treeCrossOutDone)
   const treeShowOnlyActive = useTabStore((s) => s.treeShowOnlyActive)
   const treeShowTemporary = useTabStore((s) => s.treeShowTemporary)
+  const treeShowAllOpen = useTabStore((s) => s.treeShowAllOpen)
   const treeShowWorktree = useTabStore((s) => s.treeShowWorktree)
   const treeStatusFilter = useTabStore((s) => s.treeStatusFilter)
+  const treePriorityFilter = useTabStore((s) => s.treePriorityFilter)
   const treeGroupBy = useTabStore((s) => s.treeGroupBy)
   const treeOrderBy = useTabStore((s) => s.treeOrderBy)
   const treeOrderDir = useTabStore((s) => s.treeOrderDir)
@@ -50,8 +54,10 @@ export function TreeDisplaySettings() {
   const setTreeCrossOutDone = useTabStore((s) => s.setTreeCrossOutDone)
   const setTreeShowOnlyActive = useTabStore((s) => s.setTreeShowOnlyActive)
   const setTreeShowTemporary = useTabStore((s) => s.setTreeShowTemporary)
+  const setTreeShowAllOpen = useTabStore((s) => s.setTreeShowAllOpen)
   const setTreeShowWorktree = useTabStore((s) => s.setTreeShowWorktree)
   const setTreeStatusFilter = useTabStore((s) => s.setTreeStatusFilter)
+  const setTreePriorityFilter = useTabStore((s) => s.setTreePriorityFilter)
 
   const statusOptions = useMemo(() => buildStatusOptions(null), [])
   const toggleStatus = (value: string) => {
@@ -59,6 +65,21 @@ export function TreeDisplaySettings() {
       treeStatusFilter.includes(value)
         ? treeStatusFilter.filter((s) => s !== value)
         : [...treeStatusFilter, value]
+    )
+  }
+  const priorityOptions = useMemo(
+    () =>
+      ([1, 2, 3, 4, 5] as const).map((value) => ({
+        value,
+        label: PRIORITY_LABELS[value],
+      })),
+    []
+  )
+  const togglePriority = (value: number) => {
+    setTreePriorityFilter(
+      treePriorityFilter.includes(value)
+        ? treePriorityFilter.filter((p) => p !== value)
+        : [...treePriorityFilter, value]
     )
   }
 
@@ -155,6 +176,13 @@ export function TreeDisplaySettings() {
               onChange={setTreeShowOnlyActive}
             />
             <Row
+              id="tree-show-all-open"
+              label="Show all open tasks"
+              hint="Always include tasks that have an open tab, regardless of filters"
+              checked={treeShowAllOpen}
+              onChange={setTreeShowAllOpen}
+            />
+            <Row
               id="tree-show-temporary"
               label="Show temporary"
               hint="Include temporary scratch tasks"
@@ -226,6 +254,9 @@ export function TreeDisplaySettings() {
             statusOptions={statusOptions}
             selected={treeStatusFilter}
             onToggle={toggleStatus}
+            priorityOptions={priorityOptions}
+            selectedPriorities={treePriorityFilter}
+            onTogglePriority={togglePriority}
           />
 
         </div>
@@ -240,17 +271,25 @@ function FiltersSection({
   statusOptions,
   selected,
   onToggle,
+  priorityOptions,
+  selectedPriorities,
+  onTogglePriority,
 }: {
   statusOptions: StatusOpt[]
   selected: string[]
   onToggle: (v: string) => void
+  priorityOptions: ReadonlyArray<{ value: number; label: string }>
+  selectedPriorities: number[]
+  onTogglePriority: (v: number) => void
 }) {
   const selectedSet = useMemo(() => new Set(selected), [selected])
+  const selectedPrioritySet = useMemo(() => new Set(selectedPriorities), [selectedPriorities])
   return (
     <div className="space-y-2">
       <SectionHeader>Filters</SectionHeader>
+      <Label className="text-sm">Status</Label>
       <p className="text-xs text-muted-foreground/80 leading-snug">
-        Limit by status. Pinned and open tasks always show.
+        Limit by status. Pinned tasks and active sessions show regardless of status.
       </p>
       <div className="flex flex-wrap gap-1">
         {statusOptions.map((opt) => {
@@ -275,6 +314,40 @@ function FiltersSection({
             </button>
           )
           // Tooltip only for inactive (icon-only) state.
+          if (checked) return <span key={opt.value}>{buttonInner}</span>
+          return (
+            <Tooltip key={opt.value} delayDuration={300}>
+              <TooltipTrigger asChild>{buttonInner}</TooltipTrigger>
+              <TooltipContent side="top">{opt.label}</TooltipContent>
+            </Tooltip>
+          )
+        })}
+      </div>
+      <Label className="text-sm pt-1">Priority</Label>
+      <p className="text-xs text-muted-foreground/80 leading-snug">
+        Limit by priority. Always applied — no bypass for pinned or open-tab tasks.
+      </p>
+      <div className="flex flex-wrap gap-1">
+        {priorityOptions.map((opt) => {
+          const checked = selectedPrioritySet.has(opt.value)
+          const buttonInner = (
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={checked}
+              aria-label={opt.label}
+              onClick={() => onTogglePriority(opt.value)}
+              className={cn(
+                'inline-flex items-center justify-center rounded-md border transition-colors',
+                checked
+                  ? 'border-border bg-accent/60 text-foreground hover:border-foreground/40 gap-1.5 px-2 h-7 text-xs'
+                  : 'border-transparent bg-input/30 text-muted-foreground/70 hover:text-foreground hover:border-border size-7'
+              )}
+            >
+              <PriorityIcon priority={opt.value} className={cn('size-3.5 shrink-0', !checked && 'opacity-50')} />
+              {checked && <span>{opt.label}</span>}
+            </button>
+          )
           if (checked) return <span key={opt.value}>{buttonInner}</span>
           return (
             <Tooltip key={opt.value} delayDuration={300}>
