@@ -10,7 +10,7 @@ let WORKTREE_PATH: string
 
 async function openTaskViaSearch(page: import('@playwright/test').Page, title: string) {
   await pressShortcut(page, 'search')
-  const input = page.getByPlaceholder('Search files, tasks, projects...')
+  const input = page.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
   await expect(input).toBeVisible()
   await input.fill(title)
   await page.keyboard.press('Enter')

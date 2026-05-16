@@ -23,13 +23,13 @@ test.describe('Navigation & tabs', () => {
 
   test('search shortcut opens search dialog', async ({ mainWindow }) => {
     await pressShortcut(mainWindow, 'search')
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).toBeVisible({
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).toBeVisible({
       timeout: 3_000,
     })
   })
 
   test('search finds tasks', async ({ mainWindow }) => {
-    const searchInput = mainWindow.getByPlaceholder('Search files, tasks, projects...')
+    const searchInput = mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
     await searchInput.fill('Nav search')
     await expect(mainWindow.locator('[cmdk-item]').getByText('Nav search task')).toBeVisible({ timeout: 3_000 })
     await mainWindow.keyboard.press('Escape')
@@ -37,7 +37,7 @@ test.describe('Navigation & tabs', () => {
 
   test('search shortcut selects result and navigates', async ({ mainWindow }) => {
     await pressShortcut(mainWindow, 'search')
-    const searchInput = mainWindow.getByPlaceholder('Search files, tasks, projects...')
+    const searchInput = mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
     await searchInput.fill('Nav detail task')
     await expect(mainWindow.locator('[cmdk-item]').getByText('Nav detail task')).toBeVisible({ timeout: 3_000 })
 
@@ -57,7 +57,7 @@ test.describe('Navigation & tabs', () => {
 
   test('open task from kanban and close tab', async ({ mainWindow }) => {
     await mainWindow.keyboard.press('Escape')
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).not.toBeVisible()
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).not.toBeVisible()
 
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)

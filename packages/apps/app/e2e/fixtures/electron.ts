@@ -537,7 +537,7 @@ export async function clickProject(page: Page, abbrev: string) {
   }
   // Fallback: open command palette and select by query when sidebar badges are unavailable.
   await pressShortcut(page, 'search')
-  const input = page.getByPlaceholder('Search files, tasks, projects...')
+  const input = page.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
   await input.fill(abbrev)
   await page.keyboard.press('Enter')
   await input.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {})

@@ -234,14 +234,14 @@ test.describe('File editor', () => {
   // Quick-open is now part of the unified search dialog; switch to the Files filter.
   const openFilesSearch = async (mainWindow: import('@playwright/test').Page) => {
     await pressShortcut(mainWindow, 'search')
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).toBeVisible({ timeout: 3_000 })
     await mainWindow.getByRole('button', { name: 'Files', exact: true }).click()
   }
 
   test('search shortcut opens quick open dialog', async ({ mainWindow }) => {
     await openFilesSearch(mainWindow)
     // Unified search shows results only after a query.
-    await mainWindow.getByPlaceholder('Search files, tasks, projects...').fill('h')
+    await mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...').fill('h')
     await expect(mainWindow.locator('[cmdk-item]').first()).toBeVisible({ timeout: 5_000 })
 
     await mainWindow.keyboard.press('Escape')
@@ -250,7 +250,7 @@ test.describe('File editor', () => {
   test('quick open filters files by query', async ({ mainWindow }) => {
     await openFilesSearch(mainWindow)
 
-    const input = mainWindow.getByPlaceholder('Search files, tasks, projects...')
+    const input = mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
     await input.fill('hello')
 
     // Should show hello.ts
@@ -263,7 +263,7 @@ test.describe('File editor', () => {
   test('quick open does not show gitignored files', async ({ mainWindow }) => {
     await openFilesSearch(mainWindow)
 
-    const input = mainWindow.getByPlaceholder('Search files, tasks, projects...')
+    const input = mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
     await input.fill('pkg.json')
 
     // Should show "No files found" since node_modules/pkg.json is gitignored
@@ -275,7 +275,7 @@ test.describe('File editor', () => {
   test('selecting a file in quick open opens it', async ({ mainWindow }) => {
     await openFilesSearch(mainWindow)
 
-    const input = mainWindow.getByPlaceholder('Search files, tasks, projects...')
+    const input = mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
     await input.fill('index.ts')
 
     // Select the first match

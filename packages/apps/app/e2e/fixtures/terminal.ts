@@ -53,7 +53,7 @@ export async function openTaskTerminal(
     await taskCardTitle.click()
   } else {
     await pressShortcut(page, 'search')
-    const searchInput = page.getByPlaceholder('Search files, tasks, projects...')
+    const searchInput = page.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
     await expect(searchInput).toBeVisible()
     await searchInput.fill(opts.taskTitle)
     const dialog = page.locator('[role="dialog"]:visible').last()

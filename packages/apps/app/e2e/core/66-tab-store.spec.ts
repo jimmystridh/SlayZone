@@ -39,7 +39,7 @@ const openTaskViaSearch = async (page: Page, title: string) => {
     await card.click()
   } else {
     await pressShortcut(page, 'search')
-    const input = page.getByPlaceholder('Search files, tasks, projects...')
+    const input = page.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
     await expect(input).toBeVisible({ timeout: 5_000 })
     await input.fill(title)
     await page.getByRole('dialog').last().getByText(title).first().click()

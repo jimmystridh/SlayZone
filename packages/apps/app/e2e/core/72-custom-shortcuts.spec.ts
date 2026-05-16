@@ -90,12 +90,12 @@ test.describe.serial('Custom keyboard shortcuts', () => {
     await rebindShortcut(mainWindow, 'Search', 'Meta+Shift+p')
 
     await mainWindow.keyboard.press('Meta+Shift+p')
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).toBeVisible({ timeout: 3_000 })
     await mainWindow.keyboard.press('Escape')
 
     await pressShortcut(mainWindow, 'search')
     await mainWindow.waitForTimeout(500)
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).not.toBeVisible()
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).not.toBeVisible()
 
     await resetShortcuts(mainWindow)
   })
@@ -110,13 +110,13 @@ test.describe.serial('Custom keyboard shortcuts', () => {
 
     // New shortcut should work inside task detail page
     await mainWindow.keyboard.press('Meta+Shift+p')
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).toBeVisible({ timeout: 3_000 })
     await mainWindow.keyboard.press('Escape')
 
     // Old shortcut should NOT work
     await pressShortcut(mainWindow, 'search')
     await mainWindow.waitForTimeout(500)
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).not.toBeVisible()
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).not.toBeVisible()
 
     // Cleanup: go back to home, reset
     await goToHome(mainWindow)
@@ -130,7 +130,7 @@ test.describe.serial('Custom keyboard shortcuts', () => {
     await resetShortcuts(mainWindow)
 
     await pressShortcut(mainWindow, 'search')
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).toBeVisible({ timeout: 3_000 })
     await mainWindow.keyboard.press('Escape')
   })
 
@@ -144,7 +144,7 @@ test.describe.serial('Custom keyboard shortcuts', () => {
     await goToHome(mainWindow)
 
     await mainWindow.keyboard.press('Meta+Shift+p')
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).toBeVisible({ timeout: 3_000 })
     await mainWindow.keyboard.press('Escape')
 
     await resetShortcuts(mainWindow)
@@ -184,7 +184,7 @@ test.describe.serial('Custom keyboard shortcuts', () => {
 
     // The old New Task binding should be swapped onto Search.
     await mainWindow.keyboard.press('Meta+n')
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).toBeVisible({ timeout: 3_000 })
     await mainWindow.keyboard.press('Escape')
 
     await resetShortcuts(mainWindow)
@@ -255,7 +255,7 @@ test.describe.serial('Custom keyboard shortcuts', () => {
     // This test verifies that the global search rebind doesn't break terminal search
     // and that the new global search key works from within a task tab
     await mainWindow.keyboard.press('Meta+Shift+p')
-    await expect(mainWindow.getByPlaceholder('Search files, tasks, projects...')).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')).toBeVisible({ timeout: 3_000 })
     await mainWindow.keyboard.press('Escape')
 
     await goToHome(mainWindow)
