@@ -81,22 +81,27 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
     await expect(mainWindow.locator('[data-testid="browser-agent-lock-toggle"]:visible')).toHaveCount(0)
   })
 
-  // QUARANTINED 2026-05-16: BrowserPanel now renders TWO elements with
-  // data-testid="browser-agent-lock-toggle" — one in the lock banner
-  // (data-locked="true") and one in the URL bar (data-locked="false",
-  // .invisible when !agentTouched). The remaining 4 tests need rewriting to
-  // disambiguate (use [data-testid="browser-agent-lock-banner"] for locked
-  // state vs. url-bar toggle for unlocked). Auto-lock behavior itself still
-  // works; only the selector contract is ambiguous.
+  // BrowserPanel renders two elements with data-testid="browser-agent-lock-
+  // toggle": one inside the lock banner (data-locked="true"), one in the URL
+  // bar (data-locked="false"). Disambiguate via the banner wrapper or the
+  // data-locked attribute.
+  const bannerToggle = (page: import('@playwright/test').Page) =>
+    page.locator('[data-testid="browser-agent-lock-banner"] [data-testid="browser-agent-lock-toggle"]')
+  const urlBarToggle = (page: import('@playwright/test').Page) =>
+    page.locator('[data-testid="browser-agent-lock-toggle"][data-locked="false"]:visible')
+
+  // QUARANTINED 2026-05-16 (revisit): auto-lock banner doesn't surface after
+  // CLI nav even with disambiguated selectors. Suspect tabs-state stale read
+  // between markTabAgentTouched and the renderer's prev=false→curr=true diff.
+  // Needs source-side trace to confirm whether the transition observer is
+  // missing first-trip events or the lock-write doesn't propagate.
   test.skip('navigate via CLI trips agentTouched, surfaces toggle, and auto-locks the tab', async ({ mainWindow }) => {
     const URL_A = writeFixture('a', 'page-a')
     const r = runCli('tasks', 'browser', 'navigate', URL_A)
     expect(r.status, r.stderr).toBe(0)
 
-    // Toggle appears in the URL bar and is in the locked state (auto-lock on first trip).
-    const toggle = mainWindow.locator('[data-testid="browser-agent-lock-toggle"]')
-    await expect(toggle).toHaveCount(1, { timeout: 5_000 })
-    await expect(toggle).toHaveAttribute('data-locked', 'true', { timeout: 5_000 })
+    // Auto-lock on first trip → banner toggle (data-locked="true") appears.
+    await expect(bannerToggle(mainWindow)).toBeVisible({ timeout: 5_000 })
 
     // Main-process state reflects locked.
     const views = await getViewsForTask(mainWindow, taskId)
@@ -106,15 +111,17 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
   })
 
   test.skip('clicking the toggle unlocks; clicking again re-locks', async ({ mainWindow }) => {
-    const toggle = mainWindow.locator('[data-testid="browser-agent-lock-toggle"]')
     const views = await getViewsForTask(mainWindow, taskId)
 
-    await toggle.click()
-    await expect(toggle).toHaveAttribute('data-locked', 'false')
+    // Locked → click banner toggle → unlocked.
+    await bannerToggle(mainWindow).click()
+    await expect(bannerToggle(mainWindow)).toHaveCount(0, { timeout: 3_000 })
+    await expect(urlBarToggle(mainWindow)).toBeVisible({ timeout: 3_000 })
     await expect.poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean).toBe(false)
 
-    await toggle.click()
-    await expect(toggle).toHaveAttribute('data-locked', 'true')
+    // Unlocked → click URL-bar toggle → locked.
+    await urlBarToggle(mainWindow).click()
+    await expect(bannerToggle(mainWindow)).toBeVisible({ timeout: 3_000 })
     await expect.poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean).toBe(true)
   })
 
@@ -139,21 +146,22 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
     expect(click.status, click.stderr).toBe(0)
   })
 
-  test.skip('agentTouched is sticky in the DB after first trip', async ({ electronApp }) => {
-    const stored = await electronApp.evaluate(async ({ app }, { taskId, dbPath }) => {
-      void app
-      const Database = (await import('better-sqlite3')).default as unknown as new (p: string) => {
-        prepare: (sql: string) => { get: (id: string) => { browser_tabs: string | null } | undefined }
-        close: () => void
-      }
-      const db = new Database(dbPath)
-      try {
-        const row = db.prepare('SELECT browser_tabs FROM tasks WHERE id = ?').get(taskId)
-        return row?.browser_tabs ?? null
-      } finally {
-        db.close()
-      }
-    }, { taskId, dbPath })
+  test('agentTouched is sticky in the DB after first trip', async ({ electronApp }) => {
+    // Trip agentTouched directly via CLI nav (the previous "auto-lock" test
+    // is quarantined, so this test owns the trip).
+    const URL_T = writeFixture('trip', 'page-trip')
+    const r = runCli('tasks', 'browser', 'navigate', URL_T)
+    expect(r.status, r.stderr).toBe(0)
+
+    // Use the test-only __db global instead of dynamically importing
+    // better-sqlite3 (dynamic imports aren't allowed inside evaluate).
+    const stored = await electronApp.evaluate((_, tid) => {
+      type DB = { prepare: (sql: string) => { get: (id: string) => { browser_tabs: string | null } | undefined } }
+      const db = (globalThis as Record<string, unknown>).__db as DB | undefined
+      if (!db) throw new Error('__db not exposed by main')
+      const row = db.prepare('SELECT browser_tabs FROM tasks WHERE id = ?').get(tid)
+      return row?.browser_tabs ?? null
+    }, taskId)
 
     expect(stored).toBeTruthy()
     const parsed = JSON.parse(stored as string) as { tabs: { id: string; agentTouched?: boolean }[] }
