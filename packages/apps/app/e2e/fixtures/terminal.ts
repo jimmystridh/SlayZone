@@ -152,6 +152,32 @@ export async function switchTerminalMode(page: Page, mode: TerminalMode): Promis
     const refresh = (window as { __slayzone_refreshData?: () => Promise<void> | void }).__slayzone_refreshData
     await refresh?.()
   }, { id: taskId, m: mode })
+  // Force a TaskDetailPage remount by toggling tabs — handleModeChange in
+  // source does this implicitly via markSkipCache + remountTerminal. Without
+  // the remount, Terminal's useEffect won't re-run and no new PTY will spawn
+  // for the new mode.
+  await page.evaluate((id) => {
+    type Store = {
+      getState: () => {
+        tabs: { type: string; taskId?: string }[]
+        activeTabIndex: number
+        setActiveTabIndex: (i: number) => void
+      }
+    }
+    const store = (window as unknown as { __slayzone_tabStore?: Store }).__slayzone_tabStore
+    if (!store) return
+    const state = store.getState()
+    const idx = state.tabs.findIndex(t => t.type === 'task' && t.taskId === id)
+    if (idx < 0) return
+    const otherIdx = idx === 0 ? Math.min(1, state.tabs.length - 1) : 0
+    state.setActiveTabIndex(otherIdx)
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        store.getState().setActiveTabIndex(idx)
+        setTimeout(resolve, 50)
+      }, 100)
+    })
+  }, taskId)
   // Wait for trigger to reflect the new label
   const expectedLabel = (labels[mode] ?? [mode])[0]
   await expect(trigger).toContainText(expectedLabel, { timeout: 5_000 })

@@ -1148,12 +1148,16 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
 
   // --- Find-in-page ---
   const focusFindInput = useCallback((select = false) => {
+    const focusLocalTarget = () => {
+      containerRef.current?.focus({ preventScroll: true })
+      const input = findInputRef.current
+      input?.focus({ preventScroll: true })
+      if (select) input?.select()
+    }
+
+    focusLocalTarget()
     void window.api.browser.focusRenderer().finally(() => {
-      requestAnimationFrame(() => {
-        const input = findInputRef.current
-        input?.focus()
-        if (select) input?.select()
-      })
+      requestAnimationFrame(focusLocalTarget)
     })
   }, [])
 

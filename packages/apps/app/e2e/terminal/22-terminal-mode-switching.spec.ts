@@ -43,8 +43,18 @@ test.describe('Terminal mode switching', () => {
 
   /** Open the terminal header dropdown (MoreHorizontal trigger) */
   const openTerminalMenu = async (page: import('@playwright/test').Page) => {
+    // Radix react-remove-scroll can leave pointer-events:none on <html>/<body>
+    // after a dialog closes; clear before clicking so the click isn't
+    // intercepted.
+    await page.evaluate(() => {
+      for (const el of [document.documentElement, document.body]) {
+        if (getComputedStyle(el).pointerEvents === 'none') el.style.pointerEvents = ''
+      }
+    })
     await page.locator('.lucide-ellipsis:visible, .lucide-more-horizontal:visible').first().click()
-    await expect(page.locator('[role="menu"]')).toBeVisible()
+    // Prior ContextMenu (mode switcher) may still be open — scope to Terminal
+    // menu specifically via its aria-label.
+    await expect(page.getByRole('menu', { name: 'Terminal menu' })).toBeVisible()
   }
 
   // Note: 'Sync name' menu item was removed from the terminal header dropdown.
@@ -78,11 +88,7 @@ test.describe('Terminal mode switching', () => {
     expect(task?.terminal_mode).toBe('codex')
   })
 
-  // QUARANTINED 2026-05-16 (revisit): the switch itself works via fallback,
-  // but openTerminalMenu's lucide-ellipsis click is intercepted by <html>
-  // (pointer-events leak from a prior Radix overlay). Skip until the
-  // overlay cleanup is more reliable.
-  test.skip('switch back to Claude Code', async ({ mainWindow }) => {
+  test('switch back to Claude Code', async ({ mainWindow }) => {
     await switchTerminalMode(mainWindow, 'claude-code')
 
     await expect(modeTrigger(mainWindow)).toHaveText(/Claude( Code)?/)

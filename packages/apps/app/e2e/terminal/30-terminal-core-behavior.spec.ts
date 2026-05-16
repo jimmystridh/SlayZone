@@ -115,10 +115,10 @@ test.describe('Terminal mode switch teardown', () => {
     await s.refreshData()
   })
 
-  // QUARANTINED 2026-05-16: DB-level switchTerminalMode fallback kills the
-  // old PTY but doesn't trigger the renderer remount that respawns a PTY for
-  // the new mode. Test requires the full handleModeChange path; needs a
-  // working ContextMenu fixture.
+  // QUARANTINED 2026-05-16: tab-toggle remount doesn't trigger Terminal's
+  // useEffect to re-spawn for the new mode (codex). handleModeChange uses
+  // markSkipCache+remountTerminal which aren't exposed. Needs source-level
+  // test hook.
   test.skip('kills previous session and issues create for the new mode', async ({ mainWindow }) => {
     const sessionId = getMainSessionId(taskId)
     const marker = `BEFORE_SWITCH_${Date.now()}`
