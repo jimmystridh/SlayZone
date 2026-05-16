@@ -128,9 +128,10 @@ test.describe('Session banner behavior', () => {
     expect(task?.codex_conversation_id ?? null).toBeNull()
   })
 
-  // QUARANTINED 2026-05-16: switchTerminalMode menu doesn't open for non-
-  // 'terminal' modes in fixture (same as 22). Skip until ContextMenu fixture
-  // fixed.
+  // QUARANTINED 2026-05-16: fixture fallback handles the mode switches, but
+  // the gemini "Run /stats" detect button doesn't appear after the switch.
+  // The detect banner condition probably requires PTY data the fallback path
+  // doesn't generate.
   test.skip('switching modes transitions between detect / unavailable / no banner', async ({ mainWindow }) => {
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
