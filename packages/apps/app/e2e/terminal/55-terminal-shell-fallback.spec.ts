@@ -47,18 +47,21 @@ test.describe('Terminal shell fallback on CLI crash', () => {
     }
   })
 
-  // QUARANTINED 2026-05-16: PTY never registers — initialCommand 'false'
-  // exits before the test can observe the session. The shell-fallback feature
-  // itself may still work; the contract for short-lived initial commands and
-  // the session-exists check needs reconciling.
+  // QUARANTINED 2026-05-16: '[SlayZone]' recovery banner never lands in the
+  // buffer after CLI exits, even waiting 15s. Either shell-fallback gating
+  // (`hasPostSpawnCommand`) doesn't classify custom-mode `initialCommand: false`
+  // as having a post-spawn command, or the PTY pipeline never registers the
+  // session at all. Verify against pty-manager.ts:1278 (shouldShellFallback).
   test.skip('spawns interactive shell after CLI exits non-zero', async ({ mainWindow }) => {
     const sessionId = getMainSessionId(taskId)
 
     await openTaskTerminal(mainWindow, { projectAbbrev, taskTitle: 'Crash recovery task' })
-    await waitForPtySession(mainWindow, sessionId)
 
-    // Wait for the recovery message in the buffer
-    await waitForBufferContains(mainWindow, sessionId, '[SlayZone]', 10_000)
+    // Skip waitForPtySession — initialCommand 'false' may exit before the
+    // check observes the session. Wait for the fallback's recovery banner
+    // in the buffer directly; the shell-fallback feature spawns a new PTY
+    // and writes the [SlayZone] message after the original exits.
+    await waitForBufferContains(mainWindow, sessionId, '[SlayZone]', 15_000)
 
     const buffer = await readFullBuffer(mainWindow, sessionId)
     expect(buffer).toContain('exited with code')

@@ -14,11 +14,22 @@ import {
  * Distinct from `pty:respawn-suggested` — forced path skips the
  * `terminal_mode === 'terminal'` and "PTY already alive" guards.
  */
-// QUARANTINED 2026-05-16: renderer-side `fetch('http://127.0.0.1:...')` fails
-// with "Failed to fetch" — likely Content-Security-Policy block on loopback.
-// Other specs that hit /api use Node http via the test invoke bridge. Either
-// migrate this spec to that pattern or relax CSP in test mode.
-test.describe.skip('Forced PTY respawn via REST', () => {
+// Renderer-side `fetch('http://127.0.0.1:...')` is blocked by the CSP in dev
+// mode, so POST via Node http from the main-process eval context instead.
+function postRespawn(electronApp: import('playwright').ElectronApplication, port: number, body: Record<string, unknown>) {
+  return electronApp.evaluate(async (_, { port: p, body: b }) => {
+    // Main process is Node 22, so globalThis.fetch is available without any
+    // CSP gate (CSP only restricts the renderer).
+    const r = await fetch(`http://127.0.0.1:${p}/api/pty/respawn`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(b),
+    })
+    return { status: r.status, ok: r.ok }
+  }, { port, body })
+}
+
+test.describe('Forced PTY respawn via REST', () => {
   let projectAbbrev: string
   let projectId: string
   let mcpPort = 0
@@ -41,7 +52,11 @@ test.describe.skip('Forced PTY respawn via REST', () => {
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
   })
 
-  test('REST broadcasts pty:respawn-forced to renderer', async ({ mainWindow }) => {
+  // QUARANTINED 2026-05-16: REST endpoint waits for the renderer to ack via
+  // onForceRespawn; the test installs its own listener that acks immediately,
+  // but res.ok still false (request times out). Needs requestForceRespawn ack
+  // pipeline investigation.
+  test.skip('REST broadcasts pty:respawn-forced to renderer', async ({ electronApp, mainWindow }) => {
     const s = seed(mainWindow)
     const task = await s.createTask({ projectId, title: 'Force respawn signal', status: 'in_progress' })
     await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
@@ -58,14 +73,7 @@ test.describe.skip('Forced PTY respawn via REST', () => {
       return id
     }, task.id)
 
-    const res = await mainWindow.evaluate(async ({ taskId, port }) => {
-      const r = await fetch(`http://127.0.0.1:${port}/api/pty/respawn`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId })
-      })
-      return { ok: r.ok, status: r.status }
-    }, { taskId: task.id, port: mcpPort })
+    const res = await postRespawn(electronApp, mcpPort, { taskId: task.id })
     expect(res.ok).toBe(true)
 
     await expect.poll(async () =>
@@ -76,31 +84,17 @@ test.describe.skip('Forced PTY respawn via REST', () => {
     ).toBeGreaterThan(0)
   })
 
-  test('REST 404 when task does not exist', async ({ mainWindow }) => {
-    const res = await mainWindow.evaluate(async ({ port }) => {
-      const r = await fetch(`http://127.0.0.1:${port}/api/pty/respawn`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId: '00000000-0000-0000-0000-000000000000' })
-      })
-      return { status: r.status }
-    }, { port: mcpPort })
+  test('REST 404 when task does not exist', async ({ electronApp }) => {
+    const res = await postRespawn(electronApp, mcpPort, { taskId: '00000000-0000-0000-0000-000000000000' })
     expect(res.status).toBe(404)
   })
 
-  test('REST 400 when taskId missing', async ({ mainWindow }) => {
-    const res = await mainWindow.evaluate(async ({ port }) => {
-      const r = await fetch(`http://127.0.0.1:${port}/api/pty/respawn`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      })
-      return { status: r.status }
-    }, { port: mcpPort })
+  test('REST 400 when taskId missing', async ({ electronApp }) => {
+    const res = await postRespawn(electronApp, mcpPort, {})
     expect(res.status).toBe(400)
   })
 
-  test('Force respawn restarts existing PTY (terminal mode)', async ({ mainWindow }) => {
+  test.skip('Force respawn restarts existing PTY (terminal mode)', async ({ electronApp, mainWindow }) => {
     const s = seed(mainWindow)
     const task = await s.createTask({ projectId, title: 'Force respawn restart', status: 'in_progress' })
     await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
@@ -116,13 +110,7 @@ test.describe.skip('Forced PTY respawn via REST', () => {
       return list.find((s) => s.sessionId === id)?.createdAt ?? null
     }, sessionId)
 
-    await mainWindow.evaluate(async ({ taskId, port }) => {
-      await fetch(`http://127.0.0.1:${port}/api/pty/respawn`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId })
-      })
-    }, { taskId: task.id, port: mcpPort })
+    await postRespawn(electronApp, mcpPort, { taskId: task.id })
 
     await expect.poll(async () =>
       mainWindow.evaluate(async (id) => {
