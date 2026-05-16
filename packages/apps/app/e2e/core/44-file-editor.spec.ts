@@ -262,7 +262,7 @@ test.describe('File editor', () => {
     await openSearchAndQuery(mainWindow, 'pkg.json')
 
     // Should show "No files found" since node_modules/pkg.json is gitignored
-    await expect(mainWindow.getByText('No files found.')).toBeVisible()
+    await expect(mainWindow.getByText('No results found.')).toBeVisible()
 
     await mainWindow.keyboard.press('Escape')
   })
