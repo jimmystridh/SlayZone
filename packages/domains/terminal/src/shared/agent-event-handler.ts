@@ -15,7 +15,7 @@ export type AgentId = 'claude-code' | 'codex' | 'gemini' | 'opencode'
  * Used at PTY/chat spawn time to gate `SLAYZONE_AGENT_HOOK_URL` injection.
  * Add an agent here once both its hook script + installer have shipped.
  */
-export const HOOK_SUPPORTED_AGENT_IDS: ReadonlySet<AgentId> = new Set<AgentId>(['claude-code', 'codex'])
+export const HOOK_SUPPORTED_AGENT_IDS: ReadonlySet<AgentId> = new Set<AgentId>(['claude-code', 'codex', 'gemini'])
 
 export type AgentLifecycleEventType =
   | 'agent-start'
@@ -91,15 +91,42 @@ const ALIAS_TABLE: Record<string, AgentLifecycleEventType> = {
 }
 
 /**
+ * Per-agent alias overrides. Consulted before the shared ALIAS_TABLE so an
+ * agent can disambiguate an event whose semantics differ from the canonical
+ * mapping. Example: Gemini's `AfterTool` re-affirms the agent is still working
+ * (model thinks next), while Codex's `after_tool` means tool finished —
+ * quiescent. Same string, opposite meaning.
+ */
+const PER_AGENT_OVERRIDES: Partial<Record<AgentId, Record<string, AgentLifecycleEventType>>> = {
+  gemini: {
+    beforeagent: 'agent-start',
+    afteragent: 'agent-stop',
+    aftertool: 'agent-start',
+  },
+}
+
+/**
  * Map a raw upstream hook event name to a normalized lifecycle type.
  * Case-insensitive. Returns null for unknown names so the REST handler
  * can return 204 + skip the broadcast (drop, don't default to Stop).
+ *
+ * Pass `agentId` to consult per-agent overrides before the shared table.
  */
-export function mapEventType(hookEvent: string): AgentLifecycleEventType | null {
+export function mapEventType(
+  hookEvent: string,
+  agentId?: AgentId,
+): AgentLifecycleEventType | null {
   if (!hookEvent) return null
   const key = hookEvent.trim().toLowerCase()
-  if (key in ALIAS_TABLE) return ALIAS_TABLE[key]
   const stripped = key.replace(/[_\-\s]/g, '')
+  if (agentId) {
+    const ovr = PER_AGENT_OVERRIDES[agentId]
+    if (ovr) {
+      if (key in ovr) return ovr[key]
+      if (stripped in ovr) return ovr[stripped]
+    }
+  }
+  if (key in ALIAS_TABLE) return ALIAS_TABLE[key]
   if (stripped in ALIAS_TABLE) return ALIAS_TABLE[stripped]
   return null
 }

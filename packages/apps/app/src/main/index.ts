@@ -1343,14 +1343,21 @@ app.whenReady().then(async () => {
   if (!process.env.PLAYWRIGHT || process.env.SLAYZONE_E2E_INSTALL_HOOKS === '1') {
     setImmediate(async () => {
       try {
-        const [{ installNotifyScript }, { installClaudeHooks }, { installCodexWrapper }] = await Promise.all([
+        const [
+          { installNotifyScript },
+          { installClaudeHooks },
+          { installCodexWrapper },
+          { installGeminiHooks },
+        ] = await Promise.all([
           import('./agent-hooks/notify-script-installer'),
           import('./agent-hooks/claude-hook-installer'),
           import('./agent-hooks/codex-wrapper-installer'),
+          import('./agent-hooks/gemini-hook-installer'),
         ])
         const { path: scriptPath } = await installNotifyScript()
         await installClaudeHooks({ scriptPath })
         await installCodexWrapper()
+        await installGeminiHooks({ scriptPath })
         logBoot('agent hooks installed')
       } catch (err) {
         console.error('[agent-hooks] install failed:', err)

@@ -1,4 +1,4 @@
-export { getStateDir, getSlayzoneHomeDir, getClaudeSettingsPath } from './dirs'
+export { getStateDir, getSlayzoneHomeDir, getClaudeSettingsPath, getGeminiSettingsPath } from './dirs'
 export { writeFileIfChanged } from './fs-utils'
 export { migrateXdgIfNeeded, migrateCliBinIfNeeded, type MigrationResult, type CliMigrationResult } from './migrations'
 export { installCli, installCliSync, checkCliInstalled, getCliBinTarget, getManualInstallHint, type CliInstallResult } from './cli-install'

@@ -91,12 +91,32 @@ for (const [input, expected] of cases) {
   test(`map "${input}" → ${expected}`, () => expect(mapEventType(input)).toBe(expected))
 }
 
+const overrideCases: Array<[string, Parameters<typeof mapEventType>[1], ReturnType<typeof mapEventType>]> = [
+  ['BeforeAgent', 'gemini', 'agent-start'],
+  ['AfterAgent', 'gemini', 'agent-stop'],
+  ['AfterTool', 'gemini', 'agent-start'],
+  ['after_tool', 'gemini', 'agent-start'],
+  ['SessionStart', 'gemini', 'session-start'],
+  ['SessionEnd', 'gemini', 'session-end'],
+  ['after_tool', 'codex', 'agent-stop'],
+  ['AfterTool', 'codex', 'agent-stop'],
+  ['Stop', 'claude-code', 'agent-stop'],
+]
+
+for (const [input, agentId, expected] of overrideCases) {
+  test(`map "${input}" (${agentId}) → ${expected}`, () => expect(mapEventType(input, agentId)).toBe(expected))
+}
+
 test('HOOK_SUPPORTED_AGENT_IDS contains claude-code', () => {
   expect(HOOK_SUPPORTED_AGENT_IDS.has('claude-code')).toBe(true)
 })
 
 test('HOOK_SUPPORTED_AGENT_IDS contains codex', () => {
   expect(HOOK_SUPPORTED_AGENT_IDS.has('codex')).toBe(true)
+})
+
+test('HOOK_SUPPORTED_AGENT_IDS contains gemini', () => {
+  expect(HOOK_SUPPORTED_AGENT_IDS.has('gemini')).toBe(true)
 })
 
 console.log(`\n${passed} passed, ${failed} failed`)

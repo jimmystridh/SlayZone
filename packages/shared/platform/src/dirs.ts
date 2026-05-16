@@ -45,3 +45,13 @@ export function getClaudeSettingsPath(): string {
   const home = process.env.HOME ?? process.env.USERPROFILE ?? os.homedir()
   return path.join(home, '.claude', 'settings.json')
 }
+
+/**
+ * Absolute path to the user's Gemini CLI settings.json (v0.13.0+). Honours
+ * `SLAYZONE_GEMINI_SETTINGS_PATH` for tests.
+ */
+export function getGeminiSettingsPath(): string {
+  if (process.env.SLAYZONE_GEMINI_SETTINGS_PATH) return process.env.SLAYZONE_GEMINI_SETTINGS_PATH
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? os.homedir()
+  return path.join(home, '.gemini', 'settings.json')
+}

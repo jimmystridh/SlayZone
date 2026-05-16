@@ -35,7 +35,7 @@ export function registerAgentHookRoute(app: Express, _deps: RestApiDeps): void {
       res.status(400).json({ ok: false, error: parsed.error.message })
       return
     }
-    const type = mapEventType(parsed.data.hookEvent)
+    const type = mapEventType(parsed.data.hookEvent, parsed.data.agentId)
     if (!type) {
       // Unknown event → drop silently. Never default to Stop.
       res.status(204).end()

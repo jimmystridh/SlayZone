@@ -26,6 +26,11 @@ set -e
 [ -z "$SLAYZONE_AGENT_HOOK_URL" ] && exit 0
 [ -z "$SLAYZONE_AGENT_ID" ] && exit 0
 
+# Gemini blocks waiting for a JSON response on stdout; empty {} = no-op.
+# Claude/Codex/Mastra/Droid discard our stdout, so this is universal.
+# Emit before payload read so it fires even if downstream POST fails.
+printf '{}\n'
+
 # Codex passes JSON as argv $1; Claude pipes via stdin.
 if [ -n "$1" ]; then
   PAYLOAD="$1"
