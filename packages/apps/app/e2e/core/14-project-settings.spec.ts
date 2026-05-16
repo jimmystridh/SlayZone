@@ -475,7 +475,7 @@ test.describe('Project settings & context menu', () => {
 
     await clickSettingsTab(
       mainWindow,
-      mainWindow.getByTestId('settings-tab-columns'),
+      mainWindow.getByTestId('settings-tab-tasks/statuses'),
       mainWindow.getByTestId('project-column-review')
     )
     await mainWindow.getByTestId('delete-project-column-review').click()
