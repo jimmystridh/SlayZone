@@ -50,10 +50,11 @@ test.describe('Terminal mode switching', () => {
   // Note: 'Sync name' menu item was removed from the terminal header dropdown.
   // Tests that asserted its presence/absence have been dropped.
 
-  // QUARANTINED 2026-05-16: switchTerminalMode fixture cannot open Radix
-  // ContextMenu for codex/claude-code modes (works for 'terminal'). Chevron
-  // and tab-right-click both miss the synthetic dispatch. Needs deeper
-  // investigation of ContextMenuTrigger wiring.
+  // QUARANTINED 2026-05-16 (revisit): ContextMenu chevron/right-click dispatch
+  // doesn't surface menuitemradio items in the Playwright env even with three
+  // strategies (chevron click, native right-click, JS contextmenu dispatch).
+  // Test 1 passes (trigger label) so the trigger renders — only menu opening
+  // is broken. May need Radix-specific test instrumentation.
   test.skip('switch to Codex mode', async ({ mainWindow }) => {
     await switchTerminalMode(mainWindow, 'codex')
 

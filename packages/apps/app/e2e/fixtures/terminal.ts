@@ -30,12 +30,9 @@ export const CLI_PATHS = {
 } as const
 
 function activeModeTrigger(page: Page) {
-  // Multiple tabs from prior tests may have visible triggers (e.g. when a
-  // route swap is mid-flight). Prefer the trigger inside the currently
-  // active task tab (data-tab-main + data-state="active" if present), fall
-  // back to the last visible trigger which is the most-recently-mounted.
-  const active = page.locator('[data-tab-main="true"][data-state="active"] [data-testid="terminal-mode-trigger"]:visible').first()
-  return active.or(page.locator('[data-testid="terminal-mode-trigger"]:visible').last())
+  // Multiple tabs from prior tests can leave hidden triggers in DOM; use the
+  // last visible one (most-recently mounted = currently active tab).
+  return page.locator('[data-testid="terminal-mode-trigger"]:visible').last()
 }
 
 export function getMainSessionId(taskId: string): string {
@@ -94,9 +91,9 @@ export async function switchTerminalMode(page: Page, mode: TerminalMode): Promis
 
   const trigger = activeModeTrigger(page)
   // Provider switcher uses Radix ContextMenu. The chevron's onClick dispatches
-  // a synthetic contextmenu event on the wrapping data-tab-main. Try the
-  // chevron click first; if no menu items appear, fall back to a native
-  // right-click on the tab itself.
+  // a synthetic contextmenu event on data-tab-main. Try chevron click first,
+  // then a real right-click on the tab, then a direct JS contextmenu dispatch
+  // — whichever opens the menu wins.
   const tryOpenMenu = async () => {
     const dropdownBtn = trigger.locator('[data-testid="terminal-mode-dropdown"], button').first()
     if (await dropdownBtn.isVisible({ timeout: 500 }).catch(() => false)) {
@@ -107,6 +104,18 @@ export async function switchTerminalMode(page: Page, mode: TerminalMode): Promis
     if (await tab.isVisible({ timeout: 500 }).catch(() => false)) {
       await tab.click({ button: 'right' })
     }
+    if (await page.getByRole('menuitemradio').first().isVisible({ timeout: 600 }).catch(() => false)) return true
+    // Last resort: dispatch contextmenu directly on the active tab element.
+    await page.evaluate(() => {
+      const triggers = document.querySelectorAll('[data-testid="terminal-mode-trigger"]')
+      const last = triggers[triggers.length - 1]
+      const tab = last?.closest('[data-tab-main="true"]') as HTMLElement | null
+      const rect = (last as HTMLElement | null)?.getBoundingClientRect()
+      tab?.dispatchEvent(new MouseEvent('contextmenu', {
+        bubbles: true, cancelable: true, view: window,
+        clientX: rect?.left ?? 0, clientY: (rect?.bottom ?? 0),
+      }))
+    })
     return await page.getByRole('menuitemradio').first().isVisible({ timeout: 600 }).catch(() => false)
   }
   await tryOpenMenu()
