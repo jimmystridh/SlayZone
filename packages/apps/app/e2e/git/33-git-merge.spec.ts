@@ -21,6 +21,9 @@ function getMainBranch(): string {
 }
 
 function resetRepo() {
+  // Lazy-init: when only a subset of describes run (Playwright workers / grep),
+  // the first describe's beforeAll may be skipped, leaving gitDir undefined.
+  if (!gitDir) initGitDir()
   try { git('git merge --abort') } catch { /* ignore */ }
   try { git(`git checkout ${getMainBranch()}`) } catch { /* ignore */ }
   // Remove worktree dir first, then prune, then delete branch
