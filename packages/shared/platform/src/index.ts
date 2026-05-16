@@ -1,4 +1,5 @@
 export { getStateDir, getSlayzoneHomeDir, getClaudeSettingsPath, getGeminiSettingsPath, getOpencodePluginPath } from './dirs'
+export { ensureDataRoot, getTrpcPort, getServerPort, getServerHost } from './paths'
 export { writeFileIfChanged } from './fs-utils'
 export { migrateXdgIfNeeded, migrateCliBinIfNeeded, type MigrationResult, type CliMigrationResult } from './migrations'
 export { installCli, installCliSync, checkCliInstalled, getCliBinTarget, getManualInstallHint, type CliInstallResult } from './cli-install'

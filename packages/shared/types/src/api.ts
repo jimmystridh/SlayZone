@@ -443,6 +443,7 @@ export interface ElectronAPI {
       reason: 'registered' | 'dev-skipped' | 'registration-failed'
     }>
     getVersion: () => Promise<string>
+    getTrpcPort: () => Promise<number>
     isTestsPanelEnabled: () => Promise<boolean>
     isTestsPanelEnabledSync: boolean
     isJiraIntegrationEnabled: () => Promise<boolean>

@@ -94,7 +94,7 @@ if (is.dev) {
 }
 
 // Linux XDG Base Directory compliance: move state data from ~/.config to ~/.local/state
-import { migrateXdgIfNeeded, migrateCliBinIfNeeded, getStateDir, installCli, checkCliInstalled, getCliBinTarget, getManualInstallHint } from '@slayzone/platform'
+import { migrateXdgIfNeeded, migrateCliBinIfNeeded, getStateDir, ensureDataRoot, installCli, checkCliInstalled, getCliBinTarget, getManualInstallHint } from '@slayzone/platform'
 if (process.platform === 'linux') {
   const result = migrateXdgIfNeeded()
   if (!result.failed) {
@@ -287,6 +287,7 @@ const browserViewManager = new BrowserViewManager()
 let linearSyncPoller: NodeJS.Timeout | null = null
 let discoveryPoller: NodeJS.Timeout | null = null
 let mcpCleanup: (() => void) | null = null
+let trpcCleanup: (() => void) | null = null
 type OAuthCallbackPayload = { code?: string; error?: string }
 const oauthCallbackQueue: OAuthCallbackPayload[] = []
 const oauthCallbackWaiters = new Set<(payload: OAuthCallbackPayload) => void>()
@@ -1335,6 +1336,17 @@ app.whenReady().then(async () => {
     })
   })
 
+  setImmediate(() => {
+    logBoot('trpc server import dispatched')
+    import('@slayzone/transport/server').then((mod) => {
+      mod.startTrpcServer({ db, dataRoot: ensureDataRoot() })
+      trpcCleanup = () => mod.stopTrpcServer()
+      logBoot('trpc server started')
+    }).catch((err) => {
+      console.error('[tRPC] Failed to start server:', err)
+    })
+  })
+
   // Install agent lifecycle hook script + Claude settings.json entries.
   // Off boot critical path; failures must NOT block app startup (logged only).
   // Skipped under Playwright unless the spec explicitly opts in — most E2E
@@ -1717,6 +1729,20 @@ div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:1
   })
 
   ipcMain.handle('app:getVersion', () => app.getVersion())
+  ipcMain.handle('app:get-trpc-port', async () => {
+    const g = globalThis as Record<string, unknown>
+    if (typeof g.__trpcPort === 'number') return g.__trpcPort as number
+    return new Promise<number>((resolve) => {
+      const start = Date.now()
+      const check = (): void => {
+        const port = (globalThis as Record<string, unknown>).__trpcPort
+        if (typeof port === 'number') resolve(port)
+        else if (Date.now() - start > 5000) resolve(0)
+        else setTimeout(check, 25)
+      }
+      check()
+    })
+  })
   ipcMain.handle('app:is-tests-panel-enabled', () => isLabEnabled('labs_tests_panel'))
   ipcMain.on('app:is-tests-panel-enabled-sync', (event) => { event.returnValue = isLabEnabled('labs_tests_panel') })
   ipcMain.handle('app:is-jira-integration-enabled', () => isLabEnabled('labs_jira_integration'))
@@ -2303,10 +2329,13 @@ div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:1
       if (linearSyncPoller) { clearInterval(linearSyncPoller); linearSyncPoller = null }
       if (discoveryPoller) { clearInterval(discoveryPoller); discoveryPoller = null }
 
-      // 3. Stop MCP server (restarted after table drop so port persists)
+      // 3. Stop MCP + tRPC servers (restarted after table drop so ports persist)
       mcpCleanup?.()
       mcpCleanup = null
       ;(globalThis as Record<string, unknown>).__mcpPort = undefined
+      trpcCleanup?.()
+      trpcCleanup = null
+      ;(globalThis as Record<string, unknown>).__trpcPort = undefined
 
       // 4. Close file watchers
       closeAllWatchers()
@@ -2344,13 +2373,20 @@ div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:1
       // Re-warm cache after settings table was dropped + re-migrated
       await settings.warmCache(['labs_tests_panel', 'labs_jira_integration', 'labs_loop_mode'])
 
-      // 8. Restart MCP (after table drop so port is persisted to fresh settings table)
+      // 8. Restart MCP + tRPC (after table drop so ports persist to fresh settings table)
       const mcpMod = await import('./mcp-server')
       mcpMod.startMcpServer(db, { automationEngine })
       mcpCleanup = () => mcpMod.stopMcpServer()
-      // Wait for server to be listening (listen callback sets __mcpPort)
+      const trpcMod = await import('@slayzone/transport/server')
+      trpcMod.startTrpcServer({ db, dataRoot: ensureDataRoot() })
+      trpcCleanup = () => trpcMod.stopTrpcServer()
+      // Wait for both servers to be listening
       await new Promise<void>((resolve) => {
-        const check = () => (globalThis as Record<string, unknown>).__mcpPort ? resolve() : setTimeout(check, 10)
+        const check = (): void => {
+          const g = globalThis as Record<string, unknown>
+          if (g.__mcpPort && g.__trpcPort) resolve()
+          else setTimeout(check, 10)
+        }
         check()
       })
 
@@ -2603,6 +2639,7 @@ app.on('will-quit', () => {
     discoveryPoller = null
   }
   mcpCleanup?.()
+  trpcCleanup?.()
   // Record completion BEFORE closing diagnostics DB; a row written here is the last
   // event of the session and proves the chain ran. stopDiagnostics() can clear timers
   // safely after.
