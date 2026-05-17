@@ -264,7 +264,7 @@ function App(): React.JSX.Element {
   const terminalStates = useTerminalStateTracking(trackedTaskIds, ptyContext)
 
   // Tab lifecycle (extracted — manages sync, cleanup, cache eviction, page tracking)
-  useTabLifecycle({ tasks, projects, tabs, activeTabIndex, setTasks, ptyContext, setTerminalFocusRequests })
+  useTabLifecycle({ tasks, projects, tabs, activeTabIndex, setTerminalFocusRequests })
 
   // Tab colors (extracted — pure derivation)
   const { taskProjectColors, taskWorktreeColors, tabCycleOrder } = useTabColors(tabs, tasks, projects, colorTintsEnabled)

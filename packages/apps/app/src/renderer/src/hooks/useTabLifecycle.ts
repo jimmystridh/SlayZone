@@ -5,25 +5,17 @@ import { useTabStore, type Tab } from '@slayzone/settings'
 import { taskDetailCache } from '@slayzone/task/client/taskDetailCache'
 import { track } from '@slayzone/telemetry/client'
 
-type PtyContext = {
-  subscribeExit: (sessionId: string, cb: (exitCode: number) => void) => () => void
-}
-
 export function useTabLifecycle({
   tasks,
   projects,
   tabs,
   activeTabIndex,
-  setTasks,
-  ptyContext,
   setTerminalFocusRequests
 }: {
   tasks: Task[]
   projects: Project[]
   tabs: Tab[]
   activeTabIndex: number
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>
-  ptyContext: PtyContext
   setTerminalFocusRequests: React.Dispatch<React.SetStateAction<Record<string, number>>>
 }): void {
   // Sync task/project data into tab store for worktree grouping + temp task detection
@@ -43,31 +35,6 @@ export function useTabLifecycle({
       }
     }
   }, [tabs])
-
-  // Auto-close temporary task tabs when their main terminal exits.
-  useEffect(() => {
-    const temporaryTaskTabs = tabs.filter((tab): tab is Extract<typeof tab, { type: 'task' }> =>
-      tab.type === 'task' && !!tab.isTemporary
-    )
-    const unsubscribes = temporaryTaskTabs.map((tab) => {
-      const mainSessionId = `${tab.taskId}:${tab.taskId}`
-      const subscribedMode = tasks.find((task) => task.id === tab.taskId)?.terminal_mode
-      return ptyContext.subscribeExit(mainSessionId, (exitCode) => {
-        if (exitCode !== 0) return
-        const latestMode = tasks.find((task) => task.id === tab.taskId)?.terminal_mode
-        if (subscribedMode && latestMode && subscribedMode !== latestMode) return
-        void (async () => {
-          await window.api.db.deleteTask(tab.taskId).catch(() => {})
-          setTasks((prev) => prev.filter((task) => task.id !== tab.taskId))
-          useTabStore.getState().closeTabByTaskId(tab.taskId)
-        })()
-      })
-    })
-
-    return () => {
-      unsubscribes.forEach((unsub) => unsub())
-    }
-  }, [tabs, tasks, ptyContext, setTasks])
 
   // Track whether task data has loaded at least once.
   const tasksLoadedRef = useRef(false)
