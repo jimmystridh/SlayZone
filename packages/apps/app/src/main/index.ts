@@ -48,7 +48,7 @@ function getEffectiveKeys(id: string, overrides: Record<string, string | null>):
 // External app protocols registered here so Chromium routes them through our session handler
 // instead of passing them to the OS (which would launch desktop apps like Figma, Slack, etc.)
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'slz-file', privileges: { secure: true, supportFetchAPI: true, stream: true, bypassCSP: true } },
+  { scheme: 'slz-file', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, bypassCSP: true } },
   ...BLOCKED_EXTERNAL_PROTOCOLS.map(scheme => ({ scheme, privileges: { standard: true, secure: true } })),
 ])
 
