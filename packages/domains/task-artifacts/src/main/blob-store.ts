@@ -7,7 +7,7 @@ import {
   renameSync,
   rmSync,
   statSync,
-  writeFileSync,
+  writeFileSync
 } from 'node:fs'
 import path from 'node:path'
 import type { ContentHash } from '../shared/types'

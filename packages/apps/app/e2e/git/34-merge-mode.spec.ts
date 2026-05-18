@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, resetApp, createIsolatedGitRepo } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  resetApp,
+  createIsolatedGitRepo
+} from '../fixtures/electron'
 import { pressShortcut } from '../fixtures/shortcuts'
 import { execSync } from 'child_process'
 import { writeFileSync, mkdirSync } from 'fs'
@@ -14,7 +22,9 @@ async function openTaskViaSearch(page: import('@playwright/test').Page, title: s
   await expect(input).toBeVisible()
   await input.fill(title)
   await page.keyboard.press('Enter')
-  await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+  await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({
+    timeout: 5_000
+  })
 }
 
 async function ensureGitPanelVisible(page: import('@playwright/test').Page) {
@@ -22,7 +32,10 @@ async function ensureGitPanelVisible(page: import('@playwright/test').Page) {
   for (let attempt = 0; attempt < 4; attempt += 1) {
     if (await target.isVisible({ timeout: 500 }).catch(() => false)) return
     await page.keyboard.press('Escape').catch(() => {})
-    await page.locator('#root').click({ position: { x: 16, y: 16 } }).catch(() => {})
+    await page
+      .locator('#root')
+      .click({ position: { x: 16, y: 16 } })
+      .catch(() => {})
     await page.keyboard.press('Meta+g')
   }
   await expect(target).toBeVisible({ timeout: 5_000 })
@@ -47,37 +60,78 @@ function resetRepo() {
   // Lazy-init: when running a subset of describes via --grep, the first
   // describe's beforeAll may not run, leaving gitDir undefined.
   if (!gitDir) initGitDir()
-  try { git('git merge --abort') } catch { /* ignore */ }
+  try {
+    git('git merge --abort')
+  } catch {
+    /* ignore */
+  }
   try {
     const mainWorktree = git('git rev-parse --show-toplevel').trim()
     const worktreeList = git('git worktree list --porcelain')
       .split('\n')
-      .filter(line => line.startsWith('worktree '))
-      .map(line => line.replace('worktree ', '').trim())
+      .filter((line) => line.startsWith('worktree '))
+      .map((line) => line.replace('worktree ', '').trim())
     for (const wt of worktreeList) {
       if (wt !== mainWorktree) {
-        try { git(`git worktree remove --force "${wt}"`) } catch { /* ignore */ }
+        try {
+          git(`git worktree remove --force "${wt}"`)
+        } catch {
+          /* ignore */
+        }
       }
     }
-  } catch { /* ignore */ }
-  try { execSync(`rm -rf "${WORKTREE_DIR}"`) } catch { /* ignore */ }
-  try { git('git worktree prune') } catch { /* ignore */ }
-  try { git(`git checkout ${getMainBranch()}`) } catch { /* ignore */ }
-  try { git('git branch -D test-branch') } catch { /* ignore */ }
-  try { git('git reset --hard') } catch { /* ignore */ }
-  try { git('git checkout -- .') } catch { /* ignore */ }
-  try { git('git clean -fd') } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
+  try {
+    execSync(`rm -rf "${WORKTREE_DIR}"`)
+  } catch {
+    /* ignore */
+  }
+  try {
+    git('git worktree prune')
+  } catch {
+    /* ignore */
+  }
+  try {
+    git(`git checkout ${getMainBranch()}`)
+  } catch {
+    /* ignore */
+  }
+  try {
+    git('git branch -D test-branch')
+  } catch {
+    /* ignore */
+  }
+  try {
+    git('git reset --hard')
+  } catch {
+    /* ignore */
+  }
+  try {
+    git('git checkout -- .')
+  } catch {
+    /* ignore */
+  }
+  try {
+    git('git clean -fd')
+  } catch {
+    /* ignore */
+  }
   // Remove test artifacts that may have been merged onto main
   try {
     const tracked = git('git ls-files').split('\n')
     const artifacts = tracked.filter(
-      f => f.startsWith('feature-') || f.startsWith('base-') || f === 'base.txt' || f === 'dirty.txt'
+      (f) =>
+        f.startsWith('feature-') || f.startsWith('base-') || f === 'base.txt' || f === 'dirty.txt'
     )
     if (artifacts.length > 0) {
       git(`git rm -f ${artifacts.join(' ')}`)
       git('git commit -m "cleanup test artifacts"')
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 function initGitDir() {
@@ -109,7 +163,11 @@ function setupConflict() {
   const main = getMainBranch()
   writeFileSync(path.join(gitDir, conflictFile), 'original\n')
   git(`git add ${conflictFile}`)
-  try { git('git commit -m "base"') } catch { /* already committed */ }
+  try {
+    git('git commit -m "base"')
+  } catch {
+    /* already committed */
+  }
 
   git('git checkout -b test-branch')
   writeFileSync(path.join(gitDir, conflictFile), 'branch version\n')
@@ -126,18 +184,19 @@ function setupConflict() {
 }
 
 async function ensureConflictReady(page: import('@playwright/test').Page, taskId: string) {
-  const conflicted = await page.evaluate(
-    (pp) => window.api.git.getConflictedFiles(pp),
-    gitDir
-  )
+  const conflicted = await page.evaluate((pp) => window.api.git.getConflictedFiles(pp), gitDir)
   if (conflicted.includes(conflictFile)) return
 
-  try { git('git merge --abort') } catch { /* ignore */ }
+  try {
+    git('git merge --abort')
+  } catch {
+    /* ignore */
+  }
   git('git merge --no-commit --no-ff test-branch || true')
-  await page.evaluate(
-    (d) => window.api.db.updateTask(d),
-    { id: taskId, mergeState: 'conflicts' as const }
-  )
+  await page.evaluate((d) => window.api.db.updateTask(d), {
+    id: taskId,
+    mergeState: 'conflicts' as const
+  })
   const s = seed(page)
   await s.refreshData()
 }
@@ -160,10 +219,11 @@ test.describe('Clean merge skips merge mode', () => {
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'MM clean task', status: 'todo' })
     taskId = t.id
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, worktreePath: WORKTREE_PATH, worktreeParentBranch: getMainBranch() }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch()
+    })
     await s.refreshData()
 
     await openTaskViaSearch(mainWindow, 'MM clean task')
@@ -210,10 +270,11 @@ test.describe('Phase 1 — uncommitted changes', () => {
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'MM dirty task', status: 'todo' })
     taskId = t.id
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, worktreePath: WORKTREE_PATH, worktreeParentBranch: getMainBranch() }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch()
+    })
     await s.refreshData()
 
     await openTaskViaSearch(mainWindow, 'MM dirty task')
@@ -222,10 +283,10 @@ test.describe('Phase 1 — uncommitted changes', () => {
   })
 
   test('uncommitted merge state opens diff view with merge controls', async ({ mainWindow }) => {
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, mergeState: 'uncommitted' as const }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      mergeState: 'uncommitted' as const
+    })
     const s = seed(mainWindow)
     await s.refreshData()
 
@@ -237,21 +298,32 @@ test.describe('Phase 1 — uncommitted changes', () => {
       .toBe('uncommitted')
 
     await expect(mainWindow.getByTestId('git-diff-panel').last()).toBeVisible()
-    await expect(mainWindow.getByText('Stage and commit your changes to continue the merge')).toBeVisible()
+    await expect(
+      mainWindow.getByText('Stage and commit your changes to continue the merge')
+    ).toBeVisible()
     await expect(mainWindow.getByRole('button', { name: 'Commit & Continue Merge' })).toBeVisible()
   })
 
   test('Cancel exits merge mode', async ({ mainWindow }) => {
-    await mainWindow.getByTestId('git-diff-panel').last().getByRole('button', { name: 'Cancel' }).click()
+    await mainWindow
+      .getByTestId('git-diff-panel')
+      .last()
+      .getByRole('button', { name: 'Cancel' })
+      .click()
     await mainWindow.getByRole('button', { name: 'Abort' }).click()
 
     await expect
-      .poll(async () => {
-        const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
-        return task?.merge_state ?? null
-      }, { timeout: 10_000 })
+      .poll(
+        async () => {
+          const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
+          return task?.merge_state ?? null
+        },
+        { timeout: 10_000 }
+      )
       .toBeNull()
-    await expect(mainWindow.getByText('Stage and commit your changes to continue the merge')).toHaveCount(0)
+    await expect(
+      mainWindow.getByText('Stage and commit your changes to continue the merge')
+    ).toHaveCount(0)
   })
 })
 
@@ -271,15 +343,12 @@ test.describe('Phase 2 — conflict resolution', () => {
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'MM conflict task', status: 'todo' })
     taskId = t.id
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      {
-        id: taskId,
-        worktreePath: WORKTREE_PATH,
-        worktreeParentBranch: getMainBranch(),
-        mergeState: 'conflicts' as const,
-      }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch(),
+      mergeState: 'conflicts' as const
+    })
     await s.refreshData()
 
     await openTaskViaSearch(mainWindow, 'MM conflict task')
@@ -305,7 +374,10 @@ test.describe('Phase 2 — conflict resolution', () => {
 
   test('conflicted file list shows files', async ({ mainWindow }) => {
     await ensureConflictReady(mainWindow, taskId)
-    const fileItem = activeConflictPanel(mainWindow).locator('span.truncate').filter({ hasText: conflictFile }).first()
+    const fileItem = activeConflictPanel(mainWindow)
+      .locator('span.truncate')
+      .filter({ hasText: conflictFile })
+      .first()
     await expect(fileItem).toBeVisible({ timeout: 10_000 })
   })
 
@@ -353,15 +425,12 @@ test.describe('Accept Theirs resolution', () => {
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'MM theirs task', status: 'todo' })
     taskId = t.id
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      {
-        id: taskId,
-        worktreePath: WORKTREE_PATH,
-        worktreeParentBranch: getMainBranch(),
-        mergeState: 'conflicts' as const,
-      }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch(),
+      mergeState: 'conflicts' as const
+    })
     await s.refreshData()
 
     await openTaskViaSearch(mainWindow, 'MM theirs task')
@@ -383,10 +452,15 @@ test.describe('Accept Theirs resolution', () => {
     await mainWindow.getByRole('button', { name: 'Complete Merge' }).click()
 
     // Verify theirs content on main
-    await expect.poll(async () => {
-      const content = git(`git show HEAD:${conflictFile}`)
-      return content.trim()
-    }, { timeout: 10_000 }).toBe('branch version')
+    await expect
+      .poll(
+        async () => {
+          const content = git(`git show HEAD:${conflictFile}`)
+          return content.trim()
+        },
+        { timeout: 10_000 }
+      )
+      .toBe('branch version')
   })
 })
 
@@ -405,10 +479,11 @@ test.describe('Abort merge', () => {
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'MM abort task', status: 'todo' })
     taskId = t.id
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, worktreePath: WORKTREE_PATH, worktreeParentBranch: getMainBranch() }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch()
+    })
     await s.refreshData()
 
     await openTaskViaSearch(mainWindow, 'MM abort task')
@@ -418,10 +493,10 @@ test.describe('Abort merge', () => {
     await expect(mainWindow.getByTestId('task-git-panel').last()).toBeVisible({ timeout: 5_000 })
 
     git('git merge --no-commit --no-ff test-branch || true')
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, mergeState: 'conflicts' as const }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      mergeState: 'conflicts' as const
+    })
     const s2 = seed(mainWindow)
     await s2.refreshData()
   })
@@ -429,7 +504,11 @@ test.describe('Abort merge', () => {
   test('Abort Merge clears merge state', async ({ mainWindow }) => {
     await expect(mainWindow.getByRole('button', { name: /Conflicts/ })).toBeVisible()
 
-    await mainWindow.getByTestId('task-git-panel').last().getByRole('button', { name: 'Abort', exact: true }).click()
+    await mainWindow
+      .getByTestId('task-git-panel')
+      .last()
+      .getByRole('button', { name: 'Abort', exact: true })
+      .click()
 
     await expect
       .poll(async () => {
@@ -462,41 +541,45 @@ test.describe('Merge badge on kanban', () => {
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'MM badge task', status: 'todo' })
     taskId = t.id
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, worktreePath: WORKTREE_PATH, worktreeParentBranch: getMainBranch() }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch()
+    })
     await s.refreshData()
   })
 
   test('merge badge appears when task is in merge mode', async ({ mainWindow }) => {
     // Set merge_state directly
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, mergeState: 'conflicts' as const }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      mergeState: 'conflicts' as const
+    })
     const s = seed(mainWindow)
     await s.refreshData()
 
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
 
-    const card = mainWindow.locator('.cursor-grab:visible').filter({ hasText: 'MM badge task' }).first()
+    const card = mainWindow
+      .locator('.cursor-grab:visible')
+      .filter({ hasText: 'MM badge task' })
+      .first()
     await expect(card).toBeVisible()
     const mergeIcon = card.locator('.lucide-git-merge').first()
     await expect(mergeIcon).toBeVisible()
   })
 
   test('merge badge disappears when merge_state cleared', async ({ mainWindow }) => {
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, mergeState: null }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), { id: taskId, mergeState: null })
     const s = seed(mainWindow)
     await s.refreshData()
 
     // Verify badge is gone for this task's card
-    const card = mainWindow.locator('.cursor-grab:visible').filter({ hasText: 'MM badge task' }).first()
+    const card = mainWindow
+      .locator('.cursor-grab:visible')
+      .filter({ hasText: 'MM badge task' })
+      .first()
     await expect(card).toBeVisible()
     const mergeIcon = card.locator('.lucide-git-merge')
     await expect(mergeIcon).toHaveCount(0)
@@ -534,6 +617,10 @@ test.describe('getConflictContent API', () => {
   })
 
   test.afterAll(() => {
-    try { git('git merge --abort') } catch { /* ignore */ }
+    try {
+      git('git merge --abort')
+    } catch {
+      /* ignore */
+    }
   })
 })

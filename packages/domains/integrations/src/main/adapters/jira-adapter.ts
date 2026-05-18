@@ -117,7 +117,10 @@ export const jiraAdapter: ProviderAdapter = {
     return normalizeIssue(issue, getDomain(credential))
   },
 
-  async getIssuesBatch(credential: string, refs: IssueRef[]): Promise<Map<string, NormalizedIssue>> {
+  async getIssuesBatch(
+    credential: string,
+    refs: IssueRef[]
+  ): Promise<Map<string, NormalizedIssue>> {
     if (refs.length === 0) return new Map()
     // Use JQL key IN (...) for batch fetch
     const keys = refs.map((r) => `"${r.id}"`).join(', ')
@@ -150,9 +153,12 @@ export const jiraAdapter: ProviderAdapter = {
     // Update fields (summary, description)
     const updated = await updateIssue(credential, externalId, {
       summary: params.title,
-      description: params.description !== undefined
-        ? (params.description ? markdownToAdf(params.description) : null)
-        : undefined
+      description:
+        params.description !== undefined
+          ? params.description
+            ? markdownToAdf(params.description)
+            : null
+          : undefined
     })
 
     // Handle status transition if statusId provided

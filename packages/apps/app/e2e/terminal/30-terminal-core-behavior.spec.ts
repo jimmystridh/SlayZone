@@ -3,7 +3,7 @@
  * Merged from: 31-buffer-restore, 32-state-transitions, 34-mode-switch-teardown,
  *              35-tab-rename-persistence, 37-clear-buffer, 55-trailing-output
  */
-import { test, expect, seed, clickProject, goHome, resetApp} from '../fixtures/electron'
+import { test, expect, seed, clickProject, goHome, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import {
   getMainSessionId,
@@ -14,7 +14,7 @@ import {
   waitForBufferContains,
   waitForNoPtySession,
   waitForPtySession,
-  waitForPtyState,
+  waitForPtyState
 } from '../fixtures/terminal'
 
 // ── Buffer restore ──────────────────────────────────────────────────────────
@@ -26,13 +26,24 @@ test.describe('Terminal buffer restore', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Charlie Restore', color: '#f97316', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Charlie Restore',
+      color: '#f97316',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({ projectId: p.id, title: 'Buffer restore task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Buffer restore task',
+      status: 'in_progress'
+    })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
   })
 
@@ -49,7 +60,9 @@ test.describe('Terminal buffer restore', () => {
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
     await mainWindow.getByText('Buffer restore task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible()
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible()
 
     await waitForPtySession(mainWindow, sessionId)
     const restoredBuffer = await readFullBuffer(mainWindow, sessionId)
@@ -65,17 +78,30 @@ test.describe('Terminal state transitions', () => {
 
   test.beforeAll(async ({ mainWindow }) => {
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Delta State', color: '#eab308', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Delta State',
+      color: '#eab308',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({ projectId: p.id, title: 'State transition task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'State transition task',
+      status: 'in_progress'
+    })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
   })
 
-  test('reaches idle after startup and stays healthy after command execution', async ({ mainWindow }) => {
+  test('reaches idle after startup and stays healthy after command execution', async ({
+    mainWindow
+  }) => {
     const marker = `STATE_${Date.now()}`
 
     await openTaskTerminal(mainWindow, { projectAbbrev, taskTitle: 'State transition task' })
@@ -105,13 +131,24 @@ test.describe('Terminal mode switch teardown', () => {
 
   test.beforeAll(async ({ mainWindow }) => {
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Mode Teardown', color: '#14b8a6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Mode Teardown',
+      color: '#14b8a6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({ projectId: p.id, title: 'Mode teardown task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Mode teardown task',
+      status: 'in_progress'
+    })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
   })
 
@@ -150,13 +187,20 @@ test.describe('Terminal tab rename persistence', () => {
 
   test.beforeAll(async ({ mainWindow }) => {
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Tab Rename', color: '#3b82f6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Tab Rename',
+      color: '#3b82f6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
     const t = await s.createTask({ projectId: p.id, title: 'Tab rename task', status: 'todo' })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
   })
 
@@ -164,7 +208,10 @@ test.describe('Terminal tab rename persistence', () => {
     const label = `Renamed ${Date.now()}`
 
     await openTaskTerminal(mainWindow, { projectAbbrev, taskTitle: 'Tab rename task' })
-    await mainWindow.locator('[data-testid="terminal-tabbar"]:visible [data-testid="terminal-tab-add"]').first().click()
+    await mainWindow
+      .locator('[data-testid="terminal-tabbar"]:visible [data-testid="terminal-tab-add"]')
+      .first()
+      .click()
 
     await expect
       .poll(async () => {
@@ -199,9 +246,13 @@ test.describe('Terminal tab rename persistence', () => {
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
     await mainWindow.getByText('Tab rename task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-tabbar"]:visible').first()).toBeVisible()
+    await expect(
+      mainWindow.locator('[data-testid="terminal-tabbar"]:visible').first()
+    ).toBeVisible()
 
-    await expect(mainWindow.getByTestId(`terminal-tab-${nonMainTabId}`).getByText(label)).toBeVisible()
+    await expect(
+      mainWindow.getByTestId(`terminal-tab-${nonMainTabId}`).getByText(label)
+    ).toBeVisible()
   })
 })
 
@@ -213,13 +264,24 @@ test.describe('Terminal clear buffer', () => {
 
   test.beforeAll(async ({ mainWindow }) => {
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Delta Clear', color: '#0ea5e9', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Delta Clear',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({ projectId: p.id, title: 'Clear buffer task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Clear buffer task',
+      status: 'in_progress'
+    })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
   })
 
@@ -241,14 +303,16 @@ test.describe('Terminal clear buffer', () => {
     // is *post-clear* output — markerA cannot appear there regardless of any
     // late PTY redraw, eliminating the race the previous re-clear loop tried
     // to paper over.
-    const cleared = await mainWindow.evaluate(
+    const cleared = (await mainWindow.evaluate(
       (id) => window.api.pty.clearBuffer(id),
       sessionId
-    ) as { success: boolean; clearedSeq: number | null }
+    )) as { success: boolean; clearedSeq: number | null }
     expect(cleared.success).toBe(true)
     expect(cleared.clearedSeq).not.toBeNull()
 
-    await expect.poll(async () => mainWindow.evaluate((id) => window.api.pty.exists(id), sessionId)).toBe(true)
+    await expect
+      .poll(async () => mainWindow.evaluate((id) => window.api.pty.exists(id), sessionId))
+      .toBe(true)
 
     await runCommand(mainWindow, sessionId, `echo ${markerB}`)
     await waitForBufferContains(mainWindow, sessionId, markerB)
@@ -268,13 +332,24 @@ test.describe('Terminal restart shortcut', () => {
 
   test.beforeAll(async ({ mainWindow }) => {
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Qr Restart', color: '#a855f7', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Qr Restart',
+      color: '#a855f7',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({ projectId: p.id, title: 'Restart shortcut task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Restart shortcut task',
+      status: 'in_progress'
+    })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
   })
 
@@ -304,10 +379,11 @@ test.describe('Terminal restart shortcut', () => {
 
     // Old buffer content should be gone. Allow a beat for the remount to flush
     // the old serialized buffer; assertion polls the in-process buffer.
-    await expect.poll(
-      async () => (await readFullBuffer(mainWindow, sessionId)).includes(marker),
-      { timeout: 5_000 }
-    ).toBe(false)
+    await expect
+      .poll(async () => (await readFullBuffer(mainWindow, sessionId)).includes(marker), {
+        timeout: 5_000
+      })
+      .toBe(false)
   })
 })
 
@@ -319,13 +395,24 @@ test.describe('Trailing PTY output on exit', () => {
 
   test.beforeAll(async ({ mainWindow }) => {
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Ux Trailing', color: '#f97316', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Ux Trailing',
+      color: '#f97316',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({ projectId: p.id, title: 'Trailing output task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Trailing output task',
+      status: 'in_progress'
+    })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
   })
 

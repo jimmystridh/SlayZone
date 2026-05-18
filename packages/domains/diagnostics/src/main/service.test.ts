@@ -2,7 +2,12 @@
  * Diagnostics service handler contract tests
  * Run with: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/diagnostics/src/main/service.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerDiagnosticsHandlers, stopDiagnostics } from './service.js'
 import { dialog } from 'electron'
 import * as fs from 'node:fs'
@@ -18,8 +23,11 @@ registerDiagnosticsHandlers(h.ipcMain as never, h.db, h.db)
 async function run() {
   console.log('\ndiagnostics:getConfig')
   {
-    const config = await h.invoke('diagnostics:getConfig') as {
-      enabled: boolean; verbose: boolean; includePtyOutput: boolean; retentionDays: number
+    const config = (await h.invoke('diagnostics:getConfig')) as {
+      enabled: boolean
+      verbose: boolean
+      includePtyOutput: boolean
+      retentionDays: number
     }
     expect(config.enabled).toBe(true)
     expect(config.verbose).toBe(false)
@@ -30,8 +38,10 @@ async function run() {
 
   console.log('\ndiagnostics:setConfig')
   {
-    const config = await h.invoke('diagnostics:setConfig', { verbose: true }) as {
-      enabled: boolean; verbose: boolean; retentionDays: number
+    const config = (await h.invoke('diagnostics:setConfig', { verbose: true })) as {
+      enabled: boolean
+      verbose: boolean
+      retentionDays: number
     }
     expect(config.verbose).toBe(true)
     expect(config.enabled).toBe(true)
@@ -39,7 +49,7 @@ async function run() {
     console.log('  \u2713 updates partial config')
   }
   {
-    const config = await h.invoke('diagnostics:setConfig', { retentionDays: 7 }) as {
+    const config = (await h.invoke('diagnostics:setConfig', { retentionDays: 7 })) as {
       retentionDays: number
     }
     expect(config.retentionDays).toBe(7)
@@ -47,10 +57,16 @@ async function run() {
   }
   {
     await h.invoke('diagnostics:setConfig', {
-      enabled: false, verbose: false, includePtyOutput: true, retentionDays: 30
+      enabled: false,
+      verbose: false,
+      includePtyOutput: true,
+      retentionDays: 30
     })
-    const config = await h.invoke('diagnostics:getConfig') as {
-      enabled: boolean; verbose: boolean; includePtyOutput: boolean; retentionDays: number
+    const config = (await h.invoke('diagnostics:getConfig')) as {
+      enabled: boolean
+      verbose: boolean
+      includePtyOutput: boolean
+      retentionDays: number
     }
     expect(config.enabled).toBe(false)
     expect(config.verbose).toBe(false)
@@ -63,7 +79,9 @@ async function run() {
   {
     await h.invoke('diagnostics:setConfig', { enabled: true })
     await h.invoke('diagnostics:recordClientError', {
-      type: 'error', message: 'Test error', stack: 'Error: Test\n  at test.ts:1'
+      type: 'error',
+      message: 'Test error',
+      stack: 'Error: Test\n  at test.ts:1'
     })
     console.log('  \u2713 does not throw')
   }
@@ -71,20 +89,23 @@ async function run() {
   console.log('\ndiagnostics:recordClientEvent')
   {
     await h.invoke('diagnostics:recordClientEvent', {
-      event: 'test.event', level: 'info', message: 'Test event message'
+      event: 'test.event',
+      level: 'info',
+      message: 'Test event message'
     })
     console.log('  \u2713 does not throw')
   }
 
   // Wait for instrumented event recording to settle
-  await new Promise(r => setTimeout(r, 20))
+  await new Promise((r) => setTimeout(r, 20))
 
   console.log('\ndiagnostics:export')
   {
     // Test canceled export
-    const canceled = await h.invoke('diagnostics:export', {
-      fromTsMs: 0, toTsMs: Date.now() + 10000
-    }) as { success: boolean; canceled?: boolean }
+    const canceled = (await h.invoke('diagnostics:export', {
+      fromTsMs: 0,
+      toTsMs: Date.now() + 10000
+    })) as { success: boolean; canceled?: boolean }
     expect(canceled.success).toBe(false)
     expect(canceled.canceled).toBe(true)
     console.log('  \u2713 returns canceled when dialog dismissed')
@@ -96,9 +117,10 @@ async function run() {
     ;(dialog as any).showSaveDialog = async () => ({ canceled: false, filePath: tmpFile })
 
     try {
-      const result = await h.invoke('diagnostics:export', {
-        fromTsMs: 0, toTsMs: Date.now() + 10000
-      }) as { success: boolean; path?: string; eventCount?: number }
+      const result = (await h.invoke('diagnostics:export', {
+        fromTsMs: 0,
+        toTsMs: Date.now() + 10000
+      })) as { success: boolean; path?: string; eventCount?: number }
       expect(result.success).toBe(true)
       expect(result.eventCount).toBeGreaterThan(0)
 
@@ -125,7 +147,7 @@ try {
   process.exitCode = 1
 }
 
-await new Promise(r => setTimeout(r, 50))
+await new Promise((r) => setTimeout(r, 50))
 stopDiagnostics()
 h.cleanup()
 console.log('\nDone')

@@ -26,14 +26,17 @@ function assert(cond: unknown, msg: string): void {
   if (!cond) throw new Error(msg)
 }
 function assertEq<T>(actual: T, expected: T, label: string): void {
-  if (actual !== expected) throw new Error(`${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+  if (actual !== expected)
+    throw new Error(`${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
 }
 
 function freshRoot(): { root: string; old: string; new_: string } {
   const root = mkdtempSync(join(tmpdir(), 'v127-test-'))
   return { root, old: join(root, 'assets'), new_: join(root, 'artifacts') }
 }
-function cleanup(root: string): void { rmSync(root, { recursive: true, force: true }) }
+function cleanup(root: string): void {
+  rmSync(root, { recursive: true, force: true })
+}
 
 function seedFile(p: string, content: string): void {
   mkdirSync(join(p, '..'), { recursive: true })
@@ -50,7 +53,9 @@ test('noop when neither dir exists', () => {
     assertEq(r.mode, 'noop', 'mode')
     assert(!existsSync(old), 'old should not exist')
     assert(!existsSync(new_), 'new should not exist')
-  } finally { cleanup(root) }
+  } finally {
+    cleanup(root)
+  }
 })
 
 test('noop when only new exists', () => {
@@ -60,7 +65,9 @@ test('noop when only new exists', () => {
     const r = migrateV127DiskDir(old, new_)
     assertEq(r.mode, 'noop', 'mode')
     assertEq(readFileSync(join(new_, 'taskA', 'file.md'), 'utf-8'), 'fresh', 'fresh untouched')
-  } finally { cleanup(root) }
+  } finally {
+    cleanup(root)
+  }
 })
 
 test('rename when only old exists', () => {
@@ -74,7 +81,9 @@ test('rename when only old exists', () => {
     assert(!existsSync(old), 'old gone')
     assertEq(readFileSync(join(new_, 'taskA', 'a.md'), 'utf-8'), 'A', 'A migrated')
     assertEq(readFileSync(join(new_, 'taskB', 'b.md'), 'utf-8'), 'B', 'B migrated')
-  } finally { cleanup(root) }
+  } finally {
+    cleanup(root)
+  }
 })
 
 test('merge: disjoint task dirs — all moved, old removed', () => {
@@ -90,7 +99,9 @@ test('merge: disjoint task dirs — all moved, old removed', () => {
     assertEq(r.oldDirRemoved, true, 'old removed')
     assertEq(readFileSync(join(new_, 'taskOld', 'old.md'), 'utf-8'), 'OLD', 'old content moved')
     assertEq(readFileSync(join(new_, 'taskNew', 'new.md'), 'utf-8'), 'NEW', 'new content kept')
-  } finally { cleanup(root) }
+  } finally {
+    cleanup(root)
+  }
 })
 
 test('merge: same task, disjoint files — files merged into existing task dir', () => {
@@ -103,9 +114,15 @@ test('merge: same task, disjoint files — files merged into existing task dir',
     assertEq(r.taskDirsMoved, 0, 'taskDirsMoved')
     assertEq(r.filesMoved, 1, 'filesMoved')
     assertEq(r.conflicts, 0, 'conflicts')
-    assertEq(readFileSync(join(new_, 'taskShared', 'old-only.md'), 'utf-8'), 'OLD', 'old file moved')
+    assertEq(
+      readFileSync(join(new_, 'taskShared', 'old-only.md'), 'utf-8'),
+      'OLD',
+      'old file moved'
+    )
     assertEq(readFileSync(join(new_, 'taskShared', 'new-only.md'), 'utf-8'), 'NEW', 'new file kept')
-  } finally { cleanup(root) }
+  } finally {
+    cleanup(root)
+  }
 })
 
 test('merge: file collision — old kept in place, conflict counted, content NOT overwritten', () => {
@@ -118,9 +135,19 @@ test('merge: file collision — old kept in place, conflict counted, content NOT
     assertEq(r.conflicts, 1, 'conflicts')
     assertEq(r.filesMoved, 0, 'filesMoved')
     assertEq(r.oldDirRemoved, false, 'old kept (non-empty)')
-    assertEq(readFileSync(join(new_, 'taskShared', 'same.md'), 'utf-8'), 'NEW-VERSION', 'new not overwritten')
-    assertEq(readFileSync(join(old, 'taskShared', 'same.md'), 'utf-8'), 'OLD-VERSION', 'old preserved for recovery')
-  } finally { cleanup(root) }
+    assertEq(
+      readFileSync(join(new_, 'taskShared', 'same.md'), 'utf-8'),
+      'NEW-VERSION',
+      'new not overwritten'
+    )
+    assertEq(
+      readFileSync(join(old, 'taskShared', 'same.md'), 'utf-8'),
+      'OLD-VERSION',
+      'old preserved for recovery'
+    )
+  } finally {
+    cleanup(root)
+  }
 })
 
 test('merge: empty old dir → removed cleanly', () => {
@@ -132,7 +159,9 @@ test('merge: empty old dir → removed cleanly', () => {
     assertEq(r.mode, 'merge', 'mode')
     assertEq(r.oldDirRemoved, true, 'empty old removed')
     assert(!existsSync(old), 'old gone')
-  } finally { cleanup(root) }
+  } finally {
+    cleanup(root)
+  }
 })
 
 test('idempotent: second call after successful rename is noop', () => {
@@ -143,7 +172,9 @@ test('idempotent: second call after successful rename is noop', () => {
     const r2 = migrateV127DiskDir(old, new_)
     assertEq(r2.mode, 'noop', 'second call noop')
     assertEq(readFileSync(join(new_, 'taskA', 'a.md'), 'utf-8'), 'A', 'content intact')
-  } finally { cleanup(root) }
+  } finally {
+    cleanup(root)
+  }
 })
 
 console.log(`\n${passed} passed, ${failed} failed`)

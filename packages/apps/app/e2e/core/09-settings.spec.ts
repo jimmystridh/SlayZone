@@ -1,7 +1,9 @@
 import { test, expect, seed, clickSettings, resetApp } from '../fixtures/electron'
 
 test.describe('Settings', () => {
-  test.beforeAll(async ({ mainWindow }) => { await resetApp(mainWindow) })
+  test.beforeAll(async ({ mainWindow }) => {
+    await resetApp(mainWindow)
+  })
 
   const settingsDialog = (mainWindow: import('@playwright/test').Page) =>
     mainWindow.getByRole('dialog').last()
@@ -42,7 +44,9 @@ test.describe('Settings', () => {
   test('Cmd+, opens settings dialog', async ({ mainWindow }) => {
     await mainWindow.keyboard.press('Meta+,')
     await expect(settingsDialog(mainWindow)).toBeVisible({ timeout: 5_000 })
-    await expect(settingsDialog(mainWindow).getByText('Color theme')).toBeVisible({ timeout: 5_000 })
+    await expect(settingsDialog(mainWindow).getByText('Color theme')).toBeVisible({
+      timeout: 5_000
+    })
   })
 
   test('switch theme to dark', async ({ mainWindow }) => {
@@ -70,9 +74,7 @@ test.describe('Settings', () => {
 
     await openTerminalSettings(mainWindow)
 
-    const modeTrigger = settingsDialog(mainWindow)
-      .locator('[data-slot="select-trigger"]')
-      .first()
+    const modeTrigger = settingsDialog(mainWindow).locator('[data-slot="select-trigger"]').first()
     await expect(modeTrigger).toHaveText(/Codex/)
 
     // Restore default to claude-code so subsequent tests get the real default

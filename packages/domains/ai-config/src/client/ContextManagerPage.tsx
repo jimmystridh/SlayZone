@@ -12,7 +12,7 @@ export function ContextManagerPage({
   selectedProjectId,
   projectPath,
   projectName,
-  onBack,
+  onBack
 }: ContextManagerPageProps) {
   const isLoaded = useContextManagerStore((s) => s.isLoaded)
 

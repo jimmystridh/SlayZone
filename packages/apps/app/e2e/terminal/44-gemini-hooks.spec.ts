@@ -20,10 +20,15 @@ test.describe('Gemini agent hooks', () => {
     await resetApp(mainWindow)
   })
 
-  test('boot installer wrote notify.sh + Gemini settings.json to sandbox', async ({ mainWindow }) => {
+  test('boot installer wrote notify.sh + Gemini settings.json to sandbox', async ({
+    mainWindow
+  }) => {
     const env = (await mainWindow.evaluate(() => {
       // @ts-expect-error -- test bridge
-      return window.__testInvoke('e2e:get-env', ['SLAYZONE_HOME_DIR', 'SLAYZONE_GEMINI_SETTINGS_PATH'])
+      return window.__testInvoke('e2e:get-env', [
+        'SLAYZONE_HOME_DIR',
+        'SLAYZONE_GEMINI_SETTINGS_PATH'
+      ])
     })) as Record<string, string>
 
     expect(env.SLAYZONE_HOME_DIR).toBeTruthy()
@@ -47,7 +52,9 @@ test.describe('Gemini agent hooks', () => {
     expect(settings.hooks.BeforeAgent[0].matcher).toBeUndefined()
   })
 
-  test('POST /api/agent-hook with Gemini BeforeAgent → agent-start lifecycle event', async ({ mainWindow }) => {
+  test('POST /api/agent-hook with Gemini BeforeAgent → agent-start lifecycle event', async ({
+    mainWindow
+  }) => {
     const port = (await mainWindow.evaluate(() => {
       // @ts-expect-error -- test bridge
       return window.__testInvoke('e2e:get-mcp-port', [])
@@ -68,7 +75,7 @@ test.describe('Gemini agent hooks', () => {
       agentId: 'gemini',
       hookEvent: 'BeforeAgent',
       sessionId: 'gemini-sess',
-      taskId: 'gemini-task',
+      taskId: 'gemini-task'
     })
 
     const handle = await mainWindow.waitForFunction(
@@ -76,7 +83,7 @@ test.describe('Gemini agent hooks', () => {
         const events = (window as Record<string, unknown>).__geminiEvents as unknown[] | undefined
         return events && events.length > 0 ? events[0] : null
       },
-      { timeout: 3000 },
+      { timeout: 3000 }
     )
     const event = await handle.jsonValue()
     expect(event).toMatchObject({
@@ -84,7 +91,7 @@ test.describe('Gemini agent hooks', () => {
       hookEvent: 'BeforeAgent',
       type: 'agent-start',
       sessionId: 'gemini-sess',
-      taskId: 'gemini-task',
+      taskId: 'gemini-task'
     })
 
     await mainWindow.evaluate(() => {
@@ -93,7 +100,9 @@ test.describe('Gemini agent hooks', () => {
     })
   })
 
-  test('AfterTool maps to agent-start under Gemini override (not agent-stop)', async ({ mainWindow }) => {
+  test('AfterTool maps to agent-start under Gemini override (not agent-stop)', async ({
+    mainWindow
+  }) => {
     const port = (await mainWindow.evaluate(() => {
       // @ts-expect-error -- test bridge
       return window.__testInvoke('e2e:get-mcp-port', [])
@@ -111,7 +120,7 @@ test.describe('Gemini agent hooks', () => {
 
     await postJson(`http://127.0.0.1:${port}/api/agent-hook`, {
       agentId: 'gemini',
-      hookEvent: 'AfterTool',
+      hookEvent: 'AfterTool'
     })
 
     const handle = await mainWindow.waitForFunction(
@@ -119,7 +128,7 @@ test.describe('Gemini agent hooks', () => {
         const events = (window as Record<string, unknown>).__geminiEvents2 as unknown[] | undefined
         return events && events.length > 0 ? events[0] : null
       },
-      { timeout: 3000 },
+      { timeout: 3000 }
     )
     const event = (await handle.jsonValue()) as { type: string; agentId: string }
     expect(event.type).toBe('agent-start')
@@ -151,12 +160,15 @@ function postJson(url: string, body: unknown): Promise<{ status: number }> {
         port: u.port,
         method: 'POST',
         path: u.pathname,
-        headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) },
+        headers: {
+          'content-type': 'application/json',
+          'content-length': Buffer.byteLength(payload)
+        }
       },
       (res) => {
         res.resume()
         res.on('end', () => resolve({ status: res.statusCode ?? 0 }))
-      },
+      }
     )
     req.on('error', reject)
     req.write(payload)

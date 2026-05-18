@@ -1,4 +1,12 @@
-import { test, expect, seed, clickProject, goHome, TEST_PROJECT_PATH, resetApp} from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  clickProject,
+  goHome,
+  TEST_PROJECT_PATH,
+  resetApp
+} from '../fixtures/electron'
 import { spawnSync } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -50,7 +58,11 @@ test.describe('CLI: slay', () => {
   })
 
   const runCli = (...args: string[]) => {
-    const env: Record<string, string> = { ...process.env, SLAYZONE_DB_PATH: dbPath, SLAYZONE_MCP_PORT: String(mcpPort) }
+    const env: Record<string, string> = {
+      ...process.env,
+      SLAYZONE_DB_PATH: dbPath,
+      SLAYZONE_MCP_PORT: String(mcpPort)
+    }
     // Strip inherited task-context env so CLI tests exercise default-project
     // logic instead of falling back to the parent shell's project/task.
     delete env.SLAYZONE_PROJECT_ID
@@ -125,15 +137,18 @@ test.describe('CLI: slay', () => {
       // Wait for notify → refreshData so getTask can find it
       await expect(mainWindow.getByText(title)).toBeVisible({ timeout: 10_000 })
 
-      const tasks = await mainWindow.evaluate(() => window.api.db.getTasks()) as {
-        title: string; terminal_mode: string;
+      const tasks = (await mainWindow.evaluate(() => window.api.db.getTasks())) as {
+        title: string
+        terminal_mode: string
         provider_config: Record<string, { flags?: string }>
       }[]
       const task = tasks.find((t) => t.title === title)!
       expect(task).toBeTruthy()
       expect(task.terminal_mode).toBeTruthy()
       expect(task.provider_config).toBeTruthy()
-      expect(task.provider_config['claude-code']?.flags).toContain('--allow-dangerously-skip-permissions')
+      expect(task.provider_config['claude-code']?.flags).toContain(
+        '--allow-dangerously-skip-permissions'
+      )
       expect(task.provider_config['codex']?.flags).toContain('--sandbox workspace-write')
     })
 
@@ -143,7 +158,7 @@ test.describe('CLI: slay', () => {
       const { SLAYZONE_MCP_PORT: _, ...envWithoutPort } = process.env
       const r = spawnSync('node', [SLAY_JS, 'tasks', 'create', title, '--project', 'cli test'], {
         env: { ...envWithoutPort, SLAYZONE_DB_PATH: dbPath },
-        encoding: 'utf8',
+        encoding: 'utf8'
       })
       expect(r.status).toBe(0)
 
@@ -166,7 +181,15 @@ test.describe('CLI: slay', () => {
       expect(r1.stdout).toContain('Created:')
 
       // Same external-id → skip
-      const r2 = runCli('tasks', 'create', 'CLI dedup second', '--project', 'cli test', '--external-id', extId)
+      const r2 = runCli(
+        'tasks',
+        'create',
+        'CLI dedup second',
+        '--project',
+        'cli test',
+        '--external-id',
+        extId
+      )
       expect(r2.status).toBe(0)
       expect(r2.stdout).toContain('Exists:')
       expect(r2.stdout).toContain(title)
@@ -177,11 +200,27 @@ test.describe('CLI: slay', () => {
       const projName = `CLI dedup proj ${Date.now()}`
       runCli('projects', 'create', projName, '--path', TEST_PROJECT_PATH)
 
-      const r1 = runCli('tasks', 'create', 'Task in proj1', '--project', 'cli test', '--external-id', extId)
+      const r1 = runCli(
+        'tasks',
+        'create',
+        'Task in proj1',
+        '--project',
+        'cli test',
+        '--external-id',
+        extId
+      )
       expect(r1.status).toBe(0)
       expect(r1.stdout).toContain('Created:')
 
-      const r2 = runCli('tasks', 'create', 'Task in proj2', '--project', projName, '--external-id', extId)
+      const r2 = runCli(
+        'tasks',
+        'create',
+        'Task in proj2',
+        '--project',
+        projName,
+        '--external-id',
+        extId
+      )
       expect(r2.status).toBe(0)
       expect(r2.stdout).toContain('Created:')
     })
@@ -189,20 +228,47 @@ test.describe('CLI: slay', () => {
     test('--external-provider namespaces dedup', () => {
       const extId = `provider-${Date.now()}`
 
-      const r1 = runCli('tasks', 'create', 'CLI provider task', '--project', 'cli test',
-        '--external-id', extId, '--external-provider', 'email')
+      const r1 = runCli(
+        'tasks',
+        'create',
+        'CLI provider task',
+        '--project',
+        'cli test',
+        '--external-id',
+        extId,
+        '--external-provider',
+        'email'
+      )
       expect(r1.status).toBe(0)
       expect(r1.stdout).toContain('Created:')
 
       // Same external-id, different provider → creates
-      const r2 = runCli('tasks', 'create', 'CLI provider task 2', '--project', 'cli test',
-        '--external-id', extId, '--external-provider', 'calendar')
+      const r2 = runCli(
+        'tasks',
+        'create',
+        'CLI provider task 2',
+        '--project',
+        'cli test',
+        '--external-id',
+        extId,
+        '--external-provider',
+        'calendar'
+      )
       expect(r2.status).toBe(0)
       expect(r2.stdout).toContain('Created:')
 
       // Same external-id + same provider → dedup
-      const r3 = runCli('tasks', 'create', 'CLI provider task 3', '--project', 'cli test',
-        '--external-id', extId, '--external-provider', 'email')
+      const r3 = runCli(
+        'tasks',
+        'create',
+        'CLI provider task 3',
+        '--project',
+        'cli test',
+        '--external-id',
+        extId,
+        '--external-provider',
+        'email'
+      )
       expect(r3.status).toBe(0)
       expect(r3.stdout).toContain('Exists:')
     })
@@ -233,9 +299,22 @@ test.describe('CLI: slay', () => {
       const name = `CLI project ${Date.now()}`
       const projectPath = path.join(TEST_PROJECT_PATH, `cli-project-${Date.now()}`)
 
-      const createdResult = runCli('projects', 'create', name, '--path', projectPath, '--color', '#22c55e', '--json')
+      const createdResult = runCli(
+        'projects',
+        'create',
+        name,
+        '--path',
+        projectPath,
+        '--color',
+        '#22c55e',
+        '--json'
+      )
       expect(createdResult.status).toBe(0)
-      const created = JSON.parse(createdResult.stdout) as { name: string; color: string; path: string | null }
+      const created = JSON.parse(createdResult.stdout) as {
+        name: string
+        color: string
+        path: string | null
+      }
 
       expect(created.name).toBe(name)
       expect(created.color).toBe('#22c55e')
@@ -265,7 +344,9 @@ test.describe('CLI: slay', () => {
       const r = runCli('tasks', 'update', task.id.slice(0, 8), '--title', 'CLI renamed task')
       expect(r.status).toBe(0)
       const r2 = runCli('tasks', 'list', '--json')
-      expect(JSON.parse(r2.stdout).some((t: { title: string }) => t.title === 'CLI renamed task')).toBe(true)
+      expect(
+        JSON.parse(r2.stdout).some((t: { title: string }) => t.title === 'CLI renamed task')
+      ).toBe(true)
     })
 
     test('updates task status', () => {
@@ -275,7 +356,11 @@ test.describe('CLI: slay', () => {
       const r = runCli('tasks', 'update', task.id.slice(0, 8), '--status', 'review')
       expect(r.status).toBe(0)
       const r2 = runCli('tasks', 'list', '--status', 'review', '--json')
-      expect(JSON.parse(r2.stdout).some((t: { title: string }) => t.title === 'CLI seeded in progress task')).toBe(true)
+      expect(
+        JSON.parse(r2.stdout).some(
+          (t: { title: string }) => t.title === 'CLI seeded in progress task'
+        )
+      ).toBe(true)
     })
 
     test('exits non-zero with no options', () => {
@@ -341,17 +426,25 @@ test.describe('CLI: slay', () => {
   test.describe('slay tasks done', () => {
     test('marks task done and UI updates automatically via REST notify', async ({ mainWindow }) => {
       const s = seed(mainWindow)
-      const task = await s.createTask({ projectId, title: 'Task to complete via CLI', status: 'todo' })
+      const task = await s.createTask({
+        projectId,
+        title: 'Task to complete via CLI',
+        status: 'todo'
+      })
       await s.refreshData()
       // Locate the todo column by its w-72 class + heading; task should be visible there
-      const todoCol = mainWindow.locator('div.w-72').filter({ has: mainWindow.locator('h3', { hasText: 'Todo' }) })
+      const todoCol = mainWindow
+        .locator('div.w-72')
+        .filter({ has: mainWindow.locator('h3', { hasText: 'Todo' }) })
       await expect(todoCol.getByText('Task to complete via CLI')).toBeVisible({ timeout: 5_000 })
 
       const r = runCli('tasks', 'done', task.id.slice(0, 8))
       expect(r.status).toBe(0)
 
       // CLI POSTs /api/notify → tasks:changed → refreshData → task moves from todo to done column
-      await expect(todoCol.getByText('Task to complete via CLI')).not.toBeVisible({ timeout: 5_000 })
+      await expect(todoCol.getByText('Task to complete via CLI')).not.toBeVisible({
+        timeout: 5_000
+      })
     })
 
     test('exits non-zero on unknown id prefix', () => {
@@ -370,7 +463,12 @@ test.describe('CLI: slay', () => {
       // Spawn a short-lived process via test global exposed in Playwright mode
       processId = await electronApp.evaluate(() => {
         const spawn = (globalThis as Record<string, unknown>).__spawnProcess as (
-          projectId: string | null, taskId: string | null, label: string, command: string, cwd: string, autoRestart: boolean
+          projectId: string | null,
+          taskId: string | null,
+          label: string,
+          command: string,
+          cwd: string,
+          autoRestart: boolean
         ) => string
         return spawn(null, null, 'CLI test process', 'echo hello-from-slay-cli', '/tmp', false)
       })
@@ -381,7 +479,7 @@ test.describe('CLI: slay', () => {
     const runProcessesCli = (...args: string[]) =>
       spawnSync('node', [SLAY_JS, ...args], {
         env: { ...process.env, SLAYZONE_DB_PATH: dbPath, SLAYZONE_MCP_PORT: String(mcpPort) },
-        encoding: 'utf8',
+        encoding: 'utf8'
       })
 
     test('lists processes', () => {
@@ -413,7 +511,7 @@ test.describe('CLI: slay', () => {
     test('exits non-zero when app is not running', () => {
       const r = spawnSync('node', [SLAY_JS, 'processes', 'list'], {
         env: { ...process.env, SLAYZONE_DB_PATH: dbPath, SLAYZONE_MCP_PORT: '1' },
-        encoding: 'utf8',
+        encoding: 'utf8'
       })
       expect(r.status).not.toBe(0)
       expect(r.stderr).toContain('not running')
@@ -423,7 +521,7 @@ test.describe('CLI: slay', () => {
       // Spawn a long-running process for this test
       const killId = spawnSync('node', [SLAY_JS, 'tasks', 'list'], {
         env: { ...process.env, SLAYZONE_DB_PATH: dbPath },
-        encoding: 'utf8',
+        encoding: 'utf8'
       }) // warmup — ignore result
       void killId
 
@@ -439,7 +537,9 @@ test.describe('CLI: slay', () => {
       expect(r.status).toBe(0)
       expect(r.stdout).toContain('Killed:')
 
-      const after = JSON.parse(runProcessesCli('processes', 'list', '--json').stdout) as { id: string }[]
+      const after = JSON.parse(runProcessesCli('processes', 'list', '--json').stdout) as {
+        id: string
+      }[]
       expect(after.some((p) => p.id === target.id)).toBe(false)
     })
 
@@ -453,7 +553,12 @@ test.describe('CLI: slay', () => {
       // Spawn a process that finishes quickly
       const followId = await electronApp.evaluate(() => {
         const spawn = (globalThis as Record<string, unknown>).__spawnProcess as (
-          projectId: string | null, taskId: string | null, label: string, command: string, cwd: string, autoRestart: boolean
+          projectId: string | null,
+          taskId: string | null,
+          label: string,
+          command: string,
+          cwd: string,
+          autoRestart: boolean
         ) => string
         return spawn(null, null, 'CLI follow test', 'echo follow-output-marker', '/tmp', false)
       })
@@ -474,7 +579,12 @@ test.describe('CLI: slay', () => {
     test('spawns command via user shell and captures output', async ({ electronApp }) => {
       const id = await electronApp.evaluate(() => {
         const spawn = (globalThis as Record<string, unknown>).__spawnProcess as (
-          projectId: string | null, taskId: string | null, label: string, command: string, cwd: string, autoRestart: boolean
+          projectId: string | null,
+          taskId: string | null,
+          label: string,
+          command: string,
+          cwd: string,
+          autoRestart: boolean
         ) => string
         return spawn(null, null, 'shell test', 'echo "hello from $SHELL"', '/tmp', false)
       })
@@ -488,18 +598,28 @@ test.describe('CLI: slay', () => {
       runProcessesCli('processes', 'kill', id.slice(0, 8))
     })
 
-    test('process inherits enriched PATH even with bare shell and minimal env', async ({ electronApp, mainWindow }) => {
+    test('process inherits enriched PATH even with bare shell and minimal env', async ({
+      electronApp,
+      mainWindow
+    }) => {
       // Simulate a system where the spawning shell does NOT enrich PATH
       // (e.g. /bin/sh on Linux). The cached enrichedPath from init should
       // be injected into the process env regardless.
       const fakeShell = path.join(os.tmpdir(), 'slayzone-test-bare-shell.sh')
-      fs.writeFileSync(fakeShell, [
-        '#!/bin/bash',
-        'while [ $# -gt 0 ] && [ "$1" != "-c" ]; do shift; done',
-        'if [ "$1" = "-c" ]; then shift; exec /bin/sh -c "$*"; fi',
-      ].join('\n'), { mode: 0o755 })
+      fs.writeFileSync(
+        fakeShell,
+        [
+          '#!/bin/bash',
+          'while [ $# -gt 0 ] && [ "$1" != "-c" ]; do shift; done',
+          'if [ "$1" = "-c" ]; then shift; exec /bin/sh -c "$*"; fi'
+        ].join('\n'),
+        { mode: 0o755 }
+      )
 
-      await mainWindow.evaluate((shell: string) => window.api.pty.setShellOverride(shell), fakeShell)
+      await mainWindow.evaluate(
+        (shell: string) => window.api.pty.setShellOverride(shell),
+        fakeShell
+      )
       const originalPath = await electronApp.evaluate(() => {
         const orig = process.env.PATH
         process.env.PATH = '/usr/bin:/bin'
@@ -509,7 +629,12 @@ test.describe('CLI: slay', () => {
       try {
         const id = await electronApp.evaluate(() => {
           const spawn = (globalThis as Record<string, unknown>).__spawnProcess as (
-            projectId: string | null, taskId: string | null, label: string, command: string, cwd: string, autoRestart: boolean
+            projectId: string | null,
+            taskId: string | null,
+            label: string,
+            command: string,
+            cwd: string,
+            autoRestart: boolean
           ) => string
           return spawn(null, null, 'path test', 'echo "PROC_PATH=$PATH"', '/tmp', false)
         })
@@ -524,8 +649,12 @@ test.describe('CLI: slay', () => {
         runProcessesCli('processes', 'kill', id.slice(0, 8))
       } finally {
         await mainWindow.evaluate(() => window.api.pty.setShellOverride(null))
-        await electronApp.evaluate((p: string) => { process.env.PATH = p }, originalPath)
-        try { fs.unlinkSync(fakeShell) } catch {}
+        await electronApp.evaluate((p: string) => {
+          process.env.PATH = p
+        }, originalPath)
+        try {
+          fs.unlinkSync(fakeShell)
+        } catch {}
       }
     })
   })
@@ -579,9 +708,9 @@ test.describe('CLI: slay', () => {
           ...process.env,
           SLAYZONE_DB_PATH: dbPath,
           SLAYZONE_MCP_PORT: String(mcpPort),
-          SLAYZONE_TASK_ID: parentTaskId,
+          SLAYZONE_TASK_ID: parentTaskId
         },
-        encoding: 'utf8',
+        encoding: 'utf8'
       })
       expect(r.status).toBe(0)
       expect(r.stdout).toContain('Created subtask:')
@@ -595,11 +724,27 @@ test.describe('CLI: slay', () => {
       const extId = `sub-dedup-${Date.now()}`
       const title = `CLI subtask dedup ${extId}`
 
-      const r1 = runCli('tasks', 'subtask-add', title, '--parent', parentTaskId.slice(0, 8), '--external-id', extId)
+      const r1 = runCli(
+        'tasks',
+        'subtask-add',
+        title,
+        '--parent',
+        parentTaskId.slice(0, 8),
+        '--external-id',
+        extId
+      )
       expect(r1.status).toBe(0)
       expect(r1.stdout).toContain('Created subtask:')
 
-      const r2 = runCli('tasks', 'subtask-add', 'duplicate', '--parent', parentTaskId.slice(0, 8), '--external-id', extId)
+      const r2 = runCli(
+        'tasks',
+        'subtask-add',
+        'duplicate',
+        '--parent',
+        parentTaskId.slice(0, 8),
+        '--external-id',
+        extId
+      )
       expect(r2.status).toBe(0)
       expect(r2.stdout).toContain('Exists:')
       expect(r2.stdout).toContain(title)
@@ -610,14 +755,16 @@ test.describe('CLI: slay', () => {
       const r = runCli('tasks', 'subtask-add', title, '--parent', parentTaskId.slice(0, 8))
       expect(r.status).toBe(0)
 
-      const subtasks = await mainWindow.evaluate(
+      const subtasks = (await mainWindow.evaluate(
         (pid) => window.api.db.getSubTasks(pid),
-        parentTaskId,
-      ) as { title: string; provider_config: Record<string, { flags?: string }> }[]
+        parentTaskId
+      )) as { title: string; provider_config: Record<string, { flags?: string }> }[]
       const subtask = subtasks.find((t) => t.title === title)!
       expect(subtask).toBeTruthy()
       expect(subtask.provider_config).toBeTruthy()
-      expect(subtask.provider_config['claude-code']?.flags).toContain('--allow-dangerously-skip-permissions')
+      expect(subtask.provider_config['claude-code']?.flags).toContain(
+        '--allow-dangerously-skip-permissions'
+      )
       expect(subtask.provider_config['codex']?.flags).toContain('--sandbox workspace-write')
     })
 

@@ -14,9 +14,11 @@ export function createSkillsSource(): AutocompleteSource<SkillInfo> {
       return { query: rest, tokenStart: 0, tokenEnd: cursorPos }
     },
     async fetch({ cwd }) {
-      const api = (window as unknown as {
-        api?: { chat?: { listSkills?: (cwd: string) => Promise<SkillInfo[]> } }
-      }).api
+      const api = (
+        window as unknown as {
+          api?: { chat?: { listSkills?: (cwd: string) => Promise<SkillInfo[]> } }
+        }
+      ).api
       const fn = api?.chat?.listSkills
       if (!fn) return []
       return fn(cwd)
@@ -29,6 +31,6 @@ export function createSkillsSource(): AutocompleteSource<SkillInfo> {
     accept(skill, ctx) {
       const next = spliceReplace(ctx.draft, ctx.tokenStart, ctx.tokenEnd, `/${skill.name} `)
       ctx.setDraft(next)
-    },
+    }
   }
 }

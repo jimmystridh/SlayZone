@@ -1,10 +1,17 @@
-import { test, expect, seed, goHome, clickProject, resetApp, TEST_PROJECT_PATH } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  resetApp,
+  TEST_PROJECT_PATH
+} from '../fixtures/electron'
 import type { Page, Locator } from '@playwright/test'
 
 // --- Helpers ---
 
-const settingsPanel = (page: Page): Locator =>
-  page.getByTestId('task-settings-panel').last()
+const settingsPanel = (page: Page): Locator => page.getByTestId('task-settings-panel').last()
 
 const descriptionCard = (page: Page): Locator =>
   settingsPanel(page).getByTestId('settings-description-card')
@@ -15,8 +22,7 @@ const subtasksCard = (page: Page): Locator =>
 const artifactsCard = (page: Page): Locator =>
   settingsPanel(page).getByTestId('settings-artifacts-card')
 
-const cardsGrid = (page: Page): Locator =>
-  settingsPanel(page).getByTestId('settings-cards-grid')
+const cardsGrid = (page: Page): Locator => settingsPanel(page).getByTestId('settings-cards-grid')
 
 async function cardHeight(locator: Locator): Promise<number> {
   const box = await locator.boundingBox()
@@ -44,15 +50,17 @@ async function createSubtasks(page: Page, parentId: string, projectId: string, c
           projectId,
           parentId,
           title: `Subtask ${i + 1}`,
-          status: 'todo',
+          status: 'todo'
         })
       }
     },
-    { parentId, projectId, count },
+    { parentId, projectId, count }
   )
   await page.evaluate(async () => {
-    await (window as unknown as { __slayzone_refreshData?: () => Promise<void> }).__slayzone_refreshData?.()
-    await new Promise(r => setTimeout(r, 100))
+    await (
+      window as unknown as { __slayzone_refreshData?: () => Promise<void> }
+    ).__slayzone_refreshData?.()
+    await new Promise((r) => setTimeout(r, 100))
   })
 }
 
@@ -62,8 +70,10 @@ async function clearSubtasks(page: Page, parentId: string) {
     for (const s of subs) await window.api.db.deleteTask(s.id)
   }, parentId)
   await page.evaluate(async () => {
-    await (window as unknown as { __slayzone_refreshData?: () => Promise<void> }).__slayzone_refreshData?.()
-    await new Promise(r => setTimeout(r, 100))
+    await (
+      window as unknown as { __slayzone_refreshData?: () => Promise<void> }
+    ).__slayzone_refreshData?.()
+    await new Promise((r) => setTimeout(r, 100))
   })
 }
 
@@ -77,7 +87,11 @@ test.describe('Settings panel card sizing', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'CardSize Test', color: '#6366f1', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'CardSize Test',
+      color: '#6366f1',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'Card sizing task', status: 'todo' })
@@ -106,7 +120,9 @@ test.describe('Settings panel card sizing', () => {
     expect(await cardHeight(artifactsCard(mainWindow))).toBeLessThan(60)
   })
 
-  test('only subtasks open + 0 subtasks: subtasks card is small (content-sized)', async ({ mainWindow }) => {
+  test('only subtasks open + 0 subtasks: subtasks card is small (content-sized)', async ({
+    mainWindow
+  }) => {
     await setCardOpen(descriptionCard(mainWindow), false)
     await setCardOpen(subtasksCard(mainWindow), true)
     await setCardOpen(artifactsCard(mainWindow), false)
@@ -118,7 +134,9 @@ test.describe('Settings panel card sizing', () => {
     expect(await cardHeight(artifactsCard(mainWindow))).toBeLessThan(60)
   })
 
-  test('only subtasks open + 25 subtasks: card caps at share, does not overflow grid', async ({ mainWindow }) => {
+  test('only subtasks open + 25 subtasks: card caps at share, does not overflow grid', async ({
+    mainWindow
+  }) => {
     await createSubtasks(mainWindow, taskId, projectId, 25)
     await setCardOpen(descriptionCard(mainWindow), false)
     await setCardOpen(subtasksCard(mainWindow), true)
@@ -133,7 +151,9 @@ test.describe('Settings panel card sizing', () => {
     expect(subH).toBeLessThanOrEqual(gridH + 1)
   })
 
-  test('all open + 25 subtasks: subtasks caps, description + artifacts stay content-sized', async ({ mainWindow }) => {
+  test('all open + 25 subtasks: subtasks caps, description + artifacts stay content-sized', async ({
+    mainWindow
+  }) => {
     await createSubtasks(mainWindow, taskId, projectId, 25)
     await setCardOpen(descriptionCard(mainWindow), true)
     await setCardOpen(subtasksCard(mainWindow), true)
@@ -193,7 +213,9 @@ test.describe('Settings panel card sizing', () => {
     expect(await cardHeight(subtasksCard(mainWindow))).toBeLessThan(60)
   })
 
-  test('toggle subtasks closed with 25 subtasks: collapses back to header', async ({ mainWindow }) => {
+  test('toggle subtasks closed with 25 subtasks: collapses back to header', async ({
+    mainWindow
+  }) => {
     await createSubtasks(mainWindow, taskId, projectId, 25)
     await setCardOpen(subtasksCard(mainWindow), true)
     const openH = await cardHeight(subtasksCard(mainWindow))

@@ -15,14 +15,19 @@ function getLastOffset(
   db: Database.Database,
   filePath: string
 ): { offset: number; modifiedMs: number } | undefined {
-  const row = db.prepare('SELECT last_offset, last_modified_ms FROM usage_parse_state WHERE file_path = ?').get(filePath) as
-    | ParseState
-    | undefined
+  const row = db
+    .prepare('SELECT last_offset, last_modified_ms FROM usage_parse_state WHERE file_path = ?')
+    .get(filePath) as ParseState | undefined
   if (!row) return undefined
   return { offset: row.last_offset, modifiedMs: row.last_modified_ms }
 }
 
-function saveParseState(db: Database.Database, filePath: string, mtimeMs: number, endOffset: number): void {
+function saveParseState(
+  db: Database.Database,
+  filePath: string,
+  mtimeMs: number,
+  endOffset: number
+): void {
   db.prepare(
     'INSERT OR REPLACE INTO usage_parse_state (file_path, last_modified_ms, last_offset) VALUES (?, ?, ?)'
   ).run(filePath, mtimeMs, endOffset)
@@ -91,10 +96,14 @@ export async function refreshUsageData(db: Database.Database): Promise<void> {
 
 function correlateNewRecords(db: Database.Database): void {
   const tasks = db
-    .prepare("SELECT id, provider_config, worktree_path FROM tasks WHERE provider_config IS NOT NULL AND provider_config != '{}'")
+    .prepare(
+      "SELECT id, provider_config, worktree_path FROM tasks WHERE provider_config IS NOT NULL AND provider_config != '{}'"
+    )
     .all() as Array<{ id: string; provider_config: string; worktree_path: string | null }>
 
-  const updateBySession = db.prepare('UPDATE usage_records SET task_id = ? WHERE session_id = ? AND task_id IS NULL')
+  const updateBySession = db.prepare(
+    'UPDATE usage_records SET task_id = ? WHERE session_id = ? AND task_id IS NULL'
+  )
 
   for (const task of tasks) {
     let config: Record<string, { conversationId?: string }>
@@ -114,7 +123,9 @@ function correlateNewRecords(db: Database.Database): void {
     .prepare('SELECT id, worktree_path FROM tasks WHERE worktree_path IS NOT NULL')
     .all() as Array<{ id: string; worktree_path: string }>
 
-  const updateByCwd = db.prepare('UPDATE usage_records SET task_id = ? WHERE cwd = ? AND task_id IS NULL')
+  const updateByCwd = db.prepare(
+    'UPDATE usage_records SET task_id = ? WHERE cwd = ? AND task_id IS NULL'
+  )
   for (const task of tasksWithPaths) {
     updateByCwd.run(task.id, task.worktree_path)
   }
@@ -134,7 +145,9 @@ function dateRangeToSql(range: DateRange): string {
 }
 
 /** Total tokens per day across all providers (no date filtering). */
-export function queryDailyTotals(db: Database.Database): Array<{ date: string; totalTokens: number }> {
+export function queryDailyTotals(
+  db: Database.Database
+): Array<{ date: string; totalTokens: number }> {
   return db
     .prepare(
       `SELECT date(timestamp, 'localtime') as date,
@@ -169,7 +182,10 @@ export function queryAnalytics(db: Database.Database, range: DateRange): Analyti
   }
 
   const totalInput = totals.totalInputTokens + totals.totalCacheWriteTokens
-  const cacheHitPercent = totalInput > 0 ? (totals.totalCacheReadTokens / (totalInput + totals.totalCacheReadTokens)) * 100 : 0
+  const cacheHitPercent =
+    totalInput > 0
+      ? (totals.totalCacheReadTokens / (totalInput + totals.totalCacheReadTokens)) * 100
+      : 0
 
   const byProvider = db
     .prepare(
@@ -183,7 +199,15 @@ export function queryAnalytics(db: Database.Database, range: DateRange): Analyti
       FROM usage_records WHERE timestamp >= ${since}
       GROUP BY provider ORDER BY totalTokens DESC`
     )
-    .all() as Array<{ provider: string; totalTokens: number; inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number; sessions: number }>
+    .all() as Array<{
+    provider: string
+    totalTokens: number
+    inputTokens: number
+    outputTokens: number
+    cacheReadTokens: number
+    cacheWriteTokens: number
+    sessions: number
+  }>
 
   const byModel = db
     .prepare(
@@ -228,7 +252,10 @@ export function queryAnalytics(db: Database.Database, range: DateRange): Analyti
 export function queryTaskCost(
   db: Database.Database,
   taskId: string
-): { totalTokens: number; byProvider: Array<{ provider: string; model: string; totalTokens: number; sessions: number }> } {
+): {
+  totalTokens: number
+  byProvider: Array<{ provider: string; model: string; totalTokens: number; sessions: number }>
+} {
   const byProvider = db
     .prepare(
       `SELECT provider, model,
@@ -237,7 +264,12 @@ export function queryTaskCost(
       FROM usage_records WHERE task_id = ?
       GROUP BY provider, model`
     )
-    .all(taskId) as Array<{ provider: string; model: string; totalTokens: number; sessions: number }>
+    .all(taskId) as Array<{
+    provider: string
+    model: string
+    totalTokens: number
+    sessions: number
+  }>
 
   const totalTokens = byProvider.reduce((acc, r) => acc + r.totalTokens, 0)
 

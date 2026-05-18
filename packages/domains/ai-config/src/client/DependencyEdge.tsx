@@ -1,9 +1,5 @@
 import { memo } from 'react'
-import {
-  BaseEdge,
-  getBezierPath,
-  type EdgeProps,
-} from '@xyflow/react'
+import { BaseEdge, getBezierPath, type EdgeProps } from '@xyflow/react'
 
 export interface DependencyEdgeData {
   depType: 'explicit' | 'implicit'
@@ -19,7 +15,7 @@ export const DependencyEdge = memo(function DependencyEdge({
   sourcePosition,
   targetPosition,
   style,
-  markerEnd,
+  markerEnd
 }: EdgeProps) {
   const [edgePath] = getBezierPath({
     sourceX,
@@ -27,7 +23,7 @@ export const DependencyEdge = memo(function DependencyEdge({
     targetX,
     targetY,
     sourcePosition,
-    targetPosition,
+    targetPosition
   })
 
   return (
@@ -39,7 +35,7 @@ export const DependencyEdge = memo(function DependencyEdge({
         strokeDasharray: '5 5',
         stroke: 'var(--color-muted-foreground)',
         strokeWidth: 1,
-        opacity: 0.5,
+        opacity: 0.5
       }}
       markerEnd={markerEnd}
     />

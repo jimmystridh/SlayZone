@@ -12,7 +12,12 @@
  *   <ChatPanelHarness events={loadedEvents} rate={10} />
  */
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
-import { reducer, initialState, type ChatTimelineState, type Action } from '@slayzone/terminal/client'
+import {
+  reducer,
+  initialState,
+  type ChatTimelineState,
+  type Action
+} from '@slayzone/terminal/client'
 import type { AgentEvent } from '@slayzone/terminal/shared'
 import { ChatViewContext } from '../ChatViewContext'
 import { renderTimelineItem } from '../renderers'
@@ -41,15 +46,20 @@ export function ChatPanelHarness({
   events,
   fixture,
   rate = 'real-time',
-  autoplay = true,
+  autoplay = true
 }: ChatPanelHarnessProps) {
   const [state, dispatch] = useReducer(
     (s: ChatTimelineState, a: Action) => reducer(s, a),
     undefined,
-    initialState,
+    initialState
   )
   const [playing, setPlaying] = useState(autoplay)
-  const [stats, setStats] = useState<PlaybackStats>({ applied: 0, total: 0, elapsedMs: 0, lastDispatchMs: 0 })
+  const [stats, setStats] = useState<PlaybackStats>({
+    applied: 0,
+    total: 0,
+    elapsedMs: 0,
+    lastDispatchMs: 0
+  })
   const cursorRef = useRef(0)
   const startedAtRef = useRef<number | null>(null)
   const eventsRef = useRef<AgentEvent[]>([])
@@ -77,7 +87,7 @@ export function ChatPanelHarness({
         applied: eventsRef.current.length,
         total: eventsRef.current.length,
         elapsedMs: elapsed,
-        lastDispatchMs: elapsed,
+        lastDispatchMs: elapsed
       })
       setPlaying(false)
       return
@@ -103,7 +113,7 @@ export function ChatPanelHarness({
         applied: i + 1,
         total: eventsRef.current.length,
         elapsedMs: performance.now() - (startedAtRef.current ?? performance.now()),
-        lastDispatchMs: dispatched,
+        lastDispatchMs: dispatched
       })
       timer = setTimeout(tick, tickMs)
     }
@@ -123,9 +133,9 @@ export function ChatPanelHarness({
       showMessageMeta: true,
       search: { query: '', caseSensitive: false },
       timeline: state.timeline,
-      childIndex: state.childIndex,
+      childIndex: state.childIndex
     }),
-    [state.timeline, state.childIndex],
+    [state.timeline, state.childIndex]
   )
 
   return (
@@ -155,7 +165,12 @@ export function ChatPanelHarness({
               onClick={() => {
                 cursorRef.current = 0
                 startedAtRef.current = null
-                setStats({ applied: 0, total: eventsRef.current.length, elapsedMs: 0, lastDispatchMs: 0 })
+                setStats({
+                  applied: 0,
+                  total: eventsRef.current.length,
+                  elapsedMs: 0,
+                  lastDispatchMs: 0
+                })
                 dispatch({ type: 'reset' })
               }}
             >
@@ -165,7 +180,7 @@ export function ChatPanelHarness({
         </header>
         <div className="min-h-0 flex-1 overflow-auto">
           {state.timeline.map((item, i) =>
-            item.parentToolUseId == null ? renderTimelineItem(item, i) : null,
+            item.parentToolUseId == null ? renderTimelineItem(item, i) : null
           )}
         </div>
       </div>

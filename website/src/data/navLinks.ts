@@ -9,5 +9,5 @@ export const navLinks: NavLink[] = [
   { href: '/comparison', label: 'Comparison', key: 'comparison' },
   { href: '/pricing', label: 'Pricing', key: 'pricing' },
   { href: '/faq', label: 'FAQ', key: 'faq' },
-  { href: '/docs', label: 'Docs', key: 'docs' },
+  { href: '/docs', label: 'Docs', key: 'docs' }
 ]

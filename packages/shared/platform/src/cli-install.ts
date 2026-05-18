@@ -20,7 +20,11 @@ export function getCliBinDir(): string {
     case 'darwin':
       return '/usr/local/bin'
     case 'win32':
-      return path.join(process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local'), 'SlayZone', 'bin')
+      return path.join(
+        process.env.LOCALAPPDATA ?? path.join(os.homedir(), 'AppData', 'Local'),
+        'SlayZone',
+        'bin'
+      )
     default:
       return path.join(os.homedir(), '.local', 'bin')
   }
@@ -66,7 +70,7 @@ export async function installCli(cliSrcPath: string): Promise<CliInstallResult> 
 }
 
 function shellEscape(s: string): string {
-  return s.replace(/'/g, "'\\''" )
+  return s.replace(/'/g, "'\\''")
 }
 
 async function attemptElevatedInstall(cliSrcPath: string): Promise<CliInstallResult> {
@@ -88,7 +92,11 @@ async function attemptElevatedInstall(cliSrcPath: string): Promise<CliInstallRes
   }
 }
 
-async function elevatedInstallMacOS(shellCmd: string, target: string, binDir: string): Promise<CliInstallResult> {
+async function elevatedInstallMacOS(
+  shellCmd: string,
+  target: string,
+  binDir: string
+): Promise<CliInstallResult> {
   const escapedCmd = shellCmd.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
   const script = `do shell script "${escapedCmd}" with administrator privileges`
   await execFileAsync('/usr/bin/osascript', ['-e', script])
@@ -96,7 +104,11 @@ async function elevatedInstallMacOS(shellCmd: string, target: string, binDir: st
   return { ok: true, path: target, pathNotInPATH: notInPath || undefined }
 }
 
-async function elevatedInstallLinux(shellCmd: string, target: string, binDir: string): Promise<CliInstallResult> {
+async function elevatedInstallLinux(
+  shellCmd: string,
+  target: string,
+  binDir: string
+): Promise<CliInstallResult> {
   await execFileAsync('pkexec', ['sh', '-c', shellCmd])
   const notInPath = !isBinDirInPath(binDir)
   return { ok: true, path: target, pathNotInPATH: notInPath || undefined }
@@ -106,8 +118,10 @@ function isElevationCancelled(err: unknown): boolean {
   if (!(err instanceof Error)) return false
   const execErr = err as Error & { code?: number; stderr?: string }
   if (process.platform === 'darwin') {
-    return execErr.stderr?.includes('User canceled') === true
-      || execErr.message?.includes('User canceled') === true
+    return (
+      execErr.stderr?.includes('User canceled') === true ||
+      execErr.message?.includes('User canceled') === true
+    )
   }
   return execErr.code === 126
 }
@@ -162,8 +176,12 @@ function installWindows(cliSrcPath: string, binDir: string, target: string): Cli
 function isBinDirInPath(binDir: string): boolean {
   const envPath = process.env.PATH ?? ''
   const sep = process.platform === 'win32' ? ';' : ':'
-  return envPath.split(sep).some(p => {
-    try { return fs.realpathSync(p) === fs.realpathSync(binDir) } catch { return p === binDir }
+  return envPath.split(sep).some((p) => {
+    try {
+      return fs.realpathSync(p) === fs.realpathSync(binDir)
+    } catch {
+      return p === binDir
+    }
   })
 }
 
@@ -175,10 +193,12 @@ function addToWindowsPath(binDir: string): void {
     const currentPath = match?.[1]?.trim() ?? ''
 
     // Check if already present
-    if (currentPath.split(';').some(p => p.toLowerCase() === binDir.toLowerCase())) return
+    if (currentPath.split(';').some((p) => p.toLowerCase() === binDir.toLowerCase())) return
 
     const newPath = currentPath ? `${currentPath};${binDir}` : binDir
-    execSync(`reg add "HKCU\\Environment" /v Path /t REG_EXPAND_SZ /d "${newPath}" /f`, { encoding: 'utf8' })
+    execSync(`reg add "HKCU\\Environment" /v Path /t REG_EXPAND_SZ /d "${newPath}" /f`, {
+      encoding: 'utf8'
+    })
   } catch {
     // Non-fatal — user can add to PATH manually
   }

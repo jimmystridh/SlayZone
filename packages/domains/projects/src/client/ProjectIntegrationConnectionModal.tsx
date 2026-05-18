@@ -1,13 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { IntegrationProvider } from '@slayzone/integrations/shared'
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  Input
-} from '@slayzone/ui'
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@slayzone/ui'
 
 interface ProjectIntegrationConnectionModalProps {
   open: boolean
@@ -90,7 +83,10 @@ export function ProjectIntegrationConnectionModal({
   const [errorMessage, setErrorMessage] = useState('')
 
   const guide = useMemo(() => credentialGuide(provider), [provider])
-  const title = mode === 'edit' ? `Edit ${providerLabel(provider)} Connection` : `Connect ${providerLabel(provider)}`
+  const title =
+    mode === 'edit'
+      ? `Edit ${providerLabel(provider)} Connection`
+      : `Connect ${providerLabel(provider)}`
 
   useEffect(() => {
     if (!open) return
@@ -100,9 +96,10 @@ export function ProjectIntegrationConnectionModal({
     setErrorMessage('')
   }, [open, provider, mode])
 
-  const canSubmit = provider === 'jira'
-    ? Boolean(credential.trim() && jiraDomain.trim() && jiraEmail.trim())
-    : Boolean(credential.trim())
+  const canSubmit =
+    provider === 'jira'
+      ? Boolean(credential.trim() && jiraDomain.trim() && jiraEmail.trim())
+      : Boolean(credential.trim())
 
   const handleSubmit = async () => {
     if (!canSubmit) return
@@ -113,7 +110,10 @@ export function ProjectIntegrationConnectionModal({
       if (mode === 'connect') {
         let nextConnection
         if (provider === 'github') {
-          nextConnection = await window.api.integrations.connectGithub({ token: credential.trim(), projectId })
+          nextConnection = await window.api.integrations.connectGithub({
+            token: credential.trim(),
+            projectId
+          })
         } else if (provider === 'jira') {
           nextConnection = await window.api.integrations.connectJira({
             cloudDomain: jiraDomain.trim(),
@@ -122,7 +122,10 @@ export function ProjectIntegrationConnectionModal({
             projectId
           })
         } else {
-          nextConnection = await window.api.integrations.connectLinear({ apiKey: credential.trim(), projectId })
+          nextConnection = await window.api.integrations.connectLinear({
+            apiKey: credential.trim(),
+            projectId
+          })
         }
 
         await window.api.integrations.setProjectConnection({
@@ -215,35 +218,37 @@ export function ProjectIntegrationConnectionModal({
               </div>
             </div>
           ) : (
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">
-              {mode === 'edit' ? `New ${credentialLabel(provider)}` : credentialLabel(provider)}
-            </p>
-            <div className="flex items-center gap-2">
-              <Input
-                id={`project-${provider}-${mode}-credential`}
-                type="password"
-                value={credential}
-                onChange={(event) => setCredential(event.target.value)}
-                placeholder={credentialPlaceholder(provider)}
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => void handleSubmit()}
-                disabled={!canSubmit || submitting}
-              >
-                {submitting
-                  ? mode === 'edit' ? 'Saving...' : 'Connecting...'
-                  : mode === 'edit' ? 'Save' : 'Connect'}
-              </Button>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">
+                {mode === 'edit' ? `New ${credentialLabel(provider)}` : credentialLabel(provider)}
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  id={`project-${provider}-${mode}-credential`}
+                  type="password"
+                  value={credential}
+                  onChange={(event) => setCredential(event.target.value)}
+                  placeholder={credentialPlaceholder(provider)}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => void handleSubmit()}
+                  disabled={!canSubmit || submitting}
+                >
+                  {submitting
+                    ? mode === 'edit'
+                      ? 'Saving...'
+                      : 'Connecting...'
+                    : mode === 'edit'
+                      ? 'Save'
+                      : 'Connect'}
+                </Button>
+              </div>
             </div>
-          </div>
           )}
 
-          {errorMessage ? (
-            <p className="text-xs text-destructive">{errorMessage}</p>
-          ) : null}
+          {errorMessage ? <p className="text-xs text-destructive">{errorMessage}</p> : null}
 
           <div className="mt-5 space-y-2 rounded-md border bg-muted/40 p-4">
             <p className="text-xs font-medium text-foreground/90">{guide.title}</p>

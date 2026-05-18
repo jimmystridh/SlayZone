@@ -22,7 +22,9 @@ function test(name: string, fn: () => void): void {
 
 function eq<T>(actual: T, expected: T, label?: string): void {
   if (actual !== expected) {
-    throw new Error(`${label ? label + ': ' : ''}expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+    throw new Error(
+      `${label ? label + ': ' : ''}expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+    )
   }
 }
 
@@ -52,7 +54,8 @@ test('wrapped shell actually raises ulimit when invoked', () => {
   if (out === 'unlimited') return // already unlimited, correct non-lowering
   const n = parseInt(out, 10)
   const start = startLimit === 'unlimited' ? Number.MAX_SAFE_INTEGER : parseInt(startLimit, 10)
-  if (n < 65535 && n < start) throw new Error(`expected ulimit >= 65535 (or >= ${start} if preserved), got ${n}`)
+  if (n < 65535 && n < start)
+    throw new Error(`expected ulimit >= 65535 (or >= ${start} if preserved), got ${n}`)
 })
 
 test('wrapped shell does NOT lower an already-higher soft limit', () => {
@@ -60,7 +63,14 @@ test('wrapped shell does NOT lower an already-higher soft limit', () => {
   // must see 70000 (preserved), not 65535 (lowered).
   const r = wrapShellWithUlimit('/bin/sh', ['-c', 'ulimit -n'])
   try {
-    const out = execFileSync('/bin/sh', ['-c', `ulimit -n 70000 2>/dev/null && ${quoteForShell(r.file)} ${r.args.map(quoteForShell).join(' ')}`], { encoding: 'utf8' }).trim()
+    const out = execFileSync(
+      '/bin/sh',
+      [
+        '-c',
+        `ulimit -n 70000 2>/dev/null && ${quoteForShell(r.file)} ${r.args.map(quoteForShell).join(' ')}`
+      ],
+      { encoding: 'utf8' }
+    ).trim()
     if (out === 'unlimited') return
     const n = parseInt(out, 10)
     // Should be at least 70000 (the parent's value) — either preserved exactly

@@ -1,4 +1,10 @@
-import type { UnifiedThemeDefinition, UnifiedThemeVariant, ChromeColors, TerminalThemeColors, EditorThemeColors } from '../theme-types'
+import type {
+  UnifiedThemeDefinition,
+  UnifiedThemeVariant,
+  ChromeColors,
+  TerminalThemeColors,
+  EditorThemeColors
+} from '../theme-types'
 import { slay } from './slay'
 import { slaySpecial } from './slay-special'
 import { trueBlack } from './true-black'
@@ -28,10 +34,10 @@ export const unifiedThemes: UnifiedThemeDefinition[] = [
   oneDark,
   rosePine,
   kanagawa,
-  vscode,
+  vscode
 ]
 
-const themeMap = new Map(unifiedThemes.map(t => [t.id, t]))
+const themeMap = new Map(unifiedThemes.map((t) => [t.id, t]))
 
 export function getUnifiedTheme(id: string): UnifiedThemeDefinition {
   return themeMap.get(id) ?? slay
@@ -92,7 +98,7 @@ const chromeVarMap: [string, keyof ChromeColors][] = [
   ['--surface-2', 'surface2'],
   ['--surface-3', 'surface3'],
   ['--modal', 'modal'],
-  ['--modal-border', 'modalBorder'],
+  ['--modal-border', 'modalBorder']
 ]
 
 export function applyChromeColors(chrome: ChromeColors): void {
@@ -118,4 +124,10 @@ export function clearChromeColors(): void {
   }
 }
 
-export type { UnifiedThemeDefinition, UnifiedThemeVariant, ChromeColors, TerminalThemeColors, EditorThemeColors }
+export type {
+  UnifiedThemeDefinition,
+  UnifiedThemeVariant,
+  ChromeColors,
+  TerminalThemeColors,
+  EditorThemeColors
+}

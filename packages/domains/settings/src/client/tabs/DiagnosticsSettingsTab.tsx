@@ -1,5 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
-import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@slayzone/ui'
+import {
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@slayzone/ui'
 import type { DiagnosticsConfig } from '@slayzone/types'
 import { SettingsTabIntro } from './SettingsTabIntro'
 
@@ -12,12 +21,14 @@ export function DiagnosticsSettingsTab() {
   const mountedRef = useRef(true)
 
   useEffect(() => {
-    window.api.diagnostics.getConfig().then(config => {
+    window.api.diagnostics.getConfig().then((config) => {
       if (!mountedRef.current) return
       setDiagnosticsConfig(config)
       setRetentionDaysInput(String(config.retentionDays))
     })
-    return () => { mountedRef.current = false }
+    return () => {
+      mountedRef.current = false
+    }
   }, [])
 
   const updateDiagnosticsConfig = async (partial: Partial<DiagnosticsConfig>) => {
@@ -115,7 +126,10 @@ export function DiagnosticsSettingsTab() {
         <Label className="text-base font-semibold">Export</Label>
         <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
           <span className="text-sm">Time range</span>
-          <Select value={exportRange} onValueChange={(v) => setExportRange(v as typeof exportRange)}>
+          <Select
+            value={exportRange}
+            onValueChange={(v) => setExportRange(v as typeof exportRange)}
+          >
             <SelectTrigger className="w-full max-w-sm">
               <SelectValue />
             </SelectTrigger>

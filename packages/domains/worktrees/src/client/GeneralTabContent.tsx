@@ -22,7 +22,7 @@ import {
   PrStatusChip,
   PrButtons,
   RebaseMergeButtons,
-  Section,
+  Section
 } from './general-tab-shared'
 
 interface GeneralTabContentProps {
@@ -37,35 +37,53 @@ interface GeneralTabContentProps {
 }
 
 export function GeneralTabContent({
-  task, projectPath, visible, pollIntervalMs = 5000,
-  hasGithubRemote, onUpdateTask, onTaskUpdated, onSwitchTab
+  task,
+  projectPath,
+  visible,
+  pollIntervalMs = 5000,
+  hasGithubRemote,
+  onUpdateTask,
+  onTaskUpdated,
+  onSwitchTab
 }: GeneralTabContentProps) {
   const data = useConsolidatedGeneralData(task, projectPath, visible, pollIntervalMs, onUpdateTask)
-  const branchGraph = useBranchGraph(data.targetPath, visible, data.parentBranch ?? undefined, `task:${task.id}`)
+  const branchGraph = useBranchGraph(
+    data.targetPath,
+    visible,
+    data.parentBranch ?? undefined,
+    `task:${task.id}`
+  )
   const [createPrOpen, setCreatePrOpen] = useState(false)
   const [linkPrOpen, setLinkPrOpen] = useState(false)
   const [linkError, setLinkError] = useState<string | null>(null)
 
-  const handlePrCreated = useCallback(async (url: string) => {
-    const updated = await onUpdateTask({ id: task.id, prUrl: url })
-    onTaskUpdated?.(updated)
-    setCreatePrOpen(false)
-  }, [task.id, onUpdateTask, onTaskUpdated])
-
-  const handlePrLinked = useCallback(async (url: string) => {
-    setLinkError(null)
-    try {
+  const handlePrCreated = useCallback(
+    async (url: string) => {
       const updated = await onUpdateTask({ id: task.id, prUrl: url })
       onTaskUpdated?.(updated)
-      setLinkPrOpen(false)
-    } catch (err) {
-      setLinkError(err instanceof Error ? err.message : String(err))
-    }
-  }, [task.id, onUpdateTask, onTaskUpdated])
+      setCreatePrOpen(false)
+    },
+    [task.id, onUpdateTask, onTaskUpdated]
+  )
+
+  const handlePrLinked = useCallback(
+    async (url: string) => {
+      setLinkError(null)
+      try {
+        const updated = await onUpdateTask({ id: task.id, prUrl: url })
+        onTaskUpdated?.(updated)
+        setLinkPrOpen(false)
+      } catch (err) {
+        setLinkError(err instanceof Error ? err.message : String(err))
+      }
+    },
+    [task.id, onUpdateTask, onTaskUpdated]
+  )
 
   if (!projectPath) return <NoProjectFallback />
   if (data.isGitRepo === null) return <CheckingFallback />
-  if (data.isGitRepo === false) return <NotGitRepoFallback onInit={data.handleInitGit} initializing={data.initializing} />
+  if (data.isGitRepo === false)
+    return <NotGitRepoFallback onInit={data.handleInitGit} initializing={data.initializing} />
 
   const activeBranch = data.hasWorktree ? data.worktreeBranch : data.currentBranch
 
@@ -79,9 +97,13 @@ export function GeneralTabContent({
       )}
 
       {/* Header: branch + actions */}
-      <div className={`shrink-0 mx-3 mt-3 rounded-lg border ${data.hasWorktree ? 'border-blue-500/20 bg-blue-500/5' : 'border bg-muted/30'}`}>
+      <div
+        className={`shrink-0 mx-3 mt-3 rounded-lg border ${data.hasWorktree ? 'border-blue-500/20 bg-blue-500/5' : 'border bg-muted/30'}`}
+      >
         <div className="flex items-center gap-2 px-3 py-2">
-          <GitBranch className={`h-3.5 w-3.5 shrink-0 ${data.hasWorktree ? 'text-blue-500' : 'text-muted-foreground'}`} />
+          <GitBranch
+            className={`h-3.5 w-3.5 shrink-0 ${data.hasWorktree ? 'text-blue-500' : 'text-muted-foreground'}`}
+          />
           <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded-full bg-muted border truncate">
             {activeBranch || 'detached HEAD'}
           </span>
@@ -103,13 +125,15 @@ export function GeneralTabContent({
             </span>
           ) : null}
           <div className="ml-auto flex items-center gap-2">
-            {hasGithubRemote && (
-              data.pr ? (
+            {hasGithubRemote &&
+              (data.pr ? (
                 <PrStatusChip pr={data.pr} onClick={() => onSwitchTab('pr')} />
               ) : (
-                <PrButtons onCreatePr={() => setCreatePrOpen(true)} onLinkPr={() => setLinkPrOpen(true)} />
-              )
-            )}
+                <PrButtons
+                  onCreatePr={() => setCreatePrOpen(true)}
+                  onLinkPr={() => setLinkPrOpen(true)}
+                />
+              ))}
             {data.hasWorktree ? (
               <>
                 {data.parentBranch && <MergeToParentButton data={data} />}
@@ -121,7 +145,9 @@ export function GeneralTabContent({
           </div>
         </div>
         {data.targetPath && (
-          <div className={`border-t px-3 py-1.5 flex items-center gap-1.5 ${data.hasWorktree ? 'border-blue-500/10' : 'border-border/50'}`}>
+          <div
+            className={`border-t px-3 py-1.5 flex items-center gap-1.5 ${data.hasWorktree ? 'border-blue-500/10' : 'border-border/50'}`}
+          >
             <FolderOpen className="h-3 w-3 text-muted-foreground shrink-0" />
             <button
               className="text-[11px] text-muted-foreground hover:text-foreground transition-colors truncate font-mono"
@@ -135,7 +161,9 @@ export function GeneralTabContent({
             </button>
           </div>
         )}
-        {data.createError && <p className="text-xs text-destructive px-3 pb-2">{data.createError}</p>}
+        {data.createError && (
+          <p className="text-xs text-destructive px-3 pb-2">{data.createError}</p>
+        )}
       </div>
 
       {/* Status + remote + git actions */}
@@ -145,7 +173,12 @@ export function GeneralTabContent({
             <StatusChips data={data} onSwitchTab={onSwitchTab} />
             <div className="ml-auto flex items-center gap-1.5">
               {data.hasWorktree && data.parentBranch && <RebaseMergeButtons data={data} />}
-              <Button variant="outline" size="sm" onClick={() => onSwitchTab('changes')} className="gap-1 h-7 px-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSwitchTab('changes')}
+                className="gap-1 h-7 px-2"
+              >
                 View diff
               </Button>
               {data.targetPath && (
@@ -154,7 +187,10 @@ export function GeneralTabContent({
                   upstreamAB={data.upstreamAB}
                   targetPath={data.targetPath}
                   branch={activeBranch}
-                  onSyncDone={() => { data.fetchGitData(); branchGraph.refresh() }}
+                  onSyncDone={() => {
+                    data.fetchGitData()
+                    branchGraph.refresh()
+                  }}
                 />
               )}
             </div>
@@ -165,7 +201,9 @@ export function GeneralTabContent({
       {/* Commit graph */}
       <div className="flex-1 min-h-0 flex flex-col">
         <div className="shrink-0 px-4 pt-4 mb-2 flex items-end">
-          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Commits & Branches</div>
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Commits & Branches
+          </div>
           <div className="flex-1" />
           <div className="flex items-center gap-0.5">
             <BranchGraphToolbar state={branchGraph} />
@@ -178,7 +216,9 @@ export function GeneralTabContent({
 
       <CopyFilesDialog
         open={data.copyFilesDialog.open}
-        onOpenChange={(open) => { if (!open) data.handleCopyFilesCancel() }}
+        onOpenChange={(open) => {
+          if (!open) data.handleCopyFilesCancel()
+        }}
         repoPath={data.copyFilesDialog.repoPath}
         onConfirm={data.handleCopyFilesConfirm}
       />

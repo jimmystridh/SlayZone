@@ -112,12 +112,12 @@ export function AnimatedCursor({ waypoints, cycleDuration = 6 }: Props): React.J
         animate={{
           left: xKeys,
           top: yKeys,
-          opacity: opacityKeys,
+          opacity: opacityKeys
         }}
         transition={{
           duration: cycleDuration,
           times,
-          ease: 'easeInOut',
+          ease: 'easeInOut'
         }}
       >
         <CursorSvg />

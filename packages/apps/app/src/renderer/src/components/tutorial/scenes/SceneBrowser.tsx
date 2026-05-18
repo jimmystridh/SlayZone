@@ -23,8 +23,14 @@ function UnderConstructionPage(): React.JSX.Element {
 
       {/* Hero — real text, incomplete styling */}
       <div className="px-6 pt-8">
-        <h1 className="text-[24px] font-bold text-neutral-800 leading-tight">Build faster with<br />modern tooling</h1>
-        <p className="text-[13px] text-neutral-400 mt-2 max-w-[300px]">Ship products your users love. Get started in minutes with our developer platform.</p>
+        <h1 className="text-[24px] font-bold text-neutral-800 leading-tight">
+          Build faster with
+          <br />
+          modern tooling
+        </h1>
+        <p className="text-[13px] text-neutral-400 mt-2 max-w-[300px]">
+          Ship products your users love. Get started in minutes with our developer platform.
+        </p>
         <div className="flex gap-3 mt-4">
           <div className="h-10 px-5 rounded-lg bg-blue-500 flex items-center">
             <span className="text-[13px] font-semibold text-white">Get started</span>
@@ -38,14 +44,22 @@ function UnderConstructionPage(): React.JSX.Element {
       {/* Feature cards — two done, one still a skeleton */}
       <div className="px-6 pt-6 grid grid-cols-3 gap-3">
         <div className="rounded-xl border border-neutral-200 p-4">
-          <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center text-[16px]">⚡</div>
+          <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center text-[16px]">
+            ⚡
+          </div>
           <p className="text-[13px] font-semibold text-neutral-800 mt-2">Lightning fast</p>
-          <p className="text-[11px] text-neutral-400 mt-1">Sub-millisecond response times with edge deployment.</p>
+          <p className="text-[11px] text-neutral-400 mt-1">
+            Sub-millisecond response times with edge deployment.
+          </p>
         </div>
         <div className="rounded-xl border border-neutral-200 p-4">
-          <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center text-[16px]">🔒</div>
+          <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center text-[16px]">
+            🔒
+          </div>
           <p className="text-[13px] font-semibold text-neutral-800 mt-2">Secure by default</p>
-          <p className="text-[11px] text-neutral-400 mt-1">Enterprise-grade security built into every layer.</p>
+          <p className="text-[11px] text-neutral-400 mt-1">
+            Enterprise-grade security built into every layer.
+          </p>
         </div>
         <div className="rounded-xl border-2 border-dashed border-neutral-200 p-4 flex flex-col items-center justify-center">
           <span className="text-[11px] text-neutral-300 italic">need copy</span>
@@ -78,7 +92,12 @@ function BrowserPanel(): React.JSX.Element {
         </div>
         <div className="flex-1 h-8 rounded bg-surface-1 border flex items-center gap-2 px-3">
           <Lock className="size-4 text-muted-foreground/40 shrink-0" />
-          <span className="text-[15px] text-muted-foreground/70" style={{ fontFamily: 'monospace' }}>localhost:5173</span>
+          <span
+            className="text-[15px] text-muted-foreground/70"
+            style={{ fontFamily: 'monospace' }}
+          >
+            localhost:5173
+          </span>
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
@@ -98,11 +117,16 @@ export function SceneBrowser(): React.JSX.Element {
 
   return (
     <SceneShell tabs={[{ label: 'Set up auth', active: true, dot: true }]}>
-      <TaskHeader title="Set up authentication" panels={panelButtons('Terminal', ...(showBrowser ? ['Browser'] as const : []))} />
+      <TaskHeader
+        title="Set up authentication"
+        panels={panelButtons('Terminal', ...(showBrowser ? (['Browser'] as const) : []))}
+      />
 
       <div className="flex-1 flex gap-4 p-4 min-h-0 overflow-hidden">
         {/* Terminal — full width initially, shrinks when browser opens */}
-        <div className={`${showBrowser ? 'w-2/5' : 'flex-1'} shrink-0 rounded-xl border overflow-hidden flex flex-col bg-neutral-950 transition-all duration-300`}>
+        <div
+          className={`${showBrowser ? 'w-2/5' : 'flex-1'} shrink-0 rounded-xl border overflow-hidden flex flex-col bg-neutral-950 transition-all duration-300`}
+        >
           <div className="h-12 shrink-0 border-b border-white/10 flex items-center px-4">
             <div className="flex items-center gap-2 h-8 px-3 rounded bg-primary/20">
               <div className="w-3 h-3 rounded-full bg-primary" />
@@ -113,14 +137,14 @@ export function SceneBrowser(): React.JSX.Element {
         </div>
 
         {/* Browser — appears after click */}
-        <AnimatePresence>
-          {showBrowser && <BrowserPanel />}
-        </AnimatePresence>
+        <AnimatePresence>{showBrowser && <BrowserPanel />}</AnimatePresence>
       </div>
-      <AnimatedCursor waypoints={[
-        { x: '50%', y: '50%', delay: 0.5, click: false },
-        { x: '72%', y: '10%', delay: 1.8 },
-      ]} />
+      <AnimatedCursor
+        waypoints={[
+          { x: '50%', y: '50%', delay: 0.5, click: false },
+          { x: '72%', y: '10%', delay: 1.8 }
+        ]}
+      />
     </SceneShell>
   )
 }

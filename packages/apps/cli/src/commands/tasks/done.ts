@@ -21,7 +21,9 @@ export async function doneAction(idPrefix: string | undefined, opts: DoneOpts): 
     process.exit(1)
   }
   if (tasks.length > 1) {
-    console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${idPrefix}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
 
@@ -40,7 +42,9 @@ export async function doneAction(idPrefix: string | undefined, opts: DoneOpts): 
     } else {
       const ok = await postJson(port, `/api/close-task/${task.id}`)
       if (!ok) {
-        console.error('Warning: tab close failed — main process likely stale (rebuild + restart app)')
+        console.error(
+          'Warning: tab close failed — main process likely stale (rebuild + restart app)'
+        )
       }
     }
   }

@@ -28,7 +28,7 @@ function expect(actual: number) {
       const diff = Math.abs(actual - expected)
       const epsilon = 10 ** -precision
       if (diff > epsilon) throw new Error(`Expected ~${expected}, got ${actual} (diff ${diff})`)
-    },
+    }
   }
 }
 

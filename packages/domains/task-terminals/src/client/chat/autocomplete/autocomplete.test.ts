@@ -27,7 +27,9 @@ function test(name: string, fn: () => void) {
 
 function assertEqual<T>(actual: T, expected: T, label?: string): void {
   if (actual !== expected) {
-    throw new Error(`${label ?? 'values'}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+    throw new Error(
+      `${label ?? 'values'}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+    )
   }
 }
 
@@ -131,7 +133,7 @@ function fakeSrc(id: string): AutocompleteSource<Named> {
     render: () => null,
     accept: () => undefined,
     getName: (i) => i.name,
-    getDescription: (i) => i.description,
+    getDescription: (i) => i.description
   }
 }
 
@@ -140,15 +142,18 @@ test('union ranks all sources together — name hits beat desc-only hits', () =>
   const skills = fakeSrc('skills')
   const result = rankAcrossSources(
     [
-      { source: builtins as AutocompleteSource, items: [{ name: 'help', description: 'Show available slash commands' }] },
+      {
+        source: builtins as AutocompleteSource,
+        items: [{ name: 'help', description: 'Show available slash commands' }]
+      },
       {
         source: skills as AutocompleteSource,
         items: [
           { name: 'commit', description: 'Commit changes' },
           { name: 'commit-and-done', description: 'Commit and mark done' },
-          { name: 'comparison-page', description: 'Make comparison page' },
-        ],
-      },
+          { name: 'comparison-page', description: 'Make comparison page' }
+        ]
+      }
     ],
     'comm'
   )
@@ -167,14 +172,17 @@ test('longer query that drops desc match still surfaces name matches', () => {
   const skills = fakeSrc('skills')
   const result = rankAcrossSources(
     [
-      { source: builtins as AutocompleteSource, items: [{ name: 'help', description: 'Show available slash commands' }] },
+      {
+        source: builtins as AutocompleteSource,
+        items: [{ name: 'help', description: 'Show available slash commands' }]
+      },
       {
         source: skills as AutocompleteSource,
         items: [
           { name: 'commit', description: 'Commit changes' },
-          { name: 'commit-and-done', description: 'Commit and mark done' },
-        ],
-      },
+          { name: 'commit-and-done', description: 'Commit and mark done' }
+        ]
+      }
     ],
     'commi'
   )

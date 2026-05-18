@@ -19,7 +19,7 @@ import {
   Copy,
   Check as CheckIcon,
   User,
-  Bot,
+  Bot
 } from 'lucide-react'
 import { cn } from '@slayzone/ui'
 import { DiffView, GhMarkdown } from '@slayzone/worktrees/client'
@@ -46,7 +46,11 @@ const CHAT_CARD_INDENT = 'pl-14'
 
 function formatTime(ts: number): string {
   try {
-    return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    return new Date(ts).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
   } catch {
     return ''
   }
@@ -169,12 +173,18 @@ export function ResultFooter({ item }: { item: Extract<TimelineItem, { kind: 're
           item.isError && 'text-destructive'
         )}
       >
-        {item.isError ? <CircleX className="size-3" /> : <CircleCheck className="size-3 text-emerald-500" />}
+        {item.isError ? (
+          <CircleX className="size-3" />
+        ) : (
+          <CircleCheck className="size-3 text-emerald-500" />
+        )}
         <span>{(item.durationMs / 1000).toFixed(1)}s</span>
         <span>·</span>
         <span>${item.totalCostUsd.toFixed(4)}</span>
         <span>·</span>
-        <span>{item.numTurns} turn{item.numTurns === 1 ? '' : 's'}</span>
+        <span>
+          {item.numTurns} turn{item.numTurns === 1 ? '' : 's'}
+        </span>
         {item.isError && (
           <>
             <span>·</span>
@@ -254,9 +264,9 @@ export function SubAgentRow({ item }: { item: Extract<TimelineItem, { kind: 'sub
         (t) =>
           t.kind === 'tool' &&
           isAgentLauncherToolName(t.invocation.name) &&
-          t.invocation.id === item.toolUseId,
+          t.invocation.id === item.toolUseId
       ),
-    [timeline, item.toolUseId],
+    [timeline, item.toolUseId]
   )
   const hasChildren = childIndices.length > 0 || launcherTool != null
   // Mirror ToolShell convention: errored items default open so the user sees what failed;
@@ -268,72 +278,81 @@ export function SubAgentRow({ item }: { item: Extract<TimelineItem, { kind: 'sub
 
   return (
     <>
-      <div className={cn(CHAT_CARD_INDENT, 'pr-4 py-1 group flex items-start gap-2')} data-testid="sub-agent-row">
+      <div
+        className={cn(CHAT_CARD_INDENT, 'pr-4 py-1 group flex items-start gap-2')}
+        data-testid="sub-agent-row"
+      >
         <div className="w-fit max-w-full rounded-md border border-border/50 bg-muted/20 overflow-hidden">
-        <button
-          type="button"
-          onClick={() => hasChildren && setOpen((v) => !v)}
-          disabled={!hasChildren}
-          className={cn(
-            'flex items-center gap-2 px-3 py-1.5 text-xs text-left max-w-full',
-            hasChildren && 'hover:bg-muted/40 cursor-pointer',
-            !hasChildren && 'cursor-default',
-          )}
-        >
-          {inFlight ? (
-            <Loader2 className="size-3 shrink-0 animate-spin text-violet-500" />
-          ) : errored ? (
-            <CircleX className="size-3 shrink-0 text-destructive" />
-          ) : (
-            <CircleCheck className="size-3 shrink-0 text-emerald-500" />
-          )}
-          <Bot className="size-3 shrink-0 text-muted-foreground" />
-          <span className="font-medium shrink-0">Sub-agent</span>
-          <span className="text-muted-foreground truncate min-w-0 font-mono text-[11px] flex items-center gap-2">
-            {item.description && (
-              <>
-                <span className="text-muted-foreground/40">·</span>
-                <span className="truncate">{item.description}</span>
-              </>
+          <button
+            type="button"
+            onClick={() => hasChildren && setOpen((v) => !v)}
+            disabled={!hasChildren}
+            className={cn(
+              'flex items-center gap-2 px-3 py-1.5 text-xs text-left max-w-full',
+              hasChildren && 'hover:bg-muted/40 cursor-pointer',
+              !hasChildren && 'cursor-default'
             )}
-            {item.status && (
-              <>
-                <span className="text-muted-foreground/40">·</span>
-                <span className={cn('shrink-0', errored && 'text-destructive')}>{item.status}</span>
-              </>
+          >
+            {inFlight ? (
+              <Loader2 className="size-3 shrink-0 animate-spin text-violet-500" />
+            ) : errored ? (
+              <CircleX className="size-3 shrink-0 text-destructive" />
+            ) : (
+              <CircleCheck className="size-3 shrink-0 text-emerald-500" />
             )}
-            {seconds && (
-              <>
-                <span className="text-muted-foreground/40">·</span>
-                <span className="shrink-0">{seconds}s</span>
-              </>
-            )}
-            {item.toolUses != null && item.toolUses > 0 && (
-              <>
-                <span className="text-muted-foreground/40">·</span>
-                <span className="shrink-0">{item.toolUses} tool{item.toolUses === 1 ? '' : 's'}</span>
-              </>
-            )}
-            {tokens && (
-              <>
-                <span className="text-muted-foreground/40">·</span>
-                <span className="shrink-0">{tokens} tok</span>
-              </>
-            )}
-          </span>
-          {hasChildren && (
-            <span className="ml-auto shrink-0 text-muted-foreground">
-              {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+            <Bot className="size-3 shrink-0 text-muted-foreground" />
+            <span className="font-medium shrink-0">Sub-agent</span>
+            <span className="text-muted-foreground truncate min-w-0 font-mono text-[11px] flex items-center gap-2">
+              {item.description && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className="truncate">{item.description}</span>
+                </>
+              )}
+              {item.status && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className={cn('shrink-0', errored && 'text-destructive')}>
+                    {item.status}
+                  </span>
+                </>
+              )}
+              {seconds && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className="shrink-0">{seconds}s</span>
+                </>
+              )}
+              {item.toolUses != null && item.toolUses > 0 && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className="shrink-0">
+                    {item.toolUses} tool{item.toolUses === 1 ? '' : 's'}
+                  </span>
+                </>
+              )}
+              {tokens && (
+                <>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className="shrink-0">{tokens} tok</span>
+                </>
+              )}
             </span>
-          )}
-        </button>
+            {hasChildren && (
+              <span className="ml-auto shrink-0 text-muted-foreground">
+                {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              </span>
+            )}
+          </button>
         </div>
         <HoverTimestamp timestamp={item.timestamp} />
       </div>
       {open && hasChildren && (
         <div className="pl-4" data-testid="sub-agent-children">
           {launcherTool && launcherTool.kind === 'tool' && (
-            <div key={`${item.toolUseId}:launcher`}>{renderTool(launcherTool.invocation, launcherTool.timestamp)}</div>
+            <div key={`${item.toolUseId}:launcher`}>
+              {renderTool(launcherTool.invocation, launcherTool.timestamp)}
+            </div>
           )}
           {childIndices.map((idx) => {
             const child = timeline[idx]
@@ -395,7 +414,7 @@ function ToolShell({
   summary,
   children,
   defaultOpen,
-  timestamp,
+  timestamp
 }: {
   invocation: ToolInvocation
   icon: React.ReactNode
@@ -423,9 +442,7 @@ function ToolShell({
     )
   }
   if (!body && status === 'pending') {
-    body = (
-      <div className="px-3 py-2 text-xs text-muted-foreground italic">Waiting for result…</div>
-    )
+    body = <div className="px-3 py-2 text-xs text-muted-foreground italic">Waiting for result…</div>
   }
   const canOpen = Boolean(body)
   return (
@@ -444,7 +461,9 @@ function ToolShell({
           <span className="shrink-0 text-muted-foreground">{icon}</span>
           <span className="font-medium shrink-0">{title}</span>
           {summary !== undefined && summary !== '' && (
-            <span className="text-muted-foreground truncate min-w-0 font-mono text-[11px]">{summary}</span>
+            <span className="text-muted-foreground truncate min-w-0 font-mono text-[11px]">
+              {summary}
+            </span>
           )}
           {canOpen && (
             <span className="shrink-0 text-muted-foreground">
@@ -452,7 +471,9 @@ function ToolShell({
             </span>
           )}
         </button>
-        {open && canOpen && <div className="border-t border-border/40 bg-background/40">{body}</div>}
+        {open && canOpen && (
+          <div className="border-t border-border/40 bg-background/40">{body}</div>
+        )}
       </div>
       <HoverTimestamp timestamp={timestamp} />
     </div>
@@ -460,7 +481,8 @@ function ToolShell({
 }
 
 function StatusIcon({ status }: { status: ToolInvocation['status'] }) {
-  if (status === 'pending') return <Loader2 className="size-3 animate-spin text-muted-foreground shrink-0" />
+  if (status === 'pending')
+    return <Loader2 className="size-3 animate-spin text-muted-foreground shrink-0" />
   if (status === 'error') return <CircleX className="size-3 text-destructive shrink-0" />
   if (status === 'denied') return <CircleX className="size-3 text-amber-500 shrink-0" />
   return <CircleCheck className="size-3 text-emerald-500 shrink-0" />
@@ -473,7 +495,11 @@ function shortenPath(p?: string): string {
 }
 
 export function ToolCallEdit({ invocation, timestamp }: ToolProps) {
-  const input = invocation.input as { file_path?: string; old_string?: string; new_string?: string } | null
+  const input = invocation.input as {
+    file_path?: string
+    old_string?: string
+    new_string?: string
+  } | null
   const { fileEditsOpenByDefault } = useChatView()
   const fileDiff = useMemo(() => {
     return invocation.result ? claudeEditResultToFileDiff(invocation.result.structured) : null
@@ -503,9 +529,9 @@ export function ToolCallEdit({ invocation, timestamp }: ToolProps) {
 
 export function ToolCallRead({ invocation, timestamp }: ToolProps) {
   const input = invocation.input as { file_path?: string; offset?: number; limit?: number } | null
-  const structured = invocation.result?.structured as
-    | { file?: { content?: string; numLines?: number } }
-    | null
+  const structured = invocation.result?.structured as {
+    file?: { content?: string; numLines?: number }
+  } | null
   const summary = input?.file_path
     ? `${shortenPath(input.file_path)}${input.limit ? ` · L${input.offset ?? 1}–${(input.offset ?? 1) + input.limit - 1}` : ''}`
     : ''
@@ -576,9 +602,10 @@ export function ToolCallBash({ invocation, timestamp }: ToolProps) {
 
 export function ToolCallGlob({ invocation, timestamp }: ToolProps) {
   const input = invocation.input as { pattern?: string; path?: string } | null
-  const structured = invocation.result?.structured as
-    | { filenames?: string[]; numFiles?: number }
-    | null
+  const structured = invocation.result?.structured as {
+    filenames?: string[]
+    numFiles?: number
+  } | null
   return (
     <ToolShell
       icon={<Search className="size-3" />}
@@ -590,7 +617,9 @@ export function ToolCallGlob({ invocation, timestamp }: ToolProps) {
       {structured?.filenames && (
         <ul className="p-3 text-xs font-mono grid gap-0.5 max-h-48 overflow-y-auto">
           {structured.filenames.map((f) => (
-            <li key={f}><LinkText text={f} /></li>
+            <li key={f}>
+              <LinkText text={f} />
+            </li>
           ))}
         </ul>
       )}
@@ -600,9 +629,13 @@ export function ToolCallGlob({ invocation, timestamp }: ToolProps) {
 
 export function ToolCallGrep({ invocation, timestamp }: ToolProps) {
   const input = invocation.input as { pattern?: string; path?: string } | null
-  const structured = invocation.result?.structured as
-    | { mode?: string; filenames?: string[]; numFiles?: number; numLines?: number; content?: string }
-    | null
+  const structured = invocation.result?.structured as {
+    mode?: string
+    filenames?: string[]
+    numFiles?: number
+    numLines?: number
+    content?: string
+  } | null
   const summary = `${input?.pattern ?? ''}${
     structured?.mode === 'content'
       ? ` → ${structured.numLines ?? 0} lines`
@@ -611,7 +644,13 @@ export function ToolCallGrep({ invocation, timestamp }: ToolProps) {
         : ''
   }`
   return (
-    <ToolShell icon={<Search className="size-3" />} title="Grep" invocation={invocation} timestamp={timestamp} summary={summary}>
+    <ToolShell
+      icon={<Search className="size-3" />}
+      title="Grep"
+      invocation={invocation}
+      timestamp={timestamp}
+      summary={summary}
+    >
       {structured?.content && (
         <pre className="p-3 text-xs font-mono whitespace-pre overflow-x-auto max-h-48 bg-muted/30">
           <LinkText text={structured.content} />
@@ -620,7 +659,9 @@ export function ToolCallGrep({ invocation, timestamp }: ToolProps) {
       {!structured?.content && structured?.filenames && (
         <ul className="p-3 text-xs font-mono grid gap-0.5 max-h-48 overflow-y-auto">
           {structured.filenames.map((f) => (
-            <li key={f}><LinkText text={f} /></li>
+            <li key={f}>
+              <LinkText text={f} />
+            </li>
           ))}
         </ul>
       )}
@@ -629,9 +670,9 @@ export function ToolCallGrep({ invocation, timestamp }: ToolProps) {
 }
 
 export function ToolCallTodoWrite({ invocation, timestamp }: ToolProps) {
-  const structured = invocation.result?.structured as
-    | { newTodos?: Array<{ content: string; status: string; activeForm?: string }> }
-    | null
+  const structured = invocation.result?.structured as {
+    newTodos?: Array<{ content: string; status: string; activeForm?: string }>
+  } | null
   const input = invocation.input as { todos?: Array<{ content: string; status: string }> } | null
   const todos = structured?.newTodos ?? input?.todos ?? []
   const inProgress = todos.find((t) => t.status === 'in_progress')
@@ -680,7 +721,14 @@ type AskQuestion = {
 export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
   const input = invocation.input as { questions?: AskQuestion[] } | null
   const questions = input?.questions ?? []
-  const { sendMessage, permissionRequests, respondPermission, abortAgent, timeline, collapseSignal } = useChatView()
+  const {
+    sendMessage,
+    permissionRequests,
+    respondPermission,
+    abortAgent,
+    timeline,
+    collapseSignal
+  } = useChatView()
   // Latest AskUserQuestion in the timeline stays expanded; older ones auto-collapse
   // when a newer ask appears. User can still toggle manually.
   const isLatestAsk = useMemo(() => {
@@ -768,10 +816,12 @@ export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
     })
   }
 
-  const canSubmit = questions.length > 0 && questions.every((_q, qi) => {
-    if (otherActive.has(qi)) return (otherText.get(qi) ?? '').trim().length > 0
-    return (selections.get(qi)?.size ?? 0) > 0
-  })
+  const canSubmit =
+    questions.length > 0 &&
+    questions.every((_q, qi) => {
+      if (otherActive.has(qi)) return (otherText.get(qi) ?? '').trim().length > 0
+      return (selections.get(qi)?.size ?? 0) > 0
+    })
 
   const handleSubmit = (): void => {
     if (!canSubmit || !canRespond || locked) return
@@ -807,9 +857,9 @@ export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
           // overrides any stale field of the same name.
           updatedInput: {
             ...((pendingPrompt.input as Record<string, unknown>) ?? {}),
-            answers: answersByQuestion,
-          },
-        },
+            answers: answersByQuestion
+          }
+        }
       })
       return
     }
@@ -833,7 +883,7 @@ export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
     if (pendingPrompt && respondPermission) {
       void respondPermission({
         requestId: pendingPrompt.requestId,
-        decision: { behavior: 'deny', message: 'User cancelled the question.' },
+        decision: { behavior: 'deny', message: 'User cancelled the question.' }
       })
       return
     }
@@ -849,7 +899,7 @@ export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
         <div
           className={cn(
             'min-w-0 flex-1 rounded-lg border border-indigo-500/40 bg-indigo-500/5 shadow-sm overflow-hidden transition-opacity',
-            locked && 'opacity-60',
+            locked && 'opacity-60'
           )}
         >
           <button
@@ -857,7 +907,7 @@ export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
             onClick={() => setCollapsed((c) => !c)}
             className={cn(
               'w-full flex items-center gap-2 bg-indigo-500/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/15 transition-colors',
-              !collapsed && 'border-b border-indigo-500/20',
+              !collapsed && 'border-b border-indigo-500/20'
             )}
           >
             <HelpCircle className="size-3 shrink-0" />
@@ -869,7 +919,7 @@ export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
               <span className="flex-1 min-w-0 truncate normal-case font-normal text-indigo-700/80 dark:text-indigo-300/80">
                 {locked && submittedText
                   ? submittedText.split('\n')[0]
-                  : (questions[0]?.question || '')}
+                  : questions[0]?.question || ''}
               </span>
             )}
             <span className="ml-auto shrink-0">
@@ -879,96 +929,104 @@ export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
           {!collapsed && questions.length === 0 && (
             <div className="px-3 py-2 text-sm text-muted-foreground">No questions provided.</div>
           )}
-          {!collapsed && questions.map((q, qi) => {
-            const sel = selections.get(qi) ?? new Set<string>()
-            const isOther = otherActive.has(qi)
-            return (
-              <div key={qi} className={cn('px-3 py-2', qi > 0 && 'border-t border-indigo-500/10')}>
-                <div className="text-sm font-medium text-foreground mb-2">{q.question}</div>
-                <div className="grid gap-1.5">
-                  {q.options.map((opt) => {
-                    const active = sel.has(opt.label)
-                    return (
-                      <button
-                        key={opt.label}
-                        type="button"
-                        disabled={locked}
-                        onClick={() => pickOption(qi, opt.label, q.multiSelect)}
-                        className={cn(
-                          'text-left rounded-md border px-2.5 py-1.5 text-xs transition-colors',
-                          active
-                            ? 'border-indigo-500 bg-indigo-500/15 text-foreground'
-                            : 'border-border/60 bg-background/60 hover:bg-indigo-500/5 hover:border-indigo-500/40',
-                          locked && 'opacity-60 cursor-not-allowed',
-                        )}
-                      >
-                        <div className="flex items-start gap-2">
-                          <span
-                            className={cn(
-                              'mt-0.5 shrink-0 size-3.5 border flex items-center justify-center',
-                              q.multiSelect ? 'rounded-sm' : 'rounded-full',
-                              active ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-border',
-                            )}
-                            aria-hidden
-                          >
-                            {active && <CheckIcon className="size-2.5" />}
-                          </span>
-                          <div className="min-w-0">
-                            <div className="font-medium">{opt.label}</div>
-                            {opt.description && (
-                              <div className="text-muted-foreground text-[11px] mt-0.5">{opt.description}</div>
-                            )}
+          {!collapsed &&
+            questions.map((q, qi) => {
+              const sel = selections.get(qi) ?? new Set<string>()
+              const isOther = otherActive.has(qi)
+              return (
+                <div
+                  key={qi}
+                  className={cn('px-3 py-2', qi > 0 && 'border-t border-indigo-500/10')}
+                >
+                  <div className="text-sm font-medium text-foreground mb-2">{q.question}</div>
+                  <div className="grid gap-1.5">
+                    {q.options.map((opt) => {
+                      const active = sel.has(opt.label)
+                      return (
+                        <button
+                          key={opt.label}
+                          type="button"
+                          disabled={locked}
+                          onClick={() => pickOption(qi, opt.label, q.multiSelect)}
+                          className={cn(
+                            'text-left rounded-md border px-2.5 py-1.5 text-xs transition-colors',
+                            active
+                              ? 'border-indigo-500 bg-indigo-500/15 text-foreground'
+                              : 'border-border/60 bg-background/60 hover:bg-indigo-500/5 hover:border-indigo-500/40',
+                            locked && 'opacity-60 cursor-not-allowed'
+                          )}
+                        >
+                          <div className="flex items-start gap-2">
+                            <span
+                              className={cn(
+                                'mt-0.5 shrink-0 size-3.5 border flex items-center justify-center',
+                                q.multiSelect ? 'rounded-sm' : 'rounded-full',
+                                active
+                                  ? 'border-indigo-500 bg-indigo-500 text-white'
+                                  : 'border-border'
+                              )}
+                              aria-hidden
+                            >
+                              {active && <CheckIcon className="size-2.5" />}
+                            </span>
+                            <div className="min-w-0">
+                              <div className="font-medium">{opt.label}</div>
+                              {opt.description && (
+                                <div className="text-muted-foreground text-[11px] mt-0.5">
+                                  {opt.description}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    )
-                  })}
-                  <button
-                    type="button"
-                    disabled={locked}
-                    onClick={() => pickOther(qi)}
-                    className={cn(
-                      'text-left rounded-md border px-2.5 py-1.5 text-xs transition-colors',
-                      isOther
-                        ? 'border-indigo-500 bg-indigo-500/15 text-foreground'
-                        : 'border-dashed border-border/60 bg-background/60 hover:bg-indigo-500/5 hover:border-indigo-500/40',
-                      locked && 'opacity-60 cursor-not-allowed',
-                    )}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          'shrink-0 size-3.5 rounded-full border flex items-center justify-center',
-                          isOther ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-border',
-                        )}
-                        aria-hidden
-                      >
-                        {isOther && <CheckIcon className="size-2.5" />}
-                      </span>
-                      <span className="font-medium">Other…</span>
-                    </div>
-                  </button>
-                  {isOther && (
-                    <textarea
-                      autoFocus
+                        </button>
+                      )
+                    })}
+                    <button
+                      type="button"
                       disabled={locked}
-                      value={otherText.get(qi) ?? ''}
-                      onChange={(e) => setOther(qi, e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                          e.preventDefault()
-                          handleSubmit()
-                        }
-                      }}
-                      placeholder="Type your answer…"
-                      className="w-full rounded-md border border-input bg-input/30 px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-indigo-500"
-                      rows={2}
-                    />
-                  )}
+                      onClick={() => pickOther(qi)}
+                      className={cn(
+                        'text-left rounded-md border px-2.5 py-1.5 text-xs transition-colors',
+                        isOther
+                          ? 'border-indigo-500 bg-indigo-500/15 text-foreground'
+                          : 'border-dashed border-border/60 bg-background/60 hover:bg-indigo-500/5 hover:border-indigo-500/40',
+                        locked && 'opacity-60 cursor-not-allowed'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            'shrink-0 size-3.5 rounded-full border flex items-center justify-center',
+                            isOther ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-border'
+                          )}
+                          aria-hidden
+                        >
+                          {isOther && <CheckIcon className="size-2.5" />}
+                        </span>
+                        <span className="font-medium">Other…</span>
+                      </div>
+                    </button>
+                    {isOther && (
+                      <textarea
+                        autoFocus
+                        disabled={locked}
+                        value={otherText.get(qi) ?? ''}
+                        onChange={(e) => setOther(qi, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                            e.preventDefault()
+                            handleSubmit()
+                          }
+                        }}
+                        placeholder="Type your answer…"
+                        className="w-full rounded-md border border-input bg-input/30 px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-indigo-500"
+                        rows={2}
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
           {!collapsed && questions.length > 0 && (
             <div className="border-t border-indigo-500/20 bg-indigo-500/10 px-3 py-2 flex items-center gap-2">
               {locked ? (
@@ -992,7 +1050,7 @@ export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
                       'shrink-0 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
                       canCancel
                         ? 'border-border/60 bg-background/60 hover:bg-destructive/10 hover:border-destructive/40 hover:text-destructive text-muted-foreground'
-                        : 'border-border/40 bg-muted/30 text-muted-foreground cursor-not-allowed',
+                        : 'border-border/40 bg-muted/30 text-muted-foreground cursor-not-allowed'
                     )}
                   >
                     Cancel
@@ -1005,7 +1063,7 @@ export function ToolCallAskUserQuestion({ invocation, timestamp }: ToolProps) {
                       'shrink-0 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors',
                       canSubmit && canRespond
                         ? 'border-indigo-500/40 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-900 dark:text-indigo-100'
-                        : 'border-border/40 bg-muted/30 text-muted-foreground cursor-not-allowed',
+                        : 'border-border/40 bg-muted/30 text-muted-foreground cursor-not-allowed'
                     )}
                   >
                     Submit
@@ -1056,7 +1114,10 @@ export function ToolCallExitPlanMode({ invocation, timestamp }: ToolProps) {
     if (myIdx >= 0) {
       for (let i = myIdx + 1; i < timeline.length; i++) {
         const t = timeline[i]
-        if (t.kind === 'user-text' && (t.text === PLAN_APPROVED_MARKER || t.text === PLAN_CANCELLED_MARKER)) {
+        if (
+          t.kind === 'user-text' &&
+          (t.text === PLAN_APPROVED_MARKER || t.text === PLAN_CANCELLED_MARKER)
+        ) {
           resolved = true
           break
         }
@@ -1075,7 +1136,9 @@ export function ToolCallExitPlanMode({ invocation, timestamp }: ToolProps) {
           <div className="flex items-center gap-2 border-b border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
             <ClipboardList className="size-3" />
             <span>Plan</span>
-            <span className="ml-auto"><StatusIcon status={invocation.status} /></span>
+            <span className="ml-auto">
+              <StatusIcon status={invocation.status} />
+            </span>
           </div>
           {plan && (
             <div className="px-3 py-2 text-sm leading-relaxed [&_p]:my-2 [&_p:first-child]:mt-0 [&_p:last-child]:mb-0 [&_pre]:my-3 [&_ul]:my-2 [&_ol]:my-2 [&_h1]:text-base [&_h1]:font-semibold [&_h1]:mt-4 [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h3]:text-sm [&_h3]:font-medium [&_code]:font-mono [&_code]:text-[0.85em]">
@@ -1121,11 +1184,7 @@ export function ToolCallExitPlanMode({ invocation, timestamp }: ToolProps) {
 export function ToolCallGeneric({ invocation, timestamp }: ToolProps) {
   const result = invocation.result?.rawContent
   const resultText =
-    typeof result === 'string'
-      ? result
-      : result != null
-        ? JSON.stringify(result, null, 2)
-        : ''
+    typeof result === 'string' ? result : result != null ? JSON.stringify(result, null, 2) : ''
   const inputPreview = JSON.stringify(invocation.input).slice(0, 80)
   return (
     <ToolShell
@@ -1164,7 +1223,7 @@ export const toolRenderers: Record<string, React.FC<ToolProps>> = {
   Grep: ToolCallGrep,
   TodoWrite: ToolCallTodoWrite,
   ExitPlanMode: ToolCallExitPlanMode,
-  AskUserQuestion: ToolCallAskUserQuestion,
+  AskUserQuestion: ToolCallAskUserQuestion
 }
 
 export function renderTool(invocation: ToolInvocation, timestamp?: number): React.JSX.Element {

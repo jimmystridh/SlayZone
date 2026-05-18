@@ -11,7 +11,7 @@ export function registerUnarchiveTaskRoute(app: Express, deps: RestApiDeps): voi
       const input = unarchiveInputSchema.parse({ id: req.params.id })
       const task = unarchiveTaskOp(deps.db, input.id, {
         ipcMain,
-        onMutation: deps.notifyRenderer,
+        onMutation: deps.notifyRenderer
       })
       if (!task) {
         res.status(404).json({ ok: false, error: 'Task not found' })

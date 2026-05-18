@@ -15,7 +15,9 @@ import remarkFrontmatter from 'remark-frontmatter'
 // 1. Remark plugin — teaches the unified pipeline to parse/stringify `yaml` nodes
 // ---------------------------------------------------------------------------
 
-export const remarkFrontmatterPlugin = $remark('remarkFrontmatter', () => remarkFrontmatter, ['yaml'])
+export const remarkFrontmatterPlugin = $remark('remarkFrontmatter', () => remarkFrontmatter, [
+  'yaml'
+])
 
 // ---------------------------------------------------------------------------
 // 2. Node schema — bridges the mdast `yaml` node to ProseMirror
@@ -27,21 +29,21 @@ export const frontmatterSchema = $nodeSchema('frontmatter', () => ({
   isolating: true,
   selectable: true,
   attrs: {
-    value: { default: '' },
+    value: { default: '' }
   },
 
   parseMarkdown: {
     match: (node) => node.type === 'yaml',
     runner: (state, node, type) => {
       state.addNode(type, { value: (node.value as string) ?? '' })
-    },
+    }
   },
 
   toMarkdown: {
     match: (node) => node.type.name === 'frontmatter',
     runner: (state, node) => {
       state.addNode('yaml', undefined, node.attrs.value as string)
-    },
+    }
   },
 
   // DOM round-trip (copy/paste)
@@ -49,14 +51,11 @@ export const frontmatterSchema = $nodeSchema('frontmatter', () => ({
     {
       tag: 'div[data-type="frontmatter"]',
       getAttrs: (dom) => ({
-        value: (dom as HTMLElement).dataset.value ?? '',
-      }),
-    },
+        value: (dom as HTMLElement).dataset.value ?? ''
+      })
+    }
   ],
-  toDOM: (node) => [
-    'div',
-    { 'data-type': 'frontmatter', 'data-value': node.attrs.value },
-  ],
+  toDOM: (node) => ['div', { 'data-type': 'frontmatter', 'data-value': node.attrs.value }]
 }))
 
 // ---------------------------------------------------------------------------
@@ -87,7 +86,7 @@ export const frontmatterView = $view(frontmatterSchema.node, () => {
       borderRadius: '8px',
       background: bgSubtle,
       overflow: 'hidden',
-      padding: '0',
+      padding: '0'
     })
 
     // Header label
@@ -101,7 +100,7 @@ export const frontmatterView = $view(frontmatterSchema.node, () => {
       color: textMuted,
       background: bgHeader,
       borderBottom: `1px solid ${borderLight}`,
-      userSelect: 'none',
+      userSelect: 'none'
     })
     header.textContent = 'Frontmatter'
     dom.appendChild(header)
@@ -123,7 +122,7 @@ export const frontmatterView = $view(frontmatterSchema.node, () => {
       fontSize: '0.75rem',
       lineHeight: '1.6',
       resize: 'none',
-      overflow: 'hidden',
+      overflow: 'hidden'
     })
     textarea.spellcheck = false
     textarea.value = (currentNode.attrs.value as string) ?? ''
@@ -143,7 +142,7 @@ export const frontmatterView = $view(frontmatterSchema.node, () => {
       if (pos == null) return
       const tr = view.state.tr.setNodeMarkup(pos, undefined, {
         ...currentNode.attrs,
-        value: newValue,
+        value: newValue
       })
       view.dispatch(tr)
     }
@@ -186,7 +185,7 @@ export const frontmatterView = $view(frontmatterSchema.node, () => {
       },
       destroy() {
         // nothing to clean up
-      },
+      }
     }
   }
 })
@@ -198,5 +197,5 @@ export const frontmatterView = $view(frontmatterSchema.node, () => {
 export const frontmatterPlugin: MilkdownPlugin[] = [
   ...remarkFrontmatterPlugin,
   ...frontmatterSchema,
-  frontmatterView,
+  frontmatterView
 ]

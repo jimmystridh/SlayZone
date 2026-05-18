@@ -5,7 +5,7 @@ import { describe, test, expect } from 'vitest'
 import {
   installGeminiHooks,
   GEMINI_HOOK_EVENTS,
-  isManagedSlayzoneHook,
+  isManagedSlayzoneHook
 } from './gemini-hook-installer'
 
 const SCRIPT = '/tmp/.slayzone/hooks/notify.sh'
@@ -16,7 +16,9 @@ function tmpSettings(): string {
 }
 
 function cleanup(p: string) {
-  try { fs.rmSync(path.dirname(path.dirname(p)), { recursive: true, force: true }) } catch {}
+  try {
+    fs.rmSync(path.dirname(path.dirname(p)), { recursive: true, force: true })
+  } catch {}
 }
 
 function readJson(p: string): { hooks?: Record<string, unknown[]>; [k: string]: unknown } {
@@ -27,7 +29,11 @@ describe('installGeminiHooks', () => {
   test('creates settings.json when missing, adds all 5 events', async () => {
     const target = tmpSettings()
     try {
-      const r = await installGeminiHooks({ scriptPath: SCRIPT, settingsPath: target, skipBinaryProbe: true })
+      const r = await installGeminiHooks({
+        scriptPath: SCRIPT,
+        settingsPath: target,
+        skipBinaryProbe: true
+      })
       expect(r.installed).toBe(true)
       expect(r.eventsAdded).toEqual([...GEMINI_HOOK_EVENTS])
       const data = readJson(target)
@@ -48,13 +54,19 @@ describe('installGeminiHooks', () => {
     const userEntry = { hooks: [{ type: 'command', command: '/my/custom/script.sh' }] }
     fs.writeFileSync(target, JSON.stringify({ hooks: { AfterAgent: [userEntry] } }))
     try {
-      const r = await installGeminiHooks({ scriptPath: SCRIPT, settingsPath: target, skipBinaryProbe: true })
+      const r = await installGeminiHooks({
+        scriptPath: SCRIPT,
+        settingsPath: target,
+        skipBinaryProbe: true
+      })
       expect(r.installed).toBe(true)
       const data = readJson(target)
-      const list = (data.hooks as Record<string, unknown[]>).AfterAgent as Array<{ hooks: unknown[] }>
+      const list = (data.hooks as Record<string, unknown[]>).AfterAgent as Array<{
+        hooks: unknown[]
+      }>
       expect(list.length).toBe(2)
       const stillThere = list.some((e) =>
-        (e.hooks as Array<{ command?: string }>).some((h) => h.command === '/my/custom/script.sh'),
+        (e.hooks as Array<{ command?: string }>).some((h) => h.command === '/my/custom/script.sh')
       )
       expect(stillThere).toBe(true)
     } finally {
@@ -66,7 +78,9 @@ describe('installGeminiHooks', () => {
     const target = tmpSettings()
     fs.mkdirSync(path.dirname(target), { recursive: true })
     const stale = {
-      hooks: [{ type: 'command', command: '/old/.slayzone/hooks/notify.sh', _slayzoneManaged: true }],
+      hooks: [
+        { type: 'command', command: '/old/.slayzone/hooks/notify.sh', _slayzoneManaged: true }
+      ]
     }
     fs.writeFileSync(target, JSON.stringify({ hooks: { AfterAgent: [stale] } }))
     try {
@@ -87,7 +101,11 @@ describe('installGeminiHooks', () => {
     fs.mkdirSync(path.dirname(target), { recursive: true })
     fs.writeFileSync(target, '{ this is not json')
     try {
-      const r = await installGeminiHooks({ scriptPath: SCRIPT, settingsPath: target, skipBinaryProbe: true })
+      const r = await installGeminiHooks({
+        scriptPath: SCRIPT,
+        settingsPath: target,
+        skipBinaryProbe: true
+      })
       expect(r.installed).toBe(false)
       expect(r.reason).toMatch(/not valid JSON/)
       expect(fs.readFileSync(target, 'utf8')).toBe('{ this is not json')
@@ -146,11 +164,15 @@ describe('installGeminiHooks', () => {
 
 describe('isManagedSlayzoneHook', () => {
   test('matches by marker', () => {
-    expect(isManagedSlayzoneHook({ type: 'command', command: 'x', _slayzoneManaged: true })).toBe(true)
+    expect(isManagedSlayzoneHook({ type: 'command', command: 'x', _slayzoneManaged: true })).toBe(
+      true
+    )
   })
 
   test('matches by script path substring', () => {
-    expect(isManagedSlayzoneHook({ type: 'command', command: '/home/x/.slayzone/hooks/notify.sh' })).toBe(true)
+    expect(
+      isManagedSlayzoneHook({ type: 'command', command: '/home/x/.slayzone/hooks/notify.sh' })
+    ).toBe(true)
   })
 
   test('does not match unrelated hooks', () => {

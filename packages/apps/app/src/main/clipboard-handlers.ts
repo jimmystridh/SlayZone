@@ -2,7 +2,8 @@ import { clipboard } from 'electron'
 import type { IpcMain } from 'electron'
 import { existsSync } from 'fs'
 
-const PLIST_HEADER = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<array>\n'
+const PLIST_HEADER =
+  '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<array>\n'
 const PLIST_FOOTER = '</array>\n</plist>\n'
 
 function escapeXml(s: string): string {
@@ -20,10 +21,7 @@ function parseFilenamesPlist(buf: Buffer): string[] {
   const re = /<string>([\s\S]*?)<\/string>/g
   let m: RegExpExecArray | null
   while ((m = re.exec(xml)) !== null) {
-    const decoded = m[1]
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
+    const decoded = m[1].replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
     out.push(decoded)
   }
   return out
@@ -62,7 +60,7 @@ export function writeFilePaths(paths: string[]): void {
   } else {
     clipboard.write({
       text: paths.join('\n'),
-      bookmark: pathsToFileUrls(paths),
+      bookmark: pathsToFileUrls(paths)
     })
   }
 }
@@ -85,19 +83,32 @@ export function readFilePaths(): string[] {
   }
   const text = clipboard.readText().trim()
   if (!text) return []
-  const candidates = text.split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
-  const paths = candidates.map((c) => {
-    if (c.startsWith('file://')) {
-      try { return decodeURIComponent(new URL(c).pathname) } catch { return '' }
-    }
-    return c
-  }).filter(Boolean)
+  const candidates = text
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+  const paths = candidates
+    .map((c) => {
+      if (c.startsWith('file://')) {
+        try {
+          return decodeURIComponent(new URL(c).pathname)
+        } catch {
+          return ''
+        }
+      }
+      return c
+    })
+    .filter(Boolean)
   return paths.filter((p) => p.startsWith('/') && existsSync(p))
 }
 
 export function hasFilePaths(): boolean {
   if (process.platform === 'darwin') {
-    if (clipboard.availableFormats().some((f) => f.includes('NSFilenamesPboardType') || f === 'public.file-url')) {
+    if (
+      clipboard
+        .availableFormats()
+        .some((f) => f.includes('NSFilenamesPboardType') || f === 'public.file-url')
+    ) {
       return true
     }
     const buf = clipboard.readBuffer('NSFilenamesPboardType')

@@ -21,16 +21,17 @@ function TypingCursor() {
   }, [])
 
   useEffect(() => {
-    const cursorInterval = setInterval(() => setShowCursor(v => !v), 530)
+    const cursorInterval = setInterval(() => setShowCursor((v) => !v), 530)
     return () => clearInterval(cursorInterval)
   }, [])
 
   return (
     <div className="flex items-center justify-center h-full">
       <div className="font-mono text-sm text-muted-foreground">
-        <span className="text-green-500">$</span>{' '}
-        {displayed}
-        <span className={`inline-block w-[8px] h-[14px] bg-muted-foreground align-middle ml-[1px] translate-y-[1px] ${showCursor ? 'opacity-100' : 'opacity-0'}`} />
+        <span className="text-green-500">$</span> {displayed}
+        <span
+          className={`inline-block w-[8px] h-[14px] bg-muted-foreground align-middle ml-[1px] translate-y-[1px] ${showCursor ? 'opacity-100' : 'opacity-0'}`}
+        />
       </div>
     </div>
   )
@@ -53,7 +54,8 @@ function MatrixCascade() {
     }
     resize()
 
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*(){}[]|;:,.<>?/~`'
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*(){}[]|;:,.<>?/~`'
     const fontSize = 13
     const cols = Math.floor(canvas.offsetWidth / (fontSize * 0.6))
     const drops: number[] = Array.from({ length: cols }, () => Math.random() * -20)
@@ -89,7 +91,10 @@ function MatrixCascade() {
 
     const observer = new ResizeObserver(resize)
     observer.observe(canvas)
-    return () => { cancelAnimationFrame(animId); observer.disconnect() }
+    return () => {
+      cancelAnimationFrame(animId)
+      observer.disconnect()
+    }
   }, [])
 
   return (
@@ -108,19 +113,19 @@ function AsciiArt() {
     ['   ╭───╮   ', '   │ ◜ │   ', '   ╰───╯   '],
     ['   ╭───╮   ', '   │ ◝ │   ', '   ╰───╯   '],
     ['   ╭───╮   ', '   │ ◞ │   ', '   ╰───╯   '],
-    ['   ╭───╮   ', '   │ ◟ │   ', '   ╰───╯   '],
+    ['   ╭───╮   ', '   │ ◟ │   ', '   ╰───╯   ']
   ]
 
   const [frame, setFrame] = useState(0)
   const [dots, setDots] = useState('')
 
   useEffect(() => {
-    const interval = setInterval(() => setFrame(f => (f + 1) % frames.length), 150)
+    const interval = setInterval(() => setFrame((f) => (f + 1) % frames.length), 150)
     return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
-    const interval = setInterval(() => setDots(d => d.length >= 3 ? '' : d + '.'), 400)
+    const interval = setInterval(() => setDots((d) => (d.length >= 3 ? '' : d + '.')), 400)
     return () => clearInterval(interval)
   }, [])
 
@@ -145,7 +150,7 @@ function Scanline() {
     '[  OK  ] Starting network manager...',
     '[  OK  ] Initializing PTY subsystem...',
     '[  OK  ] Connecting to process...',
-    '[  ..  ] Waiting for terminal output...',
+    '[  ..  ] Waiting for terminal output...'
   ]
 
   useEffect(() => {
@@ -154,7 +159,7 @@ function Scanline() {
       if (i < bootMessages.length) {
         const msg = bootMessages[i]
         i++
-        setLines(prev => [...prev, msg])
+        setLines((prev) => [...prev, msg])
       } else {
         clearInterval(interval)
       }
@@ -192,14 +197,19 @@ export function TerminalLoadingShowcase() {
     { name: 'Matrix Cascade', component: MatrixCascade },
     { name: 'Pulse Grid', component: PulseGrid },
     { name: 'ASCII Spinner', component: AsciiArt },
-    { name: 'Boot Sequence', component: Scanline },
+    { name: 'Boot Sequence', component: Scanline }
   ]
 
   return (
     <div className="flex flex-col gap-2 h-full p-2 overflow-auto">
       {animations.map(({ name, component: Component }) => (
-        <div key={name} className="flex-1 min-h-[120px] rounded-lg border border-border overflow-hidden relative">
-          <div className="absolute top-2 left-3 z-10 text-[10px] text-muted-foreground font-mono">{name}</div>
+        <div
+          key={name}
+          className="flex-1 min-h-[120px] rounded-lg border border-border overflow-hidden relative"
+        >
+          <div className="absolute top-2 left-3 z-10 text-[10px] text-muted-foreground font-mono">
+            {name}
+          </div>
           <div className="h-full w-full bg-surface-0">
             <Component />
           </div>

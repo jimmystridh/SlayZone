@@ -14,14 +14,14 @@ import {
   parseColumnsConfig,
   resolveColumns,
   resolveStatusId,
-  validateColumns,
+  validateColumns
 } from './columns.js'
 
 const customColumns: ColumnConfig[] = [
   { id: 'blocked', label: 'Blocked', color: 'red', position: 2, category: 'started' },
   { id: 'queue', label: 'Queue', color: 'gray', position: 0, category: 'unstarted' },
   { id: 'closed', label: 'Closed', color: 'green', position: 4, category: 'completed' },
-  { id: 'wontfix', label: 'Wontfix', color: 'slate', position: 5, category: 'canceled' },
+  { id: 'wontfix', label: 'Wontfix', color: 'slate', position: 5, category: 'canceled' }
 ]
 
 describe('validateColumns', () => {
@@ -31,7 +31,7 @@ describe('validateColumns', () => {
       { id: 'queue', label: 'Queue', color: 'gray', position: 0, category: 'unstarted' },
       { id: 'blocked', label: 'Blocked', color: 'red', position: 1, category: 'started' },
       { id: 'closed', label: 'Closed', color: 'green', position: 2, category: 'completed' },
-      { id: 'wontfix', label: 'Wontfix', color: 'slate', position: 3, category: 'canceled' },
+      { id: 'wontfix', label: 'Wontfix', color: 'slate', position: 3, category: 'canceled' }
     ])
   })
 
@@ -40,7 +40,7 @@ describe('validateColumns', () => {
       { id: 'doneish', label: 'Doneish', color: 'green', position: 0, category: 'completed' },
       { id: 'queue', label: 'Queue', color: 'gray', position: 99, category: 'unstarted' },
       { id: 'doing', label: 'Doing', color: 'blue', position: 1, category: 'started' },
-      { id: 'backlog', label: 'Backlog', color: 'slate', position: 2, category: 'backlog' },
+      { id: 'backlog', label: 'Backlog', color: 'slate', position: 2, category: 'backlog' }
     ]
 
     const normalized = validateColumns(scrambled)
@@ -51,7 +51,7 @@ describe('validateColumns', () => {
     const invalid: ColumnConfig[] = [
       { id: 'queue', label: 'Queue', color: 'gray', position: 0, category: 'unstarted' },
       { id: 'doing', label: 'Doing', color: 'blue', position: 1, category: 'started' },
-      { id: 'canceled', label: 'Canceled', color: 'slate', position: 2, category: 'canceled' },
+      { id: 'canceled', label: 'Canceled', color: 'slate', position: 2, category: 'canceled' }
     ]
     expect(() => validateColumns(invalid)).toThrow()
   })
@@ -126,7 +126,7 @@ describe('resolveStatusId', () => {
   test('matches underscore input via slug', () => {
     const cols: ColumnConfig[] = [
       { id: 'status-1', label: 'Code Review', color: 'purple', position: 0, category: 'started' },
-      { id: 'status-2', label: 'Done', color: 'green', position: 1, category: 'completed' },
+      { id: 'status-2', label: 'Done', color: 'green', position: 1, category: 'completed' }
     ]
     expect(resolveStatusId('code_review', cols)).toBe('status-1')
   })
@@ -134,7 +134,7 @@ describe('resolveStatusId', () => {
   test('exact ID takes priority over label match', () => {
     const cols: ColumnConfig[] = [
       { id: 'my-status', label: 'My Status', color: 'blue', position: 0, category: 'unstarted' },
-      { id: 'other', label: 'my-status', color: 'green', position: 1, category: 'completed' },
+      { id: 'other', label: 'my-status', color: 'green', position: 1, category: 'completed' }
     ]
     expect(resolveStatusId('my-status', cols)).toBe('my-status')
   })

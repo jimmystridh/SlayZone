@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, TEST_PROJECT_PATH, resetApp} from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  TEST_PROJECT_PATH,
+  resetApp
+} from '../fixtures/electron'
 import {
   openTaskTerminal,
   switchTerminalMode,
@@ -17,7 +25,11 @@ function parseResponse(text: string): any[] {
     return [...text.matchAll(/^data: (.+)$/gm)].map(([, json]) => JSON.parse(json))
   }
   // Plain JSON (one per line)
-  return text.trim().split('\n').filter(Boolean).map((l) => JSON.parse(l))
+  return text
+    .trim()
+    .split('\n')
+    .filter(Boolean)
+    .map((l) => JSON.parse(l))
 }
 
 /** Send a JSON-RPC request to the MCP server. */
@@ -118,10 +130,14 @@ test.describe('MCP Server', () => {
 
   test('get_current_task_id returns task id', async () => {
     const sid = await mcpInit()
-    const { body } = await mcpRequest('tools/call', {
-      name: 'get_current_task_id',
-      arguments: { task_id: taskId }
-    }, sid)
+    const { body } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'get_current_task_id',
+        arguments: { task_id: taskId }
+      },
+      sid
+    )
 
     expect(body.result).toBeTruthy()
     const payload = JSON.parse(body.result.content[0].text)
@@ -130,10 +146,14 @@ test.describe('MCP Server', () => {
 
   test('update task title via MCP', async ({ mainWindow }) => {
     const sid = await mcpInit()
-    const { body } = await mcpRequest('tools/call', {
-      name: 'update_task',
-      arguments: { task_id: taskId, title: 'Updated by MCP' }
-    }, sid)
+    const { body } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'update_task',
+        arguments: { task_id: taskId, title: 'Updated by MCP' }
+      },
+      sid
+    )
 
     // Tool returns updated task JSON
     expect(body.result).toBeTruthy()
@@ -152,15 +172,19 @@ test.describe('MCP Server', () => {
 
   test('create subtask via MCP', async ({ mainWindow }) => {
     const sid = await mcpInit()
-    const { body } = await mcpRequest('tools/call', {
-      name: 'create_subtask',
-      arguments: {
-        parent_task_id: taskId,
-        title: 'Subtask from MCP',
-        status: 'todo',
-        priority: 2
-      }
-    }, sid)
+    const { body } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'create_subtask',
+        arguments: {
+          parent_task_id: taskId,
+          title: 'Subtask from MCP',
+          status: 'todo',
+          priority: 2
+        }
+      },
+      sid
+    )
 
     expect(body.result).toBeTruthy()
     const created = JSON.parse(body.result.content[0].text)
@@ -177,26 +201,34 @@ test.describe('MCP Server', () => {
 
   test('update task status via MCP', async ({ mainWindow }) => {
     const sid = await mcpInit()
-    const { body } = await mcpRequest('tools/call', {
-      name: 'update_task',
-      arguments: { task_id: taskId, status: 'in_progress' }
-    }, sid)
+    const { body } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'update_task',
+        arguments: { task_id: taskId, status: 'in_progress' }
+      },
+      sid
+    )
 
     const updated = JSON.parse(body.result.content[0].text)
     expect(updated.status).toBe('in_progress')
 
     // Verify on kanban — task should appear in In Progress column
-    await expect(
-      mainWindow.locator('h3').getByText('In Progress', { exact: true })
-    ).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('h3').getByText('In Progress', { exact: true })).toBeVisible({
+      timeout: 5_000
+    })
   })
 
   test('returns error for nonexistent task', async () => {
     const sid = await mcpInit()
-    const { body } = await mcpRequest('tools/call', {
-      name: 'update_task',
-      arguments: { task_id: 'nonexistent-id', title: 'Nope' }
-    }, sid)
+    const { body } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'update_task',
+        arguments: { task_id: 'nonexistent-id', title: 'Nope' }
+      },
+      sid
+    )
 
     expect(body.result.isError).toBe(true)
     expect(body.result.content[0].text).toContain('not found')
@@ -204,15 +236,19 @@ test.describe('MCP Server', () => {
 
   test('update multiple fields at once', async ({ mainWindow }) => {
     const sid = await mcpInit()
-    const { body } = await mcpRequest('tools/call', {
-      name: 'update_task',
-      arguments: {
-        task_id: taskId,
-        title: 'Multi-update',
-        status: 'review',
-        priority: 1
-      }
-    }, sid)
+    const { body } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'update_task',
+        arguments: {
+          task_id: taskId,
+          title: 'Multi-update',
+          status: 'review',
+          priority: 1
+        }
+      },
+      sid
+    )
 
     const updated = JSON.parse(body.result.content[0].text)
     expect(updated.title).toBe('Multi-update')
@@ -229,27 +265,35 @@ test.describe('MCP Server', () => {
     const sid = await mcpInit()
 
     // Set description and due_date
-    const { body: setBody } = await mcpRequest('tools/call', {
-      name: 'update_task',
-      arguments: {
-        task_id: taskId,
-        description: 'A description from MCP',
-        due_date: '2026-06-01'
-      }
-    }, sid)
+    const { body: setBody } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'update_task',
+        arguments: {
+          task_id: taskId,
+          description: 'A description from MCP',
+          due_date: '2026-06-01'
+        }
+      },
+      sid
+    )
     const after = JSON.parse(setBody.result.content[0].text)
     expect(after.description).toBe('A description from MCP')
     expect(after.due_date).toBe('2026-06-01')
 
     // Clear them by setting to null
-    const { body: clearBody } = await mcpRequest('tools/call', {
-      name: 'update_task',
-      arguments: {
-        task_id: taskId,
-        description: null,
-        due_date: null
-      }
-    }, sid)
+    const { body: clearBody } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'update_task',
+        arguments: {
+          task_id: taskId,
+          description: null,
+          due_date: null
+        }
+      },
+      sid
+    )
     const cleared = JSON.parse(clearBody.result.content[0].text)
     expect(cleared.description).toBeNull()
     expect(cleared.due_date).toBeNull()
@@ -262,10 +306,14 @@ test.describe('MCP Server', () => {
 
   test('rejects invalid status value', async () => {
     const sid = await mcpInit()
-    const { body } = await mcpRequest('tools/call', {
-      name: 'update_task',
-      arguments: { task_id: taskId, status: 'yolo' }
-    }, sid)
+    const { body } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'update_task',
+        arguments: { task_id: taskId, status: 'yolo' }
+      },
+      sid
+    )
 
     // Schema validation should reject — returns error
     expect(body.result.isError ?? body.error).toBeTruthy()
@@ -273,10 +321,14 @@ test.describe('MCP Server', () => {
 
   test('rejects out-of-range priority', async () => {
     const sid = await mcpInit()
-    const { body } = await mcpRequest('tools/call', {
-      name: 'update_task',
-      arguments: { task_id: taskId, priority: 99 }
-    }, sid)
+    const { body } = await mcpRequest(
+      'tools/call',
+      {
+        name: 'update_task',
+        arguments: { task_id: taskId, priority: 99 }
+      },
+      sid
+    )
 
     expect(body.result?.isError ?? body.error).toBeTruthy()
   })
@@ -292,14 +344,22 @@ test.describe('MCP Server', () => {
 
     // Update different tasks simultaneously
     const [res1, res2] = await Promise.all([
-      mcpRequest('tools/call', {
-        name: 'update_task',
-        arguments: { task_id: taskId, title: 'From session 1' }
-      }, sid1),
-      mcpRequest('tools/call', {
-        name: 'update_task',
-        arguments: { task_id: t2.id, title: 'From session 2' }
-      }, sid2)
+      mcpRequest(
+        'tools/call',
+        {
+          name: 'update_task',
+          arguments: { task_id: taskId, title: 'From session 1' }
+        },
+        sid1
+      ),
+      mcpRequest(
+        'tools/call',
+        {
+          name: 'update_task',
+          arguments: { task_id: t2.id, title: 'From session 2' }
+        },
+        sid2
+      )
     ])
 
     const u1 = JSON.parse(res1.body.result.content[0].text)

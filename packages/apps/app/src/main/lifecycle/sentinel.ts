@@ -41,8 +41,16 @@ export function detectPreviousCrash(): PreviousBootResult {
   } catch {
     // No stub → fresh state. Not a crash.
   } finally {
-    try { unlinkSync(stubPath()) } catch { /* ignore */ }
-    try { unlinkSync(cleanPath()) } catch { /* ignore */ }
+    try {
+      unlinkSync(stubPath())
+    } catch {
+      /* ignore */
+    }
+    try {
+      unlinkSync(cleanPath())
+    } catch {
+      /* ignore */
+    }
   }
   return { crashed, prevBoot: prev }
 }
@@ -89,8 +97,12 @@ export function scanCrashDumps(sinceMs: number): MinidumpInfo[] {
         if (st.mtimeMs >= sinceMs) {
           out.push({ path: full, size: st.size, mtimeMs: st.mtimeMs })
         }
-      } catch { /* file vanished mid-scan */ }
+      } catch {
+        /* file vanished mid-scan */
+      }
     }
-  } catch { /* dir missing on first crash-free run */ }
+  } catch {
+    /* dir missing on first crash-free run */
+  }
   return out
 }

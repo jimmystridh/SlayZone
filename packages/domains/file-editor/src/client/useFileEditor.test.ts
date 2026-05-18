@@ -37,8 +37,12 @@ function installFsStub(diskContent: Record<string, string> = {}): FsStub {
       deletedListeners.add(cb)
       return () => deletedListeners.delete(cb)
     }),
-    emitChanged: (root, rel) => { for (const cb of changedListeners) cb(root, rel) },
-    emitDeleted: (root, rel) => { for (const cb of deletedListeners) cb(root, rel) }
+    emitChanged: (root, rel) => {
+      for (const cb of changedListeners) cb(root, rel)
+    },
+    emitDeleted: (root, rel) => {
+      for (const cb of deletedListeners) cb(root, rel)
+    }
   }
   ;(globalThis as unknown as { window: { api: { fs: unknown } } }).window = {
     api: { fs: stub }
@@ -76,12 +80,18 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('a.ts') })
-    await act(async () => { await result.current.openFile('b.ts') })
+    await act(async () => {
+      await result.current.openFile('a.ts')
+    })
+    await act(async () => {
+      await result.current.openFile('b.ts')
+    })
     expect(result.current.openFiles.map((f) => f.path)).toEqual(['a.ts', 'b.ts'])
     expect(result.current.activeFilePath).toBe('b.ts')
 
-    act(() => { fs.emitDeleted(ROOT, 'b.ts') })
+    act(() => {
+      fs.emitDeleted(ROOT, 'b.ts')
+    })
     await flush()
 
     expect(result.current.openFiles.map((f) => f.path)).toEqual(['a.ts'])
@@ -92,10 +102,14 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('a.ts') })
+    await act(async () => {
+      await result.current.openFile('a.ts')
+    })
     expect(result.current.activeFilePath).toBe('a.ts')
 
-    act(() => { fs.emitDeleted(ROOT, 'a.ts') })
+    act(() => {
+      fs.emitDeleted(ROOT, 'a.ts')
+    })
     await flush()
 
     expect(result.current.openFiles).toEqual([])
@@ -106,11 +120,19 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('src/c.ts') })
-    await act(async () => { await result.current.openFile('src/nested/d.ts') })
-    await act(async () => { await result.current.openFile('a.ts') })
+    await act(async () => {
+      await result.current.openFile('src/c.ts')
+    })
+    await act(async () => {
+      await result.current.openFile('src/nested/d.ts')
+    })
+    await act(async () => {
+      await result.current.openFile('a.ts')
+    })
 
-    act(() => { fs.emitDeleted(ROOT, 'src') })
+    act(() => {
+      fs.emitDeleted(ROOT, 'src')
+    })
     await flush()
 
     expect(result.current.openFiles.map((f) => f.path)).toEqual(['a.ts'])
@@ -121,9 +143,13 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('a.ts') })
+    await act(async () => {
+      await result.current.openFile('a.ts')
+    })
 
-    act(() => { fs.emitDeleted(ROOT, 'unrelated.ts') })
+    act(() => {
+      fs.emitDeleted(ROOT, 'unrelated.ts')
+    })
     await flush()
 
     expect(result.current.openFiles.map((f) => f.path)).toEqual(['a.ts'])
@@ -133,9 +159,13 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('a.ts') })
+    await act(async () => {
+      await result.current.openFile('a.ts')
+    })
 
-    act(() => { fs.emitDeleted('/other/proj', 'a.ts') })
+    act(() => {
+      fs.emitDeleted('/other/proj', 'a.ts')
+    })
     await flush()
 
     expect(result.current.openFiles.map((f) => f.path)).toEqual(['a.ts'])
@@ -145,11 +175,17 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('a.ts') })
-    act(() => { result.current.updateContent('a.ts', 'A-edited') })
+    await act(async () => {
+      await result.current.openFile('a.ts')
+    })
+    act(() => {
+      result.current.updateContent('a.ts', 'A-edited')
+    })
     expect(result.current.isDirty('a.ts')).toBe(true)
 
-    act(() => { fs.emitDeleted(ROOT, 'a.ts') })
+    act(() => {
+      fs.emitDeleted(ROOT, 'a.ts')
+    })
     await flush()
 
     expect(result.current.openFiles.map((f) => f.path)).toEqual(['a.ts'])
@@ -162,11 +198,19 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('src/c.ts') })
-    await act(async () => { await result.current.openFile('src/nested/d.ts') })
-    act(() => { result.current.updateContent('src/nested/d.ts', 'D-edited') })
+    await act(async () => {
+      await result.current.openFile('src/c.ts')
+    })
+    await act(async () => {
+      await result.current.openFile('src/nested/d.ts')
+    })
+    act(() => {
+      result.current.updateContent('src/nested/d.ts', 'D-edited')
+    })
 
-    act(() => { fs.emitDeleted(ROOT, 'src') })
+    act(() => {
+      fs.emitDeleted(ROOT, 'src')
+    })
     await flush()
 
     // Dirty d.ts stays, clean c.ts closes
@@ -178,13 +222,21 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('a.ts') })
-    act(() => { result.current.updateContent('a.ts', 'A-edited') })
-    act(() => { fs.emitDeleted(ROOT, 'a.ts') })
+    await act(async () => {
+      await result.current.openFile('a.ts')
+    })
+    act(() => {
+      result.current.updateContent('a.ts', 'A-edited')
+    })
+    act(() => {
+      fs.emitDeleted(ROOT, 'a.ts')
+    })
     await flush()
     expect(result.current.isFileDeleted('a.ts')).toBe(true)
 
-    await act(async () => { await result.current.saveFile('a.ts') })
+    await act(async () => {
+      await result.current.saveFile('a.ts')
+    })
 
     expect(result.current.isFileDeleted('a.ts')).toBe(false)
     expect(result.current.isDirty('a.ts')).toBe(false)
@@ -195,14 +247,22 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('a.ts') })
-    act(() => { result.current.updateContent('a.ts', 'A-edited') })
-    act(() => { fs.emitDeleted(ROOT, 'a.ts') })
+    await act(async () => {
+      await result.current.openFile('a.ts')
+    })
+    act(() => {
+      result.current.updateContent('a.ts', 'A-edited')
+    })
+    act(() => {
+      fs.emitDeleted(ROOT, 'a.ts')
+    })
     await flush()
     expect(result.current.isFileDeleted('a.ts')).toBe(true)
 
     // File recreated externally → change event fires
-    act(() => { fs.emitChanged(ROOT, 'a.ts') })
+    act(() => {
+      fs.emitChanged(ROOT, 'a.ts')
+    })
     await flush()
 
     // Still dirty → keeps local content, clears deleted, stays diskChanged
@@ -215,10 +275,14 @@ describe('useFileEditor — delete handling', () => {
     const { result } = renderHook(() => useFileEditor(ROOT))
     await flush()
 
-    await act(async () => { await result.current.openFile('src/c.ts') })
+    await act(async () => {
+      await result.current.openFile('src/c.ts')
+    })
 
     // "sr" is a prefix of "src/c.ts" but not a parent folder — must NOT close
-    act(() => { fs.emitDeleted(ROOT, 'sr') })
+    act(() => {
+      fs.emitDeleted(ROOT, 'sr')
+    })
     await flush()
 
     expect(result.current.openFiles.map((f) => f.path)).toEqual(['src/c.ts'])

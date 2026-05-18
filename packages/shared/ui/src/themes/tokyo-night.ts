@@ -41,7 +41,7 @@ export const tokyoNight: UnifiedThemeDefinition = {
       surface2: '#24283b',
       surface3: '#2f344e',
       modal: '#13141e',
-      modalBorder: 'rgba(255, 255, 255, 0.25)',
+      modalBorder: 'rgba(255, 255, 255, 0.25)'
     },
     terminal: {
       background: '#1a1b26',
@@ -65,7 +65,7 @@ export const tokyoNight: UnifiedThemeDefinition = {
       brightBlue: '#7aa2f7',
       brightMagenta: '#bb9af7',
       brightCyan: '#7dcfff',
-      brightWhite: '#c0caf5',
+      brightWhite: '#c0caf5'
     },
     editor: {
       background: '#1a1b26',
@@ -85,8 +85,8 @@ export const tokyoNight: UnifiedThemeDefinition = {
       variable: '#c0caf5',
       property: '#73daca',
       link: '#7aa2f7',
-      heading: '#c0caf5',
-    },
+      heading: '#c0caf5'
+    }
   },
   light: {
     chrome: {
@@ -126,7 +126,7 @@ export const tokyoNight: UnifiedThemeDefinition = {
       surface2: '#e5e6eb',
       surface3: '#f0f1f5',
       modal: '#c0c1c6',
-      modalBorder: 'rgba(0, 0, 0, 0.35)',
+      modalBorder: 'rgba(0, 0, 0, 0.35)'
     },
     terminal: {
       background: '#d5d6db',
@@ -150,7 +150,7 @@ export const tokyoNight: UnifiedThemeDefinition = {
       brightBlue: '#34548a',
       brightMagenta: '#5a4a78',
       brightCyan: '#0f4b6e',
-      brightWhite: '#343b58',
+      brightWhite: '#343b58'
     },
     editor: {
       background: '#d5d6db',
@@ -170,7 +170,7 @@ export const tokyoNight: UnifiedThemeDefinition = {
       variable: '#343b58',
       property: '#8c4351',
       link: '#34548a',
-      heading: '#343b58',
-    },
-  },
+      heading: '#343b58'
+    }
+  }
 }

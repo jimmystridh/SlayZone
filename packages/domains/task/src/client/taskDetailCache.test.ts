@@ -15,7 +15,7 @@ function makeTask(overrides: Record<string, unknown> = {}) {
     panel_visibility: null,
     browser_tabs: null,
     is_temporary: false,
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -34,11 +34,11 @@ const mockApi = {
     getTags: vi.fn().mockResolvedValue([]),
     getProjects: vi.fn().mockResolvedValue([]),
     getSubTasks: vi.fn().mockResolvedValue([]),
-    getTasks: vi.fn().mockResolvedValue([]),
+    getTasks: vi.fn().mockResolvedValue([])
   },
   tags: { getTags: vi.fn().mockResolvedValue([]) },
   taskTags: { getTagsForTask: vi.fn().mockResolvedValue([]) },
-  files: { pathExists: vi.fn().mockResolvedValue(true) },
+  files: { pathExists: vi.fn().mockResolvedValue(true) }
 }
 
 beforeEach(() => {
@@ -85,7 +85,10 @@ describe('fetchTaskDetail', () => {
   })
 
   it('uses task browser_tabs when present', async () => {
-    const tabs = { tabs: [{ id: 't1', url: 'http://localhost:3000', title: 'Dev' }], activeTabId: 't1' }
+    const tabs = {
+      tabs: [{ id: 't1', url: 'http://localhost:3000', title: 'Dev' }],
+      activeTabId: 't1'
+    }
     mockApi.db.getTask.mockResolvedValue(makeTask({ browser_tabs: tabs }))
     mockApi.db.getTasks.mockClear()
 
@@ -99,7 +102,13 @@ describe('fetchTaskDetail', () => {
     mockApi.db.getTask.mockResolvedValue(makeTask({ id: 'task-1', browser_tabs: null }))
     mockApi.db.getTasks.mockResolvedValue([
       makeTask({ id: 'task-1', browser_tabs: null }),
-      makeTask({ id: 'task-2', browser_tabs: { tabs: [{ id: 't', url: 'http://example.com', title: 'Ex' }], activeTabId: 't' } }),
+      makeTask({
+        id: 'task-2',
+        browser_tabs: {
+          tabs: [{ id: 't', url: 'http://example.com', title: 'Ex' }],
+          activeTabId: 't'
+        }
+      })
     ])
 
     const result = await fetchTaskDetail('task-1')
@@ -115,11 +124,18 @@ describe('fetchTaskDetail', () => {
   })
 
   it('merges panel_visibility with defaults', async () => {
-    mockApi.db.getTask.mockResolvedValue(makeTask({ panel_visibility: { browser: true, editor: true } }))
+    mockApi.db.getTask.mockResolvedValue(
+      makeTask({ panel_visibility: { browser: true, editor: true } })
+    )
 
     const result = await fetchTaskDetail('task-1')
     expect(result!.panelVisibility).toEqual({
-      terminal: true, browser: true, diff: false, settings: true, editor: true, processes: false,
+      terminal: true,
+      browser: true,
+      diff: false,
+      settings: true,
+      editor: true,
+      processes: false
     })
   })
 
@@ -133,7 +149,7 @@ describe('fetchTaskDetail', () => {
   it('maps taskTagIds from tag objects', async () => {
     mockApi.taskTags.getTagsForTask.mockResolvedValue([
       makeTag({ id: 'tag-a' }),
-      makeTag({ id: 'tag-b' }),
+      makeTag({ id: 'tag-b' })
     ])
 
     const result = await fetchTaskDetail('task-1')

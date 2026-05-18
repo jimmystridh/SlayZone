@@ -2,7 +2,12 @@
  * Task handler contract tests
  * Run with: npx tsx packages/domains/task/src/main/handlers.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerTaskHandlers, updateTask, configureTaskRuntimeAdapters } from './handlers.js'
 import { handleAttentionTransition } from './attention.js'
 import { parseTask } from './ops/shared.js'
@@ -13,7 +18,9 @@ registerTaskHandlers(h.ipcMain as never, h.db)
 
 // Seed a project
 const projectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projectId, 'TestProject', '#000', '/tmp/test')
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(projectId, 'TestProject', '#000', '/tmp/test')
 
 // Helper
 function createTask(title: string, extra?: Record<string, unknown>): Task {
@@ -42,16 +49,20 @@ describe('db:tasks:create', () => {
 
   test('normalizes unknown create status to the project default', () => {
     const customProjectId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)').run(
-      customProjectId,
-      'CreateStatusNormalize',
-      '#777',
-      '/tmp/create-status-normalize',
-      JSON.stringify([
-        { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
-        { id: 'closed', label: 'Closed', color: 'green', position: 1, category: 'completed' },
-      ])
-    )
+    h.db
+      .prepare(
+        'INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)'
+      )
+      .run(
+        customProjectId,
+        'CreateStatusNormalize',
+        '#777',
+        '/tmp/create-status-normalize',
+        JSON.stringify([
+          { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
+          { id: 'closed', label: 'Closed', color: 'green', position: 1, category: 'completed' }
+        ])
+      )
 
     const task = h.invoke('db:tasks:create', {
       projectId: customProjectId,
@@ -81,39 +92,52 @@ describe('db:tasks:create', () => {
     expect(child.parent_id).toBe(parent.id)
   })
 
-
   test('uses project-specific default status from columns config', () => {
     const customProjectId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)').run(
-      customProjectId,
-      'ColumnsProject',
-      '#111',
-      '/tmp/custom',
-      JSON.stringify([
-        { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
-        { id: 'progressing', label: 'Progressing', color: 'blue', position: 1, category: 'started' },
-        { id: 'closed', label: 'Closed', color: 'green', position: 2, category: 'completed' },
-      ])
-    )
+    h.db
+      .prepare(
+        'INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)'
+      )
+      .run(
+        customProjectId,
+        'ColumnsProject',
+        '#111',
+        '/tmp/custom',
+        JSON.stringify([
+          { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
+          {
+            id: 'progressing',
+            label: 'Progressing',
+            color: 'blue',
+            position: 1,
+            category: 'started'
+          },
+          { id: 'closed', label: 'Closed', color: 'green', position: 2, category: 'completed' }
+        ])
+      )
     const task = h.invoke('db:tasks:create', {
       projectId: customProjectId,
-      title: 'Project-specific default',
+      title: 'Project-specific default'
     }) as Task
     expect(task.status).toBe('queued')
   })
 
   test('falls back to inbox when project columns config is invalid', () => {
     const invalidProjectId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)').run(
-      invalidProjectId,
-      'InvalidColumns',
-      '#222',
-      '/tmp/invalid',
-      '{"not":"a-valid-columns-array"}'
-    )
+    h.db
+      .prepare(
+        'INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)'
+      )
+      .run(
+        invalidProjectId,
+        'InvalidColumns',
+        '#222',
+        '/tmp/invalid',
+        '{"not":"a-valid-columns-array"}'
+      )
     const task = h.invoke('db:tasks:create', {
       projectId: invalidProjectId,
-      title: 'Fallback default status',
+      title: 'Fallback default status'
     }) as Task
     expect(task.status).toBe('inbox')
   })
@@ -155,7 +179,7 @@ describe('db:tasks:getSubTasks', () => {
     const c2 = createTask('Child2', { parentId: parent.id })
     const subs = h.invoke('db:tasks:getSubTasks', parent.id) as Task[]
     expect(subs).toHaveLength(2)
-    const ids = subs.map(s => s.id)
+    const ids = subs.map((s) => s.id)
     expect(ids).toContain(c1.id)
     expect(ids).toContain(c2.id)
   })
@@ -178,16 +202,20 @@ describe('db:tasks:update', () => {
 
   test('normalizes unknown update status to the project default', () => {
     const customProjectId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)').run(
-      customProjectId,
-      'UpdateStatusNormalize',
-      '#888',
-      '/tmp/update-status-normalize',
-      JSON.stringify([
-        { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
-        { id: 'closed', label: 'Closed', color: 'green', position: 1, category: 'completed' },
-      ])
-    )
+    h.db
+      .prepare(
+        'INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)'
+      )
+      .run(
+        customProjectId,
+        'UpdateStatusNormalize',
+        '#888',
+        '/tmp/update-status-normalize',
+        JSON.stringify([
+          { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
+          { id: 'closed', label: 'Closed', color: 'green', position: 1, category: 'completed' }
+        ])
+      )
     const task = h.invoke('db:tasks:create', {
       projectId: customProjectId,
       title: 'Unknown status update'
@@ -199,18 +227,25 @@ describe('db:tasks:update', () => {
 
   test('updates to custom terminal status id', () => {
     const projectWithTerminal = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)').run(
-      projectWithTerminal,
-      'TerminalColumns',
-      '#333',
-      '/tmp/terminal',
-      JSON.stringify([
-        { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
-        { id: 'wontfix', label: 'Wontfix', color: 'slate', position: 1, category: 'canceled' },
-        { id: 'closed', label: 'Closed', color: 'green', position: 2, category: 'completed' },
-      ])
-    )
-    const t = h.invoke('db:tasks:create', { projectId: projectWithTerminal, title: 'TerminalStatus' }) as Task
+    h.db
+      .prepare(
+        'INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)'
+      )
+      .run(
+        projectWithTerminal,
+        'TerminalColumns',
+        '#333',
+        '/tmp/terminal',
+        JSON.stringify([
+          { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
+          { id: 'wontfix', label: 'Wontfix', color: 'slate', position: 1, category: 'canceled' },
+          { id: 'closed', label: 'Closed', color: 'green', position: 2, category: 'completed' }
+        ])
+      )
+    const t = h.invoke('db:tasks:create', {
+      projectId: projectWithTerminal,
+      title: 'TerminalStatus'
+    }) as Task
     const updated = h.invoke('db:tasks:update', { id: t.id, status: 'wontfix' }) as Task
     expect(updated.status).toBe('wontfix')
   })
@@ -218,27 +253,35 @@ describe('db:tasks:update', () => {
   test('normalizes status when moving task to a project with different columns', () => {
     const sourceProjectId = crypto.randomUUID()
     const targetProjectId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)').run(
-      sourceProjectId,
-      'MoveSource',
-      '#444',
-      '/tmp/source',
-      JSON.stringify([
-        { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
-        { id: 'doing', label: 'Doing', color: 'blue', position: 1, category: 'started' },
-        { id: 'shipped', label: 'Shipped', color: 'green', position: 2, category: 'completed' },
-      ])
-    )
-    h.db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)').run(
-      targetProjectId,
-      'MoveTarget',
-      '#555',
-      '/tmp/target',
-      JSON.stringify([
-        { id: 'triage', label: 'Triage', color: 'gray', position: 0, category: 'triage' },
-        { id: 'done', label: 'Done', color: 'green', position: 1, category: 'completed' },
-      ])
-    )
+    h.db
+      .prepare(
+        'INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)'
+      )
+      .run(
+        sourceProjectId,
+        'MoveSource',
+        '#444',
+        '/tmp/source',
+        JSON.stringify([
+          { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
+          { id: 'doing', label: 'Doing', color: 'blue', position: 1, category: 'started' },
+          { id: 'shipped', label: 'Shipped', color: 'green', position: 2, category: 'completed' }
+        ])
+      )
+    h.db
+      .prepare(
+        'INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)'
+      )
+      .run(
+        targetProjectId,
+        'MoveTarget',
+        '#555',
+        '/tmp/target',
+        JSON.stringify([
+          { id: 'triage', label: 'Triage', color: 'gray', position: 0, category: 'triage' },
+          { id: 'done', label: 'Done', color: 'green', position: 1, category: 'completed' }
+        ])
+      )
 
     const task = h.invoke('db:tasks:create', {
       projectId: sourceProjectId,
@@ -271,7 +314,9 @@ describe('db:tasks:update', () => {
       providerConfig: { 'claude-code': { conversationId: 'abc123' } }
     }) as Task
     expect(updated.provider_config['claude-code']?.conversationId).toBe('abc123')
-    expect(updated.provider_config['claude-code']?.flags).toBe('--allow-dangerously-skip-permissions')
+    expect(updated.provider_config['claude-code']?.flags).toBe(
+      '--allow-dangerously-skip-permissions'
+    )
   })
 
   test('provider_config deep merge - partial mode update', () => {
@@ -306,7 +351,13 @@ describe('db:tasks:update', () => {
 
   test('updates JSON columns', () => {
     const t = createTask('JSONTest')
-    const visibility = { terminal: true, browser: false, diff: false, settings: false, editor: true }
+    const visibility = {
+      terminal: true,
+      browser: false,
+      diff: false,
+      settings: false,
+      editor: true
+    }
     const updated = h.invoke('db:tasks:update', {
       id: t.id,
       panelVisibility: visibility
@@ -365,8 +416,12 @@ describe('db:tasks:update', () => {
   test('project move clears worktree fields and conversation IDs', () => {
     const sourceId = crypto.randomUUID()
     const targetId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(sourceId, 'WtSrc', '#a00', '/tmp/wt-src')
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(targetId, 'WtTgt', '#b00', '/tmp/wt-tgt')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(sourceId, 'WtSrc', '#a00', '/tmp/wt-src')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(targetId, 'WtTgt', '#b00', '/tmp/wt-tgt')
 
     const t = h.invoke('db:tasks:create', { projectId: sourceId, title: 'MoveWorktree' }) as Task
     // Set worktree fields + conversation ID
@@ -390,7 +445,9 @@ describe('db:tasks:update', () => {
 
   test('same-project update preserves worktree fields', () => {
     const pid = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(pid, 'SameProj', '#c00', '/tmp/same')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(pid, 'SameProj', '#c00', '/tmp/same')
 
     const t = h.invoke('db:tasks:create', { projectId: pid, title: 'KeepWorktree' }) as Task
     h.invoke('db:tasks:update', {
@@ -401,7 +458,11 @@ describe('db:tasks:update', () => {
     })
 
     // Update with same projectId + title change — should NOT clear worktree fields
-    const updated = h.invoke('db:tasks:update', { id: t.id, projectId: pid, title: 'Renamed' }) as Task
+    const updated = h.invoke('db:tasks:update', {
+      id: t.id,
+      projectId: pid,
+      title: 'Renamed'
+    }) as Task
     expect(updated.title).toBe('Renamed')
     expect(updated.worktree_path).toBe('/tmp/same/wt')
     expect(updated.worktree_parent_branch).toBe('develop')
@@ -411,8 +472,12 @@ describe('db:tasks:update', () => {
   test('project move with explicit providerConfig preserves conversation IDs', () => {
     const srcId = crypto.randomUUID()
     const dstId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(srcId, 'CfgSrc', '#d00', '/tmp/cfg-src')
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(dstId, 'CfgDst', '#e00', '/tmp/cfg-dst')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(srcId, 'CfgSrc', '#d00', '/tmp/cfg-src')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(dstId, 'CfgDst', '#e00', '/tmp/cfg-dst')
 
     const t = h.invoke('db:tasks:create', { projectId: srcId, title: 'MoveWithConfig' }) as Task
     h.invoke('db:tasks:update', {
@@ -469,8 +534,12 @@ describe('db:tasks:update', () => {
   test('rejects self-parent', () => {
     const t = createTask('SelfLoop')
     let threw = false
-    try { h.invoke('db:tasks:update', { id: t.id, parentId: t.id }) }
-    catch (e) { threw = true; expect((e as Error).message).toContain('Cannot make task its own parent') }
+    try {
+      h.invoke('db:tasks:update', { id: t.id, parentId: t.id })
+    } catch (e) {
+      threw = true
+      expect((e as Error).message).toContain('Cannot make task its own parent')
+    }
     expect(threw).toBe(true)
   })
 
@@ -480,19 +549,32 @@ describe('db:tasks:update', () => {
     const b = createTask('CycleB', { parentId: a.id })
     const c = createTask('CycleC', { parentId: b.id })
     let threw = false
-    try { h.invoke('db:tasks:update', { id: a.id, parentId: c.id }) }
-    catch (e) { threw = true; expect((e as Error).message).toContain('cycle') }
+    try {
+      h.invoke('db:tasks:update', { id: a.id, parentId: c.id })
+    } catch (e) {
+      threw = true
+      expect((e as Error).message).toContain('cycle')
+    }
     expect(threw).toBe(true)
   })
 
   test('rejects cross-project reparent', () => {
     const otherProjectId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(otherProjectId, 'OtherProj', '#f00', '/tmp/other')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(otherProjectId, 'OtherProj', '#f00', '/tmp/other')
     const local = createTask('Local')
-    const foreign = h.invoke('db:tasks:create', { projectId: otherProjectId, title: 'Foreign' }) as Task
+    const foreign = h.invoke('db:tasks:create', {
+      projectId: otherProjectId,
+      title: 'Foreign'
+    }) as Task
     let threw = false
-    try { h.invoke('db:tasks:update', { id: local.id, parentId: foreign.id }) }
-    catch (e) { threw = true; expect((e as Error).message).toContain('different project') }
+    try {
+      h.invoke('db:tasks:update', { id: local.id, parentId: foreign.id })
+    } catch (e) {
+      threw = true
+      expect((e as Error).message).toContain('different project')
+    }
     expect(threw).toBe(true)
   })
 
@@ -501,8 +583,12 @@ describe('db:tasks:update', () => {
     h.invoke('db:tasks:archive', parent.id)
     const child = createTask('OrphanChild')
     let threw = false
-    try { h.invoke('db:tasks:update', { id: child.id, parentId: parent.id }) }
-    catch (e) { threw = true; expect((e as Error).message).toContain('archived') }
+    try {
+      h.invoke('db:tasks:update', { id: child.id, parentId: parent.id })
+    } catch (e) {
+      threw = true
+      expect((e as Error).message).toContain('archived')
+    }
     expect(threw).toBe(true)
   })
 
@@ -635,7 +721,7 @@ describe('db:taskDependencies', () => {
     h.invoke('db:taskDependencies:setBlockers', t.id, [b2.id, b3.id])
     const blockers = h.invoke('db:taskDependencies:getBlockers', t.id) as Task[]
     expect(blockers).toHaveLength(2)
-    const ids = blockers.map(b => b.id)
+    const ids = blockers.map((b) => b.id)
     expect(ids).toContain(b2.id)
     expect(ids).toContain(b3.id)
   })
@@ -670,7 +756,7 @@ describe('db:taskDependencies', () => {
     h.invoke('db:taskDependencies:addBlocker', t1.id, t2.id)
     h.invoke('db:tasks:update', { id: t1.id, isBlocked: true })
     const ids = h.invoke('db:taskDependencies:getAllBlockedTaskIds') as string[]
-    const matches = ids.filter(id => id === t1.id)
+    const matches = ids.filter((id) => id === t1.id)
     expect(matches).toHaveLength(1)
   })
 })
@@ -679,13 +765,19 @@ describe('db:taskDependencies', () => {
 
 describe('onMutation callback', async () => {
   let callCount = 0
-  const onMutation = (): void => { callCount++ }
+  const onMutation = (): void => {
+    callCount++
+  }
   const h2 = await createTestHarness()
   registerTaskHandlers(h2.ipcMain as never, h2.db, onMutation)
   const pid = crypto.randomUUID()
-  h2.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(pid, 'MutProject', '#000', '/tmp/mut')
+  h2.db
+    .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+    .run(pid, 'MutProject', '#000', '/tmp/mut')
 
-  function resetCount(): void { callCount = 0 }
+  function resetCount(): void {
+    callCount = 0
+  }
 
   test('fires on create', () => {
     resetCount()
@@ -772,14 +864,17 @@ describe('updateTask — revive flow (terminal → non-terminal)', () => {
   })
 
   const reviveProjectId = crypto.randomUUID()
-  h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  h.db
+    .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
     .run(reviveProjectId, 'ReviveProject', '#abc', '/tmp/revive')
 
   function seedTask(status: string): string {
     const id = crypto.randomUUID()
-    h.db.prepare(
-      'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config) VALUES (?, ?, ?, ?, 3, ?, ?)'
-    ).run(id, reviveProjectId, `task-${status}`, status, 'claude-code', '{}')
+    h.db
+      .prepare(
+        'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config) VALUES (?, ?, ?, ?, 3, ?, ?)'
+      )
+      .run(id, reviveProjectId, `task-${status}`, status, 'claude-code', '{}')
     return id
   }
 
@@ -830,14 +925,17 @@ describe('updateTask — revive flow (terminal → non-terminal)', () => {
 // tests can resolve, so we keep this block sync to avoid the race.
 
 const attnProjectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
   .run(attnProjectId, 'AttnProject', '#abc', '/tmp/attn')
 
 function seedAttnTask(): string {
   const id = crypto.randomUUID()
-  h.db.prepare(
-    'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config) VALUES (?, ?, ?, ?, 3, ?, ?)'
-  ).run(id, attnProjectId, `attn-${id.slice(0, 6)}`, 'todo', 'claude-code', '{}')
+  h.db
+    .prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config) VALUES (?, ?, ?, ?, 3, ?, ?)'
+    )
+    .run(id, attnProjectId, `attn-${id.slice(0, 6)}`, 'todo', 'claude-code', '{}')
   return id
 }
 
@@ -850,7 +948,7 @@ function readFlag(id: string): number {
 
 describe('needs_attention', () => {
   test('column exists in schema', () => {
-    const cols = h.db.prepare("PRAGMA table_info(tasks)").all() as { name: string }[]
+    const cols = h.db.prepare('PRAGMA table_info(tasks)').all() as { name: string }[]
     expect(cols.some((c) => c.name === 'needs_attention')).toBe(true)
   })
 
@@ -967,20 +1065,26 @@ describe('needs_attention', () => {
 // "Turn into task" button. Logic lives in updateTask so all paths inherit it.
 
 const tempPromoteProjectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
   .run(tempPromoteProjectId, 'TempPromoteProject', '#abc', '/tmp/temp-promote')
 
 function seedTempTask(initialStatus = 'inbox'): string {
   const id = crypto.randomUUID()
-  h.db.prepare(
-    'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config, is_temporary) VALUES (?, ?, ?, ?, 3, ?, ?, 1)'
-  ).run(id, tempPromoteProjectId, 'temp', initialStatus, 'claude-code', '{}')
+  h.db
+    .prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config, is_temporary) VALUES (?, ?, ?, ?, 3, ?, ?, 1)'
+    )
+    .run(id, tempPromoteProjectId, 'temp', initialStatus, 'claude-code', '{}')
   return id
 }
 
 function readTempRow(id: string): { is_temporary: number; status: string; title: string } {
-  return h.db.prepare('SELECT is_temporary, status, title FROM tasks WHERE id = ?').get(id) as
-    { is_temporary: number; status: string; title: string }
+  return h.db.prepare('SELECT is_temporary, status, title FROM tasks WHERE id = ?').get(id) as {
+    is_temporary: number
+    status: string
+    title: string
+  }
 }
 
 describe('updateTask — auto-promote temporary on rename', () => {
@@ -1003,9 +1107,11 @@ describe('updateTask — auto-promote temporary on rename', () => {
 
   test('renaming a non-temp task leaves is_temporary untouched and does not bump status', () => {
     const id = crypto.randomUUID()
-    h.db.prepare(
-      'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config, is_temporary) VALUES (?, ?, ?, ?, 3, ?, ?, 0)'
-    ).run(id, tempPromoteProjectId, 'real', 'inbox', 'claude-code', '{}')
+    h.db
+      .prepare(
+        'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config, is_temporary) VALUES (?, ?, ?, ?, 3, ?, ?, 0)'
+      )
+      .run(id, tempPromoteProjectId, 'real', 'inbox', 'claude-code', '{}')
     updateTask(h.db, { id, title: 'Renamed' })
     const row = readTempRow(id)
     expect(row.is_temporary).toBe(0)
@@ -1033,31 +1139,60 @@ describe('updateTask — auto-promote temporary on rename', () => {
 // Captured asynchronously at file scope (top-level await) so describe() can
 // run sync expects against resolved Task rows without racing h.cleanup().
 const inheritFixtures = await (async () => {
-  const wtParent = await (h.invoke('db:tasks:create', { projectId, title: 'WtParent' }) as Promise<Task>)
+  const wtParent = await (h.invoke('db:tasks:create', {
+    projectId,
+    title: 'WtParent'
+  }) as Promise<Task>)
   h.invoke('db:tasks:update', {
     id: wtParent.id,
     worktreePath: '/tmp/wt-parent',
     worktreeParentBranch: 'main',
     baseDir: '/tmp/base',
-    repoName: 'repo-x',
+    repoName: 'repo-x'
   })
-  const wtChild = await (h.invoke('db:tasks:create', { projectId, title: 'WtChild', parentId: wtParent.id }) as Promise<Task>)
+  const wtChild = await (h.invoke('db:tasks:create', {
+    projectId,
+    title: 'WtChild',
+    parentId: wtParent.id
+  }) as Promise<Task>)
 
-  const noWtParent = await (h.invoke('db:tasks:create', { projectId, title: 'NoWtParent' }) as Promise<Task>)
-  const noWtChild = await (h.invoke('db:tasks:create', { projectId, title: 'NoWtChild', parentId: noWtParent.id }) as Promise<Task>)
+  const noWtParent = await (h.invoke('db:tasks:create', {
+    projectId,
+    title: 'NoWtParent'
+  }) as Promise<Task>)
+  const noWtChild = await (h.invoke('db:tasks:create', {
+    projectId,
+    title: 'NoWtChild',
+    parentId: noWtParent.id
+  }) as Promise<Task>)
 
-  const repoParent = await (h.invoke('db:tasks:create', { projectId, title: 'RepoParent' }) as Promise<Task>)
+  const repoParent = await (h.invoke('db:tasks:create', {
+    projectId,
+    title: 'RepoParent'
+  }) as Promise<Task>)
   h.invoke('db:tasks:update', { id: repoParent.id, repoName: 'parent-repo' })
-  const repoChild = await (h.invoke('db:tasks:create', { projectId, title: 'RepoChild', parentId: repoParent.id, repoName: 'caller-repo' }) as Promise<Task>)
+  const repoChild = await (h.invoke('db:tasks:create', {
+    projectId,
+    title: 'RepoChild',
+    parentId: repoParent.id,
+    repoName: 'caller-repo'
+  }) as Promise<Task>)
 
   // Shared-worktree cleanup guard: archiving the subtask alone must NOT remove parent's worktree_path
-  const guardParent = await (h.invoke('db:tasks:create', { projectId, title: 'GuardParent' }) as Promise<Task>)
+  const guardParent = await (h.invoke('db:tasks:create', {
+    projectId,
+    title: 'GuardParent'
+  }) as Promise<Task>)
   h.invoke('db:tasks:update', {
     id: guardParent.id,
     worktreePath: '/tmp/wt-guard',
-    worktreeParentBranch: 'main',
+    worktreeParentBranch: 'main'
   })
-  const guardChild = await (h.invoke('db:tasks:create', { projectId, title: 'GuardChild', parentId: guardParent.id }) as Promise<Task>)
+  const guardChild = await (h.invoke('db:tasks:create', {
+    projectId,
+    title: 'GuardChild',
+    parentId: guardParent.id
+  }) as Promise<Task>)
   await (h.invoke('db:tasks:archive', guardChild.id) as Promise<Task>)
   const guardParentAfter = await (h.invoke('db:tasks:get', guardParent.id) as Promise<Task>)
 

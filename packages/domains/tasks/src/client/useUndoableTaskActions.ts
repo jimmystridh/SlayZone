@@ -32,7 +32,7 @@ export function useUndoableTaskActions(mutations: TaskMutations, undo: UndoAPI) 
     deleteTask: rawDelete,
     bulkDelete: rawBulkDelete,
     contextMenuUpdate: rawContextMenuUpdate,
-    bulkContextMenuUpdate: rawBulkContextMenuUpdate,
+    bulkContextMenuUpdate: rawBulkContextMenuUpdate
   } = mutations
 
   // Ref avoids adding `tasks` to useCallback deps — keeps function references stable
@@ -166,10 +166,10 @@ export function useUndoableTaskActions(mutations: TaskMutations, undo: UndoAPI) 
             await rawContextMenuUpdate(id, prev)
           }
         },
-        redo: () => rawBulkContextMenuUpdate(taskIds, updates),
+        redo: () => rawBulkContextMenuUpdate(taskIds, updates)
       })
       toast(desc, {
-        action: { label: 'Undo', onClick: () => void undo.undo() },
+        action: { label: 'Undo', onClick: () => void undo.undo() }
       })
     },
     [rawBulkContextMenuUpdate, rawContextMenuUpdate, undo]
@@ -190,14 +190,21 @@ export function useUndoableTaskActions(mutations: TaskMutations, undo: UndoAPI) 
             if (restored) setTasks((prev) => [restored, ...prev])
           }
         },
-        redo: () => rawBulkDelete(taskIds),
+        redo: () => rawBulkDelete(taskIds)
       })
       toast(`Deleted ${removed.length} tasks`, {
-        action: { label: 'Undo', onClick: () => void undo.undo() },
+        action: { label: 'Undo', onClick: () => void undo.undo() }
       })
     },
     [rawBulkDelete, setTasks, undo]
   )
 
-  return { contextMenuUpdate, archiveTask, archiveTasks, deleteTask, bulkContextMenuUpdate, bulkDelete }
+  return {
+    contextMenuUpdate,
+    archiveTask,
+    archiveTasks,
+    deleteTask,
+    bulkContextMenuUpdate,
+    bulkDelete
+  }
 }

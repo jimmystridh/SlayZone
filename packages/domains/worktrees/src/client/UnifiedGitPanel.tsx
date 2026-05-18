@@ -1,9 +1,52 @@
-import { createContext, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Check, X, SkipForward, AlertTriangle, RefreshCw, Plus, PanelLeftClose, PanelLeftOpen, AlignJustify, Columns2, WrapText } from 'lucide-react'
-import { Button, Checkbox, IconButton, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch, Tooltip, TooltipContent, TooltipTrigger, cn, useShortcutDisplay } from '@slayzone/ui'
+import {
+  createContext,
+  forwardRef,
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState
+} from 'react'
+import {
+  Check,
+  X,
+  SkipForward,
+  AlertTriangle,
+  RefreshCw,
+  Plus,
+  PanelLeftClose,
+  PanelLeftOpen,
+  AlignJustify,
+  Columns2,
+  WrapText
+} from 'lucide-react'
+import {
+  Button,
+  Checkbox,
+  IconButton,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Switch,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  cn,
+  useShortcutDisplay
+} from '@slayzone/ui'
 import { useAppearance } from '@slayzone/settings/client'
 import type { Task, UpdateTaskInput, MergeContext } from '@slayzone/task/shared'
-import { DEFAULT_GIT_TAB_ORDER, isGitTabEnabled, normalizeGitTabOrder, normalizeGitTabVisibility, type GitTabId, type GitTabVisibility } from '@slayzone/task/shared'
+import {
+  DEFAULT_GIT_TAB_ORDER,
+  isGitTabEnabled,
+  normalizeGitTabOrder,
+  normalizeGitTabVisibility,
+  type GitTabId,
+  type GitTabVisibility
+} from '@slayzone/task/shared'
 import type { FilterState } from '@slayzone/tasks'
 import type { Project, DetectedRepo } from '@slayzone/projects/shared'
 import { GitDiffPanel, type GitDiffPanelHandle } from './GitDiffPanel'
@@ -78,477 +121,554 @@ export function useGitPanelContext() {
   return context
 }
 
-export const UnifiedGitPanel = forwardRef<UnifiedGitPanelHandle, UnifiedGitPanelProps>(function UnifiedGitPanel({
-  task,
-  projectId,
-  projectPath,
-  completedStatus = 'done',
-  visible,
-  pollIntervalMs,
-  defaultTab = 'general',
-  onTabChange,
-  onUpdateTask,
-  onTaskUpdated,
-  tasks = [],
-  filter,
-  projects = [],
-  onTaskClick,
-  detectedRepos = [],
-  selectedRepoName,
-  isRepoStale,
-  onRepoChange
-}, ref) {
-  const gitGeneralShortcut = useShortcutDisplay('panel-git')
-  const gitDiffShortcut = useShortcutDisplay('panel-git-diff')
+export const UnifiedGitPanel = forwardRef<UnifiedGitPanelHandle, UnifiedGitPanelProps>(
+  function UnifiedGitPanel(
+    {
+      task,
+      projectId,
+      projectPath,
+      completedStatus = 'done',
+      visible,
+      pollIntervalMs,
+      defaultTab = 'general',
+      onTabChange,
+      onUpdateTask,
+      onTaskUpdated,
+      tasks = [],
+      filter,
+      projects = [],
+      onTaskClick,
+      detectedRepos = [],
+      selectedRepoName,
+      isRepoStale,
+      onRepoChange
+    },
+    ref
+  ) {
+    const gitGeneralShortcut = useShortcutDisplay('panel-git')
+    const gitDiffShortcut = useShortcutDisplay('panel-git-diff')
 
-  const [activeTab, setActiveTabRaw] = useState<GitTabId>(defaultTab)
-  const setActiveTab = useCallback((tab: GitTabId) => {
-    setActiveTabRaw(tab)
-    onTabChange?.(tab)
-  }, [onTabChange])
-
-  useImperativeHandle(ref, () => ({
-    switchToTab: setActiveTab,
-    getActiveTab: () => activeTab
-  }), [activeTab, setActiveTab])
-  const hasConflicts = !!task && (task.merge_state === 'conflicts' || task.merge_state === 'rebase-conflicts')
-  const isUncommitted = !!task && task.merge_state === 'uncommitted'
-  const isRebase = !!task && task.merge_state === 'rebase-conflicts'
-  const diffRef = useRef<GitDiffPanelHandle>(null)
-  const worktreesRef = useRef<WorktreesTabHandle>(null)
-  const stashRef = useRef<StashTabHandle>(null)
-  const [stashShowAll, setStashShowAll] = useState(false)
-  const [conflictToolbar, setConflictToolbar] = useState<ConflictToolbarData | null>(null)
-
-  const showWorktrees = !task
-  const [hasGithubRemote, setHasGithubRemote] = useState(false)
-  const [tabOrder, setTabOrder] = useState<GitTabId[]>(() => [...DEFAULT_GIT_TAB_ORDER])
-  const [tabVisibility, setTabVisibility] = useState<GitTabVisibility>({})
-
-  // Single predicate used by both render + auto-switch fallback.
-  // Conflicts tab bypasses the user toggle — always shown when merge/rebase conflicts are live.
-  const isTabVisible = useCallback((id: GitTabId): boolean => {
-    if (id === 'conflicts') return hasConflicts
-    if (!isGitTabEnabled(tabVisibility, id)) return false
-    if (id === 'worktrees') return showWorktrees
-    if (id === 'pr') return hasGithubRemote && (!task || !!task.pr_url)
-    return true
-  }, [hasConflicts, tabVisibility, showWorktrees, hasGithubRemote, task])
-
-  useEffect(() => {
-    let cancelled = false
-    const load = () => {
-      Promise.all([
-        window.api.settings.get('git_tab_order'),
-        window.api.settings.get('git_tab_visibility'),
-      ]).then(([order, vis]) => {
-        if (cancelled) return
-        setTabOrder(normalizeGitTabOrder(order))
-        setTabVisibility(normalizeGitTabVisibility(vis))
-      })
-    }
-    load()
-    const handler = () => load()
-    window.addEventListener('sz:settings-changed', handler)
-    return () => { cancelled = true; window.removeEventListener('sz:settings-changed', handler) }
-  }, [])
-
-  const { diffContinuousFlow, diffTreeCollapsed, diffSideBySide, diffWrap } = useAppearance()
-  const setBoolSetting = useCallback((key: string, value: boolean) => {
-    window.api.settings.set(key, value ? '1' : '0')
-    window.dispatchEvent(new CustomEvent('sz:settings-changed'))
-  }, [])
-
-  // Check if repo has a GitHub remote
-  useEffect(() => {
-    if (!projectPath) { setHasGithubRemote(false); return }
-    window.api.git.hasGithubRemote(projectPath).then(setHasGithubRemote).catch(() => setHasGithubRemote(false))
-  }, [projectPath])
-
-  // Auto-switch to conflicts tab when conflicts detected
-  useEffect(() => {
-    if (hasConflicts) setActiveTab('conflicts')
-  }, [hasConflicts])
-
-  // Auto-switch to changes tab when uncommitted
-  useEffect(() => {
-    if (isUncommitted) setActiveTab('changes')
-  }, [isUncommitted])
-
-  // Reset active tab if it becomes hidden (runtime gate, user toggle, or stale 'branches').
-  useEffect(() => {
-    if ((activeTab as string) === 'branches' || !isTabVisible(activeTab)) {
-      const fallback = tabOrder.find(isTabVisible) ?? 'general'
-      setActiveTab(fallback)
-    }
-  }, [activeTab, isTabVisible, tabOrder])
-
-  // Merge-mode: commit and continue merge
-  const handleCommitAndContinueMerge = useCallback(async () => {
-    if (!task || !onUpdateTask || !onTaskUpdated) return
-    const targetPath = task.worktree_path ?? projectPath
-    if (!targetPath) return
-
-    await window.api.git.stageAll(targetPath)
-    await window.api.git.commitFiles(targetPath, 'WIP: changes before merge')
-
-    const sourceBranch = await window.api.git.getCurrentBranch(task.worktree_path!)
-    if (!sourceBranch) throw new Error('Cannot merge: detached HEAD in worktree')
-
-    const result = await window.api.git.mergeWithAI(
-      projectPath!,
-      task.worktree_path!,
-      task.worktree_parent_branch!,
-      sourceBranch
+    const [activeTab, setActiveTabRaw] = useState<GitTabId>(defaultTab)
+    const setActiveTab = useCallback(
+      (tab: GitTabId) => {
+        setActiveTabRaw(tab)
+        onTabChange?.(tab)
+      },
+      [onTabChange]
     )
 
-    if (result.success) {
-      const updated = await onUpdateTask({ id: task.id, status: completedStatus, mergeState: null, mergeContext: null })
-      onTaskUpdated(updated)
-    } else if (result.resolving) {
-      const ctx = await window.api.git.getMergeContext(projectPath!)
-      const updated = await onUpdateTask({
-        id: task.id,
-        mergeState: 'conflicts',
-        mergeContext: ctx ?? { type: 'merge', sourceBranch, targetBranch: task.worktree_parent_branch! }
-      })
-      onTaskUpdated(updated)
-    } else if (result.error) {
-      throw new Error(result.error)
-    }
-  }, [task, projectPath, completedStatus, onUpdateTask, onTaskUpdated])
+    useImperativeHandle(
+      ref,
+      () => ({
+        switchToTab: setActiveTab,
+        getActiveTab: () => activeTab
+      }),
+      [activeTab, setActiveTab]
+    )
+    const hasConflicts =
+      !!task && (task.merge_state === 'conflicts' || task.merge_state === 'rebase-conflicts')
+    const isUncommitted = !!task && task.merge_state === 'uncommitted'
+    const isRebase = !!task && task.merge_state === 'rebase-conflicts'
+    const diffRef = useRef<GitDiffPanelHandle>(null)
+    const worktreesRef = useRef<WorktreesTabHandle>(null)
+    const stashRef = useRef<StashTabHandle>(null)
+    const [stashShowAll, setStashShowAll] = useState(false)
+    const [conflictToolbar, setConflictToolbar] = useState<ConflictToolbarData | null>(null)
 
-  const handleAbortMerge = useCallback(async () => {
-    if (!task || !onUpdateTask || !onTaskUpdated) return
-    if (projectPath) {
-      try { await window.api.git.abortMerge(projectPath) } catch { /* already aborted */ }
-    }
-    const updated = await onUpdateTask({ id: task.id, mergeState: null, mergeContext: null })
-    onTaskUpdated(updated)
-  }, [task, projectPath, onUpdateTask, onTaskUpdated])
+    const showWorktrees = !task
+    const [hasGithubRemote, setHasGithubRemote] = useState(false)
+    const [tabOrder, setTabOrder] = useState<GitTabId[]>(() => [...DEFAULT_GIT_TAB_ORDER])
+    const [tabVisibility, setTabVisibility] = useState<GitTabVisibility>({})
 
-  return (
-    <GitPanelContext.Provider value={{
-      tasks,
-      filter,
-      projects,
-      activeTask: task,
-      projectPath,
-      onTaskClick,
-      onUpdateTask,
-      onTaskUpdated
-    }}>
-      <div className="h-full flex flex-col">
-      {/* Unified header: tabs left, actions right */}
-      <div className="shrink-0 h-10 px-2 border-b border-border bg-surface-1 flex items-center gap-1">
-        {tabOrder.map(tabId => {
-          if (!isTabVisible(tabId)) return null
-          switch (tabId) {
-            case 'general':
-              return (
-                <TabButton
-                  key="general"
-                  active={activeTab === 'general'}
-                  onClick={() => setActiveTab('general')}
-                  shortcut={gitGeneralShortcut}
-                >
-                  General
-                </TabButton>
-              )
-            case 'changes':
-              return (
-                <TabButton
-                  key="changes"
-                  active={activeTab === 'changes'}
-                  onClick={() => setActiveTab('changes')}
-                  shortcut={gitDiffShortcut}
-                >
-                  Diff
-                </TabButton>
-              )
-            case 'stash':
-              return (
-                <TabButton
-                  key="stash"
-                  active={activeTab === 'stash'}
-                  onClick={() => setActiveTab('stash')}
-                >
-                  Stash
-                </TabButton>
-              )
-            case 'worktrees':
-              return (
-                <TabButton
-                  key="worktrees"
-                  active={activeTab === 'worktrees'}
-                  onClick={() => setActiveTab('worktrees')}
-                >
-                  Worktrees
-                </TabButton>
-              )
-            case 'conflicts':
-              return (
-                <TabButton
-                  key="conflicts"
-                  active={activeTab === 'conflicts'}
-                  onClick={() => setActiveTab('conflicts')}
-                  badge
-                >
-                  Conflicts
-                </TabButton>
-              )
-            case 'pr':
-              return (
-                <TabButton
-                  key="pr"
-                  active={activeTab === 'pr'}
-                  onClick={() => setActiveTab('pr')}
-                >
-                  {task ? <>Pull request{task.pr_url && <span className="text-muted-foreground ml-1">#{task.pr_url.match(/\/pull\/(\d+)/)?.[1]}</span>}</> : 'Pull requests'}
-                </TabButton>
-              )
-            default:
-              return null
+    // Single predicate used by both render + auto-switch fallback.
+    // Conflicts tab bypasses the user toggle — always shown when merge/rebase conflicts are live.
+    const isTabVisible = useCallback(
+      (id: GitTabId): boolean => {
+        if (id === 'conflicts') return hasConflicts
+        if (!isGitTabEnabled(tabVisibility, id)) return false
+        if (id === 'worktrees') return showWorktrees
+        if (id === 'pr') return hasGithubRemote && (!task || !!task.pr_url)
+        return true
+      },
+      [hasConflicts, tabVisibility, showWorktrees, hasGithubRemote, task]
+    )
+
+    useEffect(() => {
+      let cancelled = false
+      const load = () => {
+        Promise.all([
+          window.api.settings.get('git_tab_order'),
+          window.api.settings.get('git_tab_visibility')
+        ]).then(([order, vis]) => {
+          if (cancelled) return
+          setTabOrder(normalizeGitTabOrder(order))
+          setTabVisibility(normalizeGitTabVisibility(vis))
+        })
+      }
+      load()
+      const handler = () => load()
+      window.addEventListener('sz:settings-changed', handler)
+      return () => {
+        cancelled = true
+        window.removeEventListener('sz:settings-changed', handler)
+      }
+    }, [])
+
+    const { diffContinuousFlow, diffTreeCollapsed, diffSideBySide, diffWrap } = useAppearance()
+    const setBoolSetting = useCallback((key: string, value: boolean) => {
+      window.api.settings.set(key, value ? '1' : '0')
+      window.dispatchEvent(new CustomEvent('sz:settings-changed'))
+    }, [])
+
+    // Check if repo has a GitHub remote
+    useEffect(() => {
+      if (!projectPath) {
+        setHasGithubRemote(false)
+        return
+      }
+      window.api.git
+        .hasGithubRemote(projectPath)
+        .then(setHasGithubRemote)
+        .catch(() => setHasGithubRemote(false))
+    }, [projectPath])
+
+    // Auto-switch to conflicts tab when conflicts detected
+    useEffect(() => {
+      if (hasConflicts) setActiveTab('conflicts')
+    }, [hasConflicts])
+
+    // Auto-switch to changes tab when uncommitted
+    useEffect(() => {
+      if (isUncommitted) setActiveTab('changes')
+    }, [isUncommitted])
+
+    // Reset active tab if it becomes hidden (runtime gate, user toggle, or stale 'branches').
+    useEffect(() => {
+      if ((activeTab as string) === 'branches' || !isTabVisible(activeTab)) {
+        const fallback = tabOrder.find(isTabVisible) ?? 'general'
+        setActiveTab(fallback)
+      }
+    }, [activeTab, isTabVisible, tabOrder])
+
+    // Merge-mode: commit and continue merge
+    const handleCommitAndContinueMerge = useCallback(async () => {
+      if (!task || !onUpdateTask || !onTaskUpdated) return
+      const targetPath = task.worktree_path ?? projectPath
+      if (!targetPath) return
+
+      await window.api.git.stageAll(targetPath)
+      await window.api.git.commitFiles(targetPath, 'WIP: changes before merge')
+
+      const sourceBranch = await window.api.git.getCurrentBranch(task.worktree_path!)
+      if (!sourceBranch) throw new Error('Cannot merge: detached HEAD in worktree')
+
+      const result = await window.api.git.mergeWithAI(
+        projectPath!,
+        task.worktree_path!,
+        task.worktree_parent_branch!,
+        sourceBranch
+      )
+
+      if (result.success) {
+        const updated = await onUpdateTask({
+          id: task.id,
+          status: completedStatus,
+          mergeState: null,
+          mergeContext: null
+        })
+        onTaskUpdated(updated)
+      } else if (result.resolving) {
+        const ctx = await window.api.git.getMergeContext(projectPath!)
+        const updated = await onUpdateTask({
+          id: task.id,
+          mergeState: 'conflicts',
+          mergeContext: ctx ?? {
+            type: 'merge',
+            sourceBranch,
+            targetBranch: task.worktree_parent_branch!
           }
-        })}
+        })
+        onTaskUpdated(updated)
+      } else if (result.error) {
+        throw new Error(result.error)
+      }
+    }, [task, projectPath, completedStatus, onUpdateTask, onTaskUpdated])
 
-        {/* Right-aligned actions */}
-        <div className="flex-1" />
-        {detectedRepos.length > 1 && onRepoChange && (
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground">Repo</span>
-            <Select value={selectedRepoName ?? detectedRepos[0]?.name ?? ''} onValueChange={onRepoChange}>
-                <SelectTrigger
-                  className={cn(
-                    'h-7! w-auto text-xs gap-1 px-2 py-0',
-                    isRepoStale && 'border-amber-500/60 text-amber-500'
-                  )}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent position="popper" className="w-auto overflow-x-visible">
-                  {detectedRepos.map((repo) => (
-                    <SelectItem
-                      key={repo.name}
-                      value={repo.name}
-                      className="text-xs pl-7 pr-2 [&_[data-slot=select-item-indicator]]:right-auto [&_[data-slot=select-item-indicator]]:left-2"
+    const handleAbortMerge = useCallback(async () => {
+      if (!task || !onUpdateTask || !onTaskUpdated) return
+      if (projectPath) {
+        try {
+          await window.api.git.abortMerge(projectPath)
+        } catch {
+          /* already aborted */
+        }
+      }
+      const updated = await onUpdateTask({ id: task.id, mergeState: null, mergeContext: null })
+      onTaskUpdated(updated)
+    }, [task, projectPath, onUpdateTask, onTaskUpdated])
+
+    return (
+      <GitPanelContext.Provider
+        value={{
+          tasks,
+          filter,
+          projects,
+          activeTask: task,
+          projectPath,
+          onTaskClick,
+          onUpdateTask,
+          onTaskUpdated
+        }}
+      >
+        <div className="h-full flex flex-col">
+          {/* Unified header: tabs left, actions right */}
+          <div className="shrink-0 h-10 px-2 border-b border-border bg-surface-1 flex items-center gap-1">
+            {tabOrder.map((tabId) => {
+              if (!isTabVisible(tabId)) return null
+              switch (tabId) {
+                case 'general':
+                  return (
+                    <TabButton
+                      key="general"
+                      active={activeTab === 'general'}
+                      onClick={() => setActiveTab('general')}
+                      shortcut={gitGeneralShortcut}
                     >
-                      <span className="flex w-full items-center gap-1.5 whitespace-nowrap">
-                        <span className="whitespace-nowrap">{repo.name}</span>
-                        <span className="flex-1" />
-                        {repo.kind && <RepoKindPill kind={repo.kind} />}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-            </Select>
-          </div>
-        )}
-        {activeTab === 'changes' && (
-          <>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <IconButton
-                  aria-label={diffTreeCollapsed ? 'Show file tree' : 'Hide file tree'}
-                  variant="ghost"
-                  className={cn('h-7 w-7', diffTreeCollapsed && 'bg-primary/15 text-primary')}
-                  onClick={() => setBoolSetting('diff_tree_collapsed', !diffTreeCollapsed)}
+                      General
+                    </TabButton>
+                  )
+                case 'changes':
+                  return (
+                    <TabButton
+                      key="changes"
+                      active={activeTab === 'changes'}
+                      onClick={() => setActiveTab('changes')}
+                      shortcut={gitDiffShortcut}
+                    >
+                      Diff
+                    </TabButton>
+                  )
+                case 'stash':
+                  return (
+                    <TabButton
+                      key="stash"
+                      active={activeTab === 'stash'}
+                      onClick={() => setActiveTab('stash')}
+                    >
+                      Stash
+                    </TabButton>
+                  )
+                case 'worktrees':
+                  return (
+                    <TabButton
+                      key="worktrees"
+                      active={activeTab === 'worktrees'}
+                      onClick={() => setActiveTab('worktrees')}
+                    >
+                      Worktrees
+                    </TabButton>
+                  )
+                case 'conflicts':
+                  return (
+                    <TabButton
+                      key="conflicts"
+                      active={activeTab === 'conflicts'}
+                      onClick={() => setActiveTab('conflicts')}
+                      badge
+                    >
+                      Conflicts
+                    </TabButton>
+                  )
+                case 'pr':
+                  return (
+                    <TabButton
+                      key="pr"
+                      active={activeTab === 'pr'}
+                      onClick={() => setActiveTab('pr')}
+                    >
+                      {task ? (
+                        <>
+                          Pull request
+                          {task.pr_url && (
+                            <span className="text-muted-foreground ml-1">
+                              #{task.pr_url.match(/\/pull\/(\d+)/)?.[1]}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        'Pull requests'
+                      )}
+                    </TabButton>
+                  )
+                default:
+                  return null
+              }
+            })}
+
+            {/* Right-aligned actions */}
+            <div className="flex-1" />
+            {detectedRepos.length > 1 && onRepoChange && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">Repo</span>
+                <Select
+                  value={selectedRepoName ?? detectedRepos[0]?.name ?? ''}
+                  onValueChange={onRepoChange}
                 >
-                  {diffTreeCollapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
-                </IconButton>
-              </TooltipTrigger>
-              <TooltipContent>{diffTreeCollapsed ? 'Show file tree' : 'Hide file tree'}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <IconButton
-                  aria-label="Continuous flow"
-                  variant="ghost"
-                  className={cn('h-7 w-7', diffContinuousFlow && 'bg-primary/15 text-primary')}
-                  onClick={() => setBoolSetting('diff_continuous_flow', !diffContinuousFlow)}
-                >
-                  <AlignJustify className="h-3.5 w-3.5" />
-                </IconButton>
-              </TooltipTrigger>
-              <TooltipContent>{diffContinuousFlow ? 'Show one file at a time' : 'Show continuous flow'}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <IconButton
-                  aria-label="Side-by-side"
-                  variant="ghost"
-                  className={cn('h-7 w-7', diffSideBySide && 'bg-primary/15 text-primary')}
-                  onClick={() => setBoolSetting('diff_side_by_side', !diffSideBySide)}
-                >
-                  <Columns2 className="h-3.5 w-3.5" />
-                </IconButton>
-              </TooltipTrigger>
-              <TooltipContent>{diffSideBySide ? 'Unified diff' : 'Side-by-side diff'}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <IconButton
-                  aria-label="Wrap lines"
-                  variant="ghost"
-                  className={cn('h-7 w-7', diffWrap && 'bg-primary/15 text-primary')}
-                  onClick={() => setBoolSetting('diff_wrap', !diffWrap)}
-                >
-                  <WrapText className="h-3.5 w-3.5" />
-                </IconButton>
-              </TooltipTrigger>
-              <TooltipContent>{diffWrap ? 'No wrap' : 'Wrap long lines'}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
+                  <SelectTrigger
+                    className={cn(
+                      'h-7! w-auto text-xs gap-1 px-2 py-0',
+                      isRepoStale && 'border-amber-500/60 text-amber-500'
+                    )}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="w-auto overflow-x-visible">
+                    {detectedRepos.map((repo) => (
+                      <SelectItem
+                        key={repo.name}
+                        value={repo.name}
+                        className="text-xs pl-7 pr-2 [&_[data-slot=select-item-indicator]]:right-auto [&_[data-slot=select-item-indicator]]:left-2"
+                      >
+                        <span className="flex w-full items-center gap-1.5 whitespace-nowrap">
+                          <span className="whitespace-nowrap">{repo.name}</span>
+                          <span className="flex-1" />
+                          {repo.kind && <RepoKindPill kind={repo.kind} />}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {activeTab === 'changes' && (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <IconButton
+                      aria-label={diffTreeCollapsed ? 'Show file tree' : 'Hide file tree'}
+                      variant="ghost"
+                      className={cn('h-7 w-7', diffTreeCollapsed && 'bg-primary/15 text-primary')}
+                      onClick={() => setBoolSetting('diff_tree_collapsed', !diffTreeCollapsed)}
+                    >
+                      {diffTreeCollapsed ? (
+                        <PanelLeftOpen className="h-3.5 w-3.5" />
+                      ) : (
+                        <PanelLeftClose className="h-3.5 w-3.5" />
+                      )}
+                    </IconButton>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {diffTreeCollapsed ? 'Show file tree' : 'Hide file tree'}
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <IconButton
+                      aria-label="Continuous flow"
+                      variant="ghost"
+                      className={cn('h-7 w-7', diffContinuousFlow && 'bg-primary/15 text-primary')}
+                      onClick={() => setBoolSetting('diff_continuous_flow', !diffContinuousFlow)}
+                    >
+                      <AlignJustify className="h-3.5 w-3.5" />
+                    </IconButton>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {diffContinuousFlow ? 'Show one file at a time' : 'Show continuous flow'}
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <IconButton
+                      aria-label="Side-by-side"
+                      variant="ghost"
+                      className={cn('h-7 w-7', diffSideBySide && 'bg-primary/15 text-primary')}
+                      onClick={() => setBoolSetting('diff_side_by_side', !diffSideBySide)}
+                    >
+                      <Columns2 className="h-3.5 w-3.5" />
+                    </IconButton>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {diffSideBySide ? 'Unified diff' : 'Side-by-side diff'}
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <IconButton
+                      aria-label="Wrap lines"
+                      variant="ghost"
+                      className={cn('h-7 w-7', diffWrap && 'bg-primary/15 text-primary')}
+                      onClick={() => setBoolSetting('diff_wrap', !diffWrap)}
+                    >
+                      <WrapText className="h-3.5 w-3.5" />
+                    </IconButton>
+                  </TooltipTrigger>
+                  <TooltipContent>{diffWrap ? 'No wrap' : 'Wrap long lines'}</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <IconButton
+                      aria-label="Refresh"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      onClick={() => diffRef.current?.refresh()}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </IconButton>
+                  </TooltipTrigger>
+                  <TooltipContent>Refresh</TooltipContent>
+                </Tooltip>
+              </>
+            )}
+            {activeTab === 'worktrees' && (
+              <IconButton
+                aria-label="Add Worktree"
+                variant="ghost"
+                className="h-7 w-7"
+                title="Add Worktree"
+                onClick={() => worktreesRef.current?.openCreateDialog()}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </IconButton>
+            )}
+            {activeTab === 'stash' && (
+              <>
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                  <Switch checked={stashShowAll} onCheckedChange={setStashShowAll} />
+                  All branches
+                </label>
                 <IconButton
                   aria-label="Refresh"
                   variant="ghost"
                   className="h-7 w-7"
-                  onClick={() => diffRef.current?.refresh()}
+                  title="Refresh"
+                  onClick={() => stashRef.current?.refresh()}
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                 </IconButton>
-              </TooltipTrigger>
-              <TooltipContent>Refresh</TooltipContent>
-            </Tooltip>
-          </>
-        )}
-        {activeTab === 'worktrees' && (
-          <IconButton
-            aria-label="Add Worktree"
-            variant="ghost"
-            className="h-7 w-7"
-            title="Add Worktree"
-            onClick={() => worktreesRef.current?.openCreateDialog()}
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </IconButton>
-        )}
-        {activeTab === 'stash' && (
-          <>
-            <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
-              <Switch checked={stashShowAll} onCheckedChange={setStashShowAll} />
-              All branches
-            </label>
-            <IconButton
-              aria-label="Refresh"
-              variant="ghost"
-              className="h-7 w-7"
-              title="Refresh"
-              onClick={() => stashRef.current?.refresh()}
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-            </IconButton>
-          </>
-        )}
-        {activeTab === 'conflicts' && conflictToolbar && (
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground">
-              {conflictToolbar.resolvedCount}/{conflictToolbar.totalCount}
-            </span>
-            {conflictToolbar.isRebase && (
-              <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={conflictToolbar.onSkipCommit}>
-                <SkipForward className="h-3 w-3" /> Skip
-              </Button>
+              </>
             )}
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={conflictToolbar.onAbort}>
-              Abort
-            </Button>
+            {activeTab === 'conflicts' && conflictToolbar && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">
+                  {conflictToolbar.resolvedCount}/{conflictToolbar.totalCount}
+                </span>
+                {conflictToolbar.isRebase && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1 h-7 text-xs"
+                    onClick={conflictToolbar.onSkipCommit}
+                  >
+                    <SkipForward className="h-3 w-3" /> Skip
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={conflictToolbar.onAbort}
+                >
+                  Abort
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* Tab content */}
-      <div className="flex-1 min-h-0 relative">
-        <div className={cn('absolute inset-0', activeTab !== 'general' && 'hidden')}>
-          {task ? (
-            <GeneralTabContent
-              task={task}
-              projectPath={projectPath}
-              visible={visible && activeTab === 'general'}
-              pollIntervalMs={pollIntervalMs}
-              hasGithubRemote={hasGithubRemote}
-              onUpdateTask={onUpdateTask!}
-              onTaskUpdated={onTaskUpdated!}
-              onSwitchTab={setActiveTab}
-            />
-          ) : (
-            <ProjectGeneralTab
-              projectId={projectId}
-              projectPath={projectPath}
-              visible={visible && activeTab === 'general'}
-              onSwitchToDiff={() => setActiveTab('changes')}
-            />
-          )}
-        </div>
-        <div className={cn('absolute inset-0', activeTab !== 'changes' && 'hidden')}>
-          <GitDiffPanel
-            ref={diffRef}
-            task={task ?? null}
-            projectPath={projectPath}
-            visible={visible && activeTab === 'changes'}
-            pollIntervalMs={pollIntervalMs}
-            mergeState={task?.merge_state}
-            onCommitAndContinueMerge={task ? handleCommitAndContinueMerge : undefined}
-            onAbortMerge={task ? handleAbortMerge : undefined}
-          />
-        </div>
-        <div className={cn('absolute inset-0', activeTab !== 'worktrees' && 'hidden')}>
-          <WorktreesTab
-            ref={worktreesRef}
-            visible={visible && activeTab === 'worktrees'}
-          />
-        </div>
-        <div className={cn('absolute inset-0', activeTab !== 'stash' && 'hidden')}>
-          <StashTab
-            ref={stashRef}
-            visible={visible && activeTab === 'stash'}
-            pollIntervalMs={pollIntervalMs}
-            showAll={stashShowAll}
-          />
-        </div>
-        {hasConflicts && task && (
-          <div className={cn('absolute inset-0', activeTab !== 'conflicts' && 'hidden')}>
-            <ConflictPhaseContent
-              task={task}
-              projectPath={projectPath!}
-              completedStatus={completedStatus}
-              isRebase={isRebase}
-              onUpdateTask={onUpdateTask!}
-              onTaskUpdated={onTaskUpdated!}
-              onToolbarChange={setConflictToolbar}
-            />
-          </div>
-        )}
-        {hasGithubRemote && (
-          <div className={cn('absolute inset-0', activeTab !== 'pr' && 'hidden')}>
-            {task ? (
-              <PullRequestTab
-                task={task}
+          {/* Tab content */}
+          <div className="flex-1 min-h-0 relative">
+            <div className={cn('absolute inset-0', activeTab !== 'general' && 'hidden')}>
+              {task ? (
+                <GeneralTabContent
+                  task={task}
+                  projectPath={projectPath}
+                  visible={visible && activeTab === 'general'}
+                  pollIntervalMs={pollIntervalMs}
+                  hasGithubRemote={hasGithubRemote}
+                  onUpdateTask={onUpdateTask!}
+                  onTaskUpdated={onTaskUpdated!}
+                  onSwitchTab={setActiveTab}
+                />
+              ) : (
+                <ProjectGeneralTab
+                  projectId={projectId}
+                  projectPath={projectPath}
+                  visible={visible && activeTab === 'general'}
+                  onSwitchToDiff={() => setActiveTab('changes')}
+                />
+              )}
+            </div>
+            <div className={cn('absolute inset-0', activeTab !== 'changes' && 'hidden')}>
+              <GitDiffPanel
+                ref={diffRef}
+                task={task ?? null}
                 projectPath={projectPath}
-                visible={visible && activeTab === 'pr'}
-                onUpdateTask={onUpdateTask!}
-                onTaskUpdated={onTaskUpdated!}
+                visible={visible && activeTab === 'changes'}
+                pollIntervalMs={pollIntervalMs}
+                mergeState={task?.merge_state}
+                onCommitAndContinueMerge={task ? handleCommitAndContinueMerge : undefined}
+                onAbortMerge={task ? handleAbortMerge : undefined}
               />
-            ) : (
-              <ProjectPrTab
-                projectPath={projectPath}
-                visible={visible && activeTab === 'pr'}
-                tasks={tasks}
-                onTaskClick={onTaskClick}
+            </div>
+            <div className={cn('absolute inset-0', activeTab !== 'worktrees' && 'hidden')}>
+              <WorktreesTab ref={worktreesRef} visible={visible && activeTab === 'worktrees'} />
+            </div>
+            <div className={cn('absolute inset-0', activeTab !== 'stash' && 'hidden')}>
+              <StashTab
+                ref={stashRef}
+                visible={visible && activeTab === 'stash'}
+                pollIntervalMs={pollIntervalMs}
+                showAll={stashShowAll}
               />
+            </div>
+            {hasConflicts && task && (
+              <div className={cn('absolute inset-0', activeTab !== 'conflicts' && 'hidden')}>
+                <ConflictPhaseContent
+                  task={task}
+                  projectPath={projectPath!}
+                  completedStatus={completedStatus}
+                  isRebase={isRebase}
+                  onUpdateTask={onUpdateTask!}
+                  onTaskUpdated={onTaskUpdated!}
+                  onToolbarChange={setConflictToolbar}
+                />
+              </div>
+            )}
+            {hasGithubRemote && (
+              <div className={cn('absolute inset-0', activeTab !== 'pr' && 'hidden')}>
+                {task ? (
+                  <PullRequestTab
+                    task={task}
+                    projectPath={projectPath}
+                    visible={visible && activeTab === 'pr'}
+                    onUpdateTask={onUpdateTask!}
+                    onTaskUpdated={onTaskUpdated!}
+                  />
+                ) : (
+                  <ProjectPrTab
+                    projectPath={projectPath}
+                    visible={visible && activeTab === 'pr'}
+                    tasks={tasks}
+                    onTaskClick={onTaskClick}
+                  />
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
-    </div>
-    </GitPanelContext.Provider>
-  )
-})
+        </div>
+      </GitPanelContext.Provider>
+    )
+  }
+)
 
 // --- Tab button ---
 
-function TabButton({ active, onClick, children, shortcut, badge }: {
+function TabButton({
+  active,
+  onClick,
+  children,
+  shortcut,
+  badge
+}: {
   active: boolean
   onClick: () => void
   children: React.ReactNode
@@ -567,20 +687,31 @@ function TabButton({ active, onClick, children, shortcut, badge }: {
     >
       {children}
       {shortcut && (
-        <span className={cn('text-[10px] leading-none', active ? 'text-foreground/70' : 'text-muted-foreground')}>
+        <span
+          className={cn(
+            'text-[10px] leading-none',
+            active ? 'text-foreground/70' : 'text-muted-foreground'
+          )}
+        >
           {shortcut}
         </span>
       )}
-      {badge && (
-        <AlertTriangle className="h-3 w-3 text-yellow-500" />
-      )}
+      {badge && <AlertTriangle className="h-3 w-3 text-yellow-500" />}
     </button>
   )
 }
 
 // --- Conflict phase (extracted from MergePanel) ---
 
-function ConflictPhaseContent({ task, projectPath, completedStatus, isRebase, onUpdateTask, onTaskUpdated, onToolbarChange }: {
+function ConflictPhaseContent({
+  task,
+  projectPath,
+  completedStatus,
+  isRebase,
+  onUpdateTask,
+  onTaskUpdated,
+  onToolbarChange
+}: {
   task: Task
   projectPath: string
   completedStatus: string
@@ -589,7 +720,6 @@ function ConflictPhaseContent({ task, projectPath, completedStatus, isRebase, on
   onTaskUpdated: (task: Task) => void
   onToolbarChange: (data: ConflictToolbarData) => void
 }) {
-
   const [conflictedFiles, setConflictedFiles] = useState<string[]>([])
   const [resolvedFiles, setResolvedFiles] = useState<Set<string>>(new Set())
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
@@ -601,7 +731,7 @@ function ConflictPhaseContent({ task, projectPath, completedStatus, isRebase, on
   // Load merge context if not on task
   useEffect(() => {
     if (!mergeContext) {
-      window.api.git.getMergeContext(projectPath).then(ctx => {
+      window.api.git.getMergeContext(projectPath).then((ctx) => {
         if (ctx) {
           setMergeContext(ctx)
           onUpdateTask({ id: task.id, mergeContext: ctx })
@@ -612,17 +742,18 @@ function ConflictPhaseContent({ task, projectPath, completedStatus, isRebase, on
 
   // Load conflicted files
   useEffect(() => {
-    window.api.git.getConflictedFiles(projectPath).then(files => {
+    window.api.git.getConflictedFiles(projectPath).then((files) => {
       setConflictedFiles(files)
       if (files.length > 0 && !selectedFile) setSelectedFile(files[0])
     })
   }, [projectPath])
 
   const handleFileResolved = useCallback((filePath: string) => {
-    setResolvedFiles(prev => new Set(prev).add(filePath))
+    setResolvedFiles((prev) => new Set(prev).add(filePath))
   }, [])
 
-  const allResolved = conflictedFiles.length > 0 && conflictedFiles.every(f => resolvedFiles.has(f))
+  const allResolved =
+    conflictedFiles.length > 0 && conflictedFiles.every((f) => resolvedFiles.has(f))
 
   const handleCompleteMerge = useCallback(async () => {
     setCompleting(true)
@@ -691,7 +822,9 @@ function ConflictPhaseContent({ task, projectPath, completedStatus, isRebase, on
       } else {
         await window.api.git.abortMerge(projectPath)
       }
-    } catch { /* already aborted */ }
+    } catch {
+      /* already aborted */
+    }
     const updated = await onUpdateTask({ id: task.id, mergeState: null, mergeContext: null })
     onTaskUpdated(updated)
   }, [task.id, projectPath, isRebase, onUpdateTask, onTaskUpdated])
@@ -705,7 +838,14 @@ function ConflictPhaseContent({ task, projectPath, completedStatus, isRebase, on
       onSkipCommit: handleSkipCommit,
       onAbort: handleAbort
     })
-  }, [resolvedFiles.size, conflictedFiles.length, isRebase, handleSkipCommit, handleAbort, onToolbarChange])
+  }, [
+    resolvedFiles.size,
+    conflictedFiles.length,
+    isRebase,
+    handleSkipCommit,
+    handleAbort,
+    onToolbarChange
+  ])
 
   const fallbackContext: MergeContext = mergeContext ?? {
     type: isRebase ? 'rebase' : 'merge',
@@ -715,15 +855,13 @@ function ConflictPhaseContent({ task, projectPath, completedStatus, isRebase, on
 
   return (
     <div className="h-full flex flex-col">
-      {error && (
-        <div className="px-4 py-2 bg-destructive/10 text-destructive text-xs">{error}</div>
-      )}
+      {error && <div className="px-4 py-2 bg-destructive/10 text-destructive text-xs">{error}</div>}
 
       {/* Main content */}
       <div className="flex-1 min-h-0 flex">
         {/* File list */}
         <div className="w-56 shrink-0 overflow-y-auto border-r">
-          {conflictedFiles.map(file => (
+          {conflictedFiles.map((file) => (
             <div
               key={file}
               className={cn(
@@ -773,8 +911,12 @@ function ConflictPhaseContent({ task, projectPath, completedStatus, isRebase, on
           disabled={!allResolved || completing}
         >
           {completing
-            ? (isRebase ? 'Continuing...' : 'Completing...')
-            : (isRebase ? 'Continue Rebase' : 'Complete Merge')}
+            ? isRebase
+              ? 'Continuing...'
+              : 'Completing...'
+            : isRebase
+              ? 'Continue Rebase'
+              : 'Complete Merge'}
         </Button>
       </div>
     </div>

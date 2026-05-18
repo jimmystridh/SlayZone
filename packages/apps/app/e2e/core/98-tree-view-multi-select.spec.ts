@@ -5,7 +5,9 @@ type TreePatch = Record<string, unknown>
 
 async function patchStore(page: Page, patch: TreePatch) {
   await page.evaluate((p) => {
-    const store = (window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }).__slayzone_tabStore
+    const store = (
+      window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }
+    ).__slayzone_tabStore
     if (!store) throw new Error('__slayzone_tabStore not exposed')
     store.setState(p)
   }, patch)
@@ -13,9 +15,13 @@ async function patchStore(page: Page, patch: TreePatch) {
 
 async function setTabs(page: Page, taskIds: string[]) {
   await page.evaluate((ids) => {
-    const store = (window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }).__slayzone_tabStore
+    const store = (
+      window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }
+    ).__slayzone_tabStore
     if (!store) throw new Error('__slayzone_tabStore not exposed')
-    const tabs: Array<{ type: 'home' } | { type: 'task'; taskId: string; title: string }> = [{ type: 'home' }]
+    const tabs: Array<{ type: 'home' } | { type: 'task'; taskId: string; title: string }> = [
+      { type: 'home' }
+    ]
     for (const id of ids) tabs.push({ type: 'task', taskId: id, title: 'tab' })
     store.setState({ tabs, activeTabIndex: 0 })
   }, taskIds)
@@ -53,9 +59,16 @@ async function getSelectedIds(page: Page, taskIds: string[]): Promise<string[]> 
 
 async function getTabTaskIds(page: Page): Promise<string[]> {
   return page.evaluate(() => {
-    const store = (window as unknown as { __slayzone_tabStore?: { getState: () => { tabs: Array<{ type: string; taskId?: string }> } } }).__slayzone_tabStore
+    const store = (
+      window as unknown as {
+        __slayzone_tabStore?: { getState: () => { tabs: Array<{ type: string; taskId?: string }> } }
+      }
+    ).__slayzone_tabStore
     if (!store) return []
-    return store.getState().tabs.filter((t) => t.type === 'task').map((t) => t.taskId!)
+    return store
+      .getState()
+      .tabs.filter((t) => t.type === 'task')
+      .map((t) => t.taskId!)
   })
 }
 
@@ -74,7 +87,11 @@ test.describe('TreeView multi-select', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: projectName, color: '#9333ea', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: projectName,
+      color: '#9333ea',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
 
     rootA = (await s.createTask({ projectId, title: 'MS A', status: 'in_progress' })).id
@@ -83,15 +100,33 @@ test.describe('TreeView multi-select', () => {
     rootTodo = (await s.createTask({ projectId, title: 'MS Todo', status: 'todo' })).id
 
     subA1 = (await mainWindow.evaluate(
-      ({ pid, parentId }) => window.api.db.createTask({ projectId: pid, title: 'MS Sub A1', status: 'in_progress', parentId }),
+      ({ pid, parentId }) =>
+        window.api.db.createTask({
+          projectId: pid,
+          title: 'MS Sub A1',
+          status: 'in_progress',
+          parentId
+        }),
       { pid: projectId, parentId: rootA }
     ))!.id
     subA2 = (await mainWindow.evaluate(
-      ({ pid, parentId }) => window.api.db.createTask({ projectId: pid, title: 'MS Sub A2', status: 'in_progress', parentId }),
+      ({ pid, parentId }) =>
+        window.api.db.createTask({
+          projectId: pid,
+          title: 'MS Sub A2',
+          status: 'in_progress',
+          parentId
+        }),
       { pid: projectId, parentId: rootA }
     ))!.id
     subA3 = (await mainWindow.evaluate(
-      ({ pid, parentId }) => window.api.db.createTask({ projectId: pid, title: 'MS Sub A3', status: 'in_progress', parentId }),
+      ({ pid, parentId }) =>
+        window.api.db.createTask({
+          projectId: pid,
+          title: 'MS Sub A3',
+          status: 'in_progress',
+          parentId
+        }),
       { pid: projectId, parentId: rootA }
     ))!.id
 
@@ -119,19 +154,25 @@ test.describe('TreeView multi-select', () => {
       treeOrderBy: 'manual',
       treeOrderDir: 'asc',
       treeGroupTemporary: true,
-      treeShowEmptyGroups: false,
+      treeShowEmptyGroups: false
     })
     await setTabs(mainWindow, [rootA])
     await seed(mainWindow).refreshData()
     await ensureProjectExpanded(mainWindow, projectName)
     await killAllPtys(mainWindow)
     // Reset task order/status so each test is independent.
-    await mainWindow.evaluate(async ({ a, b, c, todo, s1, s2, s3 }) => {
-      await window.api.db.updateTasks({ ids: [a, b, c, s1, s2, s3], updates: { status: 'in_progress' } })
-      await window.api.db.updateTasks({ ids: [todo], updates: { status: 'todo' } })
-      await window.api.db.reorderTasks([a, b, c])
-      await window.api.db.reorderTasks([s1, s2, s3])
-    }, { a: rootA, b: rootB, c: rootC, todo: rootTodo, s1: subA1, s2: subA2, s3: subA3 })
+    await mainWindow.evaluate(
+      async ({ a, b, c, todo, s1, s2, s3 }) => {
+        await window.api.db.updateTasks({
+          ids: [a, b, c, s1, s2, s3],
+          updates: { status: 'in_progress' }
+        })
+        await window.api.db.updateTasks({ ids: [todo], updates: { status: 'todo' } })
+        await window.api.db.reorderTasks([a, b, c])
+        await window.api.db.reorderTasks([s1, s2, s3])
+      },
+      { a: rootA, b: rootB, c: rootC, todo: rootTodo, s1: subA1, s2: subA2, s3: subA3 }
+    )
     await seed(mainWindow).refreshData()
     await expect(taskRow(mainWindow, rootA)).toBeVisible({ timeout: 5_000 })
     await expect(taskRow(mainWindow, rootB)).toBeVisible()
@@ -141,10 +182,9 @@ test.describe('TreeView multi-select', () => {
   test('plain click selects only the clicked row and opens the task', async ({ mainWindow }) => {
     await taskRow(mainWindow, rootB).click()
 
-    await expect.poll(
-      () => getSelectedIds(mainWindow, [rootA, rootB, rootC]),
-      { timeout: 3_000 }
-    ).toEqual([rootB])
+    await expect
+      .poll(() => getSelectedIds(mainWindow, [rootA, rootB, rootC]), { timeout: 3_000 })
+      .toEqual([rootB])
 
     // Opening the task adds it to the tab list.
     await expect.poll(() => getTabTaskIds(mainWindow), { timeout: 3_000 }).toContain(rootB)
@@ -158,10 +198,9 @@ test.describe('TreeView multi-select', () => {
     // Cmd-click on B → both A and B selected; B does NOT open.
     await taskRow(mainWindow, rootB).click({ modifiers: ['Meta'] })
 
-    await expect.poll(
-      () => getSelectedIds(mainWindow, [rootA, rootB, rootC]),
-      { timeout: 3_000 }
-    ).toEqual([rootA, rootB])
+    await expect
+      .poll(() => getSelectedIds(mainWindow, [rootA, rootB, rootC]), { timeout: 3_000 })
+      .toEqual([rootA, rootB])
 
     const tabsAfter = await getTabTaskIds(mainWindow)
     expect(tabsAfter).toEqual(tabsBefore)
@@ -174,10 +213,9 @@ test.describe('TreeView multi-select', () => {
     // Toggle B back off.
     await taskRow(mainWindow, rootB).click({ modifiers: ['Meta'] })
 
-    await expect.poll(
-      () => getSelectedIds(mainWindow, [rootA, rootB, rootC]),
-      { timeout: 3_000 }
-    ).toEqual([rootA])
+    await expect
+      .poll(() => getSelectedIds(mainWindow, [rootA, rootB, rootC]), { timeout: 3_000 })
+      .toEqual([rootA])
   })
 
   test('shift+click selects the full sibling range across roots', async ({ mainWindow }) => {
@@ -185,10 +223,9 @@ test.describe('TreeView multi-select', () => {
     await taskRow(mainWindow, rootC).click({ modifiers: ['Shift'] })
 
     // All three roots are siblings (parent_id=null) → range A..C selected.
-    await expect.poll(
-      () => getSelectedIds(mainWindow, [rootA, rootB, rootC]),
-      { timeout: 3_000 }
-    ).toEqual([rootA, rootB, rootC])
+    await expect
+      .poll(() => getSelectedIds(mainWindow, [rootA, rootB, rootC]), { timeout: 3_000 })
+      .toEqual([rootA, rootB, rootC])
   })
 
   test('shift+click selects the full sibling range across subtasks', async ({ mainWindow }) => {
@@ -198,13 +235,14 @@ test.describe('TreeView multi-select', () => {
     await taskRow(mainWindow, subA1).click()
     await taskRow(mainWindow, subA3).click({ modifiers: ['Shift'] })
 
-    await expect.poll(
-      () => getSelectedIds(mainWindow, [subA1, subA2, subA3]),
-      { timeout: 3_000 }
-    ).toEqual([subA1, subA2, subA3])
+    await expect
+      .poll(() => getSelectedIds(mainWindow, [subA1, subA2, subA3]), { timeout: 3_000 })
+      .toEqual([subA1, subA2, subA3])
   })
 
-  test('shift+click across different parents falls back to add-target-only', async ({ mainWindow }) => {
+  test('shift+click across different parents falls back to add-target-only', async ({
+    mainWindow
+  }) => {
     await expect(taskRow(mainWindow, subA2)).toBeVisible({ timeout: 5_000 })
 
     // Anchor on root A (parent=null), then shift-click subA2 (parent=A).
@@ -212,10 +250,11 @@ test.describe('TreeView multi-select', () => {
     await taskRow(mainWindow, rootA).click()
     await taskRow(mainWindow, subA2).click({ modifiers: ['Shift'] })
 
-    await expect.poll(
-      () => getSelectedIds(mainWindow, [rootA, rootB, rootC, subA1, subA2, subA3]),
-      { timeout: 3_000 }
-    ).toEqual([rootA, subA2])
+    await expect
+      .poll(() => getSelectedIds(mainWindow, [rootA, rootB, rootC, subA1, subA2, subA3]), {
+        timeout: 3_000
+      })
+      .toEqual([rootA, subA2])
   })
 
   test('multi-drag: selected roots move together into target slot', async ({ mainWindow }) => {
@@ -226,9 +265,12 @@ test.describe('TreeView multi-select', () => {
     )
     const rootD = rootDObj!.id
     try {
-      await mainWindow.evaluate(async ({ a, b, c, d }) => {
-        await window.api.db.reorderTasks([a, b, c, d])
-      }, { a: rootA, b: rootB, c: rootC, d: rootD })
+      await mainWindow.evaluate(
+        async ({ a, b, c, d }) => {
+          await window.api.db.reorderTasks([a, b, c, d])
+        },
+        { a: rootA, b: rootB, c: rootC, d: rootD }
+      )
       await seed(mainWindow).refreshData()
       await expect(taskRow(mainWindow, rootD)).toBeVisible()
 
@@ -244,51 +286,73 @@ test.describe('TreeView multi-select', () => {
 
       await mainWindow.mouse.move(srcBox.x + srcBox.width / 2, srcBox.y + srcBox.height / 2)
       await mainWindow.mouse.down()
-      await mainWindow.mouse.move(srcBox.x + srcBox.width / 2 + 12, srcBox.y + srcBox.height / 2, { steps: 5 })
-      await mainWindow.mouse.move(dstBox.x + dstBox.width / 2, dstBox.y + dstBox.height - 4, { steps: 20 })
+      await mainWindow.mouse.move(srcBox.x + srcBox.width / 2 + 12, srcBox.y + srcBox.height / 2, {
+        steps: 5
+      })
+      await mainWindow.mouse.move(dstBox.x + dstBox.width / 2, dstBox.y + dstBox.height - 4, {
+        steps: 20
+      })
       await mainWindow.mouse.up()
 
       // Expected new order: C, D, A, B.
-      await expect.poll(async () => {
-        const tasksList = await seed(mainWindow).getTasks()
-        const byId = new Map(tasksList.map((t: { id: string }) => [t.id, t]))
-        return [
-          (byId.get(rootC) as { order: number } | undefined)?.order,
-          (byId.get(rootD) as { order: number } | undefined)?.order,
-          (byId.get(rootA) as { order: number } | undefined)?.order,
-          (byId.get(rootB) as { order: number } | undefined)?.order,
-        ]
-      }, { timeout: 5_000 }).toEqual([0, 1, 2, 3])
+      await expect
+        .poll(
+          async () => {
+            const tasksList = await seed(mainWindow).getTasks()
+            const byId = new Map(tasksList.map((t: { id: string }) => [t.id, t]))
+            return [
+              (byId.get(rootC) as { order: number } | undefined)?.order,
+              (byId.get(rootD) as { order: number } | undefined)?.order,
+              (byId.get(rootA) as { order: number } | undefined)?.order,
+              (byId.get(rootB) as { order: number } | undefined)?.order
+            ]
+          },
+          { timeout: 5_000 }
+        )
+        .toEqual([0, 1, 2, 3])
     } finally {
       await mainWindow.evaluate((id) => window.api.db.deleteTask(id), rootD)
     }
   })
 
-  test('multi-drag: cross-group drop on group header changes status for all selected', async ({ mainWindow }) => {
+  test('multi-drag: cross-group drop on group header changes status for all selected', async ({
+    mainWindow
+  }) => {
     // Select A and B, drop their drag onto the 'todo' group → both get status='todo'.
     await taskRow(mainWindow, rootA).click()
     await taskRow(mainWindow, rootB).click({ modifiers: ['Meta'] })
 
     const srcBox = await taskRow(mainWindow, rootB).boundingBox()
-    const todoGroup = mainWindow.locator(`[data-testid="tree-status-group"][data-project-id="${projectId}"][data-status="todo"]`)
+    const todoGroup = mainWindow.locator(
+      `[data-testid="tree-status-group"][data-project-id="${projectId}"][data-status="todo"]`
+    )
     // Group may be empty (no rows under it) — its bounding box still exists for the header.
     const dstBox = await todoGroup.boundingBox()
     if (!srcBox || !dstBox) throw new Error('boxes unavailable')
 
     await mainWindow.mouse.move(srcBox.x + srcBox.width / 2, srcBox.y + srcBox.height / 2)
     await mainWindow.mouse.down()
-    await mainWindow.mouse.move(srcBox.x + srcBox.width / 2 + 12, srcBox.y + srcBox.height / 2, { steps: 5 })
-    await mainWindow.mouse.move(dstBox.x + dstBox.width / 2, dstBox.y + dstBox.height / 2, { steps: 20 })
+    await mainWindow.mouse.move(srcBox.x + srcBox.width / 2 + 12, srcBox.y + srcBox.height / 2, {
+      steps: 5
+    })
+    await mainWindow.mouse.move(dstBox.x + dstBox.width / 2, dstBox.y + dstBox.height / 2, {
+      steps: 20
+    })
     await mainWindow.mouse.up()
 
-    await expect.poll(async () => {
-      const tasksList = await seed(mainWindow).getTasks()
-      const byId = new Map(tasksList.map((t: { id: string }) => [t.id, t]))
-      return [
-        (byId.get(rootA) as { status: string } | undefined)?.status,
-        (byId.get(rootB) as { status: string } | undefined)?.status,
-      ]
-    }, { timeout: 5_000 }).toEqual(['todo', 'todo'])
+    await expect
+      .poll(
+        async () => {
+          const tasksList = await seed(mainWindow).getTasks()
+          const byId = new Map(tasksList.map((t: { id: string }) => [t.id, t]))
+          return [
+            (byId.get(rootA) as { status: string } | undefined)?.status,
+            (byId.get(rootB) as { status: string } | undefined)?.status
+          ]
+        },
+        { timeout: 5_000 }
+      )
+      .toEqual(['todo', 'todo'])
 
     // beforeEach resets status for the next test.
   })
@@ -301,9 +365,8 @@ test.describe('TreeView multi-select', () => {
     // Plain-click on A again — selection collapses to just A.
     await taskRow(mainWindow, rootA).click()
 
-    await expect.poll(
-      () => getSelectedIds(mainWindow, [rootA, rootB, rootC]),
-      { timeout: 3_000 }
-    ).toEqual([rootA])
+    await expect
+      .poll(() => getSelectedIds(mainWindow, [rootA, rootB, rootC]), { timeout: 3_000 })
+      .toEqual([rootA])
   })
 })

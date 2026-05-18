@@ -2,20 +2,34 @@
  * chat-effort unit tests
  * Run with: pnpm tsx packages/domains/terminal/src/shared/chat-effort.test.ts
  */
-import { chatEffortToFlags, isChatEffort, CHAT_EFFORTS, modelSupportsEffort } from './chat-effort.js'
+import {
+  chatEffortToFlags,
+  isChatEffort,
+  CHAT_EFFORTS,
+  modelSupportsEffort
+} from './chat-effort.js'
 
 let passed = 0
 let failed = 0
 function test(name: string, fn: () => void) {
-  try { fn(); console.log(`  ✓ ${name}`); passed++ }
-  catch (e) { console.error(`  ✗ ${name}\n    ${e}`); failed++ }
+  try {
+    fn()
+    console.log(`  ✓ ${name}`)
+    passed++
+  } catch (e) {
+    console.error(`  ✗ ${name}\n    ${e}`)
+    failed++
+  }
 }
 function expect<T>(v: T) {
   return {
-    toBe(e: T) { if (v !== e) throw new Error(`expected ${JSON.stringify(e)}, got ${JSON.stringify(v)}`) },
-    toEqual(e: unknown) {
-      if (JSON.stringify(v) !== JSON.stringify(e)) throw new Error(`expected ${JSON.stringify(e)}, got ${JSON.stringify(v)}`)
+    toBe(e: T) {
+      if (v !== e) throw new Error(`expected ${JSON.stringify(e)}, got ${JSON.stringify(v)}`)
     },
+    toEqual(e: unknown) {
+      if (JSON.stringify(v) !== JSON.stringify(e))
+        throw new Error(`expected ${JSON.stringify(e)}, got ${JSON.stringify(v)}`)
+    }
   }
 }
 

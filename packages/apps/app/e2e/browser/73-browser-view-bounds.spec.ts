@@ -1,8 +1,11 @@
 import { test, expect, seed, resetApp, TEST_PROJECT_PATH } from '../fixtures/electron'
 import {
-  testInvoke, urlInput,
-  ensureBrowserPanelVisible, ensureBrowserPanelHidden,
-  openTaskViaSearch, getActiveViewId,
+  testInvoke,
+  urlInput,
+  ensureBrowserPanelVisible,
+  ensureBrowserPanelHidden,
+  openTaskViaSearch,
+  getActiveViewId
 } from '../fixtures/browser-view'
 import { getTestUrl, TEST_HOST_MATCH } from '../fixtures/test-server'
 
@@ -12,30 +15,60 @@ test.describe('Browser view bounds (WebContentsView)', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Bounds Tst', color: '#0ea5e9', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Bounds Tst',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
     const t = await s.createTask({ projectId: p.id, title: 'Bounds task', status: 'todo' })
     taskId = t.id
     await s.refreshData()
     await openTaskViaSearch(mainWindow, 'Bounds task')
   })
 
-  test('NATIVE view is on screen with correct bounds (not just bookkeeping)', async ({ mainWindow }) => {
+  test('NATIVE view is on screen with correct bounds (not just bookkeeping)', async ({
+    mainWindow
+  }) => {
     await ensureBrowserPanelVisible(mainWindow)
     const viewId = await getActiveViewId(mainWindow, taskId)
 
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/'))
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15000 }).toContain(TEST_HOST_MATCH)
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15000 }
+      )
+      .toContain(TEST_HOST_MATCH)
 
-    await expect.poll(async () => {
-      const bounds = await testInvoke(mainWindow, 'browser:get-actual-native-bounds', viewId) as { x: number; y: number; width: number; height: number } | null
-      return bounds ? bounds.width > 50 && bounds.height > 50 && bounds.x >= 0 && bounds.y >= 0 : false
-    }, { timeout: 10000 }).toBe(true)
+    await expect
+      .poll(
+        async () => {
+          const bounds = (await testInvoke(
+            mainWindow,
+            'browser:get-actual-native-bounds',
+            viewId
+          )) as { x: number; y: number; width: number; height: number } | null
+          return bounds
+            ? bounds.width > 50 && bounds.height > 50 && bounds.x >= 0 && bounds.y >= 0
+            : false
+        },
+        { timeout: 10000 }
+      )
+      .toBe(true)
 
-    const nativeBounds = await testInvoke(mainWindow, 'browser:get-actual-native-bounds', viewId) as { x: number; y: number; width: number; height: number }
-    const allHidden = await testInvoke(mainWindow, 'browser:is-all-hidden') as boolean
-    const viewVisible = await testInvoke(mainWindow, 'browser:get-view-visible', viewId) as boolean
+    const nativeBounds = (await testInvoke(
+      mainWindow,
+      'browser:get-actual-native-bounds',
+      viewId
+    )) as { x: number; y: number; width: number; height: number }
+    const allHidden = (await testInvoke(mainWindow, 'browser:is-all-hidden')) as boolean
+    const viewVisible = (await testInvoke(
+      mainWindow,
+      'browser:get-view-visible',
+      viewId
+    )) as boolean
 
     expect(nativeBounds.x).toBeGreaterThanOrEqual(0)
     expect(nativeBounds.y).toBeGreaterThanOrEqual(0)
@@ -52,7 +85,12 @@ test.describe('Browser view bounds (WebContentsView)', () => {
     const viewId = await getActiveViewId(mainWindow, taskId)
     await mainWindow.waitForTimeout(300)
 
-    const bounds = await testInvoke(mainWindow, 'browser:get-bounds', viewId) as { x: number; y: number; width: number; height: number } | null
+    const bounds = (await testInvoke(mainWindow, 'browser:get-bounds', viewId)) as {
+      x: number
+      y: number
+      width: number
+      height: number
+    } | null
     expect(bounds).toBeTruthy()
     expect(bounds!.x).toBeGreaterThanOrEqual(0)
     expect(bounds!.y).toBeGreaterThanOrEqual(0)
@@ -67,7 +105,12 @@ test.describe('Browser view bounds (WebContentsView)', () => {
     const newBounds = { x: 100, y: 200, width: 300, height: 400 }
     await testInvoke(mainWindow, 'browser:set-bounds', viewId, newBounds)
 
-    const bounds = await testInvoke(mainWindow, 'browser:get-bounds', viewId) as { x: number; y: number; width: number; height: number }
+    const bounds = (await testInvoke(mainWindow, 'browser:get-bounds', viewId)) as {
+      x: number
+      y: number
+      width: number
+      height: number
+    }
     expect(bounds.x).toBe(100)
     expect(bounds.y).toBe(200)
     expect(bounds.width).toBe(300)
@@ -87,7 +130,12 @@ test.describe('Browser view bounds (WebContentsView)', () => {
     await mainWindow.waitForTimeout(200)
 
     // Bounds should still be valid
-    const bounds = await testInvoke(mainWindow, 'browser:get-bounds', viewId) as { x: number; y: number; width: number; height: number }
+    const bounds = (await testInvoke(mainWindow, 'browser:get-bounds', viewId)) as {
+      x: number
+      y: number
+      width: number
+      height: number
+    }
     expect(bounds.width).toBeGreaterThan(0)
     expect(bounds.height).toBeGreaterThan(0)
   })
@@ -105,7 +153,12 @@ test.describe('Browser view bounds (WebContentsView)', () => {
     await mainWindow.waitForTimeout(300)
 
     // Bounds should be restored
-    const bounds = await testInvoke(mainWindow, 'browser:get-bounds', viewId) as { x: number; y: number; width: number; height: number }
+    const bounds = (await testInvoke(mainWindow, 'browser:get-bounds', viewId)) as {
+      x: number
+      y: number
+      width: number
+      height: number
+    }
     expect(bounds.width).toBeGreaterThan(0)
     expect(bounds.height).toBeGreaterThan(0)
   })
@@ -116,11 +169,21 @@ test.describe('Browser view bounds (WebContentsView)', () => {
 
     // Rapid fire 50 setBounds calls
     for (let i = 0; i < 50; i++) {
-      await testInvoke(mainWindow, 'browser:set-bounds', viewId, { x: i, y: i, width: 200 + i, height: 100 + i })
+      await testInvoke(mainWindow, 'browser:set-bounds', viewId, {
+        x: i,
+        y: i,
+        width: 200 + i,
+        height: 100 + i
+      })
     }
 
     // Final bounds should match last call
-    const bounds = await testInvoke(mainWindow, 'browser:get-bounds', viewId) as { x: number; y: number; width: number; height: number }
+    const bounds = (await testInvoke(mainWindow, 'browser:get-bounds', viewId)) as {
+      x: number
+      y: number
+      width: number
+      height: number
+    }
     expect(bounds.x).toBe(49)
     expect(bounds.y).toBe(49)
     expect(bounds.width).toBe(249)

@@ -1,6 +1,14 @@
 import { ChevronLeft } from 'lucide-react'
 
-export function PanelBreadcrumb({ label, onBack, parentLabel = 'Panels' }: { label: string; onBack: () => void; parentLabel?: string }) {
+export function PanelBreadcrumb({
+  label,
+  onBack,
+  parentLabel = 'Panels'
+}: {
+  label: string
+  onBack: () => void
+  parentLabel?: string
+}) {
   return (
     <button
       type="button"

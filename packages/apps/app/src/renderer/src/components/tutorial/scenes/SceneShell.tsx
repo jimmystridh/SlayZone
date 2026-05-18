@@ -1,9 +1,19 @@
-import { Home, X, Terminal, FileCode, Globe, GitBranch, Zap, Settings, type LucideIcon } from 'lucide-react'
+import {
+  Home,
+  X,
+  Terminal,
+  FileCode,
+  Globe,
+  GitBranch,
+  Zap,
+  Settings,
+  type LucideIcon
+} from 'lucide-react'
 
 const PROJECTS = [
   { abbr: 'SZ', color: '#3b82f6' },
   { abbr: 'BE', color: '#10b981' },
-  { abbr: 'MB', color: '#8b5cf6' },
+  { abbr: 'MB', color: '#8b5cf6' }
 ]
 
 interface TabDef {
@@ -24,24 +34,33 @@ export const ALL_PANEL_BUTTONS: PanelButton[] = [
   { icon: Globe, label: 'Browser', active: false },
   { icon: GitBranch, label: 'Git', active: false },
   { icon: Zap, label: 'Processes', active: false },
-  { icon: Settings, label: 'Settings', active: false },
+  { icon: Settings, label: 'Settings', active: false }
 ]
 
 /** Returns panel buttons with the given labels set to active */
 export function panelButtons(...activeLabels: string[]): PanelButton[] {
   return ALL_PANEL_BUTTONS.map((b) => ({
     ...b,
-    active: activeLabels.includes(b.label),
+    active: activeLabels.includes(b.label)
   }))
 }
 
-export function TaskHeader({ title, panels }: { title: string; panels: PanelButton[] }): React.JSX.Element {
+export function TaskHeader({
+  title,
+  panels
+}: {
+  title: string
+  panels: PanelButton[]
+}): React.JSX.Element {
   return (
     <div className="h-16 shrink-0 border-b flex items-center justify-between px-6">
       <h2 className="text-[20px] font-semibold truncate">{title}</h2>
       <div className="flex items-center gap-1">
         {panels.map(({ icon: Icon, label, active }) => (
-          <div key={label} className={`h-10 px-3 rounded flex items-center gap-2 text-[16px] ${active ? 'bg-muted text-foreground' : 'text-muted-foreground/60'}`}>
+          <div
+            key={label}
+            className={`h-10 px-3 rounded flex items-center gap-2 text-[16px] ${active ? 'bg-muted text-foreground' : 'text-muted-foreground/60'}`}
+          >
             <Icon className="size-5" />
             <span>{label}</span>
           </div>
@@ -59,7 +78,11 @@ interface SceneShellProps {
   children: React.ReactNode
 }
 
-export function SceneShell({ activeProject = 0, tabs, children }: SceneShellProps): React.JSX.Element {
+export function SceneShell({
+  activeProject = 0,
+  tabs,
+  children
+}: SceneShellProps): React.JSX.Element {
   return (
     <div className="w-full h-full flex rounded-2xl bg-surface-0 overflow-hidden relative">
       {/* Sidebar */}
@@ -78,7 +101,7 @@ export function SceneShell({ activeProject = 0, tabs, children }: SceneShellProp
                 boxShadow:
                   i === activeProject
                     ? `0 0 0 4px var(--background), 0 0 0 8px ${p.color}`
-                    : undefined,
+                    : undefined
               }}
             >
               {p.abbr}

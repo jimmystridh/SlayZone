@@ -74,10 +74,12 @@ export function insertTaskRow(db: Database, row: TaskRowData): Task | null {
       row.panelVisibility,
       row.browserTabs,
       row.webPanelUrls,
-      row.updatedAt ?? null,
+      row.updatedAt ?? null
     )
 
-    const fetched = db.prepare('SELECT * FROM tasks WHERE id = ?').get(row.id) as Record<string, unknown> | undefined
+    const fetched = db.prepare('SELECT * FROM tasks WHERE id = ?').get(row.id) as
+      | Record<string, unknown>
+      | undefined
     const task = parseTask(fetched)
     if (!task) return null
 

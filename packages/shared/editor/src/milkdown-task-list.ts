@@ -56,16 +56,19 @@ function createTaskListItemView(node: Node, view: EditorView, getPos: () => numb
   }
 }
 
-export const taskListPlugin = $prose(() => new Plugin({
-  key: new PluginKey('taskListCheckbox'),
-  props: {
-    nodeViews: {
-      list_item: (node, view, getPos) => {
-        if (node.attrs.checked != null) {
-          return createTaskListItemView(node, view, getPos as () => number | undefined)
+export const taskListPlugin = $prose(
+  () =>
+    new Plugin({
+      key: new PluginKey('taskListCheckbox'),
+      props: {
+        nodeViews: {
+          list_item: (node, view, getPos) => {
+            if (node.attrs.checked != null) {
+              return createTaskListItemView(node, view, getPos as () => number | undefined)
+            }
+            return undefined as unknown as never
+          }
         }
-        return undefined as unknown as never
       }
-    }
-  }
-}))
+    })
+)

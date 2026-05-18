@@ -9,8 +9,8 @@ import { faqGroups } from '../data/faq.js'
 const sidebarSections = [
   {
     heading: 'Categories',
-    links: faqGroups.map((group) => ({ href: `#${group.id}`, label: group.title })),
-  },
+    links: faqGroups.map((group) => ({ href: `#${group.id}`, label: group.title }))
+  }
 ]
 
 const faqSchema = {
@@ -20,9 +20,9 @@ const faqSchema = {
     group.items.map((item) => ({
       '@type': 'Question',
       name: item.question,
-      acceptedAnswer: { '@type': 'Answer', text: item.answer },
-    })),
-  ),
+      acceptedAnswer: { '@type': 'Answer', text: item.answer }
+    }))
+  )
 }
 const faqSchemaJson = JSON.stringify(faqSchema).replace(/</g, '\\u003c')
 ---

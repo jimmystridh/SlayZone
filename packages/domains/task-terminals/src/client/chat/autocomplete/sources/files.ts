@@ -39,11 +39,15 @@ export function createFilesSource(): AutocompleteSource<FileMatch> {
     id: 'files',
     detect: detectFileTrigger,
     async fetch({ cwd }) {
-      const api = (window as unknown as {
-        api?: {
-          chat?: { listFiles?: (cwd: string, query: string, limit?: number) => Promise<FileMatch[]> }
+      const api = (
+        window as unknown as {
+          api?: {
+            chat?: {
+              listFiles?: (cwd: string, query: string, limit?: number) => Promise<FileMatch[]>
+            }
+          }
         }
-      }).api
+      ).api
       const fn = api?.chat?.listFiles
       if (!fn) return []
       // Prefetch w/ empty query, cap 2000. Source filters locally.
@@ -73,6 +77,6 @@ export function createFilesSource(): AutocompleteSource<FileMatch> {
       // Replace `@query` with `@path ` so user can keep typing after.
       const next = spliceReplace(ctx.draft, ctx.tokenStart, ctx.tokenEnd, `@${file.path} `)
       ctx.setDraft(next)
-    },
+    }
   }
 }

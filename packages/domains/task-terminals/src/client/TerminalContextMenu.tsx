@@ -8,13 +8,24 @@ import {
   ContextMenuTrigger,
   useShortcutDisplay,
   useAppearance,
-  appearanceDefaults,
+  appearanceDefaults
 } from '@slayzone/ui'
 import {
-  Copy, ClipboardPaste, TextSelect, Eraser, Search,
-  Columns2, Plus, X, PenLine,
-  ZoomIn, ZoomOut, RotateCw, ArrowDownToLine,
-  Hash, Power
+  Copy,
+  ClipboardPaste,
+  TextSelect,
+  Eraser,
+  Search,
+  Columns2,
+  Plus,
+  X,
+  PenLine,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  ArrowDownToLine,
+  Hash,
+  Power
 } from 'lucide-react'
 import type { TerminalHandle } from '@slayzone/terminal/client/Terminal'
 
@@ -44,7 +55,7 @@ export function TerminalContextMenu({
   onNewGroup,
   onClose,
   onRename,
-  onResetSession,
+  onResetSession
 }: TerminalContextMenuProps) {
   const [hasSelection, setHasSelection] = useState(false)
   const { terminalFontSize } = useAppearance()
@@ -56,13 +67,16 @@ export function TerminalContextMenu({
 
   const isAiMode = mode !== 'terminal'
 
-  const handleOpenChange = useCallback((open: boolean) => {
-    if (open) {
-      setHasSelection(terminalRef.current?.hasSelection() ?? false)
-    } else {
-      terminalRef.current?.focus()
-    }
-  }, [terminalRef])
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (open) {
+        setHasSelection(terminalRef.current?.hasSelection() ?? false)
+      } else {
+        terminalRef.current?.focus()
+      }
+    },
+    [terminalRef]
+  )
 
   const handleCopy = useCallback(() => {
     const sel = terminalRef.current?.getSelection()
@@ -70,7 +84,7 @@ export function TerminalContextMenu({
   }, [terminalRef])
 
   const handlePaste = useCallback(() => {
-    void navigator.clipboard.readText().then(text => {
+    void navigator.clipboard.readText().then((text) => {
       if (text) window.api.pty.write(sessionId, text)
     })
   }, [sessionId])
@@ -103,9 +117,7 @@ export function TerminalContextMenu({
 
   return (
     <ContextMenu onOpenChange={handleOpenChange}>
-      <ContextMenuTrigger asChild>
-        {children}
-      </ContextMenuTrigger>
+      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent className="w-64">
         {/* Clipboard */}
         <ContextMenuItem disabled={!hasSelection} onSelect={handleCopy}>
@@ -166,15 +178,24 @@ export function TerminalContextMenu({
         <ContextMenuSeparator />
 
         {/* Display */}
-        <ContextMenuItem disabled={terminalFontSize >= FONT_SIZE_MAX} onSelect={() => updateFontSize(terminalFontSize + 1)}>
+        <ContextMenuItem
+          disabled={terminalFontSize >= FONT_SIZE_MAX}
+          onSelect={() => updateFontSize(terminalFontSize + 1)}
+        >
           <ZoomIn className="size-4" />
           Zoom In
         </ContextMenuItem>
-        <ContextMenuItem disabled={terminalFontSize <= FONT_SIZE_MIN} onSelect={() => updateFontSize(terminalFontSize - 1)}>
+        <ContextMenuItem
+          disabled={terminalFontSize <= FONT_SIZE_MIN}
+          onSelect={() => updateFontSize(terminalFontSize - 1)}
+        >
           <ZoomOut className="size-4" />
           Zoom Out
         </ContextMenuItem>
-        <ContextMenuItem disabled={terminalFontSize === appearanceDefaults.terminalFontSize} onSelect={() => updateFontSize(appearanceDefaults.terminalFontSize)}>
+        <ContextMenuItem
+          disabled={terminalFontSize === appearanceDefaults.terminalFontSize}
+          onSelect={() => updateFontSize(appearanceDefaults.terminalFontSize)}
+        >
           <RotateCw className="size-4" />
           Reset Zoom
         </ContextMenuItem>

@@ -42,16 +42,26 @@ const STATUS_DOT_COLORS: Record<LoopStatus, string> = {
 }
 
 const CRITERIA_LABELS = {
-  'contains': 'contains',
+  contains: 'contains',
   'not-contains': 'not contains',
-  'regex': 'regex'
+  regex: 'regex'
 } as const
 
 function truncate(s: string, max: number): string {
   return s.length > max ? s.slice(0, max) + '\u2026' : s
 }
 
-export function LoopModeBanner({ config, status, iteration, onStart, onPause, onResume, onStop, onEditConfig, floating = true }: LoopModeBannerProps) {
+export function LoopModeBanner({
+  config,
+  status,
+  iteration,
+  onStart,
+  onPause,
+  onResume,
+  onStop,
+  onEditConfig,
+  floating = true
+}: LoopModeBannerProps) {
   const active = isLoopActive(status)
   const showStatus = status !== 'idle'
   const progress = config.maxIterations > 0 ? (iteration / config.maxIterations) * 100 : 0
@@ -67,14 +77,21 @@ export function LoopModeBanner({ config, status, iteration, onStart, onPause, on
       }}
     >
       {/* Header */}
-      <div className={`flex items-center justify-between px-3 py-2 border-b ${active ? 'border-orange-500/20 bg-orange-500/5' : 'border-border'}`}>
+      <div
+        className={`flex items-center justify-between px-3 py-2 border-b ${active ? 'border-orange-500/20 bg-orange-500/5' : 'border-border'}`}
+      >
         <span className="font-bold text-foreground tracking-wide">LOOP COMMAND</span>
         <div className="flex items-center gap-0.5">
           {!active && status !== 'paused' && (
             <>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <IconButton variant="ghost" className="size-7" aria-label="Edit config" onClick={onEditConfig}>
+                  <IconButton
+                    variant="ghost"
+                    className="size-7"
+                    aria-label="Edit config"
+                    onClick={onEditConfig}
+                  >
                     <Pencil className="size-3.5" />
                   </IconButton>
                 </TooltipTrigger>
@@ -82,7 +99,12 @@ export function LoopModeBanner({ config, status, iteration, onStart, onPause, on
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <IconButton variant="ghost" className="size-7" aria-label="Start loop" onClick={() => onStart(config)}>
+                  <IconButton
+                    variant="ghost"
+                    className="size-7"
+                    aria-label="Start loop"
+                    onClick={() => onStart(config)}
+                  >
                     <Play className="size-4" />
                   </IconButton>
                 </TooltipTrigger>
@@ -93,7 +115,12 @@ export function LoopModeBanner({ config, status, iteration, onStart, onPause, on
           {active && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <IconButton variant="ghost" className="size-7" aria-label="Pause loop" onClick={onPause}>
+                <IconButton
+                  variant="ghost"
+                  className="size-7"
+                  aria-label="Pause loop"
+                  onClick={onPause}
+                >
                   <Pause className="size-4" />
                 </IconButton>
               </TooltipTrigger>
@@ -103,7 +130,12 @@ export function LoopModeBanner({ config, status, iteration, onStart, onPause, on
           {status === 'paused' && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <IconButton variant="ghost" className="size-7" aria-label="Resume loop" onClick={onResume}>
+                <IconButton
+                  variant="ghost"
+                  className="size-7"
+                  aria-label="Resume loop"
+                  onClick={onResume}
+                >
                   <RotateCcw className="size-4" />
                 </IconButton>
               </TooltipTrigger>
@@ -113,7 +145,12 @@ export function LoopModeBanner({ config, status, iteration, onStart, onPause, on
           {(active || status === 'paused') && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <IconButton variant="ghost" className="size-7 text-destructive" aria-label="Stop loop" onClick={onStop}>
+                <IconButton
+                  variant="ghost"
+                  className="size-7 text-destructive"
+                  aria-label="Stop loop"
+                  onClick={onStop}
+                >
                   <Square className="size-4" />
                 </IconButton>
               </TooltipTrigger>
@@ -132,19 +169,26 @@ export function LoopModeBanner({ config, status, iteration, onStart, onPause, on
       {/* Criteria */}
       <div className={`px-3 py-2.5 border-b ${active ? 'border-orange-500/20' : 'border-border'}`}>
         <div className="text-muted-foreground mb-0.5">Criteria</div>
-        <div className="text-foreground">{CRITERIA_LABELS[config.criteriaType]} &ldquo;{truncate(config.criteriaPattern, 40)}&rdquo;</div>
+        <div className="text-foreground">
+          {CRITERIA_LABELS[config.criteriaType]} &ldquo;{truncate(config.criteriaPattern, 40)}
+          &rdquo;
+        </div>
       </div>
 
       {/* Status + progress */}
       <div className={`px-3 py-2.5 space-y-2`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <div className={`size-2.5 rounded-full shrink-0 ${STATUS_DOT_COLORS[status]} ${active ? 'animate-pulse' : ''}`} />
+            <div
+              className={`size-2.5 rounded-full shrink-0 ${STATUS_DOT_COLORS[status]} ${active ? 'animate-pulse' : ''}`}
+            />
             <span className={showStatus ? 'text-foreground font-medium' : 'text-muted-foreground'}>
               {STATUS_LABELS[status]}
             </span>
           </div>
-          <span className="text-muted-foreground font-mono tabular-nums">{iteration}/{config.maxIterations}</span>
+          <span className="text-muted-foreground font-mono tabular-nums">
+            {iteration}/{config.maxIterations}
+          </span>
         </div>
         <div className="h-1.5 rounded-full bg-muted overflow-hidden">
           <div

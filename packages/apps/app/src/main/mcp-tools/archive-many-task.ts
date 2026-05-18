@@ -23,10 +23,12 @@ export function registerArchiveManyTaskTool(server: McpServer, deps: McpToolsDep
       }
       deps.notifyRenderer()
       return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify({ archived: ids.length, ids }, null, 2)
-        }]
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify({ archived: ids.length, ids }, null, 2)
+          }
+        ]
       }
     }
   )

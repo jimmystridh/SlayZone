@@ -21,9 +21,14 @@ export async function subtaskAddAction(title: string, opts: SubtaskAddOpts): Pro
     { ':prefix': parentId }
   )
 
-  if (parents.length === 0) { console.error(`Task not found: ${parentId}`); process.exit(1) }
+  if (parents.length === 0) {
+    console.error(`Task not found: ${parentId}`)
+    process.exit(1)
+  }
   if (parents.length > 1) {
-    console.error(`Ambiguous id prefix "${parentId}". Matches: ${parents.map((t) => t.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${parentId}". Matches: ${parents.map((t) => t.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
 
@@ -34,7 +39,11 @@ export async function subtaskAddAction(title: string, opts: SubtaskAddOpts): Pro
       `SELECT id, title, status FROM tasks
        WHERE project_id = :projectId AND external_provider = :provider AND external_id = :externalId
        LIMIT 1`,
-      { ':projectId': parent.project_id, ':provider': opts.externalProvider ?? null, ':externalId': opts.externalId }
+      {
+        ':projectId': parent.project_id,
+        ':provider': opts.externalProvider ?? null,
+        ':externalId': opts.externalId
+      }
     )
     if (existing.length > 0) {
       const t = existing[0]
@@ -50,15 +59,20 @@ export async function subtaskAddAction(title: string, opts: SubtaskAddOpts): Pro
     process.exit(1)
   }
   const parentColumns = getProjectColumnsConfig(db, parent.project_id)
-  const status = opts.status ? resolveStatusId(opts.status, parentColumns) : getDefaultStatus(parentColumns)
+  const status = opts.status
+    ? resolveStatusId(opts.status, parentColumns)
+    : getDefaultStatus(parentColumns)
   if (opts.status && !status) {
     console.error(`Unknown status "${opts.status}" for parent task's project.`)
     process.exit(1)
   }
 
-  const terminalMode = parent.terminal_mode
-    ?? (db.query<{ value: string }>(`SELECT value FROM settings WHERE key = 'default_terminal_mode' LIMIT 1`)[0]?.value)
-    ?? 'claude-code'
+  const terminalMode =
+    parent.terminal_mode ??
+    db.query<{ value: string }>(
+      `SELECT value FROM settings WHERE key = 'default_terminal_mode' LIMIT 1`
+    )[0]?.value ??
+    'claude-code'
 
   const providerConfig = buildProviderConfig(db)
   const id = crypto.randomUUID()
@@ -92,16 +106,24 @@ export async function subtaskAddAction(title: string, opts: SubtaskAddOpts): Pro
         ':opencodeFlags': providerConfig['opencode']?.flags ?? '',
         ':externalId': opts.externalId ?? null,
         ':externalProvider': opts.externalId ? (opts.externalProvider ?? null) : null,
-        ':now': now,
+        ':now': now
       }
     )
   } catch (err: unknown) {
-    if (opts.externalId && err instanceof Error && err.message.includes('UNIQUE constraint failed')) {
+    if (
+      opts.externalId &&
+      err instanceof Error &&
+      err.message.includes('UNIQUE constraint failed')
+    ) {
       const existing = db.query<{ id: string; title: string; status: string }>(
         `SELECT id, title, status FROM tasks
          WHERE project_id = :projectId AND external_provider = :provider AND external_id = :externalId
          LIMIT 1`,
-        { ':projectId': parent.project_id, ':provider': opts.externalProvider ?? null, ':externalId': opts.externalId }
+        {
+          ':projectId': parent.project_id,
+          ':provider': opts.externalProvider ?? null,
+          ':externalId': opts.externalId
+        }
       )
       if (existing.length > 0) {
         const t = existing[0]

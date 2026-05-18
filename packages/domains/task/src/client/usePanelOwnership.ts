@@ -13,7 +13,10 @@ interface OwnershipEntry {
 export function usePanelOwnership(taskId: string | undefined) {
   const [windowId, setWindowId] = useState<number | null>(null)
   const [entries, setEntries] = useState<OwnershipEntry[]>([])
-  const [releasedOnClose, setReleasedOnClose] = useState<Array<{ taskId: string; panelId: string }> | null>(null)
+  const [releasedOnClose, setReleasedOnClose] = useState<Array<{
+    taskId: string
+    panelId: string
+  }> | null>(null)
 
   // Resolve this window's webContents id once
   useEffect(() => {
@@ -55,7 +58,8 @@ export function usePanelOwnership(taskId: string | undefined) {
   }, [taskId])
 
   const ownerOf = useCallback(
-    (panelId: string): number | null => entries.find((e) => e.panelId === panelId)?.ownerWindowId ?? null,
+    (panelId: string): number | null =>
+      entries.find((e) => e.panelId === panelId)?.ownerWindowId ?? null,
     [entries]
   )
 
@@ -115,6 +119,16 @@ export function usePanelOwnership(taskId: string | undefined) {
       releasedOnClose,
       consumeReleasedOnClose
     }),
-    [windowId, ownerOf, isOwnedByMe, hasOtherOwner, claim, claimAndCloseOther, release, releasedOnClose, consumeReleasedOnClose]
+    [
+      windowId,
+      ownerOf,
+      isOwnedByMe,
+      hasOtherOwner,
+      claim,
+      claimAndCloseOther,
+      release,
+      releasedOnClose,
+      consumeReleasedOnClose
+    ]
   )
 }

@@ -3,7 +3,12 @@
  * Run with: ELECTRON_RUN_AS_NODE=1 ./node_modules/.bin/electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/apps/app/src/main/rest-api/tasks/open.test.ts
  */
 import express from 'express'
-import { createTestHarness, test, expect, describe } from '../../../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../../../shared/test-utils/ipc-harness.js'
 import { mountRestApp } from '../../../../../../shared/test-utils/rest-harness.js'
 import { BrowserWindow } from '../../../../../../shared/test-utils/mock-electron.js'
 import { registerOpenTaskRoute } from './open.js'
@@ -18,11 +23,21 @@ let restoreCalled = 0
 let minimized = false
 
 const fakeWin = {
-  webContents: { send: (channel: string, ...args: unknown[]) => { sent.push({ channel, args }) } },
+  webContents: {
+    send: (channel: string, ...args: unknown[]) => {
+      sent.push({ channel, args })
+    }
+  },
   isMinimized: () => minimized,
-  restore: () => { restoreCalled++ },
-  show: () => { showCalled++ },
-  focus: () => { focusCalled++ },
+  restore: () => {
+    restoreCalled++
+  },
+  show: () => {
+    showCalled++
+  },
+  focus: () => {
+    focusCalled++
+  }
 }
 
 // Patch static methods on mock BrowserWindow.

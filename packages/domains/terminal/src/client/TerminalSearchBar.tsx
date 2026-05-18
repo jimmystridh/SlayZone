@@ -62,27 +62,34 @@ export function TerminalSearchBar({ searchAddon, onClose, focusToken }: Terminal
   const findNext = useCallback(() => {
     try {
       if (query) searchAddon.findNext(query, { caseSensitive, decorations })
-    } catch { /* */ }
+    } catch {
+      /* */
+    }
   }, [query, caseSensitive, searchAddon])
 
   const findPrevious = useCallback(() => {
     try {
       if (query) searchAddon.findPrevious(query, { caseSensitive, decorations })
-    } catch { /* */ }
+    } catch {
+      /* */
+    }
   }, [query, caseSensitive, searchAddon])
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      onClose()
-    } else if (e.key === 'Enter' && e.shiftKey) {
-      e.preventDefault()
-      findPrevious()
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      findNext()
-    }
-  }, [onClose, findNext, findPrevious])
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      } else if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault()
+        findPrevious()
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        findNext()
+      }
+    },
+    [onClose, findNext, findPrevious]
+  )
 
   // Focus + select input on mount and whenever focusToken bumps
   useEffect(() => {
@@ -90,11 +97,7 @@ export function TerminalSearchBar({ searchAddon, onClose, focusToken }: Terminal
     inputRef.current?.select()
   }, [focusToken])
 
-  const countDisplay = query
-    ? resultCount > 0
-      ? `${resultIndex + 1}/${resultCount}`
-      : '0/0'
-    : ''
+  const countDisplay = query ? (resultCount > 0 ? `${resultIndex + 1}/${resultCount}` : '0/0') : ''
 
   return (
     // Stop propagation so container onClick doesn't steal focus from search input
@@ -115,10 +118,18 @@ export function TerminalSearchBar({ searchAddon, onClose, focusToken }: Terminal
       <span className="text-xs text-muted-foreground dark:text-muted-foreground tabular-nums shrink-0 min-w-[3ch] text-right">
         {countDisplay}
       </span>
-      <button onClick={findPrevious} title="Previous (Shift+Enter)" className="p-0.5 hover:bg-accent dark:hover:bg-accent rounded">
+      <button
+        onClick={findPrevious}
+        title="Previous (Shift+Enter)"
+        className="p-0.5 hover:bg-accent dark:hover:bg-accent rounded"
+      >
         <ChevronUp className="size-4 text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground" />
       </button>
-      <button onClick={findNext} title="Next (Enter)" className="p-0.5 hover:bg-accent dark:hover:bg-accent rounded">
+      <button
+        onClick={findNext}
+        title="Next (Enter)"
+        className="p-0.5 hover:bg-accent dark:hover:bg-accent rounded"
+      >
         <ChevronDown className="size-4 text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground" />
       </button>
       <button
@@ -128,7 +139,11 @@ export function TerminalSearchBar({ searchAddon, onClose, focusToken }: Terminal
       >
         <ALargeSmall className="size-4" />
       </button>
-      <button onClick={onClose} title="Close (Escape)" className="p-0.5 hover:bg-accent dark:hover:bg-accent rounded">
+      <button
+        onClick={onClose}
+        title="Close (Escape)"
+        className="p-0.5 hover:bg-accent dark:hover:bg-accent rounded"
+      >
         <X className="size-3.5 text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground" />
       </button>
     </div>

@@ -23,30 +23,31 @@ type Section = 'provider-sync' | 'instructions' | 'skills' | 'mcps' | 'files' | 
 const STANDARD_SECTIONS: { id: Section; label: string; icon: typeof Sparkles }[] = [
   { id: 'instructions', label: 'Instructions', icon: FileText },
   { id: 'skills', label: 'Skills', icon: Sparkles },
-  { id: 'mcps', label: 'MCPs', icon: Server },
+  { id: 'mcps', label: 'MCPs', icon: Server }
 ]
 
-const LEVEL_SECTIONS: Record<ConfigLevel, { id: Section; label: string; icon: typeof Sparkles }[]> = {
-  computer: [{ id: 'files', label: 'Files', icon: FolderOpen }],
-  project: STANDARD_SECTIONS,
-  library: STANDARD_SECTIONS,
-}
+const LEVEL_SECTIONS: Record<ConfigLevel, { id: Section; label: string; icon: typeof Sparkles }[]> =
+  {
+    computer: [{ id: 'files', label: 'Files', icon: FolderOpen }],
+    project: STANDARD_SECTIONS,
+    library: STANDARD_SECTIONS
+  }
 
 const EXTERNAL_SECTIONS: { id: Section; label: string; icon: typeof Sparkles }[] = [
-  { id: 'marketplace', label: 'Marketplace', icon: Store },
+  { id: 'marketplace', label: 'Marketplace', icon: Store }
 ]
 
 const LEVELS: { id: ConfigLevel; label: string }[] = [
   { id: 'computer', label: 'Computer' },
   { id: 'project', label: 'Project' },
-  { id: 'library', label: 'Library' },
+  { id: 'library', label: 'Library' }
 ]
 
 export function ContextManagerShell({
   selectedProjectId,
   projectPath,
   projectName,
-  onBack,
+  onBack
 }: ContextManagerShellProps) {
   const hasProject = !!selectedProjectId && !!projectPath
 
@@ -61,7 +62,7 @@ export function ContextManagerShell({
   // Extra refresh: when leaving skills/providers (sections where mutations happen).
   const { count: staleSkillCount, refresh: refreshStaleSkillCount } = useStaleSkillCount(
     selectedProjectId,
-    projectPath,
+    projectPath
   )
   const prevSectionRef = useRef(activeSection)
   useEffect(() => {
@@ -71,18 +72,16 @@ export function ContextManagerShell({
     prevSectionRef.current = activeSection
   }, [activeSection, refreshStaleSkillCount])
 
-  const handleSectionClick = useCallback((level: ConfigLevel, section: string) => {
-    setActive(level, section)
-  }, [setActive])
+  const handleSectionClick = useCallback(
+    (level: ConfigLevel, section: string) => {
+      setActive(level, section)
+    },
+    [setActive]
+  )
 
   const renderContent = () => {
     if (isProviders) {
-      return (
-        <ProviderSyncSection
-          projectId={selectedProjectId}
-          projectName={projectName}
-        />
-      )
+      return <ProviderSyncSection projectId={selectedProjectId} projectName={projectName} />
     }
 
     const level = activeLevel
@@ -103,23 +102,11 @@ export function ContextManagerShell({
     }
 
     if (section === 'skills') {
-      return (
-        <SkillsSection
-          level={level}
-          projectId={selectedProjectId}
-          projectPath={projectPath}
-        />
-      )
+      return <SkillsSection level={level} projectId={selectedProjectId} projectPath={projectPath} />
     }
 
     if (section === 'mcps') {
-      return (
-        <McpSection
-          level={level}
-          projectId={selectedProjectId}
-          projectPath={projectPath}
-        />
-      )
+      return <McpSection level={level} projectId={selectedProjectId} projectPath={projectPath} />
     }
 
     if (section === 'marketplace') {
@@ -156,28 +143,35 @@ export function ContextManagerShell({
                   {levelLabel}
                 </div>
                 <div className="space-y-0.5">
-                  {LEVEL_SECTIONS[levelId].map(({ id: sectionId, label: sectionLabel, icon: SectionIcon }) => {
-                    const isActive = !isProviders && activeLevel === levelId && activeSection === sectionId
-                    const showStale = levelId === 'project' && sectionId === 'skills' && staleSkillCount > 0
-                    return (
-                      <button
-                        key={sectionId}
-                        onClick={() => handleSectionClick(levelId, sectionId)}
-                        className={cn(
-                          'flex w-full items-center gap-2.5 rounded-md px-4 py-1.5 text-xs transition-colors',
-                          isActive
-                            ? 'bg-surface-3 font-medium text-foreground ring-1 ring-border'
-                            : 'text-muted-foreground hover:bg-surface-3 hover:text-foreground'
-                        )}
-                      >
-                        <SectionIcon className="size-3.5" />
-                        {sectionLabel}
-                        {showStale && (
-                          <span className="ml-auto size-2 rounded-full bg-amber-500" title={`${staleSkillCount} stale`} />
-                        )}
-                      </button>
-                    )
-                  })}
+                  {LEVEL_SECTIONS[levelId].map(
+                    ({ id: sectionId, label: sectionLabel, icon: SectionIcon }) => {
+                      const isActive =
+                        !isProviders && activeLevel === levelId && activeSection === sectionId
+                      const showStale =
+                        levelId === 'project' && sectionId === 'skills' && staleSkillCount > 0
+                      return (
+                        <button
+                          key={sectionId}
+                          onClick={() => handleSectionClick(levelId, sectionId)}
+                          className={cn(
+                            'flex w-full items-center gap-2.5 rounded-md px-4 py-1.5 text-xs transition-colors',
+                            isActive
+                              ? 'bg-surface-3 font-medium text-foreground ring-1 ring-border'
+                              : 'text-muted-foreground hover:bg-surface-3 hover:text-foreground'
+                          )}
+                        >
+                          <SectionIcon className="size-3.5" />
+                          {sectionLabel}
+                          {showStale && (
+                            <span
+                              className="ml-auto size-2 rounded-full bg-amber-500"
+                              title={`${staleSkillCount} stale`}
+                            />
+                          )}
+                        </button>
+                      )
+                    }
+                  )}
                 </div>
               </div>
             )
@@ -189,24 +183,26 @@ export function ContextManagerShell({
               External
             </div>
             <div className="space-y-0.5">
-              {EXTERNAL_SECTIONS.map(({ id: sectionId, label: sectionLabel, icon: SectionIcon }) => {
-                const isActive = !isProviders && activeSection === sectionId
-                return (
-                  <button
-                    key={sectionId}
-                    onClick={() => handleSectionClick(activeLevel, sectionId)}
-                    className={cn(
-                      'flex w-full items-center gap-2.5 rounded-md px-4 py-1.5 text-xs transition-colors',
-                      isActive
-                        ? 'bg-surface-3 font-medium text-foreground ring-1 ring-border'
-                        : 'text-muted-foreground hover:bg-surface-3 hover:text-foreground'
-                    )}
-                  >
-                    <SectionIcon className="size-3.5" />
-                    {sectionLabel}
-                  </button>
-                )
-              })}
+              {EXTERNAL_SECTIONS.map(
+                ({ id: sectionId, label: sectionLabel, icon: SectionIcon }) => {
+                  const isActive = !isProviders && activeSection === sectionId
+                  return (
+                    <button
+                      key={sectionId}
+                      onClick={() => handleSectionClick(activeLevel, sectionId)}
+                      className={cn(
+                        'flex w-full items-center gap-2.5 rounded-md px-4 py-1.5 text-xs transition-colors',
+                        isActive
+                          ? 'bg-surface-3 font-medium text-foreground ring-1 ring-border'
+                          : 'text-muted-foreground hover:bg-surface-3 hover:text-foreground'
+                      )}
+                    >
+                      <SectionIcon className="size-3.5" />
+                      {sectionLabel}
+                    </button>
+                  )
+                }
+              )}
             </div>
           </div>
         </div>
@@ -232,9 +228,7 @@ export function ContextManagerShell({
       {/* Main content */}
       <div className="flex-1 min-h-0 min-w-0 rounded-xl border border-border/50 bg-surface-2 flex flex-col overflow-hidden p-6">
         {activeSection === 'marketplace' && !isProviders ? (
-          <div className="flex-1 min-h-0 flex flex-col">
-            {renderContent()}
-          </div>
+          <div className="flex-1 min-h-0 flex flex-col">{renderContent()}</div>
         ) : (
           <>
             <div className="shrink-0 flex items-center justify-between mb-4">
@@ -245,9 +239,7 @@ export function ContextManagerShell({
               </h2>
               <div id="context-manager-header-actions" />
             </div>
-            <div className="flex-1 min-h-0">
-              {renderContent()}
-            </div>
+            <div className="flex-1 min-h-0">{renderContent()}</div>
           </>
         )}
       </div>
@@ -256,7 +248,10 @@ export function ContextManagerShell({
       <div id="context-manager-resize-handle" className="flex items-center" />
 
       {/* Editor panel — populated via portal from SkillsSection */}
-      <div id="context-manager-editor-panel" className="shrink-0 empty:hidden rounded-xl border border-border/50 bg-surface-2 overflow-y-auto p-6 flex flex-col" />
+      <div
+        id="context-manager-editor-panel"
+        className="shrink-0 empty:hidden rounded-xl border border-border/50 bg-surface-2 overflow-y-auto p-6 flex flex-col"
+      />
     </div>
   )
 }

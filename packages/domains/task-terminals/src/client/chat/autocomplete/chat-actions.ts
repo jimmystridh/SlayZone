@@ -31,7 +31,7 @@ export async function resetChat(
         taskId: session.taskId,
         mode: session.mode,
         cwd: session.cwd,
-        providerFlagsOverride: session.providerFlagsOverride ?? null,
+        providerFlagsOverride: session.providerFlagsOverride ?? null
       })
     } catch {
       /* ignore — interrupt is best-effort */
@@ -43,7 +43,7 @@ export async function resetChat(
       taskId: session.taskId,
       mode: session.mode,
       cwd: session.cwd,
-      providerFlagsOverride: session.providerFlagsOverride ?? null,
+      providerFlagsOverride: session.providerFlagsOverride ?? null
     })
     opts.onSuccess?.()
   } catch (err) {

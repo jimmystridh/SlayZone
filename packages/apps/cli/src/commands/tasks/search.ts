@@ -14,7 +14,7 @@ export async function searchAction(query: string, opts: SearchOpts): Promise<voi
 
   const conditions: string[] = [
     't.is_temporary = 0',
-    '(LOWER(t.title) LIKE :q OR LOWER(COALESCE(t.description, \'\')) LIKE :q)',
+    "(LOWER(t.title) LIKE :q OR LOWER(COALESCE(t.description, '')) LIKE :q)"
   ]
   const params: Record<string, string | number | null> = { ':q': q, ':limit': limit }
 

@@ -2,7 +2,10 @@ import { test, expect, seed, resetApp, TEST_PROJECT_PATH } from '../fixtures/ele
 import {
   testInvoke,
   ensureBrowserPanelVisible,
-  openTaskViaSearch, getAllViewIds, getActiveViewId, getViewsForTask,
+  openTaskViaSearch,
+  getAllViewIds,
+  getActiveViewId,
+  getViewsForTask
 } from '../fixtures/browser-view'
 import { getTestUrl, TEST_HOST_MATCH } from '../fixtures/test-server'
 
@@ -31,14 +34,28 @@ test.describe('Browser view z-ordering (NativeViewLayer)', () => {
     const viewId = await getActiveViewId(mainWindow, taskId)
 
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/'))
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15000 }).toContain(TEST_HOST_MATCH)
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15000 }
+      )
+      .toContain(TEST_HOST_MATCH)
 
     // View should be visible before dialog
-    await expect.poll(async () => {
-      return await testInvoke(mainWindow, 'browser:is-view-natively-visible', viewId) as boolean
-    }, { timeout: 5000 }).toBe(true)
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(
+            mainWindow,
+            'browser:is-view-natively-visible',
+            viewId
+          )) as boolean
+        },
+        { timeout: 5000 }
+      )
+      .toBe(true)
 
     // Open a dialog by clicking sidebar plus button
     const createBtn = mainWindow.locator('[data-slot="sidebar"] button:has(.lucide-plus)').first()
@@ -52,18 +69,36 @@ test.describe('Browser view z-ordering (NativeViewLayer)', () => {
     await overlay.waitFor({ state: 'visible', timeout: 5000 })
 
     // The browser view should hide while the dialog overlay is open.
-    await expect.poll(async () => {
-      return await testInvoke(mainWindow, 'browser:is-view-natively-visible', viewId) as boolean
-    }, { timeout: 3000 }).toBe(false)
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(
+            mainWindow,
+            'browser:is-view-natively-visible',
+            viewId
+          )) as boolean
+        },
+        { timeout: 3000 }
+      )
+      .toBe(false)
 
     // Close dialog
     await mainWindow.keyboard.press('Escape')
     await overlay.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {})
 
     // The browser view should restore after the dialog closes.
-    await expect.poll(async () => {
-      return await testInvoke(mainWindow, 'browser:is-view-natively-visible', viewId) as boolean
-    }, { timeout: 3000 }).toBe(true)
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(
+            mainWindow,
+            'browser:is-view-natively-visible',
+            viewId
+          )) as boolean
+        },
+        { timeout: 3000 }
+      )
+      .toBe(true)
   })
 
   test('views survive hideAll/showAll cycle', async ({ mainWindow }) => {
@@ -100,8 +135,11 @@ test.describe('Browser view z-ordering (NativeViewLayer)', () => {
     const viewsBefore = await getAllViewIds(mainWindow)
 
     // Open a dropdown in the browser toolbar
-    const importBtn = mainWindow.locator('[data-browser-panel]').first()
-      .locator('button[aria-label="Import URL from another task"]').first()
+    const importBtn = mainWindow
+      .locator('[data-browser-panel]')
+      .first()
+      .locator('button[aria-label="Import URL from another task"]')
+      .first()
 
     if (await importBtn.isVisible().catch(() => false)) {
       await importBtn.click()
@@ -163,7 +201,13 @@ test.describe('Browser view z-ordering (NativeViewLayer)', () => {
 
     // Create a second task
     const s = (await import('./fixtures/electron')).seed(mainWindow)
-    const t2 = await s.createTask({ projectId: (await mainWindow.evaluate(() => window.api.db.getProjects())).find((p: any) => p.name === 'ZOrder T')!.id, title: 'ZOrder task B', status: 'todo' })
+    const t2 = await s.createTask({
+      projectId: (await mainWindow.evaluate(() => window.api.db.getProjects())).find(
+        (p: any) => p.name === 'ZOrder T'
+      )!.id,
+      title: 'ZOrder task B',
+      status: 'todo'
+    })
     await s.refreshData()
 
     // Open second task
@@ -172,20 +216,32 @@ test.describe('Browser view z-ordering (NativeViewLayer)', () => {
     await mainWindow.waitForTimeout(500)
 
     // Task A's view should be hidden (task A is inactive)
-    const visibleA = await testInvoke(mainWindow, 'browser:is-view-natively-visible', viewIdA) as boolean
+    const visibleA = (await testInvoke(
+      mainWindow,
+      'browser:is-view-natively-visible',
+      viewIdA
+    )) as boolean
     expect(visibleA).toBe(false)
 
     // Task B's views should be on screen
     const viewsB = await getViewsForTask(mainWindow, t2.id)
     if (viewsB.length > 0) {
-      const boundsB = await testInvoke(mainWindow, 'browser:get-actual-native-bounds', viewsB[0]) as { x: number }
+      const boundsB = (await testInvoke(
+        mainWindow,
+        'browser:get-actual-native-bounds',
+        viewsB[0]
+      )) as { x: number }
       expect(boundsB.x).toBeGreaterThanOrEqual(0)
     }
 
     // Switch back to task A — its views should restore
     await openTaskViaSearch(mainWindow, 'ZOrder task')
     await mainWindow.waitForTimeout(500)
-    const boundsAAfter = await testInvoke(mainWindow, 'browser:get-actual-native-bounds', viewIdA) as { x: number } | null
+    const boundsAAfter = (await testInvoke(
+      mainWindow,
+      'browser:get-actual-native-bounds',
+      viewIdA
+    )) as { x: number } | null
     if (boundsAAfter) {
       expect(boundsAAfter.x).toBeGreaterThanOrEqual(0)
     }

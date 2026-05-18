@@ -10,7 +10,7 @@ import type { McpToolsDeps } from './types'
 export function registerUpdateTaskTool(server: McpServer, deps: McpToolsDeps): void {
   server.tool(
     'update_task',
-    'Update a task\'s details (title, description, status, priority, assignee, due date). Prefer calling get_current_task_id first, then pass that as task_id. In task terminals, you can source task_id from local $SLAYZONE_TASK_ID.',
+    "Update a task's details (title, description, status, priority, assignee, due date). Prefer calling get_current_task_id first, then pass that as task_id. In task terminals, you can source task_id from local $SLAYZONE_TASK_ID.",
     {
       task_id: z.string().describe('The task ID to update (read from $SLAYZONE_TASK_ID env var)'),
       title: z.string().optional().describe('New title'),
@@ -19,7 +19,13 @@ export function registerUpdateTaskTool(server: McpServer, deps: McpToolsDeps): v
       priority: z.number().min(1).max(5).optional().describe('Priority 1-5 (1=highest)'),
       assignee: z.string().nullable().optional().describe('Assignee name (null to clear)'),
       due_date: z.string().nullable().optional().describe('Due date ISO string (null to clear)'),
-      parent_id: z.string().nullable().optional().describe('Reparent task. String = new parent id (must be in same project, no cycles, not archived). null = detach to root.'),
+      parent_id: z
+        .string()
+        .nullable()
+        .optional()
+        .describe(
+          'Reparent task. String = new parent id (must be in same project, no cycles, not archived). null = detach to root.'
+        ),
       close: z.boolean().optional().describe('Close the task tab in the UI')
     },
     async ({ task_id, due_date, parent_id, close, ...fields }) => {
@@ -28,17 +34,22 @@ export function registerUpdateTaskTool(server: McpServer, deps: McpToolsDeps): v
           | { project_id: string }
           | undefined
         if (!taskRow) {
-          return { content: [{ type: 'text' as const, text: `Task ${task_id} not found` }], isError: true }
+          return {
+            content: [{ type: 'text' as const, text: `Task ${task_id} not found` }],
+            isError: true
+          }
         }
 
         const projectColumns = getProjectColumns(deps.db, taskRow.project_id)
         if (!isKnownStatus(fields.status, projectColumns)) {
           const allowed = getAllowedStatusesText(projectColumns)
           return {
-            content: [{
-              type: 'text' as const,
-              text: `Unknown status "${fields.status}" for task ${task_id}. Allowed statuses: ${allowed}.`
-            }],
+            content: [
+              {
+                type: 'text' as const,
+                text: `Unknown status "${fields.status}" for task ${task_id}. Allowed statuses: ${allowed}.`
+              }
+            ],
             isError: true
           }
         }
@@ -55,17 +66,22 @@ export function registerUpdateTaskTool(server: McpServer, deps: McpToolsDeps): v
         return { content: [{ type: 'text' as const, text: (err as Error).message }], isError: true }
       }
       if (!updated) {
-        return { content: [{ type: 'text' as const, text: `Task ${task_id} not found` }], isError: true }
+        return {
+          content: [{ type: 'text' as const, text: `Task ${task_id} not found` }],
+          isError: true
+        }
       }
       deps.notifyRenderer()
       if (close) {
         broadcastToWindows('app:close-task', task_id)
       }
       return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify(updated, null, 2)
-        }]
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(updated, null, 2)
+          }
+        ]
       }
     }
   )

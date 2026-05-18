@@ -22,7 +22,11 @@ function authUserIdFromSubject(subject: string | undefined): Id<'users'> | null 
   return userId as Id<'users'>
 }
 
-async function findCurrentUser(ctx: QueryCtx | MutationCtx, tokenIdentifier: string, subject?: string): Promise<Doc<'users'> | null> {
+async function findCurrentUser(
+  ctx: QueryCtx | MutationCtx,
+  tokenIdentifier: string,
+  subject?: string
+): Promise<Doc<'users'> | null> {
   const authUserId = authUserIdFromSubject(subject)
   const authUser = authUserId ? await ctx.db.get(authUserId) : null
   if (authUser) return authUser
@@ -57,7 +61,7 @@ async function upsertViewer(ctx: MutationCtx): Promise<Id<'users'>> {
           ? profile.image
           : typeof profile.avatar_url === 'string'
             ? profile.avatar_url
-        : undefined
+            : undefined
 
   const legacyUser = await ctx.db
     .query('users')
@@ -184,11 +188,13 @@ export const syncViewerProfile = mutation({
 
 export const syncDailyStats = mutation({
   args: {
-    days: v.array(v.object({
-      date: v.string(),
-      totalTokens: v.number(),
-      totalCompletedTasks: v.number()
-    }))
+    days: v.array(
+      v.object({
+        date: v.string(),
+        totalTokens: v.number(),
+        totalCompletedTasks: v.number()
+      })
+    )
   },
   handler: async (ctx, args) => {
     const userId = await upsertViewer(ctx)
@@ -239,7 +245,8 @@ export const getMyTotals = query({
       .first()
 
     const githubNumericId =
-      parseGithubNumericId(githubAccount?.providerAccountId) ?? parseGithubNumericId(user.githubId ?? null)
+      parseGithubNumericId(githubAccount?.providerAccountId) ??
+      parseGithubNumericId(user.githubId ?? null)
 
     const stats = await ctx.db
       .query('leaderboardDailyStats')
@@ -259,9 +266,7 @@ export const getMyTotals = query({
         name: user.name ?? null,
         image: user.image ?? null
       },
-      totals: stats.length > 0
-        ? { totalTokens, totalCompletedTasks, updatedAt: lastUpdated }
-        : null
+      totals: stats.length > 0 ? { totalTokens, totalCompletedTasks, updatedAt: lastUpdated } : null
     }
   }
 })
@@ -351,7 +356,10 @@ export const topByTotalTokens = query({
     const cutoff = getDateCutoff(args.period ?? 'all-time')
 
     const stats = cutoff
-      ? await ctx.db.query('leaderboardDailyStats').withIndex('by_date', (q) => q.gte('date', cutoff)).collect()
+      ? await ctx.db
+          .query('leaderboardDailyStats')
+          .withIndex('by_date', (q) => q.gte('date', cutoff))
+          .collect()
       : await ctx.db.query('leaderboardDailyStats').collect()
 
     const userTotals = new Map<Id<'users'>, number>()
@@ -376,10 +384,7 @@ export const topByTotalTokens = query({
 
     const viewerUserId = await getViewerUserId(ctx)
     const viewerRank = viewerUserId ? allEntries.findIndex((e) => e.userId === viewerUserId) : -1
-    const viewer =
-      viewerRank >= limit
-        ? { ...allEntries[viewerRank], rank: viewerRank + 1 }
-        : null
+    const viewer = viewerRank >= limit ? { ...allEntries[viewerRank], rank: viewerRank + 1 } : null
 
     return { entries: allEntries.slice(0, limit), viewer }
   }
@@ -395,7 +400,10 @@ export const topByCompletedTasks = query({
     const cutoff = getDateCutoff(args.period ?? 'all-time')
 
     const stats = cutoff
-      ? await ctx.db.query('leaderboardDailyStats').withIndex('by_date', (q) => q.gte('date', cutoff)).collect()
+      ? await ctx.db
+          .query('leaderboardDailyStats')
+          .withIndex('by_date', (q) => q.gte('date', cutoff))
+          .collect()
       : await ctx.db.query('leaderboardDailyStats').collect()
 
     const userTotals = new Map<Id<'users'>, number>()
@@ -420,10 +428,7 @@ export const topByCompletedTasks = query({
 
     const viewerUserId = await getViewerUserId(ctx)
     const viewerRank = viewerUserId ? allEntries.findIndex((e) => e.userId === viewerUserId) : -1
-    const viewer =
-      viewerRank >= limit
-        ? { ...allEntries[viewerRank], rank: viewerRank + 1 }
-        : null
+    const viewer = viewerRank >= limit ? { ...allEntries[viewerRank], rank: viewerRank + 1 } : null
 
     return { entries: allEntries.slice(0, limit), viewer }
   }

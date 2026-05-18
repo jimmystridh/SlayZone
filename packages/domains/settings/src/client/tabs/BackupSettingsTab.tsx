@@ -72,15 +72,14 @@ export function BackupSettingsTab() {
   const [editingName, setEditingName] = useState('')
 
   const loadData = useCallback(async () => {
-    const [b, s] = await Promise.all([
-      window.api.backup.list(),
-      window.api.backup.getSettings()
-    ])
+    const [b, s] = await Promise.all([window.api.backup.list(), window.api.backup.getSettings()])
     setBackups(b)
     setSettings(s)
   }, [])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   const handleCreate = async () => {
     setCreating(true)
@@ -138,7 +137,11 @@ export function BackupSettingsTab() {
 
       <div className="flex items-center gap-2">
         <Button variant="outline" onClick={handleCreate} disabled={creating}>
-          {creating ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Download className="mr-2 size-4" />}
+          {creating ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 size-4" />
+          )}
           Create Backup
         </Button>
         <Button variant="ghost" onClick={() => window.api.backup.revealInFinder()}>
@@ -177,7 +180,9 @@ export function BackupSettingsTab() {
                   </SelectTrigger>
                   <SelectContent>
                     {INTERVAL_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -194,7 +199,9 @@ export function BackupSettingsTab() {
                   </SelectTrigger>
                   <SelectContent>
                     {MAX_BACKUPS_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -208,7 +215,11 @@ export function BackupSettingsTab() {
       <Card>
         <CardHeader>
           <CardTitle>Backups</CardTitle>
-          <CardDescription>{backups.length === 0 ? 'No backups yet. Create one to get started.' : `${backups.length} backup${backups.length === 1 ? '' : 's'}`}</CardDescription>
+          <CardDescription>
+            {backups.length === 0
+              ? 'No backups yet. Create one to get started.'
+              : `${backups.length} backup${backups.length === 1 ? '' : 's'}`}
+          </CardDescription>
         </CardHeader>
         {backups.length > 0 && (
           <CardContent className="space-y-1">
@@ -235,12 +246,20 @@ export function BackupSettingsTab() {
                         value={editingName}
                         onChange={(e) => setEditingName(e.target.value)}
                         autoFocus
-                        onKeyDown={(e) => { if (e.key === 'Escape') setEditingFilename(null) }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') setEditingFilename(null)
+                        }}
                       />
                       <Button type="submit" variant="ghost" size="sm" className="size-7 p-0">
                         <Check className="size-3.5" />
                       </Button>
-                      <Button type="button" variant="ghost" size="sm" className="size-7 p-0" onClick={() => setEditingFilename(null)}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="size-7 p-0"
+                        onClick={() => setEditingFilename(null)}
+                      >
                         <X className="size-3.5" />
                       </Button>
                     </form>
@@ -248,16 +267,22 @@ export function BackupSettingsTab() {
                     <span className="text-sm font-medium truncate">{backup.name}</span>
                   )}
                   <span
-                    className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${{
-                      auto: 'bg-blue-500/10 text-blue-500',
-                      manual: 'bg-emerald-500/10 text-emerald-500',
-                      migration: 'bg-amber-500/10 text-amber-500',
-                    }[backup.type]}`}
+                    className={`shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${
+                      {
+                        auto: 'bg-blue-500/10 text-blue-500',
+                        manual: 'bg-emerald-500/10 text-emerald-500',
+                        migration: 'bg-amber-500/10 text-amber-500'
+                      }[backup.type]
+                    }`}
                   >
                     {backup.type}
                   </span>
-                  <span className="text-muted-foreground text-xs shrink-0">{formatTimestamp(backup.timestamp)}</span>
-                  <span className="text-muted-foreground text-xs shrink-0">{formatBytes(backup.sizeBytes)}</span>
+                  <span className="text-muted-foreground text-xs shrink-0">
+                    {formatTimestamp(backup.timestamp)}
+                  </span>
+                  <span className="text-muted-foreground text-xs shrink-0">
+                    {formatBytes(backup.sizeBytes)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 shrink-0 ml-2">
                   <Button
@@ -281,11 +306,7 @@ export function BackupSettingsTab() {
                   >
                     <Pencil className="size-3.5" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDeleteTarget(backup)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(backup)}>
                     <Trash2 className="size-3.5 text-destructive" />
                   </Button>
                 </div>
@@ -301,22 +322,17 @@ export function BackupSettingsTab() {
           <AlertDialogHeader>
             <AlertDialogTitle>Restore Backup</AlertDialogTitle>
             <AlertDialogDescription>
-              This will replace your current database with{' '}
-              <strong>{restoreTarget?.name}</strong> ({restoreTarget && formatTimestamp(restoreTarget.timestamp)}) and restart the app.
+              This will replace your current database with <strong>{restoreTarget?.name}</strong> (
+              {restoreTarget && formatTimestamp(restoreTarget.timestamp)}) and restart the app.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex items-center gap-3 py-2">
-            <Switch
-              checked={createSafetyBackup}
-              onCheckedChange={setCreateSafetyBackup}
-            />
+            <Switch checked={createSafetyBackup} onCheckedChange={setCreateSafetyBackup} />
             <span className="text-sm">Create safety backup of current data first</span>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRestore}>
-              Restore & Restart
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleRestore}>Restore & Restart</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -327,14 +343,13 @@ export function BackupSettingsTab() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Backup</AlertDialogTitle>
             <AlertDialogDescription>
-              Delete <strong>{deleteTarget?.name}</strong> ({deleteTarget && formatTimestamp(deleteTarget.timestamp)})? This cannot be undone.
+              Delete <strong>{deleteTarget?.name}</strong> (
+              {deleteTarget && formatTimestamp(deleteTarget.timestamp)})? This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Delete
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

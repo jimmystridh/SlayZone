@@ -22,7 +22,7 @@ export function syncTerminalModes(db: Database): void {
     const existsStmt = db.prepare('SELECT id FROM terminal_modes WHERE id = ?')
 
     // Prune legacy built-ins that are no longer in the code definition
-    const builtinIds = DEFAULT_TERMINAL_MODES.map(m => m.id)
+    const builtinIds = DEFAULT_TERMINAL_MODES.map((m) => m.id)
     const placeholders = builtinIds.map(() => '?').join(',')
     db.prepare(`
       DELETE FROM terminal_modes

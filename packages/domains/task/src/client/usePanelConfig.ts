@@ -1,17 +1,24 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { PanelConfig, PanelView, WebPanelDefinition } from '../shared/types'
-import { DEFAULT_PANEL_CONFIG, isPanelEnabled, orderIdToTaskId, orderIdToHomeId } from '../shared/types'
+import {
+  DEFAULT_PANEL_CONFIG,
+  isPanelEnabled,
+  orderIdToTaskId,
+  orderIdToHomeId
+} from '../shared/types'
 import { mergePanelOrder, mergePredefinedWebPanels } from '../shared/panel-config'
 
 const SETTINGS_KEY = 'panel_config'
 const CHANGE_EVENT = 'panel-config-changed'
 
 function loadConfig(): Promise<PanelConfig> {
-  return window.api.settings.get(SETTINGS_KEY).then(raw => {
+  return window.api.settings.get(SETTINGS_KEY).then((raw) => {
     if (raw) {
       try {
         return mergePanelOrder(mergePredefinedWebPanels(JSON.parse(raw) as PanelConfig))
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
     return DEFAULT_PANEL_CONFIG
   })
@@ -32,7 +39,9 @@ export function usePanelConfig(): {
   useEffect(() => {
     void loadConfig().then(setConfig)
 
-    const onChanged = () => { void loadConfig().then(setConfig) }
+    const onChanged = () => {
+      void loadConfig().then(setConfig)
+    }
     window.addEventListener(CHANGE_EVENT, onChanged)
     const cleanupIpc = window.api?.app?.onSettingsChanged?.(onChanged)
     return () => {
@@ -48,7 +57,7 @@ export function usePanelConfig(): {
   }, [])
 
   const enabledWebPanels = useMemo(
-    () => config.webPanels.filter(wp => isPanelEnabled(config, wp.id, 'task')),
+    () => config.webPanels.filter((wp) => isPanelEnabled(config, wp.id, 'task')),
     [config]
   )
 
@@ -70,5 +79,12 @@ export function usePanelConfig(): {
     return out
   }, [config])
 
-  return { config, updateConfig, enabledWebPanels, isBuiltinEnabled, getOrderedTaskIds, getOrderedHomeIds }
+  return {
+    config,
+    updateConfig,
+    enabledWebPanels,
+    isBuiltinEnabled,
+    getOrderedTaskIds,
+    getOrderedHomeIds
+  }
 }

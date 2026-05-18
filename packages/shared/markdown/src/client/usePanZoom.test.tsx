@@ -12,7 +12,14 @@ interface HarnessProps {
   fitOnMount?: boolean
 }
 
-function Harness({ svg, hostSize, controlsRef, hostRefOut, contentRefOut, fitOnMount = false }: HarnessProps) {
+function Harness({
+  svg,
+  hostSize,
+  controlsRef,
+  hostRefOut,
+  contentRefOut,
+  fitOnMount = false
+}: HarnessProps) {
   const { hostRef, contentRef, controls } = usePanZoom({ fitOnMount })
   const initRef = useRef(false)
   useEffect(() => {
@@ -23,7 +30,17 @@ function Harness({ svg, hostSize, controlsRef, hostRefOut, contentRefOut, fitOnM
     initRef.current = true
     if (hostSize && hostRef.current) {
       const el = hostRef.current
-      const rect = { x: 0, y: 0, top: 0, left: 0, right: hostSize.w, bottom: hostSize.h, width: hostSize.w, height: hostSize.h, toJSON: () => ({}) }
+      const rect = {
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: hostSize.w,
+        bottom: hostSize.h,
+        width: hostSize.w,
+        height: hostSize.h,
+        toJSON: () => ({})
+      }
       el.getBoundingClientRect = () => rect as DOMRect
       Object.defineProperty(el, 'clientWidth', { value: hostSize.w, configurable: true })
       Object.defineProperty(el, 'clientHeight', { value: hostSize.h, configurable: true })
@@ -44,7 +61,9 @@ function flushRaf() {
 
 function parseTransform(el: HTMLElement | null): { x: number; y: number; scale: number } {
   if (!el) return { x: 0, y: 0, scale: 1 }
-  const m = /translate3d\(([-\d.]+)px,\s*([-\d.]+)px,\s*0\)\s*scale\(([-\d.]+)\)/.exec(el.style.transform)
+  const m = /translate3d\(([-\d.]+)px,\s*([-\d.]+)px,\s*0\)\s*scale\(([-\d.]+)\)/.exec(
+    el.style.transform
+  )
   if (!m) return { x: 0, y: 0, scale: 1 }
   return { x: parseFloat(m[1]), y: parseFloat(m[2]), scale: parseFloat(m[3]) }
 }
@@ -70,7 +89,7 @@ describe('usePanZoom', () => {
         controlsRef={controls}
         hostRefOut={host}
         contentRefOut={content}
-      />,
+      />
     )
     await act(async () => {
       controls.current!.fit()
@@ -90,7 +109,7 @@ describe('usePanZoom', () => {
         controlsRef={controls}
         hostRefOut={host}
         contentRefOut={content}
-      />,
+      />
     )
     await act(async () => {
       controls.current!.setTransform({ x: 0, y: 0, scale: 1 })
@@ -112,7 +131,7 @@ describe('usePanZoom', () => {
         controlsRef={controls}
         hostRefOut={host}
         contentRefOut={content}
-      />,
+      />
     )
     await act(async () => {
       controls.current!.setTransform({ x: 0, y: 0, scale: 1 })
@@ -138,14 +157,20 @@ describe('usePanZoom', () => {
         controlsRef={controls}
         hostRefOut={host}
         contentRefOut={content}
-      />,
+      />
     )
     await act(async () => {
       controls.current!.setTransform({ x: 0, y: 0, scale: 1 })
       await flushRaf()
     })
     await act(async () => {
-      const ev = new WheelEvent('wheel', { deltaY: -100, clientX: 100, clientY: 100, bubbles: true, cancelable: true })
+      const ev = new WheelEvent('wheel', {
+        deltaY: -100,
+        clientX: 100,
+        clientY: 100,
+        bubbles: true,
+        cancelable: true
+      })
       content.current!.dispatchEvent(ev)
       await flushRaf()
     })

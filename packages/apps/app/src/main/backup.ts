@@ -16,7 +16,8 @@ const DEFAULT_BACKUP_SETTINGS: BackupSettings = {
 }
 
 // Filename format: slayzone.dev.2026-03-07T12-30-00-000Z.manual.sqlite
-const BACKUP_REGEX = /^slayzone(?:\.dev)?\.(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z)\.(auto|manual|migration)\.sqlite$/
+const BACKUP_REGEX =
+  /^slayzone(?:\.dev)?\.(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z)\.(auto|manual|migration)\.sqlite$/
 
 function getBackupsDir(): string {
   const userDataPath = process.env.SLAYZONE_DB_DIR || app.getPath('userData')
@@ -31,7 +32,9 @@ function buildBackupFilename(type: 'auto' | 'manual' | 'migration'): string {
   return `${prefix}.${timestamp}.${type}.sqlite`
 }
 
-function parseBackupFilename(filename: string): { timestamp: Date; type: 'auto' | 'manual' | 'migration' } | null {
+function parseBackupFilename(
+  filename: string
+): { timestamp: Date; type: 'auto' | 'manual' | 'migration' } | null {
   const match = filename.match(BACKUP_REGEX)
   if (!match) return null
   // Restore ISO format: 2026-03-07T12-30-00-000Z → 2026-03-07T12:30:00.000Z
@@ -49,23 +52,33 @@ let _db: Database.Database | null = null
 
 function getBackupNames(): Record<string, string> {
   if (!_db) return {}
-  const row = _db.prepare('SELECT value FROM settings WHERE key = ?').get('backup_names') as { value: string } | undefined
+  const row = _db.prepare('SELECT value FROM settings WHERE key = ?').get('backup_names') as
+    | { value: string }
+    | undefined
   if (!row) return {}
-  try { return JSON.parse(row.value) } catch { return {} }
+  try {
+    return JSON.parse(row.value)
+  } catch {
+    return {}
+  }
 }
 
 function setBackupName(filename: string, name: string): void {
   if (!_db) return
   const names = getBackupNames()
   names[filename] = name
-  _db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('backup_names', JSON.stringify(names))
+  _db
+    .prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
+    .run('backup_names', JSON.stringify(names))
 }
 
 function removeBackupName(filename: string): void {
   if (!_db) return
   const names = getBackupNames()
   delete names[filename]
-  _db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('backup_names', JSON.stringify(names))
+  _db
+    .prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
+    .run('backup_names', JSON.stringify(names))
 }
 
 function listBackups(): BackupInfo[] {
@@ -89,7 +102,11 @@ function listBackups(): BackupInfo[] {
   return backups
 }
 
-async function createBackup(db: Database.Database, type: 'auto' | 'manual', name?: string): Promise<BackupInfo> {
+async function createBackup(
+  db: Database.Database,
+  type: 'auto' | 'manual',
+  name?: string
+): Promise<BackupInfo> {
   const dir = getBackupsDir()
   const filename = buildBackupFilename(type)
   const destPath = path.join(dir, filename)
@@ -155,7 +172,9 @@ function restoreBackup(filename: string): void {
 }
 
 function getBackupSettings(db: Database.Database): BackupSettings {
-  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get('backup_settings') as { value: string } | undefined
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get('backup_settings') as
+    | { value: string }
+    | undefined
   if (!row) return { ...DEFAULT_BACKUP_SETTINGS }
   try {
     return { ...DEFAULT_BACKUP_SETTINGS, ...JSON.parse(row.value) }
@@ -164,7 +183,10 @@ function getBackupSettings(db: Database.Database): BackupSettings {
   }
 }
 
-function setBackupSettings(db: Database.Database, partial: Partial<BackupSettings>): BackupSettings {
+function setBackupSettings(
+  db: Database.Database,
+  partial: Partial<BackupSettings>
+): BackupSettings {
   const current = getBackupSettings(db)
   const merged = { ...current, ...partial }
   db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(
@@ -220,7 +242,9 @@ export async function createPreMigrationBackup(
   const filename = buildBackupFilename('migration')
   try {
     await db.backup(path.join(dir, filename))
-    console.error(`[slayzone] Pre-migration backup: v${currentVersion}→v${targetVersion} → ${filename}`)
+    console.error(
+      `[slayzone] Pre-migration backup: v${currentVersion}→v${targetVersion} → ${filename}`
+    )
     cleanupOldBackups('migration', 3)
   } catch (err) {
     console.error(`[slayzone] Pre-migration backup failed (continuing): ${err}`)

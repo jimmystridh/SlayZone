@@ -7,7 +7,7 @@ export {
   deleteTaskOp,
   restoreTaskOp,
   unarchiveTaskOp,
-  updateTaskOp,
+  updateTaskOp
 } from './ops'
 export type { CreateImportedTaskInput } from './ops'
 export { taskEvents } from './events'
@@ -15,6 +15,14 @@ export type { TaskEventMap } from './events'
 export type { OpDeps } from './ops/shared'
 export { registerTaskTemplateHandlers } from './template-handlers'
 export { registerFilesHandlers } from './files'
-export { buildPdfHtml, buildMermaidPdfHtml, buildPngHtml, escapeHtml, PDF_CSS, renderToPdf, renderToPng } from './artifact-export'
+export {
+  buildPdfHtml,
+  buildMermaidPdfHtml,
+  buildPngHtml,
+  escapeHtml,
+  PDF_CSS,
+  renderToPdf,
+  renderToPng
+} from './artifact-export'
 export { startArtifactWatcher, closeArtifactWatcher } from './artifact-watcher'
 export { handleAttentionTransition } from './attention'

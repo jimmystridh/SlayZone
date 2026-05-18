@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 test.describe('Kanban interactions', () => {
@@ -12,7 +12,11 @@ test.describe('Kanban interactions', () => {
     // Find or create a dedicated project
     let kanbanProject = projects.find((p: { name: string }) => p.name === 'Kanban Test')
     if (!kanbanProject) {
-      kanbanProject = await s.createProject({ name: 'Kanban Test', color: '#06b6d4', path: TEST_PROJECT_PATH })
+      kanbanProject = await s.createProject({
+        name: 'Kanban Test',
+        color: '#06b6d4',
+        path: TEST_PROJECT_PATH
+      })
     }
     const p = kanbanProject
 
@@ -31,8 +35,16 @@ test.describe('Kanban interactions', () => {
     await s.createTask({ projectId: p.id, title: 'Drag me task', status: 'todo' })
 
     // Seed blocker/blocked pair
-    const blockerTask = await s.createTask({ projectId: p.id, title: 'Kanban blocker', status: 'in_progress' })
-    const blockedTask = await s.createTask({ projectId: p.id, title: 'Kanban blocked', status: 'todo' })
+    const blockerTask = await s.createTask({
+      projectId: p.id,
+      title: 'Kanban blocker',
+      status: 'in_progress'
+    })
+    const blockedTask = await s.createTask({
+      projectId: p.id,
+      title: 'Kanban blocked',
+      status: 'todo'
+    })
     await s.addBlocker(blockedTask.id, blockerTask.id)
 
     // Seed tasks for bulk archive
@@ -64,7 +76,9 @@ test.describe('Kanban interactions', () => {
       await mainWindow.waitForTimeout(200)
 
       // Move to the In Progress column (below header)
-      await mainWindow.mouse.move(columnBox.x + columnBox.width / 2, columnBox.y + 100, { steps: 10 })
+      await mainWindow.mouse.move(columnBox.x + columnBox.width / 2, columnBox.y + 100, {
+        steps: 10
+      })
       await mainWindow.mouse.up()
 
       // Verify status changed via API
@@ -85,9 +99,12 @@ test.describe('Kanban interactions', () => {
     const overduePill = cardContainer.getByText(overdueDate, { exact: true }).last()
     await expect(overduePill).toBeVisible({ timeout: 5_000 })
 
-    const hasOverdueStyling = await overduePill.evaluate((el) =>
-      el.className.includes('text-destructive') || el.className.includes('ring-destructive')
-    ).catch(() => false)
+    const hasOverdueStyling = await overduePill
+      .evaluate(
+        (el) =>
+          el.className.includes('text-destructive') || el.className.includes('ring-destructive')
+      )
+      .catch(() => false)
 
     expect(hasOverdueStyling).toBe(true)
   })
@@ -98,7 +115,9 @@ test.describe('Kanban interactions', () => {
 
     // Blocked tasks render a "Blocked" pill on the card.
     const cardContainer = blockedCard.locator('..').locator('..')
-    await expect(cardContainer.getByText('Blocked', { exact: true })).toBeVisible({ timeout: 3_000 })
+    await expect(cardContainer.getByText('Blocked', { exact: true })).toBeVisible({
+      timeout: 3_000
+    })
   })
 
   test('bulk archive done tasks via API and verify hidden', async ({ mainWindow }) => {
@@ -124,7 +143,10 @@ test.describe('Kanban interactions', () => {
     await expect(mainWindow.getByText('Done bulk 1')).not.toBeVisible({ timeout: 3_000 })
 
     // Open Display popover, then toggle show archived switch
-    await mainWindow.getByRole('button', { name: /Display/ }).first().click()
+    await mainWindow
+      .getByRole('button', { name: /Display/ })
+      .first()
+      .click()
     const archivedSwitch = mainWindow.locator('#display-archived')
     await expect(archivedSwitch).toBeVisible({ timeout: 3_000 })
     await archivedSwitch.click()
@@ -144,7 +166,9 @@ test.describe('Kanban interactions', () => {
   test('edit task title persists across navigation', async ({ mainWindow }) => {
     // Close any open task tabs first by going home
     await goHome(mainWindow)
-    await expect(mainWindow.getByText('Concurrent edit task').first()).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.getByText('Concurrent edit task').first()).toBeVisible({
+      timeout: 5_000
+    })
 
     // Open task
     await mainWindow.getByText('Concurrent edit task').first().click()
@@ -158,7 +182,9 @@ test.describe('Kanban interactions', () => {
 
     // Navigate away
     await goHome(mainWindow)
-    await expect(mainWindow.getByText('Edited concurrent task').first()).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.getByText('Edited concurrent task').first()).toBeVisible({
+      timeout: 5_000
+    })
 
     // Verify persisted via API
     const tasks = await seed(mainWindow).getTasks()

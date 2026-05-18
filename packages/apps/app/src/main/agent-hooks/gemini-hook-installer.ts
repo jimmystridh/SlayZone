@@ -19,7 +19,7 @@ export const GEMINI_HOOK_EVENTS = [
   'SessionEnd',
   'BeforeAgent',
   'AfterAgent',
-  'AfterTool',
+  'AfterTool'
 ] as const
 
 const TOOL_MATCHED_EVENTS = new Set<string>(['AfterTool'])
@@ -91,7 +91,7 @@ async function isGeminiInstalled(): Promise<boolean> {
  * - Atomic write via `writeFileIfChanged` (no-op if unchanged).
  */
 export async function installGeminiHooks(
-  opts: InstallGeminiHooksOpts,
+  opts: InstallGeminiHooksOpts
 ): Promise<InstallGeminiHooksResult> {
   // E2E specs assert the file is written; the test runner doesn't have
   // `gemini` on PATH, so the probe would otherwise short-circuit. Same env
@@ -117,7 +117,11 @@ export async function installGeminiHooks(
       }
       settings = parsed as GeminiSettings
     } catch {
-      return { installed: false, eventsAdded: [], reason: 'settings.json is not valid JSON — refusing to overwrite' }
+      return {
+        installed: false,
+        eventsAdded: [],
+        reason: 'settings.json is not valid JSON — refusing to overwrite'
+      }
     }
   } catch (err: unknown) {
     if (!isENOENT(err)) throw err
@@ -150,9 +154,9 @@ function buildManagedEntry(event: string, scriptPath: string): GeminiHookEntry {
       {
         type: 'command',
         command: scriptPath,
-        [MARKER_KEY]: true,
-      },
-    ],
+        [MARKER_KEY]: true
+      }
+    ]
   }
   if (TOOL_MATCHED_EVENTS.has(event)) entry.matcher = '*'
   return entry

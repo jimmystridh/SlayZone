@@ -4,7 +4,15 @@ export { FilterBarB as FilterBar } from './FilterBarB'
 export { useTasksData } from './useTasksData'
 export { useUndoableTaskActions } from './useUndoableTaskActions'
 export { useFilterState, useFilterStateMap, useFilterStore } from './useFilterState'
-export { applyFilters, groupTasksBy, sortTasks, PRIORITY_LABELS, type Column, type GroupKey, type GroupOpts } from './kanban'
+export {
+  applyFilters,
+  groupTasksBy,
+  sortTasks,
+  PRIORITY_LABELS,
+  type Column,
+  type GroupKey,
+  type GroupOpts
+} from './kanban'
 export { getViewConfig, type FilterState, type ViewConfig, type SortKey } from './FilterState'
 export { useSnoozeWakeUp } from './useSnoozeWakeUp'
 export { TaskContextMenu } from './TaskContextMenu'

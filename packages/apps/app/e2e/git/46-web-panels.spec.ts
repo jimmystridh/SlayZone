@@ -1,4 +1,12 @@
-import { test, expect, seed, clickSettings, clickProject, goHome, resetApp} from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  clickSettings,
+  clickProject,
+  goHome,
+  resetApp
+} from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { pressShortcut } from '../fixtures/shortcuts'
 import { spawnSync } from 'child_process'
@@ -19,10 +27,7 @@ test.describe('Web panels', () => {
     page.locator('[role="dialog"][aria-label="Settings"]').last()
 
   /** Find a panel card in settings by name. */
-  const findCard = (
-    dialog: import('@playwright/test').Locator,
-    name: string
-  ) =>
+  const findCard = (dialog: import('@playwright/test').Locator, name: string) =>
     dialog.locator('.space-y-2 > *').filter({ hasText: name }).first()
 
   const openPanelsTab = async (page: import('@playwright/test').Page) => {
@@ -42,7 +47,12 @@ test.describe('Web panels', () => {
     // Navigate to panels tab; handle being in a sub-config by clicking back first
     const panelsTab = dialog.getByTestId('settings-tab-panels')
     await panelsTab.click()
-    if (!(await dialog.getByPlaceholder('Name').isVisible({ timeout: 500 }).catch(() => false))) {
+    if (
+      !(await dialog
+        .getByPlaceholder('Name')
+        .isVisible({ timeout: 500 })
+        .catch(() => false))
+    ) {
       const backBtn = dialog.getByRole('button', { name: 'Panels', exact: true }).first()
       if (await backBtn.isVisible({ timeout: 300 }).catch(() => false)) {
         await backBtn.click({ force: true }).catch(() => {})
@@ -63,13 +73,15 @@ test.describe('Web panels', () => {
     await expect(input).toBeVisible()
     await input.fill(title)
     await page.keyboard.press('Enter')
-    await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible(
+      { timeout: 5_000 }
+    )
   }
 
   const runCli = (...args: string[]) =>
     spawnSync('node', [SLAY_JS, ...args], {
       env: { ...process.env, SLAYZONE_DB_PATH: dbPath, SLAYZONE_MCP_PORT: String(mcpPort) },
-      encoding: 'utf8',
+      encoding: 'utf8'
     })
 
   test.beforeAll(async ({ electronApp, mainWindow }) => {
@@ -127,8 +139,10 @@ test.describe('Web panels', () => {
       // Each row now exposes two switches (home / task view). Both should be
       // unchecked for a predefined external by default — check via .last()
       // to grab the task-scope toggle.
-      await expect(findCard(dialog, name).getByRole('switch').last())
-        .toHaveAttribute('data-state', 'unchecked')
+      await expect(findCard(dialog, name).getByRole('switch').last()).toHaveAttribute(
+        'data-state',
+        'unchecked'
+      )
     }
   })
 
@@ -201,11 +215,19 @@ test.describe('Web panels', () => {
     if (await titleEl.isVisible().catch(() => false)) await titleEl.click()
 
     await mainWindow.keyboard.press('Meta+l')
-    if (!(await mainWindow.locator('[data-panel-id^="web:"]:visible').first().isVisible().catch(() => false))) {
+    if (
+      !(await mainWindow
+        .locator('[data-panel-id^="web:"]:visible')
+        .first()
+        .isVisible()
+        .catch(() => false))
+    ) {
       await mainWindow.keyboard.press('Meta+Shift+l')
     }
 
-    await expect(mainWindow.locator('[data-panel-id^="web:"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('[data-panel-id^="web:"]:visible').first()).toBeVisible({
+      timeout: 5_000
+    })
   })
 
   test('Cmd+L toggles custom web panel off', async ({ mainWindow }) => {
@@ -218,7 +240,9 @@ test.describe('Web panels', () => {
       await mainWindow.keyboard.press('Meta+Shift+l')
     }
 
-    await expect(mainWindow.locator('[data-panel-id^="web:"]:visible')).toHaveCount(0, { timeout: 3_000 })
+    await expect(mainWindow.locator('[data-panel-id^="web:"]:visible')).toHaveCount(0, {
+      timeout: 3_000
+    })
   })
 
   // ── Delete panels ──
@@ -237,8 +261,9 @@ test.describe('Web panels', () => {
     // Reopen — mergePredefined should NOT re-add it
     await closePanelsTab(mainWindow)
     await openPanelsTab(mainWindow)
-    await expect(findCard(settingsDialog(mainWindow), figmaPanelName))
-      .not.toBeVisible({ timeout: 3_000 })
+    await expect(findCard(settingsDialog(mainWindow), figmaPanelName)).not.toBeVisible({
+      timeout: 3_000
+    })
   })
 
   test.skip('delete custom TestPanel', async ({ mainWindow }) => {
@@ -304,8 +329,7 @@ test.describe('Web panels', () => {
     await expect(card).toBeVisible({ timeout: 5_000 })
 
     await card.click()
-    await expect(dialog.getByText('Show toast when detected'))
-      .toBeVisible({ timeout: 5_000 })
+    await expect(dialog.getByText('Show toast when detected')).toBeVisible({ timeout: 5_000 })
     await dialog.getByTestId('settings-tab-panels').click()
     await expect(findCard(dialog, 'Browser')).toBeVisible({ timeout: 5_000 })
   })
@@ -328,7 +352,9 @@ test.describe('Web panels', () => {
     await closePanelsTab(mainWindow)
 
     await mainWindow.keyboard.press('Meta+e')
-    await expect(mainWindow.locator('[data-panel-id="editor"]:visible')).toHaveCount(0, { timeout: 3_000 })
+    await expect(mainWindow.locator('[data-panel-id="editor"]:visible')).toHaveCount(0, {
+      timeout: 3_000
+    })
 
     // Re-enable
     await openPanelsTab(mainWindow)
@@ -345,14 +371,22 @@ test.describe('Web panels', () => {
     expect(r.status).toBe(0)
 
     // settings:changed IPC → usePanelConfig reloads → PanelToggle re-renders
-    await expect(mainWindow.getByRole('button', { name: 'CLITaskPanel' })).toBeVisible({ timeout: 10_000 })
+    await expect(mainWindow.getByRole('button', { name: 'CLITaskPanel' })).toBeVisible({
+      timeout: 10_000
+    })
   })
 
   test('CLI-created panel appears in settings without reopen', async ({ mainWindow }) => {
     await openPanelsTab(mainWindow)
     const dialog = settingsDialog(mainWindow)
 
-    const r = runCli('--dev', 'panels', 'create', 'CLISettingsPanel', 'https://cli-settings.example.com')
+    const r = runCli(
+      '--dev',
+      'panels',
+      'create',
+      'CLISettingsPanel',
+      'https://cli-settings.example.com'
+    )
     expect(r.status).toBe(0)
 
     // settings:changed IPC → PanelsSettingsTab reloads panel_config
@@ -386,13 +420,26 @@ test.describe('Web panels', () => {
   // ── CLI round-trip: create → list → disable → list → enable → list → delete → list ──
 
   test('CLI create appears in CLI list', async () => {
-    const r = runCli('--dev', 'panels', 'create', 'RoundTrip', 'https://roundtrip.example.com', '-s', 'l')
+    const r = runCli(
+      '--dev',
+      'panels',
+      'create',
+      'RoundTrip',
+      'https://roundtrip.example.com',
+      '-s',
+      'l'
+    )
     expect(r.status).toBe(0)
 
     const list = runCli('--dev', 'panels', 'list', '--json')
     expect(list.status).toBe(0)
-    const panels = JSON.parse(list.stdout) as { id: string; name: string; baseUrl: string; shortcut?: string }[]
-    const found = panels.find(p => p.name === 'RoundTrip')
+    const panels = JSON.parse(list.stdout) as {
+      id: string
+      name: string
+      baseUrl: string
+      shortcut?: string
+    }[]
+    const found = panels.find((p) => p.name === 'RoundTrip')
     expect(found).toBeTruthy()
     expect(found!.baseUrl).toBe('https://roundtrip.example.com')
     expect(found!.shortcut).toBe('l')
@@ -405,7 +452,7 @@ test.describe('Web panels', () => {
     const list = runCli('--dev', 'panels', 'list')
     expect(list.status).toBe(0)
     // Table output: RoundTrip row should show ✗ (disabled)
-    const line = list.stdout.split('\n').find(l => l.includes('RoundTrip'))
+    const line = list.stdout.split('\n').find((l) => l.includes('RoundTrip'))
     expect(line).toBeTruthy()
     expect(line).toContain('✗')
   })
@@ -416,7 +463,7 @@ test.describe('Web panels', () => {
 
     const list = runCli('--dev', 'panels', 'list')
     expect(list.status).toBe(0)
-    const line = list.stdout.split('\n').find(l => l.includes('RoundTrip'))
+    const line = list.stdout.split('\n').find((l) => l.includes('RoundTrip'))
     expect(line).toBeTruthy()
     expect(line).toContain('✓')
   })
@@ -428,7 +475,7 @@ test.describe('Web panels', () => {
     const list = runCli('--dev', 'panels', 'list', '--json')
     expect(list.status).toBe(0)
     const panels = JSON.parse(list.stdout) as { name: string }[]
-    expect(panels.find(p => p.name === 'RoundTrip')).toBeFalsy()
+    expect(panels.find((p) => p.name === 'RoundTrip')).toBeFalsy()
   })
 
   test('CLI delete by name is case-insensitive', async () => {
@@ -441,7 +488,7 @@ test.describe('Web panels', () => {
     const list = runCli('--dev', 'panels', 'list', '--json')
     expect(list.status).toBe(0)
     const panels = JSON.parse(list.stdout) as { name: string }[]
-    expect(panels.find(p => p.name === 'CaseTest')).toBeFalsy()
+    expect(panels.find((p) => p.name === 'CaseTest')).toBeFalsy()
   })
 
   test('CLI delete nonexistent panel fails', async () => {
@@ -462,7 +509,15 @@ test.describe('Web panels', () => {
     expect(cr.status).toBe(0)
 
     // Second panel with same shortcut should fail
-    const dup = runCli('--dev', 'panels', 'create', 'DupKey2', 'https://dup2.example.com', '-s', 'l')
+    const dup = runCli(
+      '--dev',
+      'panels',
+      'create',
+      'DupKey2',
+      'https://dup2.example.com',
+      '-s',
+      'l'
+    )
     expect(dup.status).not.toBe(0)
     expect(dup.stderr).toContain('already used')
 
@@ -492,7 +547,7 @@ test.describe('Web panels', () => {
     // Gone from CLI list
     const list = runCli('--dev', 'panels', 'list', '--json')
     const panels = JSON.parse(list.stdout) as { name: string }[]
-    expect(panels.find(p => p.name === 'BothTest')).toBeFalsy()
+    expect(panels.find((p) => p.name === 'BothTest')).toBeFalsy()
 
     await closePanelsTab(mainWindow)
   })

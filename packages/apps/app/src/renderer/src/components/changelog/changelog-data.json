@@ -1838,7 +1838,7 @@
         "title": "Browser screenshot capture",
         "description": "Screenshot the browser view directly instead of requiring region selection."
       },
-{
+      {
         "category": "fix",
         "title": "Shortcuts blocked by modals",
         "description": "Global keyboard shortcuts no longer fire when a modal dialog is open."
@@ -2291,7 +2291,7 @@
         "title": "Database backups",
         "description": "Automatic SQLite database backup system to protect your data."
       },
-{
+      {
         "category": "fix",
         "title": "Interactive CLI prompts fixed",
         "description": "Sync query responses and OSC filtering fix broken interactive prompts."
@@ -2318,7 +2318,7 @@
         "title": "Custom AI providers",
         "description": "Add any AI CLI as a terminal mode with custom commands, flags, and settings."
       },
-{
+      {
         "category": "feature",
         "title": "Getting started checklist",
         "description": "New onboarding checklist guides you through initial setup step by step."
@@ -2328,7 +2328,7 @@
         "title": "Worktrees management panel",
         "description": "Create, switch, and delete git worktrees from a dedicated panel in the kanban view."
       },
-{
+      {
         "category": "improvement",
         "title": "Terminal focus on tab switch",
         "description": "Switching task tabs now auto-focuses the terminal — no extra click needed."

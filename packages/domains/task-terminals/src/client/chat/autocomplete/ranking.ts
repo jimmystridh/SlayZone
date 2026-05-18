@@ -33,11 +33,7 @@ export function rankByName<Item>(
   const usage = getUsage ?? (() => 0)
 
   if (!query) {
-    return [...items].sort(
-      (a, b) =>
-        usage(b) - usage(a) ||
-        getName(a).localeCompare(getName(b))
-    )
+    return [...items].sort((a, b) => usage(b) - usage(a) || getName(a).localeCompare(getName(b)))
   }
 
   const nameHits = makeFzf(items, getName).find(query)
@@ -46,7 +42,7 @@ export function rankByName<Item>(
   const merged: { item: Item; score: number; exact: boolean }[] = nameHits.map((h) => ({
     item: h.item,
     score: h.score,
-    exact: isExactMatch(getName(h.item), query),
+    exact: isExactMatch(getName(h.item), query)
   }))
 
   if (getDescription) {
@@ -107,7 +103,7 @@ export function rankAcrossSources(
         source: g.source,
         sourceId: g.source.id,
         name: getName(item),
-        description: getDesc ? getDesc(item) : '',
+        description: getDesc ? getDesc(item) : ''
       })
     }
   }
@@ -126,7 +122,7 @@ export function rankAcrossSources(
     const merged: { entry: U; score: number; exact: boolean }[] = nameHits.map((h) => ({
       entry: h.item,
       score: h.score,
-      exact: isExactMatch(h.item.name, query),
+      exact: isExactMatch(h.item.name, query)
     }))
     const pool = universe.filter((e) => !matched.has(e) && e.description)
     for (const h of makeFzf(pool, (e) => e.description).find(query)) {

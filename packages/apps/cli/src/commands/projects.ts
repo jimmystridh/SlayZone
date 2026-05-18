@@ -105,7 +105,10 @@ export function projectsCommand(): Command {
   cmd
     .command('create <name>')
     .description('Create a new project')
-    .option('--path <path>', 'Repository path (relative paths are resolved from current directory and auto-created)')
+    .option(
+      '--path <path>',
+      'Repository path (relative paths are resolved from current directory and auto-created)'
+    )
     .option('--color <hex>', 'Project color (#RRGGBB)', DEFAULT_PROJECT_COLOR)
     .option('--json', 'Output created project as JSON')
     .action(async (name: string, opts: { path?: string; color: string; json?: boolean }) => {
@@ -115,7 +118,7 @@ export function projectsCommand(): Command {
         prepared = prepareProjectCreate({
           name,
           color: opts.color,
-          path: projectPath,
+          path: projectPath
         })
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
@@ -148,7 +151,7 @@ export function projectsCommand(): Command {
               ':columnsConfig': prepared.columnsConfigJson,
               ':sortOrder': nextOrder,
               ':createdAt': prepared.createdAt,
-              ':updatedAt': prepared.updatedAt,
+              ':updatedAt': prepared.updatedAt
             }
           )
           db.run('COMMIT')
@@ -192,41 +195,55 @@ export function projectsCommand(): Command {
     .option('--color <hex>', 'New project color (#RRGGBB)')
     .option('--path <path>', 'New repository path')
     .option('--json', 'Output updated project as JSON')
-    .action(async (proj: string, opts: { name?: string; color?: string; path?: string; json?: boolean }) => {
-      if (opts.name === undefined && opts.color === undefined && opts.path === undefined) {
-        console.error('Provide at least one of --name, --color, --path')
-        process.exit(1)
+    .action(
+      async (
+        proj: string,
+        opts: { name?: string; color?: string; path?: string; json?: boolean }
+      ) => {
+        if (opts.name === undefined && opts.color === undefined && opts.path === undefined) {
+          console.error('Provide at least one of --name, --color, --path')
+          process.exit(1)
+        }
+
+        const db = openDb()
+        const project = resolveProject(db, proj)
+        const sets: string[] = ['updated_at = :now']
+        const params: Record<string, string | number | null> = {
+          ':now': new Date().toISOString(),
+          ':id': project.id
+        }
+
+        if (opts.name !== undefined) {
+          sets.push('name = :name')
+          params[':name'] = opts.name
+        }
+        if (opts.color !== undefined) {
+          sets.push('color = :color')
+          params[':color'] = opts.color
+        }
+        if (opts.path !== undefined) {
+          const resolved = normalizeProjectPath(opts.path)
+          if (resolved) ensureProjectPath(resolved)
+          sets.push('path = :path')
+          params[':path'] = resolved
+        }
+
+        db.run(`UPDATE projects SET ${sets.join(', ')} WHERE id = :id`, params)
+
+        const updated = db.query<CreatedProjectRow>(
+          `SELECT id, name, color, path, created_at, updated_at FROM projects WHERE id = :id LIMIT 1`,
+          { ':id': project.id }
+        )[0]
+        db.close()
+        await notifyApp()
+
+        if (opts.json) {
+          console.log(JSON.stringify(updated, null, 2))
+          return
+        }
+        console.log(`Updated project: ${project.id.slice(0, 8)}  ${opts.name ?? project.name}`)
       }
-
-      const db = openDb()
-      const project = resolveProject(db, proj)
-      const sets: string[] = ['updated_at = :now']
-      const params: Record<string, string | number | null> = { ':now': new Date().toISOString(), ':id': project.id }
-
-      if (opts.name !== undefined) { sets.push('name = :name'); params[':name'] = opts.name }
-      if (opts.color !== undefined) { sets.push('color = :color'); params[':color'] = opts.color }
-      if (opts.path !== undefined) {
-        const resolved = normalizeProjectPath(opts.path)
-        if (resolved) ensureProjectPath(resolved)
-        sets.push('path = :path')
-        params[':path'] = resolved
-      }
-
-      db.run(`UPDATE projects SET ${sets.join(', ')} WHERE id = :id`, params)
-
-      const updated = db.query<CreatedProjectRow>(
-        `SELECT id, name, color, path, created_at, updated_at FROM projects WHERE id = :id LIMIT 1`,
-        { ':id': project.id }
-      )[0]
-      db.close()
-      await notifyApp()
-
-      if (opts.json) {
-        console.log(JSON.stringify(updated, null, 2))
-        return
-      }
-      console.log(`Updated project: ${project.id.slice(0, 8)}  ${opts.name ?? project.name}`)
-    })
+    )
 
   return cmd
 }

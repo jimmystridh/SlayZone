@@ -119,4 +119,3 @@ export interface BuiltinCommand {
   description: string
   run: (ctx: AcceptCtx) => void | Promise<void>
 }
-

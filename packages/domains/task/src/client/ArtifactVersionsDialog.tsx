@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   Input,
-  cn,
+  cn
 } from '@slayzone/ui'
 import type { ArtifactVersion } from '@slayzone/task-artifacts/shared'
 
@@ -77,7 +77,7 @@ function RenameField({
   renameValue,
   setRenameValue,
   commitRename,
-  cancelRename,
+  cancelRename
 }: {
   v: ArtifactVersion
   renameValue: string
@@ -115,7 +115,7 @@ function VersionPill({
   onSetCurrent,
   onOpenPreview,
   onDiff,
-  canDiff,
+  canDiff
 }: NodeChromeProps): React.JSX.Element {
   return (
     <div className="group relative flex items-stretch min-w-[220px]">
@@ -124,13 +124,11 @@ function VersionPill({
           'flex-1 flex flex-col gap-1 rounded-lg border px-3 py-2 shadow-sm',
           isCurrent
             ? 'border-primary bg-primary/10'
-            : 'border-border bg-card group-hover:bg-muted/60',
+            : 'border-border bg-card group-hover:bg-muted/60'
         )}
       >
         <div className="flex items-center gap-2">
-          <span className="font-mono tabular-nums text-sm font-semibold">
-            v{v.version_num}
-          </span>
+          <span className="font-mono tabular-nums text-sm font-semibold">v{v.version_num}</span>
           <span className="font-mono text-[10px] text-muted-foreground/70">
             {shortHash(v.content_hash)}
           </span>
@@ -162,7 +160,7 @@ function VersionPill({
       <div
         className={cn(
           'absolute left-full top-0 pl-2 transition-opacity z-10',
-          'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:opacity-100 hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto',
+          'opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto hover:opacity-100 hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto'
         )}
       >
         <div className="flex flex-col gap-1 rounded-md border border-border bg-popover px-1.5 py-1.5 shadow-[0_3px_6px_rgba(0,0,0,0.25)] dark:shadow-[0_3px_6px_rgba(255,255,255,0.1)] min-w-[150px]">
@@ -216,7 +214,7 @@ export function ArtifactVersionsDialog({
   onRename,
   onOpenPreview,
   onDiff,
-  onCreateVersion,
+  onCreateVersion
 }: Props): React.JSX.Element {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
@@ -232,7 +230,10 @@ export function ArtifactVersionsDialog({
   const commitRename = async (v: ArtifactVersion): Promise<void> => {
     const next = renameValue.trim()
     const normalized = next.length === 0 ? null : next
-    if (normalized === v.name) { setRenamingId(null); return }
+    if (normalized === v.name) {
+      setRenamingId(null)
+      return
+    }
     setBusyId(v.id)
     try {
       await onRename(v.version_num, normalized)
@@ -286,7 +287,11 @@ export function ArtifactVersionsDialog({
                       <div
                         className={cn(
                           'absolute bottom-0 h-px bg-border',
-                          isFirst ? 'left-1/2 right-[-12px]' : isLast ? 'left-[-12px] right-1/2' : 'left-[-12px] right-[-12px]',
+                          isFirst
+                            ? 'left-1/2 right-[-12px]'
+                            : isLast
+                              ? 'left-[-12px] right-1/2'
+                              : 'left-[-12px] right-[-12px]'
                         )}
                       />
                     )}
@@ -324,7 +329,8 @@ export function ArtifactVersionsDialog({
         <DialogHeader>
           <DialogTitle>Versions</DialogTitle>
           <DialogDescription>
-            Root at the bottom, newest branches above. Set any version as current — edits from the app then branch from it.
+            Root at the bottom, newest branches above. Set any version as current — edits from the
+            app then branch from it.
           </DialogDescription>
         </DialogHeader>
         <div className="h-[75vh] overflow-auto border border-border rounded-md bg-background">

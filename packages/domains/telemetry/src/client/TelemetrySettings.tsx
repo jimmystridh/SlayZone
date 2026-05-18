@@ -26,8 +26,8 @@ export function TelemetrySettings({ tier, onTierChange }: TelemetrySettingsProps
         <Label className="text-base font-semibold">Enhanced Analytics</Label>
         <p className="text-sm text-muted-foreground">
           Opt in to help us understand retention patterns over time. A random anonymous ID is
-          persisted locally and unhandled exceptions are reported to help us fix crashes.
-          No personal information is collected.
+          persisted locally and unhandled exceptions are reported to help us fix crashes. No
+          personal information is collected.
         </p>
         <div className="flex items-center gap-3">
           <Switch

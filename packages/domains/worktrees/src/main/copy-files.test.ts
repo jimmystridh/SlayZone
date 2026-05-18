@@ -18,7 +18,17 @@ const repoPath = path.join(root, 'repo')
 fs.mkdirSync(repoPath)
 
 function git(cmd: string, cwd = repoPath) {
-  return execSync(cmd, { cwd, encoding: 'utf-8', env: { ...process.env, GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@test.com', GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@test.com' } }).trim()
+  return execSync(cmd, {
+    cwd,
+    encoding: 'utf-8',
+    env: {
+      ...process.env,
+      GIT_AUTHOR_NAME: 'Test',
+      GIT_AUTHOR_EMAIL: 'test@test.com',
+      GIT_COMMITTER_NAME: 'Test',
+      GIT_COMMITTER_EMAIL: 'test@test.com'
+    }
+  }).trim()
 }
 
 let passed = 0
@@ -65,7 +75,7 @@ section('getIgnoredFileTree')
 await test('returns top-level nodes', async () => {
   const tree = await getIgnoredFileTree(repoPath)
   expect(tree.length).toBe(3) // build/, dist/, app.log
-  const names = tree.map(n => n.name)
+  const names = tree.map((n) => n.name)
   expect(names).toContain('app.log')
   expect(names).toContain('dist')
   expect(names).toContain('build')
@@ -81,7 +91,7 @@ await test('dirs sorted before files', async () => {
 
 await test('directory nodes have correct fileCount and children', async () => {
   const tree = await getIgnoredFileTree(repoPath)
-  const dist = tree.find(n => n.name === 'dist')!
+  const dist = tree.find((n) => n.name === 'dist')!
   expect(dist.isDirectory).toBe(true)
   expect(dist.fileCount).toBe(3) // bundle.js, index.css, nested/deep.js
   expect(dist.children.length).toBe(3) // bundle.js, index.css, nested/
@@ -89,8 +99,8 @@ await test('directory nodes have correct fileCount and children', async () => {
 
 await test('nested directory has children', async () => {
   const tree = await getIgnoredFileTree(repoPath)
-  const dist = tree.find(n => n.name === 'dist')!
-  const nested = dist.children.find(c => c.name === 'nested')!
+  const dist = tree.find((n) => n.name === 'dist')!
+  const nested = dist.children.find((c) => c.name === 'nested')!
   expect(nested.isDirectory).toBe(true)
   expect(nested.fileCount).toBe(1)
   expect(nested.children.length).toBe(1)
@@ -100,20 +110,20 @@ await test('nested directory has children', async () => {
 
 await test('top-level file has real size', async () => {
   const tree = await getIgnoredFileTree(repoPath)
-  const logFile = tree.find(n => n.name === 'app.log')!
+  const logFile = tree.find((n) => n.name === 'app.log')!
   expect(logFile.size).toBeGreaterThan(0)
 })
 
 await test('directory nodes have size 0', async () => {
   const tree = await getIgnoredFileTree(repoPath)
-  const dist = tree.find(n => n.name === 'dist')!
+  const dist = tree.find((n) => n.name === 'dist')!
   expect(dist.size).toBe(0)
 })
 
 await test('file node has correct path', async () => {
   const tree = await getIgnoredFileTree(repoPath)
-  const dist = tree.find(n => n.name === 'dist')!
-  const bundle = dist.children.find(c => c.name === 'bundle.js')!
+  const dist = tree.find((n) => n.name === 'dist')!
+  const bundle = dist.children.find((c) => c.name === 'bundle.js')!
   expect(bundle.path).toBe('dist/bundle.js')
 })
 
@@ -222,7 +232,10 @@ await test('preserves symlinks (pnpm node_modules pattern)', async () => {
 
   // Mimic pnpm: real file in .pnpm/, symlink in node_modules/
   fs.mkdirSync(path.join(symRepo, 'node_modules', '.pnpm', 'pkg@1.0.0'), { recursive: true })
-  fs.writeFileSync(path.join(symRepo, 'node_modules', '.pnpm', 'pkg@1.0.0', 'index.js'), 'module.exports = 1')
+  fs.writeFileSync(
+    path.join(symRepo, 'node_modules', '.pnpm', 'pkg@1.0.0', 'index.js'),
+    'module.exports = 1'
+  )
   fs.symlinkSync('.pnpm/pkg@1.0.0', path.join(symRepo, 'node_modules', 'pkg'))
 
   const wtPath = path.join(root, 'wt-copy-symlink')
@@ -247,18 +260,28 @@ await test('returns ask by default', () => {
 })
 
 await test('returns global setting when set', () => {
-  h.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_copy_behavior', 'all')").run()
+  h.db
+    .prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_copy_behavior', 'all')"
+    )
+    .run()
   const result = resolveCopyBehavior(h.db as never)
   expect(result.behavior).toBe('all')
   h.db.prepare("DELETE FROM settings WHERE key = 'worktree_copy_behavior'").run()
 })
 
 await test('project override takes precedence', () => {
-  h.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_copy_behavior', 'all')").run()
+  h.db
+    .prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_copy_behavior', 'all')"
+    )
+    .run()
   const projectId = 'test-project-copy'
-  h.db.prepare("INSERT OR REPLACE INTO projects (id, name, path, color, worktree_copy_behavior) VALUES (?, ?, ?, ?, ?)").run(
-    projectId, 'Test', repoPath, '#000000', 'none'
-  )
+  h.db
+    .prepare(
+      'INSERT OR REPLACE INTO projects (id, name, path, color, worktree_copy_behavior) VALUES (?, ?, ?, ?, ?)'
+    )
+    .run(projectId, 'Test', repoPath, '#000000', 'none')
 
   const result = resolveCopyBehavior(h.db as never, projectId)
   expect(result.behavior).toBe('none')
@@ -266,13 +289,21 @@ await test('project override takes precedence', () => {
   const global = resolveCopyBehavior(h.db as never)
   expect(global.behavior).toBe('all')
 
-  h.db.prepare("DELETE FROM projects WHERE id = ?").run(projectId)
+  h.db.prepare('DELETE FROM projects WHERE id = ?').run(projectId)
   h.db.prepare("DELETE FROM settings WHERE key = 'worktree_copy_behavior'").run()
 })
 
 await test('returns custom paths for custom behavior', () => {
-  h.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_copy_behavior', 'custom')").run()
-  h.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_copy_paths', 'node_modules, .env, dist')").run()
+  h.db
+    .prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_copy_behavior', 'custom')"
+    )
+    .run()
+  h.db
+    .prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_copy_paths', 'node_modules, .env, dist')"
+    )
+    .run()
 
   const result = resolveCopyBehavior(h.db as never)
   expect(result.behavior).toBe('custom')
@@ -286,9 +317,9 @@ await test('returns custom paths for custom behavior', () => {
 section('IPC handlers')
 
 await test('git:getIgnoredFileTree via IPC', async () => {
-  const tree = await h.invoke('git:getIgnoredFileTree', repoPath) as IgnoredFileNode[]
+  const tree = (await h.invoke('git:getIgnoredFileTree', repoPath)) as IgnoredFileNode[]
   expect(tree.length).toBe(3)
-  const dist = tree.find(n => n.name === 'dist')!
+  const dist = tree.find((n) => n.name === 'dist')!
   expect(dist.children.length).toBe(3)
 })
 

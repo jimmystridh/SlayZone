@@ -8,7 +8,12 @@ interface MarkdownSettingsPopoverProps {
   children: ReactNode
 }
 
-export function MarkdownSettingsPopover({ open, onOpenChange, trigger, children }: MarkdownSettingsPopoverProps) {
+export function MarkdownSettingsPopover({
+  open,
+  onOpenChange,
+  trigger,
+  children
+}: MarkdownSettingsPopoverProps) {
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>

@@ -40,7 +40,14 @@ interface ProjectIntegrationSetupWizardProps {
   }) => void
 }
 
-const STEPS = ['Connect account', 'Choose source', 'Choose mode', 'Set up statuses', 'Review mapping', 'Preview and confirm']
+const STEPS = [
+  'Connect account',
+  'Choose source',
+  'Choose mode',
+  'Set up statuses',
+  'Review mapping',
+  'Preview and confirm'
+]
 
 const SYNC_MODE_OPTIONS: Array<{
   value: WizardSyncMode
@@ -131,7 +138,9 @@ export function ProjectIntegrationSetupWizard({
   const [githubProjectId, setGithubProjectId] = useState('')
   const [syncMode, setSyncMode] = useState<WizardSyncMode>(toWizardSyncMode(initialSyncMode))
   const [assignedToMe, setAssignedToMe] = useState(initialAssignedToMe ?? false)
-  const [conflictPolicy, setConflictPolicy] = useState<'external' | 'local' | 'latest' | 'manual'>('external')
+  const [conflictPolicy, setConflictPolicy] = useState<'external' | 'local' | 'latest' | 'manual'>(
+    'external'
+  )
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewLoaded, setPreviewLoaded] = useState(false)
   const [previewCount, setPreviewCount] = useState(0)
@@ -149,22 +158,29 @@ export function ProjectIntegrationSetupWizard({
     [provider]
   )
 
-  const mappedStatuses = useMemo(() => resolveColumns(project.columns_config), [project.columns_config])
+  const mappedStatuses = useMemo(
+    () => resolveColumns(project.columns_config),
+    [project.columns_config]
+  )
   const openStatusLabel = useMemo(
     () =>
-      mappedStatuses.find((column) =>
-        column.category === 'unstarted' ||
-        column.category === 'triage' ||
-        column.category === 'backlog'
-      )?.label ?? mappedStatuses[0]?.label ?? 'Default',
+      mappedStatuses.find(
+        (column) =>
+          column.category === 'unstarted' ||
+          column.category === 'triage' ||
+          column.category === 'backlog'
+      )?.label ??
+      mappedStatuses[0]?.label ??
+      'Default',
     [mappedStatuses]
   )
   const closedStatusLabel = useMemo(
     () =>
-      mappedStatuses.find((column) =>
-        column.category === 'completed' ||
-        column.category === 'canceled'
-      )?.label ?? mappedStatuses[mappedStatuses.length - 1]?.label ?? 'Done',
+      mappedStatuses.find(
+        (column) => column.category === 'completed' || column.category === 'canceled'
+      )?.label ??
+      mappedStatuses[mappedStatuses.length - 1]?.label ??
+      'Done',
     [mappedStatuses]
   )
 
@@ -173,38 +189,41 @@ export function ProjectIntegrationSetupWizard({
     [githubProjects, githubProjectId]
   )
 
-  const loadConnections = useCallback(async (options?: { preserveMessage?: boolean }) => {
-    setLoadingConnections(true)
-    if (!options?.preserveMessage) {
-      setMessage('')
-    }
-    try {
-      const loadedConnections = await window.api.integrations.listConnections(provider)
-      setConnections(loadedConnections)
-      setConnectionId((current) => {
-        if (connectionLocked) {
-          if (
-            initialConnectionId &&
-            loadedConnections.some((connection) => connection.id === initialConnectionId)
-          ) {
-            return initialConnectionId
-          }
-          return ''
-        }
-
-        return current && loadedConnections.some((connection) => connection.id === current)
-          ? current
-          : loadedConnections[0]?.id || ''
-      })
-      if (!connectionLocked && loadedConnections.length === 0) {
-        setShowConnectForm(true)
+  const loadConnections = useCallback(
+    async (options?: { preserveMessage?: boolean }) => {
+      setLoadingConnections(true)
+      if (!options?.preserveMessage) {
+        setMessage('')
       }
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : String(error))
-    } finally {
-      setLoadingConnections(false)
-    }
-  }, [provider, connectionLocked, initialConnectionId])
+      try {
+        const loadedConnections = await window.api.integrations.listConnections(provider)
+        setConnections(loadedConnections)
+        setConnectionId((current) => {
+          if (connectionLocked) {
+            if (
+              initialConnectionId &&
+              loadedConnections.some((connection) => connection.id === initialConnectionId)
+            ) {
+              return initialConnectionId
+            }
+            return ''
+          }
+
+          return current && loadedConnections.some((connection) => connection.id === current)
+            ? current
+            : loadedConnections[0]?.id || ''
+        })
+        if (!connectionLocked && loadedConnections.length === 0) {
+          setShowConnectForm(true)
+        }
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : String(error))
+      } finally {
+        setLoadingConnections(false)
+      }
+    },
+    [provider, connectionLocked, initialConnectionId]
+  )
 
   useEffect(() => {
     setStep(1)
@@ -226,7 +245,15 @@ export function ProjectIntegrationSetupWizard({
     setCategoryOverrides({})
     setTaskRemapping({})
     setStatusSetupComplete(false)
-  }, [provider, initialConnectionId, initialTeamId, initialLinearProjectId, initialSyncMode, initialAssignedToMe, project.id])
+  }, [
+    provider,
+    initialConnectionId,
+    initialTeamId,
+    initialLinearProjectId,
+    initialSyncMode,
+    initialAssignedToMe,
+    project.id
+  ])
 
   useEffect(() => {
     void loadConnections()
@@ -240,7 +267,8 @@ export function ProjectIntegrationSetupWizard({
       return
     }
     setLoadingTeams(true)
-    void window.api.integrations.listLinearTeams(connectionId)
+    void window.api.integrations
+      .listLinearTeams(connectionId)
       .then((result) => {
         const loadedTeams = Array.isArray(result) ? result : result.teams
         setTeams(loadedTeams)
@@ -261,7 +289,8 @@ export function ProjectIntegrationSetupWizard({
       return
     }
     setLoadingProjects(true)
-    void window.api.integrations.listLinearProjects(connectionId, teamId)
+    void window.api.integrations
+      .listLinearProjects(connectionId, teamId)
       .then((loadedProjects) => {
         setLinearProjects(loadedProjects)
       })
@@ -281,7 +310,8 @@ export function ProjectIntegrationSetupWizard({
       return
     }
     setLoadingGithubProjects(true)
-    void window.api.integrations.listGithubProjects(connectionId)
+    void window.api.integrations
+      .listGithubProjects(connectionId)
       .then((loadedProjects) => {
         setGithubProjects(loadedProjects)
         setGithubProjectId((current) => current || loadedProjects[0]?.id || '')
@@ -295,9 +325,10 @@ export function ProjectIntegrationSetupWizard({
   }, [provider, connectionId])
 
   // Clear status setup when source changes
-  const sourceKey = provider === 'linear'
-    ? `${connectionId}:${teamId}:${linearProjectId}`
-    : `${connectionId}:${selectedGitHubProject?.id ?? ''}`
+  const sourceKey =
+    provider === 'linear'
+      ? `${connectionId}:${teamId}:${linearProjectId}`
+      : `${connectionId}:${selectedGitHubProject?.id ?? ''}`
   useEffect(() => {
     setProviderStatuses([])
     setCategoryOverrides({})
@@ -311,16 +342,18 @@ export function ProjectIntegrationSetupWizard({
     if (providerStatuses.length > 0) return
 
     const externalTeamId = provider === 'linear' ? teamId : selectedGitHubProject?.owner.login
-    const externalProjectId = provider === 'github' ? selectedGitHubProject?.id : (linearProjectId || undefined)
+    const externalProjectId =
+      provider === 'github' ? selectedGitHubProject?.id : linearProjectId || undefined
     if (!externalTeamId) return
 
     setLoadingStatuses(true)
-    void window.api.integrations.fetchProviderStatuses({
-      connectionId,
-      provider,
-      externalTeamId,
-      externalProjectId
-    })
+    void window.api.integrations
+      .fetchProviderStatuses({
+        connectionId,
+        provider,
+        externalTeamId,
+        externalProjectId
+      })
       .then((statuses) => {
         setProviderStatuses(statuses)
       })
@@ -330,7 +363,15 @@ export function ProjectIntegrationSetupWizard({
       .finally(() => {
         setLoadingStatuses(false)
       })
-  }, [step, connectionId, provider, teamId, selectedGitHubProject, linearProjectId, providerStatuses.length])
+  }, [
+    step,
+    connectionId,
+    provider,
+    teamId,
+    selectedGitHubProject,
+    linearProjectId,
+    providerStatuses.length
+  ])
 
   const handleApplyStatuses = async () => {
     setApplyingStatuses(true)
@@ -365,9 +406,7 @@ export function ProjectIntegrationSetupWizard({
       connectionId,
       projectId: project.id,
       groupId: provider === 'linear' ? teamId : undefined,
-      scopeId: provider === 'linear'
-        ? (linearProjectId || undefined)
-        : selectedGitHubProject?.id,
+      scopeId: provider === 'linear' ? linearProjectId || undefined : selectedGitHubProject?.id,
       limit: 50
     })
 
@@ -438,9 +477,7 @@ export function ProjectIntegrationSetupWizard({
           projectId: project.id,
           connectionId,
           groupId: provider === 'linear' ? teamId : undefined,
-          scopeId: provider === 'linear'
-            ? (linearProjectId || undefined)
-            : selectedGitHubProject?.id,
+          scopeId: provider === 'linear' ? linearProjectId || undefined : selectedGitHubProject?.id,
           limit: 50
         })
         imported = result.imported
@@ -458,15 +495,16 @@ export function ProjectIntegrationSetupWizard({
     setConnectingAccount(true)
     setMessage('')
     try {
-      const connection = provider === 'github'
-        ? await window.api.integrations.connectGithub({
-            token: connectionCredential.trim(),
-            projectId: project.id
-          })
-        : await window.api.integrations.connectLinear({
-            apiKey: connectionCredential.trim(),
-            projectId: project.id
-          })
+      const connection =
+        provider === 'github'
+          ? await window.api.integrations.connectGithub({
+              token: connectionCredential.trim(),
+              projectId: project.id
+            })
+          : await window.api.integrations.connectLinear({
+              apiKey: connectionCredential.trim(),
+              projectId: project.id
+            })
       setConnectionId(connection.id)
       setConnectionCredential('')
       setShowConnectForm(false)
@@ -483,7 +521,9 @@ export function ProjectIntegrationSetupWizard({
     <Card className="gap-4 py-4">
       <CardHeader className="space-y-4 px-4">
         <div className="space-y-1">
-          <CardTitle className="text-base">{provider === 'github' ? 'GitHub Project Setup Wizard' : 'Linear Setup Wizard'}</CardTitle>
+          <CardTitle className="text-base">
+            {provider === 'github' ? 'GitHub Project Setup Wizard' : 'Linear Setup Wizard'}
+          </CardTitle>
           <p className="text-sm text-muted-foreground">
             Configure sync for this project in six quick steps.
           </p>
@@ -500,10 +540,16 @@ export function ProjectIntegrationSetupWizard({
                 onClick={() => setStep(current)}
                 className={cn(
                   'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-left transition-colors',
-                  active ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/50'
+                  active
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-muted-foreground/50'
                 )}
               >
-                {done ? <CheckCircle2 className="size-3 text-primary" /> : <Circle className="size-3 text-muted-foreground" />}
+                {done ? (
+                  <CheckCircle2 className="size-3 text-primary" />
+                ) : (
+                  <Circle className="size-3 text-muted-foreground" />
+                )}
                 <span className="line-clamp-1 text-[11px] text-muted-foreground">{label}</span>
               </button>
             )
@@ -515,12 +561,18 @@ export function ProjectIntegrationSetupWizard({
         {step === 1 ? (
           <div className="space-y-3">
             <Label htmlFor="wizard-connection">Connection</Label>
-            <Select value={connectionId} onValueChange={setConnectionId} disabled={connectionLocked}>
+            <Select
+              value={connectionId}
+              onValueChange={setConnectionId}
+              disabled={connectionLocked}
+            >
               <SelectTrigger id="wizard-connection" className="w-full max-w-md">
                 <SelectValue
-                  placeholder={loadingConnections
-                    ? 'Loading connections...'
-                    : `Select a ${providerConnectionLabel(provider)} connection`}
+                  placeholder={
+                    loadingConnections
+                      ? 'Loading connections...'
+                      : `Select a ${providerConnectionLabel(provider)} connection`
+                  }
                 />
               </SelectTrigger>
               <SelectContent>
@@ -561,7 +613,10 @@ export function ProjectIntegrationSetupWizard({
             {!connectionLocked && (showConnectForm || connections.length === 0) && (
               <div className="space-y-3 rounded-md border p-3">
                 <div className="space-y-1">
-                  <Label htmlFor="wizard-connection-credential" className="text-xs text-muted-foreground">
+                  <Label
+                    htmlFor="wizard-connection-credential"
+                    className="text-xs text-muted-foreground"
+                  >
                     {providerCredentialLabel(provider)}
                   </Label>
                   <Input
@@ -579,7 +634,9 @@ export function ProjectIntegrationSetupWizard({
                     disabled={!connectionCredential.trim() || connectingAccount}
                     onClick={() => void handleConnectAccount()}
                   >
-                    {connectingAccount ? 'Connecting…' : `Connect ${providerConnectionLabel(provider)}`}
+                    {connectingAccount
+                      ? 'Connecting…'
+                      : `Connect ${providerConnectionLabel(provider)}`}
                   </Button>
                 </div>
               </div>
@@ -591,7 +648,11 @@ export function ProjectIntegrationSetupWizard({
           <div className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor="wizard-linear-team">Team</Label>
-              <Select value={teamId} onValueChange={setTeamId} disabled={!connectionId || loadingTeams}>
+              <Select
+                value={teamId}
+                onValueChange={setTeamId}
+                disabled={!connectionId || loadingTeams}
+              >
                 <SelectTrigger id="wizard-linear-team" className="w-full max-w-md">
                   <SelectValue placeholder={loadingTeams ? 'Loading teams...' : 'Choose a team'} />
                 </SelectTrigger>
@@ -612,7 +673,11 @@ export function ProjectIntegrationSetupWizard({
                 disabled={!teamId || loadingProjects}
               >
                 <SelectTrigger id="wizard-linear-project" className="w-full max-w-md">
-                  <SelectValue placeholder={loadingProjects ? 'Loading projects...' : 'Any project in selected team'} />
+                  <SelectValue
+                    placeholder={
+                      loadingProjects ? 'Loading projects...' : 'Any project in selected team'
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">Any project in selected team</SelectItem>
@@ -653,11 +718,17 @@ export function ProjectIntegrationSetupWizard({
                 disabled={!connectionId || loadingGithubProjects}
               >
                 <SelectTrigger id="wizard-github-project" className="w-full max-w-md">
-                  <SelectValue placeholder={loadingGithubProjects ? 'Loading projects...' : 'Choose a GitHub Project'} />
+                  <SelectValue
+                    placeholder={
+                      loadingGithubProjects ? 'Loading projects...' : 'Choose a GitHub Project'
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {githubProjects.length === 0 ? (
-                    <SelectItem value="__none__" disabled>No projects found — use a classic PAT with repo scope</SelectItem>
+                    <SelectItem value="__none__" disabled>
+                      No projects found — use a classic PAT with repo scope
+                    </SelectItem>
                   ) : null}
                   {githubProjects.map((githubProject) => (
                     <SelectItem key={githubProject.id} value={githubProject.id}>
@@ -694,13 +765,17 @@ export function ProjectIntegrationSetupWizard({
               >
                 <p className="text-sm font-medium">{option.label}</p>
                 <p className="text-xs text-muted-foreground">{option.description}</p>
-                {option.disabled ? <p className="mt-1 text-[11px] text-muted-foreground">Coming soon</p> : null}
+                {option.disabled ? (
+                  <p className="mt-1 text-[11px] text-muted-foreground">Coming soon</p>
+                ) : null}
               </button>
             ))}
 
             {provider === 'linear' && syncMode === 'two_way' ? (
               <div className="rounded-md border bg-muted/30 p-3">
-                <Label htmlFor="wizard-conflict-policy" className="mb-1 block">Conflict policy</Label>
+                <Label htmlFor="wizard-conflict-policy" className="mb-1 block">
+                  Conflict policy
+                </Label>
                 <Select
                   value={conflictPolicy}
                   onValueChange={(value) => setConflictPolicy(value as typeof conflictPolicy)}
@@ -743,7 +818,10 @@ export function ProjectIntegrationSetupWizard({
                         <Select
                           value={categoryOverrides[status.id] ?? status.type ?? 'unstarted'}
                           onValueChange={(value) =>
-                            setCategoryOverrides((prev) => ({ ...prev, [status.id]: value as WorkflowCategory }))
+                            setCategoryOverrides((prev) => ({
+                              ...prev,
+                              [status.id]: value as WorkflowCategory
+                            }))
                           }
                         >
                           <SelectTrigger className="w-36">
@@ -751,7 +829,9 @@ export function ProjectIntegrationSetupWizard({
                           </SelectTrigger>
                           <SelectContent>
                             {WORKFLOW_CATEGORIES.map((cat) => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                              <SelectItem key={cat} value={cat}>
+                                {cat}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -766,7 +846,8 @@ export function ProjectIntegrationSetupWizard({
                       Remap existing tasks
                     </p>
                     <p className="mb-2 text-xs text-muted-foreground">
-                      Choose where existing tasks should go. Unmapped tasks will move to the default status.
+                      Choose where existing tasks should go. Unmapped tasks will move to the default
+                      status.
                     </p>
                     <div className="space-y-2">
                       {resolveColumns(project.columns_config).map((col) => (
@@ -824,7 +905,9 @@ export function ProjectIntegrationSetupWizard({
               Mapping defaults are pre-filled for this scaffold. Required fields are enforced.
             </p>
             <div className="rounded-md border p-3">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Field mapping</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Field mapping
+              </p>
               <ul className="space-y-1 text-sm">
                 <li>Title -&gt; Task title</li>
                 <li>Description -&gt; Task description</li>
@@ -834,13 +917,13 @@ export function ProjectIntegrationSetupWizard({
               </ul>
             </div>
             <div className="rounded-md border p-3">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Status mapping</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Status mapping
+              </p>
               {provider === 'linear' ? (
                 <div className="space-y-1 text-sm">
                   {mappedStatuses.map((column) => (
-                    <p key={column.id}>
-                      Linear state type -&gt; {column.label}
-                    </p>
+                    <p key={column.id}>Linear state type -&gt; {column.label}</p>
                   ))}
                 </div>
               ) : (
@@ -875,7 +958,12 @@ export function ProjectIntegrationSetupWizard({
               )}
             </div>
             <div className="flex flex-wrap justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => void handleSaveProfile(false)} disabled={saving}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleSaveProfile(false)}
+                disabled={saving}
+              >
                 {saving ? 'Saving...' : 'Save profile without syncing'}
               </Button>
               <Button size="sm" onClick={() => void handleSaveProfile(true)} disabled={saving}>
@@ -888,17 +976,29 @@ export function ProjectIntegrationSetupWizard({
         {message ? <p className="text-xs text-muted-foreground">{message}</p> : null}
 
         <div className="flex items-center justify-between border-t pt-3">
-          <div className="text-xs text-muted-foreground">Step {step} of {STEPS.length}</div>
+          <div className="text-xs text-muted-foreground">
+            Step {step} of {STEPS.length}
+          </div>
           <div className="flex items-center gap-2">
             {step > 1 ? (
-              <Button variant="outline" size="sm" onClick={() => setStep((current) => Math.max(1, current - 1))}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setStep((current) => Math.max(1, current - 1))}
+              >
                 Back
               </Button>
             ) : (
-              <Button variant="outline" size="sm" onClick={onCancel}>Cancel</Button>
+              <Button variant="outline" size="sm" onClick={onCancel}>
+                Cancel
+              </Button>
             )}
             {step < STEPS.length ? (
-              <Button size="sm" onClick={() => setStep((current) => Math.min(STEPS.length, current + 1))} disabled={!canGoNext}>
+              <Button
+                size="sm"
+                onClick={() => setStep((current) => Math.min(STEPS.length, current + 1))}
+                disabled={!canGoNext}
+              >
                 Next
               </Button>
             ) : null}

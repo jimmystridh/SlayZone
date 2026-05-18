@@ -40,9 +40,13 @@ function killProcessTree(child: ChildProcess, signal: NodeJS.Signals = 'SIGTERM'
   const pid = child.pid
   if (pid == null) return
   if (process.platform === 'win32') {
-    try { execFileSync('taskkill', ['/T', '/F', '/PID', String(pid)]) } catch {}
+    try {
+      execFileSync('taskkill', ['/T', '/F', '/PID', String(pid)])
+    } catch {}
   } else {
-    try { process.kill(-pid, signal) } catch {}
+    try {
+      process.kill(-pid, signal)
+    } catch {}
   }
 }
 
@@ -68,10 +72,20 @@ export function initProcessManager(database: Database): void {
   // saves it from blocking window creation. First spawn within the deferred
   // window pays the cost lazily — same as before this warm-up existed.
   setImmediate(() => {
-    try { getEnrichedPath() } catch { /* lazy fallback handles it */ }
+    try {
+      getEnrichedPath()
+    } catch {
+      /* lazy fallback handles it */
+    }
   })
   const rows = db.prepare('SELECT * FROM processes ORDER BY created_at').all() as Array<{
-    id: string; task_id: string | null; project_id: string | null; label: string; command: string; cwd: string; auto_restart: number
+    id: string
+    task_id: string | null
+    project_id: string | null
+    label: string
+    command: string
+    cwd: string
+    auto_restart: number
   }>
   for (const row of rows) {
     processes.set(row.id, {
@@ -92,7 +106,7 @@ export function initProcessManager(database: Database): void {
       spawnedAt: null,
       processTitle: null,
       titlePollTimer: null,
-      oscTitleSet: false,
+      oscTitleSet: false
     })
   }
 }
@@ -161,7 +175,9 @@ function doSpawn(proc: ManagedProcess): void {
   const isWin = process.platform === 'win32'
   // fish needs -i (interactive) for PATH init inside `if status is-interactive` blocks
   // bash/zsh only need -l (login) to source profile — -i without a TTY causes side effects
-  const shellArgs = isWin ? ['/c', proc.command] : [...(isFish ? ['-i', '-l'] : ['-l']), '-c', proc.command]
+  const shellArgs = isWin
+    ? ['/c', proc.command]
+    : [...(isFish ? ['-i', '-l'] : ['-l']), '-c', proc.command]
   const env: Record<string, string | undefined> = { ...process.env }
   const enrichedPath = getEnrichedPath()
   if (enrichedPath) env.PATH = enrichedPath
@@ -209,16 +225,29 @@ export function createProcess(
 ): string {
   const id = randomUUID()
   const proc: ManagedProcess = {
-    id, taskId, projectId, label, command, cwd, autoRestart,
-    status: 'stopped', pid: null, exitCode: null,
-    logBuffer: [], child: null,
+    id,
+    taskId,
+    projectId,
+    label,
+    command,
+    cwd,
+    autoRestart,
+    status: 'stopped',
+    pid: null,
+    exitCode: null,
+    logBuffer: [],
+    child: null,
     startedAt: new Date().toISOString(),
-    restartCount: 0, spawnedAt: null,
-    processTitle: null, titlePollTimer: null, oscTitleSet: false,
+    restartCount: 0,
+    spawnedAt: null,
+    processTitle: null,
+    titlePollTimer: null,
+    oscTitleSet: false
   }
   processes.set(id, proc)
-  db?.prepare('INSERT INTO processes (id, project_id, task_id, label, command, cwd, auto_restart) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .run(id, projectId, taskId, label, command, cwd, autoRestart ? 1 : 0)
+  db?.prepare(
+    'INSERT INTO processes (id, project_id, task_id, label, command, cwd, auto_restart) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, projectId, taskId, label, command, cwd, autoRestart ? 1 : 0)
   return id
 }
 
@@ -232,23 +261,38 @@ export function spawnProcess(
 ): string {
   const id = randomUUID()
   const proc: ManagedProcess = {
-    id, taskId, projectId, label, command, cwd, autoRestart,
-    status: 'running', pid: null, exitCode: null,
-    logBuffer: [], child: null,
+    id,
+    taskId,
+    projectId,
+    label,
+    command,
+    cwd,
+    autoRestart,
+    status: 'running',
+    pid: null,
+    exitCode: null,
+    logBuffer: [],
+    child: null,
     startedAt: new Date().toISOString(),
-    restartCount: 0, spawnedAt: null,
-    processTitle: null, titlePollTimer: null, oscTitleSet: false,
+    restartCount: 0,
+    spawnedAt: null,
+    processTitle: null,
+    titlePollTimer: null,
+    oscTitleSet: false
   }
   processes.set(id, proc)
-  db?.prepare('INSERT INTO processes (id, project_id, task_id, label, command, cwd, auto_restart) VALUES (?, ?, ?, ?, ?, ?, ?)')
-    .run(id, projectId, taskId, label, command, cwd, autoRestart ? 1 : 0)
+  db?.prepare(
+    'INSERT INTO processes (id, project_id, task_id, label, command, cwd, auto_restart) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, projectId, taskId, label, command, cwd, autoRestart ? 1 : 0)
   doSpawn(proc)
   return id
 }
 
 export function updateProcess(
   id: string,
-  updates: Partial<Pick<ProcessInfo, 'label' | 'command' | 'cwd' | 'autoRestart' | 'taskId' | 'projectId'>>
+  updates: Partial<
+    Pick<ProcessInfo, 'label' | 'command' | 'cwd' | 'autoRestart' | 'taskId' | 'projectId'>
+  >
 ): boolean {
   const proc = processes.get(id)
   if (!proc) return false
@@ -257,7 +301,15 @@ export function updateProcess(
     UPDATE processes SET
       project_id = ?, task_id = ?, label = ?, command = ?, cwd = ?, auto_restart = ?
     WHERE id = ?
-  `).run(proc.projectId, proc.taskId, proc.label, proc.command, proc.cwd, proc.autoRestart ? 1 : 0, id)
+  `).run(
+    proc.projectId,
+    proc.taskId,
+    proc.label,
+    proc.command,
+    proc.cwd,
+    proc.autoRestart ? 1 : 0,
+    id
+  )
   return true
 }
 
@@ -310,12 +362,18 @@ export function killTaskProcesses(taskId: string): void {
 /** Returns task-scoped processes for taskId plus project-scoped processes matching projectId. */
 export function listForTask(taskId: string | null, projectId: string | null): ProcessInfo[] {
   return Array.from(processes.values())
-    .filter(p => p.taskId === taskId || (p.taskId === null && p.projectId != null && p.projectId === projectId))
+    .filter(
+      (p) =>
+        p.taskId === taskId ||
+        (p.taskId === null && p.projectId != null && p.projectId === projectId)
+    )
     .map(({ child: _, titlePollTimer: _t, oscTitleSet: _o, ...info }) => info)
 }
 
 export function listAllProcesses(): ProcessInfo[] {
-  return Array.from(processes.values()).map(({ child: _, titlePollTimer: _t, oscTitleSet: _o, ...info }) => info)
+  return Array.from(processes.values()).map(
+    ({ child: _, titlePollTimer: _t, oscTitleSet: _o, ...info }) => info
+  )
 }
 
 const statsPoller = createStatsPoller(
@@ -326,10 +384,14 @@ const statsPoller = createStatsPoller(
     }
     return pidMap
   },
-  (stats) => { win?.webContents.send('processes:stats', stats) }
+  (stats) => {
+    win?.webContents.send('processes:stats', stats)
+  }
 )
 
-function startStatsPolling(): void { statsPoller.ensureStarted() }
+function startStatsPolling(): void {
+  statsPoller.ensureStarted()
+}
 
 export function killAllProcesses(): void {
   statsPoller.stop()

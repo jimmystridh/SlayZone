@@ -32,6 +32,7 @@ export function HighlightedText({ text }: { text: string }) {
     )
     cursor = at + needle.length
   }
-  if (cursor < text.length) out.push(<React.Fragment key={key++}>{text.slice(cursor)}</React.Fragment>)
+  if (cursor < text.length)
+    out.push(<React.Fragment key={key++}>{text.slice(cursor)}</React.Fragment>)
   return <>{out}</>
 }

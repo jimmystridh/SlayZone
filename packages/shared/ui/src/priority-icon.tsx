@@ -21,7 +21,13 @@ export function PriorityIcon({ priority, className }: PriorityIconProps) {
   if (priority === 5) {
     return (
       <svg viewBox="0 0 16 16" fill="none" className={cn(size, className)}>
-        <path d="M3 5h2M7 5h2M11 5h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-muted-foreground" />
+        <path
+          d="M3 5h2M7 5h2M11 5h2"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          className="text-muted-foreground"
+        />
       </svg>
     )
   }
@@ -31,15 +37,33 @@ export function PriorityIcon({ priority, className }: PriorityIconProps) {
   const color = { 2: '#f97316', 3: '#eab308', 4: '#3b82f6' }[priority]
   return (
     <svg viewBox="0 0 16 16" fill="none" className={cn(size, className)}>
-      <rect x="2.5" y="10" width="3" height="4" rx="0.5"
+      <rect
+        x="2.5"
+        y="10"
+        width="3"
+        height="4"
+        rx="0.5"
         fill={filled >= 1 ? color : undefined}
-        className={filled >= 1 ? undefined : 'fill-muted-foreground/25'} />
-      <rect x="6.5" y="6.5" width="3" height="7.5" rx="0.5"
+        className={filled >= 1 ? undefined : 'fill-muted-foreground/25'}
+      />
+      <rect
+        x="6.5"
+        y="6.5"
+        width="3"
+        height="7.5"
+        rx="0.5"
         fill={filled >= 2 ? color : undefined}
-        className={filled >= 2 ? undefined : 'fill-muted-foreground/25'} />
-      <rect x="10.5" y="3" width="3" height="11" rx="0.5"
+        className={filled >= 2 ? undefined : 'fill-muted-foreground/25'}
+      />
+      <rect
+        x="10.5"
+        y="3"
+        width="3"
+        height="11"
+        rx="0.5"
         fill={filled >= 3 ? color : undefined}
-        className={filled >= 3 ? undefined : 'fill-muted-foreground/25'} />
+        className={filled >= 3 ? undefined : 'fill-muted-foreground/25'}
+      />
     </svg>
   )
 }

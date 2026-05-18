@@ -1,18 +1,25 @@
 import { create } from 'zustand'
-import { shortcutDefinitions, SHORTCUT_DEFAULT_MIGRATIONS, SHORTCUT_ID_RENAMES, type ShortcutDefinition, type ShortcutScope } from '@slayzone/shortcuts'
+import {
+  shortcutDefinitions,
+  SHORTCUT_DEFAULT_MIGRATIONS,
+  SHORTCUT_ID_RENAMES,
+  type ShortcutDefinition,
+  type ShortcutScope
+} from '@slayzone/shortcuts'
 
 // Typed accessor for the Electron preload API. The full type lives in @slayzone/types
 // and is augmented onto Window by the preload. We use a minimal cast here so this
 // package can typecheck independently without pulling in the full ElectronAPI type.
-const api = () => (window as any).api as {
-  settings: {
-    get: (key: string) => Promise<string | null>
-    set: (key: string, value: string) => Promise<void>
+const api = () =>
+  (window as any).api as {
+    settings: {
+      get: (key: string) => Promise<string | null>
+      set: (key: string, value: string) => Promise<void>
+    }
+    shortcuts: {
+      changed: () => void
+    }
   }
-  shortcuts: {
-    changed: () => void
-  }
-}
 
 const SETTINGS_KEY = 'custom_shortcuts'
 

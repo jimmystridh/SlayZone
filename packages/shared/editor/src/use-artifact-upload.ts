@@ -23,7 +23,12 @@ function extFromMime(mime: string): string {
 }
 
 interface ArtifactsApiNarrow {
-  uploadBlob: (data: { taskId: string; title: string; bytes: Uint8Array; folderId?: string | null }) => Promise<ArtifactRef | null>
+  uploadBlob: (data: {
+    taskId: string
+    title: string
+    bytes: Uint8Array
+    folderId?: string | null
+  }) => Promise<ArtifactRef | null>
   getFilePath: (id: string) => Promise<string | null>
 }
 
@@ -36,7 +41,8 @@ function getArtifactsApi(): ArtifactsApiNarrow {
 }
 
 function getArtifactFoldersApi(): ArtifactFoldersApiNarrow {
-  return (window as unknown as { api: { artifactFolders: ArtifactFoldersApiNarrow } }).api.artifactFolders
+  return (window as unknown as { api: { artifactFolders: ArtifactFoldersApiNarrow } }).api
+    .artifactFolders
 }
 
 export interface UseArtifactUploadOptions {
@@ -59,16 +65,20 @@ export function useArtifactUpload(
     let folderId: string | null = null
     const folderName = folderNameRef.current
     if (folderName) {
-      const folder = await getArtifactFoldersApi().getOrCreateByName({ taskId: tid, name: folderName })
+      const folder = await getArtifactFoldersApi().getOrCreateByName({
+        taskId: tid,
+        name: folderName
+      })
       folderId = folder?.id ?? null
     }
     const results = await Promise.all(
       files.map(async (file) => {
         const buf = await file.arrayBuffer()
         const bytes = new Uint8Array(buf)
-        const baseTitle = file.name && file.name.length > 0
-          ? file.name
-          : `pasted-${tsSlug()}${extFromMime(file.type)}`
+        const baseTitle =
+          file.name && file.name.length > 0
+            ? file.name
+            : `pasted-${tsSlug()}${extFromMime(file.type)}`
         return artifacts.uploadBlob({ taskId: tid, title: baseTitle, bytes, folderId })
       })
     )

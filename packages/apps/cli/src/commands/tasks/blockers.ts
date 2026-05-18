@@ -9,7 +9,10 @@ export interface BlockersOpts {
   json?: boolean
 }
 
-export async function blockersAction(taskId: string | undefined, opts: BlockersOpts): Promise<void> {
+export async function blockersAction(
+  taskId: string | undefined,
+  opts: BlockersOpts
+): Promise<void> {
   taskId = resolveId(taskId)
   const db = openDb()
 
@@ -17,9 +20,14 @@ export async function blockersAction(taskId: string | undefined, opts: BlockersO
     `SELECT id FROM tasks WHERE id LIKE :prefix || '%' LIMIT 2`,
     { ':prefix': taskId }
   )
-  if (tasks.length === 0) { console.error(`Task not found: ${taskId}`); process.exit(1) }
+  if (tasks.length === 0) {
+    console.error(`Task not found: ${taskId}`)
+    process.exit(1)
+  }
   if (tasks.length > 1) {
-    console.error(`Ambiguous id prefix "${taskId}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${taskId}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
 
@@ -28,7 +36,12 @@ export async function blockersAction(taskId: string | undefined, opts: BlockersO
   function resolveTaskId(prefix: string): string {
     if (prefix === task.id || prefix === task.id.slice(0, prefix.length)) {
       // Check exact self-reference
-      if (prefix === task.id || db.query<{ id: string }>(`SELECT id FROM tasks WHERE id LIKE :p || '%' LIMIT 1`, { ':p': prefix })[0]?.id === task.id) {
+      if (
+        prefix === task.id ||
+        db.query<{ id: string }>(`SELECT id FROM tasks WHERE id LIKE :p || '%' LIMIT 1`, {
+          ':p': prefix
+        })[0]?.id === task.id
+      ) {
         console.error(`A task cannot block itself.`)
         process.exit(1)
       }
@@ -37,9 +50,14 @@ export async function blockersAction(taskId: string | undefined, opts: BlockersO
       `SELECT id FROM tasks WHERE id LIKE :p || '%' LIMIT 2`,
       { ':p': prefix }
     )
-    if (matches.length === 0) { console.error(`Task not found: ${prefix}`); process.exit(1) }
+    if (matches.length === 0) {
+      console.error(`Task not found: ${prefix}`)
+      process.exit(1)
+    }
     if (matches.length > 1) {
-      console.error(`Ambiguous id prefix "${prefix}". Matches: ${matches.map((t) => t.id.slice(0, 8)).join(', ')}`)
+      console.error(
+        `Ambiguous id prefix "${prefix}". Matches: ${matches.map((t) => t.id.slice(0, 8)).join(', ')}`
+      )
       process.exit(1)
     }
     if (matches[0].id === task.id) {
@@ -58,17 +76,26 @@ export async function blockersAction(taskId: string | undefined, opts: BlockersO
         const blockerIds = opts.set.map(resolveTaskId)
         db.run(`DELETE FROM task_dependencies WHERE blocks_task_id = :tid`, { ':tid': task.id })
         for (const bid of blockerIds) {
-          db.run(`INSERT OR IGNORE INTO task_dependencies (task_id, blocks_task_id) VALUES (:bid, :tid)`, { ':bid': bid, ':tid': task.id })
+          db.run(
+            `INSERT OR IGNORE INTO task_dependencies (task_id, blocks_task_id) VALUES (:bid, :tid)`,
+            { ':bid': bid, ':tid': task.id }
+          )
         }
       } else if (opts.add) {
         for (const prefix of opts.add) {
           const bid = resolveTaskId(prefix)
-          db.run(`INSERT OR IGNORE INTO task_dependencies (task_id, blocks_task_id) VALUES (:bid, :tid)`, { ':bid': bid, ':tid': task.id })
+          db.run(
+            `INSERT OR IGNORE INTO task_dependencies (task_id, blocks_task_id) VALUES (:bid, :tid)`,
+            { ':bid': bid, ':tid': task.id }
+          )
         }
       } else if (opts.remove) {
         for (const prefix of opts.remove) {
           const bid = resolveTaskId(prefix)
-          db.run(`DELETE FROM task_dependencies WHERE task_id = :bid AND blocks_task_id = :tid`, { ':bid': bid, ':tid': task.id })
+          db.run(`DELETE FROM task_dependencies WHERE task_id = :bid AND blocks_task_id = :tid`, {
+            ':bid': bid,
+            ':tid': task.id
+          })
         }
       } else if (opts.clear) {
         db.run(`DELETE FROM task_dependencies WHERE blocks_task_id = :tid`, { ':tid': task.id })

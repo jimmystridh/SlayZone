@@ -18,27 +18,30 @@ export function ArtifactPicker({ items, query, coords, onSelect, onClose }: Arti
   const [selectedIndex, setSelectedIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const filtered = items.filter(item =>
-    item.title.toLowerCase().includes(query.toLowerCase())
+  const filtered = items.filter((item) => item.title.toLowerCase().includes(query.toLowerCase()))
+
+  useEffect(() => {
+    setSelectedIndex(0)
+  }, [query])
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1))
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedIndex((i) => Math.max(i - 1, 0))
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        if (filtered[selectedIndex]) onSelect(filtered[selectedIndex])
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    },
+    [filtered, selectedIndex, onSelect, onClose]
   )
-
-  useEffect(() => { setSelectedIndex(0) }, [query])
-
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setSelectedIndex(i => Math.min(i + 1, filtered.length - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setSelectedIndex(i => Math.max(i - 1, 0))
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      if (filtered[selectedIndex]) onSelect(filtered[selectedIndex])
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      onClose()
-    }
-  }, [filtered, selectedIndex, onSelect, onClose])
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown, true)
@@ -68,9 +71,14 @@ export function ArtifactPicker({ items, query, coords, onSelect, onClose }: Arti
           key={item.id}
           type="button"
           className={`flex items-center gap-2 w-full px-2 py-1 text-xs text-left ${
-            i === selectedIndex ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50'
+            i === selectedIndex
+              ? 'bg-muted text-foreground'
+              : 'text-muted-foreground hover:bg-muted/50'
           }`}
-          onMouseDown={(e) => { e.preventDefault(); onSelect(item) }}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            onSelect(item)
+          }}
           onMouseEnter={() => setSelectedIndex(i)}
         >
           <span className="truncate flex-1">{item.title}</span>

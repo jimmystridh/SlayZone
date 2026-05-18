@@ -2,7 +2,12 @@
  * CLI db-helpers tests — resolveProject
  * Run with: npx tsx --loader ./packages/shared/test-utils/loader.ts packages/apps/cli/test/db.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../shared/test-utils/ipc-harness.js'
 import { createSlayDbAdapter, captureAll } from './test-harness.js'
 import { resolveProject, resolveProjectArg } from '../src/db-helpers.mjs'
 
@@ -11,8 +16,12 @@ const db = createSlayDbAdapter(h.db)
 
 const projectId = crypto.randomUUID()
 const projectId2 = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(projectId, 'Alpha Project', '#000')
-h.db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(projectId2, 'Alpha Backup', '#111')
+h.db
+  .prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)')
+  .run(projectId, 'Alpha Project', '#000')
+h.db
+  .prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)')
+  .run(projectId2, 'Alpha Backup', '#111')
 
 describe('resolveProject', () => {
   test('resolves by exact ID', () => {

@@ -1,5 +1,41 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { MoreHorizontal, Archive, Trash2, AlertTriangle, Loader2, Terminal as TerminalIcon, Globe, Settings2, GitBranch, FileCode, ChevronDown, ChevronRight, Flag, Plus, GripVertical, X, Info, Check, CheckCircle2, XCircle, Stethoscope, Cpu, Circle, Repeat, LayoutTemplate, Paperclip, Power, Eye, Trophy, Sparkles, PartyPopper, Shuffle, Swords, Flame, PanelsTopLeft } from 'lucide-react'
+import {
+  MoreHorizontal,
+  Archive,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  Terminal as TerminalIcon,
+  Globe,
+  Settings2,
+  GitBranch,
+  FileCode,
+  ChevronDown,
+  ChevronRight,
+  Flag,
+  Plus,
+  GripVertical,
+  X,
+  Info,
+  Check,
+  CheckCircle2,
+  XCircle,
+  Stethoscope,
+  Cpu,
+  Circle,
+  Repeat,
+  LayoutTemplate,
+  Paperclip,
+  Power,
+  Eye,
+  Trophy,
+  Sparkles,
+  PartyPopper,
+  Shuffle,
+  Swords,
+  Flame,
+  PanelsTopLeft
+} from 'lucide-react'
 import { IconArrowsVertical, IconArrowsMaximize } from '@tabler/icons-react'
 import { DescriptionDialog } from './DescriptionDialog'
 import { ArtifactsPanel, type ArtifactsPanelHandle } from './ArtifactsPanel'
@@ -11,15 +47,44 @@ import { CSS } from '@dnd-kit/utilities'
 import type { Task, PanelVisibility, UpdateTaskInput } from '@slayzone/task/shared'
 import type { TaskTemplate } from '@slayzone/task/shared'
 import type { TaskDetailData } from './taskDetailCache'
-import { BUILTIN_PANEL_IDS, getProviderConversationId, getProviderFlags, setProviderConversationId, setProviderFlags, clearAllConversationIds, getProviderLastKilledAt, COLD_RESPAWN_MS, priorityOptions } from '@slayzone/task/shared'
+import {
+  BUILTIN_PANEL_IDS,
+  getProviderConversationId,
+  getProviderFlags,
+  setProviderConversationId,
+  setProviderFlags,
+  clearAllConversationIds,
+  getProviderLastKilledAt,
+  COLD_RESPAWN_MS,
+  priorityOptions
+} from '@slayzone/task/shared'
 import type { BrowserTabsState } from '@slayzone/task-browser/shared'
 import type { Tag } from '@slayzone/tags/shared'
 import type { Project } from '@slayzone/projects/shared'
-import { getDefaultStatus, getDoneStatus, isCompletedStatus, isTerminalStatus, resolveColumns, resolveRepoPath } from '@slayzone/projects/shared'
+import {
+  getDefaultStatus,
+  getDoneStatus,
+  isCompletedStatus,
+  isTerminalStatus,
+  resolveColumns,
+  resolveRepoPath
+} from '@slayzone/projects/shared'
 import { useDetectedRepos } from '@slayzone/projects'
-import { DEV_SERVER_URL_PATTERN, SESSION_ID_COMMANDS, SESSION_ID_UNAVAILABLE } from '@slayzone/terminal/shared'
+import {
+  DEV_SERVER_URL_PATTERN,
+  SESSION_ID_COMMANDS,
+  SESSION_ID_UNAVAILABLE
+} from '@slayzone/terminal/shared'
 import type { TerminalMode, ValidationResult } from '@slayzone/terminal/shared'
-import { Button, IconButton, PanelToggle, DevServerToast, Collapsible, CollapsibleTrigger, CollapsibleContent } from '@slayzone/ui'
+import {
+  Button,
+  IconButton,
+  PanelToggle,
+  DevServerToast,
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent
+} from '@slayzone/ui'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,13 +92,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@slayzone/ui'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@slayzone/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@slayzone/ui'
 import { Input } from '@slayzone/ui'
 import {
   ContextMenu,
@@ -63,13 +122,62 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@slayzone/ui'
 import { Popover, PopoverContent, PopoverTrigger } from '@slayzone/ui'
 import { TaskMetadataSidebar, ExternalSyncCard } from './TaskMetadataSidebar'
 import { RichTextEditor } from '@slayzone/editor'
-import { normalizeDescription, stripMarkdown, getExtensionFromTitle, getEffectiveRenderMode, RENDER_MODE_INFO } from '@slayzone/task/shared'
-import { useTheme, useDialogStore, useTabStore, type SearchFileContext } from '@slayzone/settings/client'
-import { markSkipCache, usePty, useTerminalModes, getVisibleModes, getModeLabel, groupTerminalModes, useLoopMode, isLoopActive, stripAnsi, serializeTerminalHistory, LoopModeBanner, LoopModeDialog, SlayNudgeBanner, useSlayNudge, PtyStateDot, PtyProgressDot } from '@slayzone/terminal'
+import {
+  normalizeDescription,
+  stripMarkdown,
+  getExtensionFromTitle,
+  getEffectiveRenderMode,
+  RENDER_MODE_INFO
+} from '@slayzone/task/shared'
+import {
+  useTheme,
+  useDialogStore,
+  useTabStore,
+  type SearchFileContext
+} from '@slayzone/settings/client'
+import {
+  markSkipCache,
+  usePty,
+  useTerminalModes,
+  getVisibleModes,
+  getModeLabel,
+  groupTerminalModes,
+  useLoopMode,
+  isLoopActive,
+  stripAnsi,
+  serializeTerminalHistory,
+  LoopModeBanner,
+  LoopModeDialog,
+  SlayNudgeBanner,
+  useSlayNudge,
+  PtyStateDot,
+  PtyProgressDot
+} from '@slayzone/terminal'
 import type { LoopConfig } from '@slayzone/terminal/shared'
-import { TerminalContainer, type TerminalContainerHandle, MODE_ICONS } from '@slayzone/task-terminals'
-import { UnifiedGitPanel, type UnifiedGitPanelHandle, type GitTabId, useProjectRepos } from '@slayzone/worktrees'
-import { buildStatusOptions, cn, getColumnStatusStyle, PriorityIcon, useAppearance, matchesShortcut, useShortcutStore, useShortcutDisplay, withModalGuard, getThemeEditorColors, type EditorThemeColors } from '@slayzone/ui'
+import {
+  TerminalContainer,
+  type TerminalContainerHandle,
+  MODE_ICONS
+} from '@slayzone/task-terminals'
+import {
+  UnifiedGitPanel,
+  type UnifiedGitPanelHandle,
+  type GitTabId,
+  useProjectRepos
+} from '@slayzone/worktrees'
+import {
+  buildStatusOptions,
+  cn,
+  getColumnStatusStyle,
+  PriorityIcon,
+  useAppearance,
+  matchesShortcut,
+  useShortcutStore,
+  useShortcutDisplay,
+  withModalGuard,
+  getThemeEditorColors,
+  type EditorThemeColors
+} from '@slayzone/ui'
 import { BrowserPanel, type BrowserPanelHandle } from '@slayzone/task-browser'
 import { FileEditorView, type FileEditorViewHandle } from '@slayzone/file-editor/client'
 import type { EditorOpenFilesState, OpenFileOptions } from '@slayzone/file-editor/shared'
@@ -86,7 +194,18 @@ import { ResizeHandle } from './ResizeHandle'
 import { ProcessesPanel } from './ProcessesPanel'
 import { TaskSettingsPanel } from './TaskSettingsPanel'
 
-function TaskOverviewRow({ sub, columns, statusOptions, onNavigate, onUpdate, onDelete, dragHandle, rowRef, rowStyle, isDragging }: {
+function TaskOverviewRow({
+  sub,
+  columns,
+  statusOptions,
+  onNavigate,
+  onUpdate,
+  onDelete,
+  dragHandle,
+  rowRef,
+  rowStyle,
+  isDragging
+}: {
   sub: Task
   columns?: Project['columns_config']
   statusOptions: Array<{ value: string; label: string }>
@@ -109,8 +228,8 @@ function TaskOverviewRow({ sub, columns, statusOptions, onNavigate, onUpdate, on
           ref={rowRef}
           style={rowStyle}
           className={cn(
-            "relative flex items-center gap-2 py-1 px-1 rounded cursor-pointer hover:bg-muted/50 group select-none",
-            isDragging && "opacity-50"
+            'relative flex items-center gap-2 py-1 px-1 rounded cursor-pointer hover:bg-muted/50 group select-none',
+            isDragging && 'opacity-50'
           )}
         >
           {dragHandle}
@@ -124,11 +243,15 @@ function TaskOverviewRow({ sub, columns, statusOptions, onNavigate, onUpdate, on
                     onClick={(e) => e.stopPropagation()}
                     className="shrink-0 cursor-pointer transition-opacity hover:opacity-70"
                   >
-                    {StatusIcon && <StatusIcon className={cn("size-3.5", statusStyle?.iconClass)} />}
+                    {StatusIcon && (
+                      <StatusIcon className={cn('size-3.5', statusStyle?.iconClass)} />
+                    )}
                   </button>
                 </PopoverTrigger>
               </TooltipTrigger>
-              <TooltipContent>{statusStyle?.label ?? sub.status} — {Math.round(sub.progress ?? 0)}% complete</TooltipContent>
+              <TooltipContent>
+                {statusStyle?.label ?? sub.status} — {Math.round(sub.progress ?? 0)}% complete
+              </TooltipContent>
             </Tooltip>
             <PopoverContent className="w-44 p-1" align="start" onClick={(e) => e.stopPropagation()}>
               {statusOptions.map((opt) => {
@@ -139,7 +262,10 @@ function TaskOverviewRow({ sub, columns, statusOptions, onNavigate, onUpdate, on
                   <button
                     key={opt.value}
                     type="button"
-                    className={cn('flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm cursor-pointer hover:bg-accent', isCurrent && 'bg-accent font-medium')}
+                    className={cn(
+                      'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm cursor-pointer hover:bg-accent',
+                      isCurrent && 'bg-accent font-medium'
+                    )}
                     onClick={() => {
                       onUpdate(sub.id, { status: opt.value })
                       setStatusOpen(false)
@@ -153,7 +279,10 @@ function TaskOverviewRow({ sub, columns, statusOptions, onNavigate, onUpdate, on
             </PopoverContent>
           </Popover>
           <span
-            className={cn("text-xs flex-1 truncate", isTerminalStatus(sub.status, columns ?? null) && "line-through text-muted-foreground")}
+            className={cn(
+              'text-xs flex-1 truncate',
+              isTerminalStatus(sub.status, columns ?? null) && 'line-through text-muted-foreground'
+            )}
             onClick={() => onNavigate?.(sub.id)}
           >
             {sub.title}
@@ -169,9 +298,14 @@ function TaskOverviewRow({ sub, columns, statusOptions, onNavigate, onUpdate, on
         <ContextMenuSub>
           <ContextMenuSubTrigger>Status</ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            <ContextMenuRadioGroup value={sub.status} onValueChange={(v) => onUpdate(sub.id, { status: v })}>
+            <ContextMenuRadioGroup
+              value={sub.status}
+              onValueChange={(v) => onUpdate(sub.id, { status: v })}
+            >
               {statusOptions.map((s) => (
-                <ContextMenuRadioItem key={s.value} value={s.value}>{s.label}</ContextMenuRadioItem>
+                <ContextMenuRadioItem key={s.value} value={s.value}>
+                  {s.label}
+                </ContextMenuRadioItem>
               ))}
             </ContextMenuRadioGroup>
           </ContextMenuSubContent>
@@ -179,17 +313,26 @@ function TaskOverviewRow({ sub, columns, statusOptions, onNavigate, onUpdate, on
         <ContextMenuSub>
           <ContextMenuSubTrigger>Priority</ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            <ContextMenuRadioGroup value={String(sub.priority)} onValueChange={(v) => onUpdate(sub.id, { priority: parseInt(v, 10) })}>
-              {Object.entries({ 1: 'Urgent', 2: 'High', 3: 'Medium', 4: 'Low', 5: 'Someday' }).map(([value, label]) => (
-                <ContextMenuRadioItem key={value} value={value}>{label}</ContextMenuRadioItem>
-              ))}
+            <ContextMenuRadioGroup
+              value={String(sub.priority)}
+              onValueChange={(v) => onUpdate(sub.id, { priority: parseInt(v, 10) })}
+            >
+              {Object.entries({ 1: 'Urgent', 2: 'High', 3: 'Medium', 4: 'Low', 5: 'Someday' }).map(
+                ([value, label]) => (
+                  <ContextMenuRadioItem key={value} value={value}>
+                    {label}
+                  </ContextMenuRadioItem>
+                )
+              )}
             </ContextMenuRadioGroup>
           </ContextMenuSubContent>
         </ContextMenuSub>
         {onDelete && (
           <>
             <ContextMenuSeparator />
-            <ContextMenuItem variant="destructive" onSelect={() => onDelete(sub.id)}>Delete</ContextMenuItem>
+            <ContextMenuItem variant="destructive" onSelect={() => onDelete(sub.id)}>
+              Delete
+            </ContextMenuItem>
           </>
         )}
       </ContextMenuContent>
@@ -205,19 +348,34 @@ function SortableSubTask(props: {
   onUpdate: (id: string, updates: Record<string, unknown>) => void
   onDelete: (id: string) => void
 }): React.JSX.Element {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: props.sub.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: props.sub.id
+  })
   const style = { transform: CSS.Transform.toString(transform), transition }
   const dragHandle = (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span {...attributes} {...listeners} className="shrink-0 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground touch-none" onClick={(e) => e.stopPropagation()}>
+        <span
+          {...attributes}
+          {...listeners}
+          className="shrink-0 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground touch-none"
+          onClick={(e) => e.stopPropagation()}
+        >
           <GripVertical className="size-3" />
         </span>
       </TooltipTrigger>
       <TooltipContent>Drag to reorder</TooltipContent>
     </Tooltip>
   )
-  return <TaskOverviewRow {...props} rowRef={setNodeRef} rowStyle={style} isDragging={isDragging} dragHandle={dragHandle} />
+  return (
+    <TaskOverviewRow
+      {...props}
+      rowRef={setNodeRef}
+      rowStyle={style}
+      isDragging={isDragging}
+      dragHandle={dragHandle}
+    />
+  )
 }
 
 export interface TaskDetailPageProps {
@@ -272,7 +430,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   isSidePanelResizing,
   initialData,
   isSecondaryWindow = false,
-  onPanelVisibilityChange,
+  onPanelVisibilityChange
 }: TaskDetailPageProps): React.JSX.Element {
   // Prefer live global state; fall back to suspense-cached data for subtask race window
   const task = taskProp ?? initialData?.task ?? null
@@ -284,7 +442,14 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   const { modes } = useTerminalModes()
 
   const { editorThemeId, contentVariant } = useTheme()
-  const { notesFontFamily, notesReadability, notesWidth, notesCheckedHighlight, notesShowToolbar, notesSpellcheck } = useAppearance()
+  const {
+    notesFontFamily,
+    notesReadability,
+    notesWidth,
+    notesCheckedHighlight,
+    notesShowToolbar,
+    notesSpellcheck
+  } = useAppearance()
   const taskHeaderPanelMode = useTabStore((s) => s.taskHeaderPanelMode)
   const taskHeaderPanelAlign = useTabStore((s) => s.taskHeaderPanelAlign)
   const taskHeaderTitleAlign = useTabStore((s) => s.taskHeaderTitleAlign)
@@ -299,37 +464,59 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   useEffect(() => {
     const handleTagUpdated = (e: Event) => {
       const tag = (e as CustomEvent).detail as Tag
-      setTags((prev) => prev.map((t) => t.id === tag.id ? tag : t))
+      setTags((prev) => prev.map((t) => (t.id === tag.id ? tag : t)))
     }
     window.addEventListener('slayzone:tag-updated', handleTagUpdated)
     return () => window.removeEventListener('slayzone:tag-updated', handleTagUpdated)
   }, [])
-  const { tagIds: taskTagIds, setTagIds: setTaskTagIds } = useTaskTagIds(task?.id, initialData?.taskTagIds)
-  const statusOptions = useMemo(() => buildStatusOptions(project?.columns_config), [project?.columns_config])
-  const completedStatus = useMemo(() => getDoneStatus(project?.columns_config), [project?.columns_config])
+  const { tagIds: taskTagIds, setTagIds: setTaskTagIds } = useTaskTagIds(
+    task?.id,
+    initialData?.taskTagIds
+  )
+  const statusOptions = useMemo(
+    () => buildStatusOptions(project?.columns_config),
+    [project?.columns_config]
+  )
+  const completedStatus = useMemo(
+    () => getDoneStatus(project?.columns_config),
+    [project?.columns_config]
+  )
   const [statusPopoverOpen, setStatusPopoverOpen] = useState(false)
   const [priorityPopoverOpen, setPriorityPopoverOpen] = useState(false)
   const [openCompletedAnyway, setOpenCompletedAnyway] = useState(false)
   const [completedVariant, setCompletedVariant] = useState(0)
-  useEffect(() => { setOpenCompletedAnyway(false) }, [task?.id])
+  useEffect(() => {
+    setOpenCompletedAnyway(false)
+  }, [task?.id])
 
   // Sub-tasks
-  const { subTasks, createSubTask, updateSubTask: handleUpdateSubTask, deleteSubTask: handleDeleteSubTask, handleDragEnd: handleSubTaskDragEnd } = useSubTasks(task?.id, initialData?.subTasks)
+  const {
+    subTasks,
+    createSubTask,
+    updateSubTask: handleUpdateSubTask,
+    deleteSubTask: handleDeleteSubTask,
+    handleDragEnd: handleSubTaskDragEnd
+  } = useSubTasks(task?.id, initialData?.subTasks)
 
   // Artifacts
   const { artifacts } = useArtifacts(task?.id)
   const { uploadFiles: uploadImageFiles } = useArtifactUpload(task?.id)
-  const handleUploadImages = useCallback(async (files: File[]) => {
-    const uploaded = await uploadImageFiles(files)
-    return uploaded.map((a) => ({ id: a.id, title: a.title }))
-  }, [uploadImageFiles])
+  const handleUploadImages = useCallback(
+    async (files: File[]) => {
+      const uploaded = await uploadImageFiles(files)
+      return uploaded.map((a) => ({ id: a.id, title: a.title }))
+    },
+    [uploadImageFiles]
+  )
   const [addingSubTask, setAddingSubTask] = useState(false)
   const [subTaskTitle, setSubTaskTitle] = useState('')
   const subTaskInputRef = useRef<HTMLInputElement>(null)
   const [parentTask] = useState<Task | null>(initialData?.parentTask ?? null)
 
   // Project path validation
-  const [projectPathMissing, setProjectPathMissing] = useState(initialData?.projectPathMissing ?? false)
+  const [projectPathMissing, setProjectPathMissing] = useState(
+    initialData?.projectPathMissing ?? false
+  )
 
   // Multi-repo detection (drives the *task-bound* axis: terminal cwd, editor root, browser, worktree creation)
   const detectedRepos = useDetectedRepos(project?.path ?? null)
@@ -346,24 +533,35 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
 
   // Git-panel viewing axis: ephemeral, repo selection here does NOT change the task-bound path.
   // Default = task-bound; if that resolves to a non-git wrapper folder, default to first discovered repo.
-  const taskBoundRepoForView = task?.worktree_path ?? resolvedRepo.path  // worktree if present, else resolved child / project root
+  const taskBoundRepoForView = task?.worktree_path ?? resolvedRepo.path // worktree if present, else resolved child / project root
   const { repos: viewableRepos } = useProjectRepos(project?.path ?? null, taskBoundRepoForView)
   const [gitViewRepoPath, setGitViewRepoPath] = useState<string | null>(null)
   // Resolve the active git-panel target. Prefer explicit user pick; fall back to task-bound if it's a real git repo;
   // else first viewable repo (covers wrapper-folder projects). Recomputed on each render so disk changes self-heal.
   const resolvedGitViewPath = useMemo(() => {
-    if (gitViewRepoPath && viewableRepos.some(r => r.path === gitViewRepoPath)) return gitViewRepoPath
-    if (taskBoundRepoForView && viewableRepos.some(r => r.path === taskBoundRepoForView)) return taskBoundRepoForView
+    if (gitViewRepoPath && viewableRepos.some((r) => r.path === gitViewRepoPath))
+      return gitViewRepoPath
+    if (taskBoundRepoForView && viewableRepos.some((r) => r.path === taskBoundRepoForView))
+      return taskBoundRepoForView
     return viewableRepos[0]?.path ?? taskBoundRepoForView
   }, [gitViewRepoPath, viewableRepos, taskBoundRepoForView])
-  const handleRepoChange = useCallback((repoName: string) => {
-    // Ephemeral: pick by name from discovered repos. Does NOT persist to task.repo_name.
-    const match = viewableRepos.find(r => r.name === repoName)
-    if (match) setGitViewRepoPath(match.path)
-  }, [viewableRepos])
+  const handleRepoChange = useCallback(
+    (repoName: string) => {
+      // Ephemeral: pick by name from discovered repos. Does NOT persist to task.repo_name.
+      const match = viewableRepos.find((r) => r.name === repoName)
+      if (match) setGitViewRepoPath(match.path)
+    },
+    [viewableRepos]
+  )
 
   // PTY context for buffer management
-  const { resetTaskState, subscribeSessionDetected, subscribeDevServer, getQuickRunPrompt, clearQuickRunPrompt } = usePty()
+  const {
+    resetTaskState,
+    subscribeSessionDetected,
+    subscribeDevServer,
+    getQuickRunPrompt,
+    clearQuickRunPrompt
+  } = usePty()
 
   // Shortcut display strings (reactive to user customization)
   const panelTerminalShortcut = useShortcutDisplay('panel-terminal')
@@ -414,7 +612,9 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   // In-progress prompt state
 
   // Description editing state
-  const [descriptionValue, setDescriptionValue] = useState(() => normalizeDescription(task?.description ?? null, task?.description_format ?? 'html'))
+  const [descriptionValue, setDescriptionValue] = useState(() =>
+    normalizeDescription(task?.description ?? null, task?.description_format ?? 'html')
+  )
   const descriptionDirty = useRef(false)
 
   // Terminal restart key (changing this forces remount)
@@ -428,8 +628,24 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
 
   // Panel visibility state. Initial value sourced from initialData (secondary lifts via parent).
   const defaultPanelVisibility: PanelVisibility = isSecondaryWindow
-    ? { terminal: false, browser: false, diff: false, settings: false, editor: false, artifacts: false, processes: false }
-    : { terminal: true, browser: false, diff: false, settings: true, editor: false, artifacts: false, processes: false }
+    ? {
+        terminal: false,
+        browser: false,
+        diff: false,
+        settings: false,
+        editor: false,
+        artifacts: false,
+        processes: false
+      }
+    : {
+        terminal: true,
+        browser: false,
+        diff: false,
+        settings: true,
+        editor: false,
+        artifacts: false,
+        processes: false
+      }
   const [panelVisibility, setPanelVisibility] = useState<PanelVisibility>(
     initialData?.panelVisibility ?? defaultPanelVisibility
   )
@@ -446,7 +662,9 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   useEffect(() => {
     if (!isSecondaryWindow || !task?.id) return
     const releasingTaskId = task.id
-    return () => { void window.api.panels.releaseAllForTask(releasingTaskId) }
+    return () => {
+      void window.api.panels.releaseAllForTask(releasingTaskId)
+    }
   }, [isSecondaryWindow, task?.id])
 
   // Panel ownership across windows (multi-window support)
@@ -456,9 +674,14 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   const [openTaskWindowIds, setOpenTaskWindowIds] = useState<string[]>([])
   useEffect(() => {
     let alive = true
-    window.api.taskWindow.list().then((ids) => { if (alive) setOpenTaskWindowIds(ids) })
+    window.api.taskWindow.list().then((ids) => {
+      if (alive) setOpenTaskWindowIds(ids)
+    })
     const unsub = window.api.taskWindow.onListChanged((ids) => setOpenTaskWindowIds(ids))
-    return () => { alive = false; unsub() }
+    return () => {
+      alive = false
+      unsub()
+    }
   }, [])
   const hasOpenSecondary = !!task && openTaskWindowIds.includes(task.id)
 
@@ -479,25 +702,38 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     tabs: [{ id: 'default', url: 'about:blank', title: 'New Tab' }],
     activeTabId: 'default'
   }
-  const [browserTabs, setBrowserTabs] = useState<BrowserTabsState>(initialData?.browserTabs ?? defaultBrowserTabs)
+  const [browserTabs, setBrowserTabs] = useState<BrowserTabsState>(
+    initialData?.browserTabs ?? defaultBrowserTabs
+  )
 
   // Global panel configuration (which panels are enabled, custom web panels)
   const { enabledWebPanels, isBuiltinEnabled, getOrderedTaskIds } = usePanelConfig()
   const orderedTaskIds = useMemo(() => getOrderedTaskIds(), [getOrderedTaskIds])
   const panelOrderIdx = useMemo(() => {
     const m: Record<string, number> = {}
-    orderedTaskIds.forEach((id, i) => { m[id] = i })
+    orderedTaskIds.forEach((id, i) => {
+      m[id] = i
+    })
     return m
   }, [orderedTaskIds])
   const panelOrderStyle = (id: string): { order: number } => ({ order: panelOrderIdx[id] ?? 0 })
-  const getFirstVisibleTaskPanelId = (): string | null => orderedTaskIds.find(id => panelVisibility[id] && !ownership.hasOtherOwner(id)) ?? null
+  const getFirstVisibleTaskPanelId = (): string | null =>
+    orderedTaskIds.find((id) => panelVisibility[id] && !ownership.hasOtherOwner(id)) ?? null
 
   // Auto-claim panels for this window when visible AND no current owner.
   // First-owner priority: subsequent windows opening same panel render a
   // stub w/ Take over buttons until user explicitly takes over.
   useEffect(() => {
     if (!task || ownership.windowId == null) return
-    const claimableIds = ['terminal', 'browser', 'editor', 'diff', 'artifacts', 'processes', 'settings'] as const
+    const claimableIds = [
+      'terminal',
+      'browser',
+      'editor',
+      'diff',
+      'artifacts',
+      'processes',
+      'settings'
+    ] as const
     for (const id of claimableIds) {
       if (panelVisibility[id] && ownership.ownerOf(id) == null) ownership.claim(id)
     }
@@ -515,7 +751,10 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
       const next = { ...prev }
       let changed = false
       for (const id of ids) {
-        if (next[id]) { next[id] = false; changed = true }
+        if (next[id]) {
+          next[id] = false
+          changed = true
+        }
       }
       return changed ? next : prev
     })
@@ -526,7 +765,9 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   useEffect(() => {
     return window.api.panels.onCloseRequest((payload) => {
       if (!task || payload.taskId !== task.id) return
-      setPanelVisibility((prev) => prev[payload.panelId] ? { ...prev, [payload.panelId]: false } : prev)
+      setPanelVisibility((prev) =>
+        prev[payload.panelId] ? { ...prev, [payload.panelId]: false } : prev
+      )
     })
   }, [task?.id])
 
@@ -572,25 +813,41 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   // Loop command (labs feature)
   const [loopModeAvailable, setLoopModeAvailable] = useState(false)
   const [loopDialogOpen, setLoopDialogOpen] = useState(false)
-  const loopConfigured = task?.loop_config != null && !!(task.loop_config.prompt.trim() && task.loop_config.criteriaPattern.trim())
+  const loopConfigured =
+    task?.loop_config != null &&
+    !!(task.loop_config.prompt.trim() && task.loop_config.criteriaPattern.trim())
   useEffect(() => {
     window.api.app.isLoopModeEnabled().then(setLoopModeAvailable)
   }, [])
   const mainSessionId = task ? getMainSessionId(task.id) : ''
-  const handleLoopConfigChange = useCallback((cfg: LoopConfig | null) => {
-    if (!task) return
-    window.api.db.updateTask({ id: task.id, loopConfig: cfg }).then((updated) => {
-      if (updated) onTaskUpdated(updated)
-    })
-  }, [task?.id, onTaskUpdated])
-  const { status: loopStatus, iteration: loopIteration, startLoop, pauseLoop, resumeLoop, stopLoop } = useLoopMode({
+  const handleLoopConfigChange = useCallback(
+    (cfg: LoopConfig | null) => {
+      if (!task) return
+      window.api.db.updateTask({ id: task.id, loopConfig: cfg }).then((updated) => {
+        if (updated) onTaskUpdated(updated)
+      })
+    },
+    [task?.id, onTaskUpdated]
+  )
+  const {
+    status: loopStatus,
+    iteration: loopIteration,
+    startLoop,
+    pauseLoop,
+    resumeLoop,
+    stopLoop
+  } = useLoopMode({
     sessionId: mainSessionId,
     onConfigChange: handleLoopConfigChange
   })
 
-  const { showBanner: showSlayNudge, dismiss: dismissSlayNudge, recheck: recheckSlayNudge } = useSlayNudge({
+  const {
+    showBanner: showSlayNudge,
+    dismiss: dismissSlayNudge,
+    recheck: recheckSlayNudge
+  } = useSlayNudge({
     projectId: task?.project_id ?? null,
-    projectPath: effectiveRepoPath ?? project?.path ?? null,
+    projectPath: effectiveRepoPath ?? project?.path ?? null
   })
 
   // Dev server URL detection
@@ -600,10 +857,14 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   const devServerAutoOpenRef = useRef(false)
   const devServerAutoOpenCallbackRef = useRef<((url: string) => void) | null>(null)
   const devUrlToastDismissedRef = useRef<boolean>(!!task?.dev_url_toast_dismissed)
-  useEffect(() => { devUrlToastDismissedRef.current = !!task?.dev_url_toast_dismissed }, [task?.dev_url_toast_dismissed])
+  useEffect(() => {
+    devUrlToastDismissedRef.current = !!task?.dev_url_toast_dismissed
+  }, [task?.dev_url_toast_dismissed])
   const browserOpenRef = useRef(panelVisibility.browser)
   const gitPanelRef = useRef<UnifiedGitPanelHandle>(null)
-  const [gitDefaultTab, setGitDefaultTab] = useState<GitTabId>(() => task?.git_active_tab ?? 'general')
+  const [gitDefaultTab, setGitDefaultTab] = useState<GitTabId>(
+    () => task?.git_active_tab ?? 'general'
+  )
   const gitTabSyncedRef = useRef(!!task?.git_active_tab)
   useEffect(() => {
     if (gitTabSyncedRef.current) return
@@ -612,11 +873,14 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
       gitTabSyncedRef.current = true
     }
   }, [task?.git_active_tab])
-  const handleGitTabChange = useCallback((tab: GitTabId) => {
-    setGitDefaultTab(tab)
-    gitTabSyncedRef.current = true
-    if (task?.id) void window.api.db.updateTask({ id: task.id, gitActiveTab: tab })
-  }, [task?.id])
+  const handleGitTabChange = useCallback(
+    (tab: GitTabId) => {
+      setGitDefaultTab(tab)
+      gitTabSyncedRef.current = true
+      if (task?.id) void window.api.db.updateTask({ id: task.id, gitActiveTab: tab })
+    },
+    [task?.id]
+  )
   const fileEditorRef = useRef<FileEditorViewHandle>(null)
   const terminalContainerRef = useRef<TerminalContainerHandle>(null)
   const browserPanelRef = useRef<BrowserPanelHandle>(null)
@@ -634,13 +898,15 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
       pendingSearchToggleRef.current = false
     }
   }, [])
-  useEffect(() => { browserOpenRef.current = panelVisibility.browser }, [panelVisibility.browser])
+  useEffect(() => {
+    browserOpenRef.current = panelVisibility.browser
+  }, [panelVisibility.browser])
 
   // Load dev server settings (re-read on settingsRevision change)
   useEffect(() => {
     Promise.all([
       window.api.settings.get('dev_server_toast_enabled'),
-      window.api.settings.get('dev_server_auto_open_browser'),
+      window.api.settings.get('dev_server_auto_open_browser')
     ]).then(([toast, autoOpen]) => {
       devServerToastEnabledRef.current = toast !== '0'
       devServerAutoOpenRef.current = autoOpen === '1'
@@ -650,7 +916,10 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   // Load CCS profiles when mode is 'ccs'
   useEffect(() => {
     if (task?.terminal_mode === 'ccs') {
-      window.api.pty.ccsListProfiles().then(({ profiles }) => setCcsProfiles(profiles)).catch(() => {})
+      window.api.pty
+        .ccsListProfiles()
+        .then(({ profiles }) => setCcsProfiles(profiles))
+        .catch(() => {})
     }
   }, [task?.terminal_mode])
 
@@ -709,12 +978,19 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
 
   // Check project path exists when project changes
   useEffect(() => {
-    if (!project?.path) { setProjectPathMissing(false); return }
+    if (!project?.path) {
+      setProjectPathMissing(false)
+      return
+    }
     const pathExists = window.api.files?.pathExists
     if (typeof pathExists !== 'function') return
     let cancelled = false
-    pathExists(project.path).then((exists) => { if (!cancelled) setProjectPathMissing(!exists) })
-    return () => { cancelled = true }
+    pathExists(project.path).then((exists) => {
+      if (!cancelled) setProjectPathMissing(!exists)
+    })
+    return () => {
+      cancelled = true
+    }
   }, [project?.path])
 
   // Handle session ID creation from terminal — persist to DB only.
@@ -728,35 +1004,53 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
       if (window.api.app.isPlaywright) return
       void window.api.db.updateTask({
         id: task.id,
-        providerConfig: setProviderConversationId(task.provider_config, task.terminal_mode, sessionId)
+        providerConfig: setProviderConversationId(
+          task.provider_config,
+          task.terminal_mode,
+          sessionId
+        )
       })
     },
     [task]
   )
 
   // Handle terminal ready - memoized to prevent effect cascade
-  const handleTerminalReady = useCallback((api: {
-    sendInput: (text: string) => Promise<void>
-    write: (data: string) => Promise<boolean>
-    focus: () => void
-    clearBuffer: () => Promise<void>
-  }) => {
-    terminalApiRef.current = api
-  }, [])
+  const handleTerminalReady = useCallback(
+    (api: {
+      sendInput: (text: string) => Promise<void>
+      write: (data: string) => Promise<boolean>
+      focus: () => void
+      clearBuffer: () => Promise<void>
+    }) => {
+      terminalApiRef.current = api
+    },
+    []
+  )
 
-  const handleTerminalFocusRequestHandled = useCallback((requestId: number): void => {
-    onTerminalFocusRequestHandled?.(taskId, requestId)
-  }, [onTerminalFocusRequestHandled, taskId])
-
+  const handleTerminalFocusRequestHandled = useCallback(
+    (requestId: number): void => {
+      onTerminalFocusRequestHandled?.(taskId, requestId)
+    },
+    [onTerminalFocusRequestHandled, taskId]
+  )
 
   // Session ID discovery: providers that don't support --session-id at creation
   const sessionIdCommand = task ? SESSION_ID_COMMANDS[task.terminal_mode] : undefined
-  const showSessionBanner = !!sessionIdCommand && !!task && !getProviderConversationId(task.provider_config, task.terminal_mode) && !detectedSessionId
+  const showSessionBanner =
+    !!sessionIdCommand &&
+    !!task &&
+    !getProviderConversationId(task.provider_config, task.terminal_mode) &&
+    !detectedSessionId
 
   // Providers where session ID detection is not possible
   const sessionIdUnavailable = !!task && SESSION_ID_UNAVAILABLE.includes(task.terminal_mode)
-  const [sessionUnavailableDismissed, setSessionUnavailableDismissed] = useState<string | null>(null)
-  const showUnavailableBanner = sessionIdUnavailable && !getProviderConversationId(task?.provider_config, task?.terminal_mode ?? '') && sessionUnavailableDismissed !== task?.id
+  const [sessionUnavailableDismissed, setSessionUnavailableDismissed] = useState<string | null>(
+    null
+  )
+  const showUnavailableBanner =
+    sessionIdUnavailable &&
+    !getProviderConversationId(task?.provider_config, task?.terminal_mode ?? '') &&
+    sessionUnavailableDismissed !== task?.id
 
   const handleDetectSessionId = useCallback(async () => {
     if (!task || !sessionIdCommand) return
@@ -786,19 +1080,27 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     if (!task || !detectedSessionId) return
     const updated = await window.api.db.updateTask({
       id: task.id,
-      providerConfig: setProviderConversationId(task.provider_config, task.terminal_mode, detectedSessionId)
+      providerConfig: setProviderConversationId(
+        task.provider_config,
+        task.terminal_mode,
+        detectedSessionId
+      )
     })
     onTaskUpdated(updated)
     setDetectedSessionId(null)
   }, [task, detectedSessionId, onTaskUpdated])
 
   const handleUpdateSessionIdRef = useRef(handleUpdateSessionId)
-  useEffect(() => { handleUpdateSessionIdRef.current = handleUpdateSessionId }, [handleUpdateSessionId])
+  useEffect(() => {
+    handleUpdateSessionIdRef.current = handleUpdateSessionId
+  }, [handleUpdateSessionId])
 
   // Cmd+Shift+U: sync detected session ID to DB (only when this task is active and banner is showing)
   useEffect(() => {
     if (!shortcutActive) return
-    return window.api.app.onSyncSessionId(() => { void handleUpdateSessionIdRef.current() })
+    return window.api.app.onSyncSessionId(() => {
+      void handleUpdateSessionIdRef.current()
+    })
   }, [shortcutActive])
 
   // Persist detected conversation IDs immediately for modes that need session discovery.
@@ -813,7 +1115,11 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     void (async () => {
       const updated = await window.api.db.updateTask({
         id: task.id,
-        providerConfig: setProviderConversationId(task.provider_config, task.terminal_mode, detectedSessionId)
+        providerConfig: setProviderConversationId(
+          task.provider_config,
+          task.terminal_mode,
+          detectedSessionId
+        )
       })
       if (cancelled) return
       onTaskUpdated(updated)
@@ -897,7 +1203,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
         return
       }
       const killedAt = getProviderLastKilledAt(task.provider_config, task.terminal_mode)
-      const isCold = killedAt == null || (Date.now() - killedAt) > COLD_RESPAWN_MS
+      const isCold = killedAt == null || Date.now() - killedAt > COLD_RESPAWN_MS
       if (isCold) {
         await handleResetTerminal()
       } else {
@@ -962,9 +1268,14 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
           const deadline = Date.now() + 5000
           while (Date.now() < deadline) {
             try {
-              if (await window.api.pty.exists(sid)) { result = 'ok'; break }
-            } catch { break }
-            await new Promise(r => setTimeout(r, 100))
+              if (await window.api.pty.exists(sid)) {
+                result = 'ok'
+                break
+              }
+            } catch {
+              break
+            }
+            await new Promise((r) => setTimeout(r, 100))
           }
         }
       } finally {
@@ -1019,13 +1330,16 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     await terminalApiRef.current?.write(escaped)
   }, [])
 
-  const handleInsertElementSnippet = useCallback(async (snippet: string) => {
-    if (!task) return
-    const text = snippet.trim()
-    if (!text) return
-    const mainSessionId = `${task.id}:${task.id}`
-    await window.api.pty.write(mainSessionId, text)
-  }, [task])
+  const handleInsertElementSnippet = useCallback(
+    async (snippet: string) => {
+      if (!task) return
+      const text = snippet.trim()
+      if (!text) return
+      const mainSessionId = `${task.id}:${task.id}`
+      await window.api.pty.write(mainSessionId, text)
+    },
+    [task]
+  )
 
   // Inject task description into terminal (no execute)
   const handleInjectDescription = useCallback(async () => {
@@ -1077,7 +1391,9 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
 
   // Keep a ref so the onCloseCurrent handler always sees current browserTabs without re-subscribing
   const browserTabsRef = useRef(browserTabs)
-  useEffect(() => { browserTabsRef.current = browserTabs }, [browserTabs])
+  useEffect(() => {
+    browserTabsRef.current = browserTabs
+  }, [browserTabs])
 
   // Track last-focused sub-panel via focusin (macOS native menu accelerators clear activeElement by callback time)
   const lastFocusedPanelRef = useRef<'terminal' | 'editor' | 'browser' | null>(null)
@@ -1119,7 +1435,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     return window.api.app.onCloseCurrent(async () => {
       const panel = lastFocusedPanelRef.current
       if (panel === 'terminal') {
-        const closed = await terminalContainerRef.current?.closeActiveGroup() ?? true
+        const closed = (await terminalContainerRef.current?.closeActiveGroup()) ?? true
         if (closed) return
       } else if (panel === 'editor') {
         const closed = fileEditorRef.current?.closeActiveFile()
@@ -1127,8 +1443,8 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
       } else if (panel === 'browser') {
         const bt = browserTabsRef.current
         if (bt.tabs.length > 1) {
-          const idx = bt.tabs.findIndex(t => t.id === bt.activeTabId)
-          const newTabs = bt.tabs.filter(t => t.id !== bt.activeTabId)
+          const idx = bt.tabs.findIndex((t) => t.id === bt.activeTabId)
+          const newTabs = bt.tabs.filter((t) => t.id !== bt.activeTabId)
           const newActiveId = newTabs[Math.min(idx, newTabs.length - 1)]?.id ?? null
           setBrowserTabs({ tabs: newTabs, activeTabId: newActiveId })
           return
@@ -1231,7 +1547,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
 
   const handleSetDefaultFlags = useCallback(async () => {
     if (!task || task.terminal_mode === 'terminal') return
-    const modeInfo = modes.find(m => m.id === task.terminal_mode)
+    const modeInfo = modes.find((m) => m.id === task.terminal_mode)
     const defaultFlags = modeInfo?.defaultFlags ?? ''
     setFlagsInputValue(defaultFlags)
     await handleFlagsSave(defaultFlags)
@@ -1288,16 +1604,22 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     if (!panelVisibility.artifacts) handlePanelToggle('artifacts', true)
     artifactsPanelRef.current?.selectArtifact(artifactId)
   }
-  useEffect(() => window.api.app.onOpenArtifact((tid, aid) => openArtifactRef.current(tid, aid)), [])
+  useEffect(
+    () => window.api.app.onOpenArtifact((tid, aid) => openArtifactRef.current(tid, aid)),
+    []
+  )
 
-  const handleQuickOpenFile = useCallback((filePath: string, options?: OpenFileOptions) => {
-    if (fileEditorRef.current) {
-      fileEditorRef.current.openFile(filePath, options)
-    } else {
-      pendingEditorFileRef.current = filePath
-      handlePanelToggle('editor', true)
-    }
-  }, [handlePanelToggle])
+  const handleQuickOpenFile = useCallback(
+    (filePath: string, options?: OpenFileOptions) => {
+      if (fileEditorRef.current) {
+        fileEditorRef.current.openFile(filePath, options)
+      } else {
+        pendingEditorFileRef.current = filePath
+        handlePanelToggle('editor', true)
+      }
+    },
+    [handlePanelToggle]
+  )
 
   // Snapshot of the task's file-open context for the unified palette.
   // Captured into the dialog payload at the moment the shortcut fires; cleared on close.
@@ -1328,12 +1650,20 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
         }
         return
       }
-      if (matchesShortcut(e, keys('browser-element-picker')) && isBuiltinEnabled('browser', 'task') && panelVisibility.browser) {
+      if (
+        matchesShortcut(e, keys('browser-element-picker')) &&
+        isBuiltinEnabled('browser', 'task') &&
+        panelVisibility.browser
+      ) {
         e.preventDefault()
         browserPanelRef.current?.pickElement()
         return
       }
-      if (matchesShortcut(e, keys('browser-focus-url')) && isBuiltinEnabled('browser', 'task') && panelVisibility.browser) {
+      if (
+        matchesShortcut(e, keys('browser-focus-url')) &&
+        isBuiltinEnabled('browser', 'task') &&
+        panelVisibility.browser
+      ) {
         e.preventDefault()
         browserPanelRef.current?.focusUrlBar()
         return
@@ -1379,7 +1709,11 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
         return
       }
       // Cmd+T: new browser tab when browser panel is open
-      if (matchesShortcut(e, keys('browser-new-tab')) && panelVisibility.browser && isBuiltinEnabled('browser', 'task')) {
+      if (
+        matchesShortcut(e, keys('browser-new-tab')) &&
+        panelVisibility.browser &&
+        isBuiltinEnabled('browser', 'task')
+      ) {
         e.preventDefault()
         browserPanelRef.current?.newTab()
         requestAnimationFrame(() => browserPanelRef.current?.focusUrlBar())
@@ -1411,10 +1745,17 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
       const inCodeMirror = target?.closest?.('.cm-editor')
       if (inCodeMirror) return
 
-      if (matchesShortcut(e, keys('panel-browser')) && !inEditor && isBuiltinEnabled('browser', 'task')) {
+      if (
+        matchesShortcut(e, keys('panel-browser')) &&
+        !inEditor &&
+        isBuiltinEnabled('browser', 'task')
+      ) {
         e.preventDefault()
         handlePanelToggle('browser', !panelVisibility.browser)
-      } else if (matchesShortcut(e, keys('panel-settings')) && isBuiltinEnabled('settings', 'task')) {
+      } else if (
+        matchesShortcut(e, keys('panel-settings')) &&
+        isBuiltinEnabled('settings', 'task')
+      ) {
         e.preventDefault()
         handlePanelToggle('settings', !panelVisibility.settings)
       } else {
@@ -1430,7 +1771,14 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     })
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [shortcutActive, panelVisibility, handlePanelToggle, isBuiltinEnabled, enabledWebPanels, buildTaskFileContext])
+  }, [
+    shortcutActive,
+    panelVisibility,
+    handlePanelToggle,
+    isBuiltinEnabled,
+    enabledWebPanels,
+    buildTaskFileContext
+  ])
 
   // Focus and select title input when editing
   useEffect(() => {
@@ -1470,24 +1818,25 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
 
     const updated = await window.api.db.updateTask({
       id: task.id,
-      description: descriptionValue || undefined,
+      description: descriptionValue || undefined
     })
     onTaskUpdated(updated)
   }
-
 
   const handleCreateSubTask = async (): Promise<void> => {
     if (!task || !subTaskTitle.trim()) return
     await createSubTask({
       projectId: task.project_id,
       title: subTaskTitle.trim(),
-      status: getDefaultStatus(project?.columns_config),
+      status: getDefaultStatus(project?.columns_config)
     })
     setSubTaskTitle('')
     setAddingSubTask(false)
   }
 
-  const subTaskSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const subTaskSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  )
 
   const handleTaskUpdate = (updated: Task): void => {
     setTitleValue(updated.title)
@@ -1495,37 +1844,47 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     onTaskUpdated(updated)
   }
 
-  const applyTemplate = useCallback(async (template: TaskTemplate) => {
-    if (!task) return
-    const updates: UpdateTaskInput = { id: task.id }
-    if (template.terminal_mode) updates.terminalMode = template.terminal_mode
-    if (template.provider_config) updates.providerConfig = template.provider_config
-    if (template.panel_visibility) updates.panelVisibility = template.panel_visibility
-    if (template.browser_tabs) updates.browserTabs = template.browser_tabs
-    if (template.web_panel_urls) updates.webPanelUrls = template.web_panel_urls
+  const applyTemplate = useCallback(
+    async (template: TaskTemplate) => {
+      if (!task) return
+      const updates: UpdateTaskInput = { id: task.id }
+      if (template.terminal_mode) updates.terminalMode = template.terminal_mode
+      if (template.provider_config) updates.providerConfig = template.provider_config
+      if (template.panel_visibility) updates.panelVisibility = template.panel_visibility
+      if (template.browser_tabs) updates.browserTabs = template.browser_tabs
+      if (template.web_panel_urls) updates.webPanelUrls = template.web_panel_urls
 
-    const modeChanged = template.terminal_mode && template.terminal_mode !== task.terminal_mode
-    if (modeChanged) {
-      const mainSessionId = getMainSessionId(task.id)
-      resetTaskState(mainSessionId)
-      await window.api.pty.kill(mainSessionId)
-      markSkipCache(mainSessionId)
-    }
+      const modeChanged = template.terminal_mode && template.terminal_mode !== task.terminal_mode
+      if (modeChanged) {
+        const mainSessionId = getMainSessionId(task.id)
+        resetTaskState(mainSessionId)
+        await window.api.pty.kill(mainSessionId)
+        markSkipCache(mainSessionId)
+      }
 
-    const updated = await window.api.db.updateTask(updates)
-    handleTaskUpdate(updated)
+      const updated = await window.api.db.updateTask(updates)
+      handleTaskUpdate(updated)
 
-    if (template.panel_visibility) setPanelVisibility(template.panel_visibility)
-    if (template.browser_tabs) setBrowserTabs(template.browser_tabs)
-    if (template.web_panel_urls) webPanelUrlsRef.current = { ...template.web_panel_urls }
+      if (template.panel_visibility) setPanelVisibility(template.panel_visibility)
+      if (template.browser_tabs) setBrowserTabs(template.browser_tabs)
+      if (template.web_panel_urls) webPanelUrlsRef.current = { ...template.web_panel_urls }
 
-    if (modeChanged) {
-      setTerminalKey(k => k + 1)
-    }
-  }, [task, getMainSessionId, resetTaskState])
+      if (modeChanged) {
+        setTerminalKey((k) => k + 1)
+      }
+    },
+    [task, getMainSessionId, resetTaskState]
+  )
 
   // Wrapper for GitPanel that calls API and notifies parent
-  const updateTaskAndNotify = async (data: { id: string; worktreePath?: string | null; worktreeParentBranch?: string | null; baseDir?: string | null; browserUrl?: string | null; status?: Task['status'] }): Promise<Task> => {
+  const updateTaskAndNotify = async (data: {
+    id: string
+    worktreePath?: string | null
+    worktreeParentBranch?: string | null
+    baseDir?: string | null
+    browserUrl?: string | null
+    status?: Task['status']
+  }): Promise<Task> => {
     // Only reset PTY when the effective working directory actually changes
     const oldEffective = task?.worktree_path ?? task?.base_dir ?? resolvedRepo.path
     const newWorktree = data.worktreePath !== undefined ? data.worktreePath : task?.worktree_path
@@ -1545,22 +1904,25 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
 
     // Force terminal remount if effective cwd changed
     if (cwdChanged) {
-      setTerminalKey(k => k + 1)
+      setTerminalKey((k) => k + 1)
     }
 
     return updated
   }
 
   // Handler for browser tabs changes
-  const handleBrowserTabsChange = useCallback(async (tabs: BrowserTabsState) => {
-    setBrowserTabs(tabs)
-    if (!task) return
-    // Persist to DB (debounced via the tab state itself)
-    await window.api.db.updateTask({
-      id: task.id,
-      browserTabs: tabs
-    })
-  }, [task])
+  const handleBrowserTabsChange = useCallback(
+    async (tabs: BrowserTabsState) => {
+      setBrowserTabs(tabs)
+      if (!task) return
+      // Persist to DB (debounced via the tab state itself)
+      await window.api.db.updateTask({
+        id: task.id,
+        browserTabs: tabs
+      })
+    },
+    [task]
+  )
 
   // Web panel URL persistence — use ref to avoid stale closures
   const webPanelUrlsRef = useRef<Record<string, string>>({})
@@ -1629,7 +1991,11 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
 
   // Flush pending saves on unmount
   useEffect(() => {
-    return () => { flushPendingUrlSave(); flushPendingEditorSave(); flushPendingActiveArtifactSave() }
+    return () => {
+      flushPendingUrlSave()
+      flushPendingEditorSave()
+      flushPendingActiveArtifactSave()
+    }
   }, [flushPendingUrlSave, flushPendingEditorSave])
 
   const handleWebPanelUrlChange = useCallback((panelId: string, url: string) => {
@@ -1665,15 +2031,18 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
   }, [])
 
   // Open a dev server URL in the browser panel (used by both auto-open and toast)
-  const openDevServerInBrowser = useCallback((url: string) => {
-    handlePanelToggle('browser', true)
-    const newTab = { id: `tab-${crypto.randomUUID().slice(0, 8)}`, url, title: url }
-    if (browserOpenRef.current) {
-      handleBrowserTabsChange({ tabs: [...browserTabs.tabs, newTab], activeTabId: newTab.id })
-    } else {
-      handleBrowserTabsChange({ tabs: [newTab], activeTabId: newTab.id })
-    }
-  }, [handlePanelToggle, handleBrowserTabsChange, browserTabs])
+  const openDevServerInBrowser = useCallback(
+    (url: string) => {
+      handlePanelToggle('browser', true)
+      const newTab = { id: `tab-${crypto.randomUUID().slice(0, 8)}`, url, title: url }
+      if (browserOpenRef.current) {
+        handleBrowserTabsChange({ tabs: [...browserTabs.tabs, newTab], activeTabId: newTab.id })
+      } else {
+        handleBrowserTabsChange({ tabs: [newTab], activeTabId: newTab.id })
+      }
+    },
+    [handlePanelToggle, handleBrowserTabsChange, browserTabs]
+  )
 
   useEffect(() => {
     devServerAutoOpenCallbackRef.current = openDevServerInBrowser
@@ -1689,7 +2058,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
         // The navigate route will load `url` into the targeted tab's webContents.
         handlePanelToggle('browser', true)
         const tabs = browserTabsRef.current
-        if (tabs.tabs.some(t => t.id === tabId) && tabs.activeTabId !== tabId) {
+        if (tabs.tabs.some((t) => t.id === tabId) && tabs.activeTabId !== tabId) {
           handleBrowserTabsChange({ ...tabs, activeTabId: tabId })
         }
       } else if (url) {
@@ -1707,9 +2076,13 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
       if (taskId !== task.id) return
       handlePanelToggle('browser', true)
       const tabUrl = url ?? 'about:blank'
-      const newTab = { id: tabId, url: tabUrl, title: tabUrl === 'about:blank' ? 'New Tab' : tabUrl }
+      const newTab = {
+        id: tabId,
+        url: tabUrl,
+        title: tabUrl === 'about:blank' ? 'New Tab' : tabUrl
+      }
       const current = browserTabsRef.current
-      if (current.tabs.some(t => t.id === tabId)) return
+      if (current.tabs.some((t) => t.id === tabId)) return
       const nextActive = background && current.tabs.length > 0 ? current.activeTabId : tabId
       handleBrowserTabsChange({ tabs: [...current.tabs, newTab], activeTabId: nextActive })
     })
@@ -1755,59 +2128,73 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     )
   }
 
-  const visiblePanelCount = [...BUILTIN_PANEL_IDS, ...enabledWebPanels.map((wp) => wp.id)]
-    .filter((panelId) => !!panelVisibility[panelId]).length
+  const visiblePanelCount = [...BUILTIN_PANEL_IDS, ...enabledWebPanels.map((wp) => wp.id)].filter(
+    (panelId) => !!panelVisibility[panelId]
+  ).length
   const hasVisiblePanels = visiblePanelCount > 0
   const multipleVisiblePanels = visiblePanelCount > 1
   const isTaskCompleted = isCompletedStatus(task.status, project?.columns_config)
 
   return (
-    <div id="task-detail" className={cn("h-full flex flex-col", compact ? "p-0" : "gap-4")}>
+    <div id="task-detail" className={cn('h-full flex flex-col', compact ? 'p-0' : 'gap-4')}>
       {compact && (
         <div className="shrink-0 flex items-center gap-1.5 px-2 h-10 bg-surface-1 border-b border-border min-w-0">
-          {!task.is_temporary && (() => {
-            const statusStyle = getColumnStatusStyle(task.status, project?.columns_config)
-            if (!statusStyle) return null
-            const StatusIcon = statusStyle.icon
-            return (
-              <Popover open={statusPopoverOpen} onOpenChange={setStatusPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <button type="button" className="shrink-0 cursor-pointer transition-opacity hover:opacity-70">
-                    <StatusIcon className={cn('size-4', statusStyle.iconClass)} strokeWidth={3} />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-44 p-1" align="start">
-                  {statusOptions.map((opt) => {
-                    const optStyle = getColumnStatusStyle(opt.value, project?.columns_config)
-                    const OptIcon = optStyle?.icon ?? Circle
-                    const isCurrent = opt.value === task.status
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        className={cn('flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm cursor-pointer hover:bg-accent', isCurrent && 'bg-accent font-medium')}
-                        onClick={async () => {
-                          const updated = await window.api.db.updateTask({ id: task.id, status: opt.value })
-                          handleTaskUpdate(updated)
-                          setStatusPopoverOpen(false)
-                        }}
-                      >
-                        <OptIcon className={cn('size-4', optStyle?.iconClass)} />
-                        {opt.label}
-                      </button>
-                    )
-                  })}
-                </PopoverContent>
-              </Popover>
-            )
-          })()}
+          {!task.is_temporary &&
+            (() => {
+              const statusStyle = getColumnStatusStyle(task.status, project?.columns_config)
+              if (!statusStyle) return null
+              const StatusIcon = statusStyle.icon
+              return (
+                <Popover open={statusPopoverOpen} onOpenChange={setStatusPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="shrink-0 cursor-pointer transition-opacity hover:opacity-70"
+                    >
+                      <StatusIcon className={cn('size-4', statusStyle.iconClass)} strokeWidth={3} />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-44 p-1" align="start">
+                    {statusOptions.map((opt) => {
+                      const optStyle = getColumnStatusStyle(opt.value, project?.columns_config)
+                      const OptIcon = optStyle?.icon ?? Circle
+                      const isCurrent = opt.value === task.status
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          className={cn(
+                            'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm cursor-pointer hover:bg-accent',
+                            isCurrent && 'bg-accent font-medium'
+                          )}
+                          onClick={async () => {
+                            const updated = await window.api.db.updateTask({
+                              id: task.id,
+                              status: opt.value
+                            })
+                            handleTaskUpdate(updated)
+                            setStatusPopoverOpen(false)
+                          }}
+                        >
+                          <OptIcon className={cn('size-4', optStyle?.iconClass)} />
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </PopoverContent>
+                </Popover>
+              )
+            })()}
           <span className="text-xs font-medium truncate flex-1">
             {task.is_temporary ? 'Temporary task' : task.title}
           </span>
           {!task.is_temporary && (
             <Popover open={priorityPopoverOpen} onOpenChange={setPriorityPopoverOpen}>
               <PopoverTrigger asChild>
-                <button type="button" className="shrink-0 inline-flex items-center rounded-full bg-muted/50 px-1.5 py-0.5 cursor-pointer transition-colors hover:bg-muted">
+                <button
+                  type="button"
+                  className="shrink-0 inline-flex items-center rounded-full bg-muted/50 px-1.5 py-0.5 cursor-pointer transition-colors hover:bg-muted"
+                >
                   <PriorityIcon priority={task.priority} className="size-3.5" />
                 </button>
               </PopoverTrigger>
@@ -1816,9 +2203,15 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                   <button
                     key={opt.value}
                     type="button"
-                    className={cn('flex w-full items-center gap-2 rounded px-2 py-1 text-xs cursor-pointer hover:bg-accent', opt.value === task.priority && 'bg-accent font-medium')}
+                    className={cn(
+                      'flex w-full items-center gap-2 rounded px-2 py-1 text-xs cursor-pointer hover:bg-accent',
+                      opt.value === task.priority && 'bg-accent font-medium'
+                    )}
                     onClick={async () => {
-                      const updated = await window.api.db.updateTask({ id: task.id, priority: opt.value })
+                      const updated = await window.api.db.updateTask({
+                        id: task.id,
+                        priority: opt.value
+                      })
                       handleTaskUpdate(updated)
                       setPriorityPopoverOpen(false)
                     }}
@@ -1837,1379 +2230,1857 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
         </div>
       )}
       {/* Header */}
-      {!compact && !zenMode && <header className="shrink-0 relative">
-        <div>
-          <div className={cn(
-            'flex items-center gap-4 window-no-drag',
-            taskHeaderTitleAlign === 'left' && taskHeaderPanelAlign === 'right' && 'justify-between',
-            taskHeaderTitleAlign === 'right' && taskHeaderPanelAlign === 'left' && 'justify-between flex-row-reverse',
-            taskHeaderTitleAlign === 'left' && taskHeaderPanelAlign === 'left' && 'justify-start',
-            taskHeaderTitleAlign === 'right' && taskHeaderPanelAlign === 'right' && 'justify-end'
-          )}>
-            {task.is_temporary ? (
-              <div className="flex shrink-0">
-                <div className="relative min-w-0 w-full">
-                  <div className="flex items-center gap-3">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="size-5 text-muted-foreground/55 shrink-0" />
-                      </TooltipTrigger>
-                      <TooltipContent>Auto-deletes on terminal exit or tab close</TooltipContent>
-                    </Tooltip>
-                    <span className="text-2xl italic text-muted-foreground">Temporary task</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2.5 shrink-0"
-                      onClick={async () => {
-                        const converted = await onConvertTask?.(task)
-                        if (converted) {
-                          handleTaskUpdate(converted)
-                          setEditingTitle(true)
-                        }
-                      }}
-                    >
-                      Turn into task
-                    </Button>
-                    {templates.length > 0 && (
-                      <DropdownMenu>
-                        <Tooltip>
-                          <DropdownMenuTrigger asChild>
-                            <TooltipTrigger asChild>
-                              <Button variant="outline" size="icon" className="size-7 shrink-0">
-                                <LayoutTemplate className="size-4" />
-                              </Button>
-                            </TooltipTrigger>
-                          </DropdownMenuTrigger>
-                          <TooltipContent>Apply template</TooltipContent>
-                        </Tooltip>
-                        <DropdownMenuContent align="start" className="min-w-0">
-                          {templates.map((t, i) => (
-                            <DropdownMenuItem key={t.id} className="items-baseline gap-2.5" onClick={() => applyTemplate(t)}>
-                              <span className="text-[11px] text-muted-foreground tabular-nums">{i + 1}</span>
-                              {t.name}{t.is_default ? ' ♦' : ''}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (<div className="flex items-center gap-2 shrink-0">
-              {(() => {
-                const statusStyle = getColumnStatusStyle(task.status, project?.columns_config)
-                if (!statusStyle) return null
-                const StatusIcon = statusStyle.icon
-                return (
-                  <Popover open={statusPopoverOpen} onOpenChange={setStatusPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className="shrink-0 cursor-pointer transition-opacity hover:opacity-70"
-                      >
-                        <StatusIcon className={cn('size-5', statusStyle.iconClass)} strokeWidth={3} />
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-44 p-1" align="start">
-                      {statusOptions.map((opt) => {
-                        const optStyle = getColumnStatusStyle(opt.value, project?.columns_config)
-                        const OptIcon = optStyle?.icon ?? Circle
-                        const isCurrent = opt.value === task.status
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            className={cn(
-                              'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm cursor-pointer hover:bg-accent',
-                              isCurrent && 'bg-accent font-medium'
-                            )}
-                            onClick={async () => {
-                              const updated = await window.api.db.updateTask({ id: task.id, status: opt.value })
-                              handleTaskUpdate(updated)
-                              setStatusPopoverOpen(false)
-                            }}
-                          >
-                            <OptIcon className={cn('size-4', optStyle?.iconClass)} />
-                            {opt.label}
-                          </button>
-                        )
-                      })}
-                    </PopoverContent>
-                  </Popover>
-                )
-              })()}
-              <div className="inline-grid items-center min-w-[2ch]">
-                <span className="invisible col-start-1 row-start-1 text-2xl font-bold whitespace-pre">
-                  {titleValue || ' '}
-                </span>
-                <input
-                  ref={titleInputRef}
-                  value={titleValue}
-                  onChange={(e) => setTitleValue(e.target.value)}
-                  onBlur={handleTitleSave}
-                  onKeyDown={handleTitleKeyDown}
-                  onClick={() => setEditingTitle(true)}
-                  readOnly={!editingTitle}
-                  className={cn(
-                    'col-start-1 row-start-1 text-2xl font-bold bg-transparent border-none outline-none w-full',
-                    !editingTitle && 'cursor-pointer'
-                  )}
-                />
-              </div>
-            </div>)}
-
-            {task.linear_url && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <a
-                    href="#"
-                    onClick={(e) => { e.preventDefault(); window.api.shell.openExternal(task.linear_url!) }}
-                    className="shrink-0 rounded bg-indigo-500/10 px-1.5 py-0.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-500/20 dark:text-indigo-400"
-                  >
-                    Linear
-                  </a>
-                </TooltipTrigger>
-                <TooltipContent>Open in Linear</TooltipContent>
-              </Tooltip>
-            )}
-
-
-            <div className={cn(
-              'flex items-center gap-1 min-w-0',
-              taskHeaderPanelAlign === 'left' && 'flex-row-reverse'
-            )}>
-              {task && (isSecondaryWindow || !hasOpenSecondary) && (
-                taskHeaderPanelMode === 'menu' ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label={isSecondaryWindow ? 'Reattach task' : 'Detach task to new window'}
-                        onClick={() => {
-                          if (isSecondaryWindow) window.api.window.close()
-                          else window.api.taskWindow.open(task.id)
-                        }}
-                        className="shrink-0 inline-flex items-center justify-center size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                      >
-                        <SquareArrowOutUpRight className="size-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">{isSecondaryWindow ? 'Reattach' : 'Detach'}</TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <button
-                    type="button"
-                    aria-label={isSecondaryWindow ? 'Reattach task' : 'Detach task to new window'}
-                    onClick={() => {
-                      if (isSecondaryWindow) window.api.window.close()
-                      else window.api.taskWindow.open(task.id)
-                    }}
-                    className="shrink-0 flex items-center gap-1.5 rounded-full bg-muted/50 hover:bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <SquareArrowOutUpRight className="size-3.5" />
-                    {isSecondaryWindow ? 'Reattach' : 'Detach'}
-                  </button>
-                )
+      {!compact && !zenMode && (
+        <header className="shrink-0 relative">
+          <div>
+            <div
+              className={cn(
+                'flex items-center gap-4 window-no-drag',
+                taskHeaderTitleAlign === 'left' &&
+                  taskHeaderPanelAlign === 'right' &&
+                  'justify-between',
+                taskHeaderTitleAlign === 'right' &&
+                  taskHeaderPanelAlign === 'left' &&
+                  'justify-between flex-row-reverse',
+                taskHeaderTitleAlign === 'left' &&
+                  taskHeaderPanelAlign === 'left' &&
+                  'justify-start',
+                taskHeaderTitleAlign === 'right' &&
+                  taskHeaderPanelAlign === 'right' &&
+                  'justify-end'
               )}
-              {(() => {
-                const entries: Record<string, { id: string; icon: typeof Globe; label: string; shortcut?: string | null }> = {
-                  terminal: { id: 'terminal', icon: TerminalIcon, label: 'Agent', shortcut: panelTerminalShortcut },
-                  browser: { id: 'browser', icon: Globe, label: 'Browser', shortcut: panelBrowserShortcut },
-                  editor: { id: 'editor', icon: FileCode, label: 'Editor', shortcut: panelEditorShortcut },
-                  artifacts: { id: 'artifacts', icon: Paperclip, label: 'Artifacts', shortcut: panelArtifactsShortcut },
-                  diff: { id: 'diff', icon: GitBranch, label: 'Git', shortcut: panelGitShortcut },
-                  processes: { id: 'processes', icon: Cpu, label: 'Processes', shortcut: panelProcessesShortcut },
-                  settings: { id: 'settings', icon: Settings2, label: 'Settings', shortcut: panelSettingsShortcut },
-                }
-                for (const wp of enabledWebPanels) {
-                  entries[wp.id] = { id: wp.id, icon: Globe, label: wp.name, shortcut: wp.shortcut ? `⌘${wp.shortcut.toUpperCase()}` : undefined }
-                }
-                const ordered = orderedTaskIds
-                  .map(id => entries[id])
-                  .filter((e): e is NonNullable<typeof e> => !!e)
-                  .filter(p => {
-                    // PERMANENT: Agent (terminal) toggle MUST NEVER appear in secondary window. User explicit.
-                    if (isSecondaryWindow && p.id === 'terminal') return false
-                    const isBuiltin = ['terminal', 'browser', 'editor', 'artifacts', 'diff', 'processes', 'settings'].includes(p.id)
-                    if (isBuiltin) return isBuiltinEnabled(p.id, 'task') && !(task.is_temporary && p.id === 'settings')
-                    return true // web panels already filtered by enabledWebPanels
-                  })
-                  .map(p => ({ ...p, active: !!panelVisibility[p.id] }))
-
-                if (taskHeaderPanelMode === 'menu') {
-                  const activeCount = ordered.filter(p => p.active).length
-                  return (
-                    <DropdownMenu>
+            >
+              {task.is_temporary ? (
+                <div className="flex shrink-0">
+                  <div className="relative min-w-0 w-full">
+                    <div className="flex items-center gap-3">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              type="button"
-                              aria-label="Panels"
-                              className="inline-flex items-center gap-1.5 rounded-md bg-surface-2 hover:bg-surface-3 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              <PanelsTopLeft className="size-4" />
-                              {activeCount > 0 && (
-                                <span className="tabular-nums text-[10px] text-muted-foreground/80">{activeCount}</span>
-                              )}
-                            </button>
-                          </DropdownMenuTrigger>
+                          <Info className="size-5 text-muted-foreground/55 shrink-0" />
                         </TooltipTrigger>
-                        <TooltipContent side="bottom">Panels</TooltipContent>
+                        <TooltipContent>Auto-deletes on terminal exit or tab close</TooltipContent>
                       </Tooltip>
-                      <DropdownMenuContent align={taskHeaderPanelAlign === 'left' ? 'start' : 'end'} className="min-w-[180px]">
-                        {ordered.map(p => {
-                          const Icon = p.icon
-                          return (
-                            <DropdownMenuItem
-                              key={p.id}
-                              onSelect={(e) => { e.preventDefault(); handlePanelToggle(p.id, !p.active) }}
-                              className={cn('cursor-pointer gap-2', p.active && 'bg-accent/50')}
-                            >
-                              <Icon className="size-4" />
-                              <span className="flex-1">{p.label}</span>
-                              {p.shortcut && (
-                                <span className="text-[10px] text-muted-foreground tabular-nums">{p.shortcut}</span>
-                              )}
-                            </DropdownMenuItem>
-                          )
-                        })}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )
-                }
+                      <span className="text-2xl italic text-muted-foreground">Temporary task</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2.5 shrink-0"
+                        onClick={async () => {
+                          const converted = await onConvertTask?.(task)
+                          if (converted) {
+                            handleTaskUpdate(converted)
+                            setEditingTitle(true)
+                          }
+                        }}
+                      >
+                        Turn into task
+                      </Button>
+                      {templates.length > 0 && (
+                        <DropdownMenu>
+                          <Tooltip>
+                            <DropdownMenuTrigger asChild>
+                              <TooltipTrigger asChild>
+                                <Button variant="outline" size="icon" className="size-7 shrink-0">
+                                  <LayoutTemplate className="size-4" />
+                                </Button>
+                              </TooltipTrigger>
+                            </DropdownMenuTrigger>
+                            <TooltipContent>Apply template</TooltipContent>
+                          </Tooltip>
+                          <DropdownMenuContent align="start" className="min-w-0">
+                            {templates.map((t, i) => (
+                              <DropdownMenuItem
+                                key={t.id}
+                                className="items-baseline gap-2.5"
+                                onClick={() => applyTemplate(t)}
+                              >
+                                <span className="text-[11px] text-muted-foreground tabular-nums">
+                                  {i + 1}
+                                </span>
+                                {t.name}
+                                {t.is_default ? ' ♦' : ''}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 shrink-0">
+                  {(() => {
+                    const statusStyle = getColumnStatusStyle(task.status, project?.columns_config)
+                    if (!statusStyle) return null
+                    const StatusIcon = statusStyle.icon
+                    return (
+                      <Popover open={statusPopoverOpen} onOpenChange={setStatusPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="shrink-0 cursor-pointer transition-opacity hover:opacity-70"
+                          >
+                            <StatusIcon
+                              className={cn('size-5', statusStyle.iconClass)}
+                              strokeWidth={3}
+                            />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-44 p-1" align="start">
+                          {statusOptions.map((opt) => {
+                            const optStyle = getColumnStatusStyle(
+                              opt.value,
+                              project?.columns_config
+                            )
+                            const OptIcon = optStyle?.icon ?? Circle
+                            const isCurrent = opt.value === task.status
+                            return (
+                              <button
+                                key={opt.value}
+                                type="button"
+                                className={cn(
+                                  'flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm cursor-pointer hover:bg-accent',
+                                  isCurrent && 'bg-accent font-medium'
+                                )}
+                                onClick={async () => {
+                                  const updated = await window.api.db.updateTask({
+                                    id: task.id,
+                                    status: opt.value
+                                  })
+                                  handleTaskUpdate(updated)
+                                  setStatusPopoverOpen(false)
+                                }}
+                              >
+                                <OptIcon className={cn('size-4', optStyle?.iconClass)} />
+                                {opt.label}
+                              </button>
+                            )
+                          })}
+                        </PopoverContent>
+                      </Popover>
+                    )
+                  })()}
+                  <div className="inline-grid items-center min-w-[2ch]">
+                    <span className="invisible col-start-1 row-start-1 text-2xl font-bold whitespace-pre">
+                      {titleValue || ' '}
+                    </span>
+                    <input
+                      ref={titleInputRef}
+                      value={titleValue}
+                      onChange={(e) => setTitleValue(e.target.value)}
+                      onBlur={handleTitleSave}
+                      onKeyDown={handleTitleKeyDown}
+                      onClick={() => setEditingTitle(true)}
+                      readOnly={!editingTitle}
+                      className={cn(
+                        'col-start-1 row-start-1 text-2xl font-bold bg-transparent border-none outline-none w-full',
+                        !editingTitle && 'cursor-pointer'
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
 
-                return <PanelToggle panels={ordered} onChange={handlePanelToggle} />
-              })()}
+              {task.linear_url && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        window.api.shell.openExternal(task.linear_url!)
+                      }}
+                      className="shrink-0 rounded bg-indigo-500/10 px-1.5 py-0.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-500/20 dark:text-indigo-400"
+                    >
+                      Linear
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>Open in Linear</TooltipContent>
+                </Tooltip>
+              )}
+
+              <div
+                className={cn(
+                  'flex items-center gap-1 min-w-0',
+                  taskHeaderPanelAlign === 'left' && 'flex-row-reverse'
+                )}
+              >
+                {task &&
+                  (isSecondaryWindow || !hasOpenSecondary) &&
+                  (taskHeaderPanelMode === 'menu' ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          aria-label={
+                            isSecondaryWindow ? 'Reattach task' : 'Detach task to new window'
+                          }
+                          onClick={() => {
+                            if (isSecondaryWindow) window.api.window.close()
+                            else window.api.taskWindow.open(task.id)
+                          }}
+                          className="shrink-0 inline-flex items-center justify-center size-7 rounded-md text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                        >
+                          <SquareArrowOutUpRight className="size-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {isSecondaryWindow ? 'Reattach' : 'Detach'}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={isSecondaryWindow ? 'Reattach task' : 'Detach task to new window'}
+                      onClick={() => {
+                        if (isSecondaryWindow) window.api.window.close()
+                        else window.api.taskWindow.open(task.id)
+                      }}
+                      className="shrink-0 flex items-center gap-1.5 rounded-full bg-muted/50 hover:bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <SquareArrowOutUpRight className="size-3.5" />
+                      {isSecondaryWindow ? 'Reattach' : 'Detach'}
+                    </button>
+                  ))}
+                {(() => {
+                  const entries: Record<
+                    string,
+                    { id: string; icon: typeof Globe; label: string; shortcut?: string | null }
+                  > = {
+                    terminal: {
+                      id: 'terminal',
+                      icon: TerminalIcon,
+                      label: 'Agent',
+                      shortcut: panelTerminalShortcut
+                    },
+                    browser: {
+                      id: 'browser',
+                      icon: Globe,
+                      label: 'Browser',
+                      shortcut: panelBrowserShortcut
+                    },
+                    editor: {
+                      id: 'editor',
+                      icon: FileCode,
+                      label: 'Editor',
+                      shortcut: panelEditorShortcut
+                    },
+                    artifacts: {
+                      id: 'artifacts',
+                      icon: Paperclip,
+                      label: 'Artifacts',
+                      shortcut: panelArtifactsShortcut
+                    },
+                    diff: { id: 'diff', icon: GitBranch, label: 'Git', shortcut: panelGitShortcut },
+                    processes: {
+                      id: 'processes',
+                      icon: Cpu,
+                      label: 'Processes',
+                      shortcut: panelProcessesShortcut
+                    },
+                    settings: {
+                      id: 'settings',
+                      icon: Settings2,
+                      label: 'Settings',
+                      shortcut: panelSettingsShortcut
+                    }
+                  }
+                  for (const wp of enabledWebPanels) {
+                    entries[wp.id] = {
+                      id: wp.id,
+                      icon: Globe,
+                      label: wp.name,
+                      shortcut: wp.shortcut ? `⌘${wp.shortcut.toUpperCase()}` : undefined
+                    }
+                  }
+                  const ordered = orderedTaskIds
+                    .map((id) => entries[id])
+                    .filter((e): e is NonNullable<typeof e> => !!e)
+                    .filter((p) => {
+                      // PERMANENT: Agent (terminal) toggle MUST NEVER appear in secondary window. User explicit.
+                      if (isSecondaryWindow && p.id === 'terminal') return false
+                      const isBuiltin = [
+                        'terminal',
+                        'browser',
+                        'editor',
+                        'artifacts',
+                        'diff',
+                        'processes',
+                        'settings'
+                      ].includes(p.id)
+                      if (isBuiltin)
+                        return (
+                          isBuiltinEnabled(p.id, 'task') &&
+                          !(task.is_temporary && p.id === 'settings')
+                        )
+                      return true // web panels already filtered by enabledWebPanels
+                    })
+                    .map((p) => ({ ...p, active: !!panelVisibility[p.id] }))
+
+                  if (taskHeaderPanelMode === 'menu') {
+                    const activeCount = ordered.filter((p) => p.active).length
+                    return (
+                      <DropdownMenu>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                aria-label="Panels"
+                                className="inline-flex items-center gap-1.5 rounded-md bg-surface-2 hover:bg-surface-3 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <PanelsTopLeft className="size-4" />
+                                {activeCount > 0 && (
+                                  <span className="tabular-nums text-[10px] text-muted-foreground/80">
+                                    {activeCount}
+                                  </span>
+                                )}
+                              </button>
+                            </DropdownMenuTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">Panels</TooltipContent>
+                        </Tooltip>
+                        <DropdownMenuContent
+                          align={taskHeaderPanelAlign === 'left' ? 'start' : 'end'}
+                          className="min-w-[180px]"
+                        >
+                          {ordered.map((p) => {
+                            const Icon = p.icon
+                            return (
+                              <DropdownMenuItem
+                                key={p.id}
+                                onSelect={(e) => {
+                                  e.preventDefault()
+                                  handlePanelToggle(p.id, !p.active)
+                                }}
+                                className={cn('cursor-pointer gap-2', p.active && 'bg-accent/50')}
+                              >
+                                <Icon className="size-4" />
+                                <span className="flex-1">{p.label}</span>
+                                {p.shortcut && (
+                                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                                    {p.shortcut}
+                                  </span>
+                                )}
+                              </DropdownMenuItem>
+                            )
+                          })}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )
+                  }
+
+                  return <PanelToggle panels={ordered} onChange={handlePanelToggle} />
+                })()}
+              </div>
             </div>
+            {parentTask && (
+              <button
+                type="button"
+                onClick={() => onNavigateToTask?.(parentTask.id)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer -mt-1"
+              >
+                Sub-task of
+                <span className="font-medium truncate max-w-[300px]">{parentTask.title}</span>
+              </button>
+            )}
           </div>
-          {parentTask && (
-            <button
-              type="button"
-              onClick={() => onNavigateToTask?.(parentTask.id)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer -mt-1"
-            >
-              Sub-task of
-              <span className="font-medium truncate max-w-[300px]">{parentTask.title}</span>
-            </button>
-          )}
-        </div>
-      </header>}
+        </header>
+      )}
 
       {/* Dev server detected toast */}
-      {!compact && <DevServerToast
-        url={detectedDevUrl}
-        onOpen={() => {
-          if (!detectedDevUrl) return
-          openDevServerInBrowser(detectedDevUrl)
-          setDetectedDevUrl(null)
-        }}
-        onDismiss={() => {
-          setDetectedDevUrl(null)
-          if (task?.id) {
-            devUrlToastDismissedRef.current = true
-            void window.api.db.updateTask({ id: task.id, devUrlToastDismissed: true })
-          }
-        }}
-      />}
+      {!compact && (
+        <DevServerToast
+          url={detectedDevUrl}
+          onOpen={() => {
+            if (!detectedDevUrl) return
+            openDevServerInBrowser(detectedDevUrl)
+            setDetectedDevUrl(null)
+          }}
+          onDismiss={() => {
+            setDetectedDevUrl(null)
+            if (task?.id) {
+              devUrlToastDismissedRef.current = true
+              void window.api.db.updateTask({ id: task.id, devUrlToastDismissed: true })
+            }
+          }}
+        />
+      )}
 
       {/* Split view: terminal | browser | settings | git diff */}
       <div id="task-panels" ref={splitContainerRef} className="flex-1 flex min-h-0">
-        {isTaskCompleted && !openCompletedAnyway ? (() => {
-          const actionButtonClass = "inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-surface-1/80 backdrop-blur px-3 py-1.5 text-sm cursor-pointer hover:bg-accent"
-          const actionButtons = (
-            <div className="mt-6 grid grid-cols-2 gap-2 w-full max-w-sm mx-auto">
-              <button
-                type="button"
-                className={actionButtonClass}
-                onClick={() => onCloseTab(task.id)}
-              >
-                <Check className="size-4 text-emerald-400" strokeWidth={3} />
-                Close task
-              </button>
-              <button
-                type="button"
-                className={actionButtonClass}
-                onClick={() => setOpenCompletedAnyway(true)}
-              >
-                <Eye className="size-4 text-sky-400" strokeWidth={3} />
-                Show details
-              </button>
-              {resolveColumns(project?.columns_config)
-                .filter((col) => col.category === 'started')
-                .map((col) => {
-                  const optStyle = getColumnStatusStyle(col.id, project?.columns_config)
-                  const OptIcon = optStyle?.icon ?? Circle
-                  return (
-                    <button
-                      key={col.id}
-                      type="button"
-                      className={actionButtonClass}
-                      onClick={async () => {
-                        const updated = await window.api.db.updateTask({ id: task.id, status: col.id })
-                        handleTaskUpdate(updated)
-                      }}
-                    >
-                      <OptIcon className={cn('size-4', optStyle?.iconClass)} strokeWidth={3} />
-                      Move to {col.label}
-                    </button>
-                  )
-                })}
-            </div>
-          )
-          const variantLabels = ['Trophy hero', 'Sword slash', 'Confetti light', 'Medallion', 'Stamp']
-          const switcher = (
-            <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-md border border-border bg-surface-1/80 backdrop-blur px-2 py-1 text-xs text-muted-foreground">
-              <Shuffle className="size-3" strokeWidth={2.5} />
-              <select
-                value={completedVariant}
-                onChange={(e) => setCompletedVariant(Number(e.target.value))}
-                className="bg-transparent outline-none cursor-pointer text-foreground"
-              >
-                {variantLabels.map((label, i) => (
-                  <option key={i} value={i} className="bg-surface-1 text-foreground">{i + 1}. {label}</option>
-                ))}
-              </select>
-            </div>
-          )
-          const variants = [
-            // V1: Trophy hero — soft glow bg, big trophy
-            <div key="v1" className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
-              {switcher}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_closest-side_at_50%_50%,_rgba(245,158,11,0.12)_25%,_transparent_100%)] pointer-events-none" />
-              <div className="relative flex flex-col items-center text-center">
-                <div className="size-20 rounded-full bg-amber-500/15 flex items-center justify-center mb-5 ring-4 ring-amber-500/10">
-                  <Trophy className="size-10 text-amber-500" strokeWidth={2} />
-                </div>
-                <p className="text-5xl font-bold tracking-tight">Slayed!</p>
-                <p className="mt-3 text-base text-muted-foreground">Task wrapped. Take the win.</p>
-                {actionButtons}
-              </div>
-            </div>,
-            // V2: Sword slash — angled accent line + sword icon
-            <div key="v2" className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
-              {switcher}
-              <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-rose-500/40 to-transparent -rotate-6 pointer-events-none" />
-              <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-rose-500/20 to-transparent rotate-3 translate-y-3 pointer-events-none" />
-              <div className="relative flex flex-col items-center text-center">
-                <Swords className="size-12 text-rose-500 mb-4 -rotate-12" strokeWidth={2} />
-                <p className="text-5xl font-bold tracking-tight">Task slayed</p>
-                <p className="mt-3 text-base text-muted-foreground">Clean cut. Onto the next.</p>
-                {actionButtons}
-              </div>
-            </div>,
-            // V3: Confetti light — few tasteful pieces, big check
-            <div key="v3" className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
-              {switcher}
-              <PartyPopper className="absolute top-[18%] left-[22%] size-6 text-fuchsia-400/60 -rotate-12" />
-              <Sparkles className="absolute top-[24%] right-[24%] size-5 text-amber-400/60" />
-              <Sparkles className="absolute bottom-[26%] left-[28%] size-5 text-emerald-400/60" />
-              <PartyPopper className="absolute bottom-[20%] right-[22%] size-6 text-sky-400/60 rotate-12" />
-              <div className="relative flex flex-col items-center text-center">
-                <div className="size-20 rounded-full bg-emerald-500/15 flex items-center justify-center mb-5 ring-4 ring-emerald-500/10">
-                  <CheckCircle2 className="size-11 text-emerald-500" strokeWidth={2.25} />
-                </div>
-                <p className="text-5xl font-bold tracking-tight">You slayed it!</p>
-                <p className="mt-3 text-base text-muted-foreground">Another one in the books.</p>
-                {actionButtons}
-              </div>
-            </div>,
-            // V4: Medallion — gradient circle badge
-            <div key="v4" className="flex-1 flex flex-col items-center justify-center relative">
-              {switcher}
-              <div className="flex flex-col items-center text-center">
-                <div className="relative mb-5">
-                  <div className="size-24 rounded-full bg-gradient-to-br from-emerald-400/40 via-emerald-500/30 to-emerald-700/40 flex items-center justify-center ring-2 ring-emerald-500/50 shadow-[0_0_40px_rgba(16,185,129,0.25)]">
-                    <Flame className="size-12 text-emerald-400" strokeWidth={2} fill="currentColor" fillOpacity={0.2} />
-                  </div>
-                </div>
-                <p className="text-[11px] uppercase tracking-[0.4em] text-emerald-500 font-bold">Slayer</p>
-                <p className="mt-2 text-4xl font-bold tracking-tight">Task slayed</p>
-                <p className="mt-3 text-base text-muted-foreground">Earned. Want to peek inside?</p>
-                {actionButtons}
-              </div>
-            </div>,
-            // V5: Stamp — visible rotated SLAYED banner
-            <div key="v5" className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
-              {switcher}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-                <span className="text-emerald-500/[0.08] font-black tracking-[0.2em] text-[clamp(5rem,15vw,13rem)] leading-none -rotate-12">SLAYED</span>
-              </div>
-              <div className="relative flex flex-col items-center text-center">
-                <div className="-rotate-6 inline-flex items-center gap-2 rounded-md border-2 border-emerald-500/70 bg-emerald-500/10 px-4 py-1.5 mb-5">
-                  <CheckCircle2 className="size-5 text-emerald-500" strokeWidth={2.5} />
-                  <span className="text-emerald-500 font-bold tracking-[0.25em] uppercase text-sm">Slayed</span>
-                </div>
-                <p className="text-4xl font-bold tracking-tight">Stamped & done</p>
-                <p className="mt-3 text-base text-muted-foreground">Locked in the win column.</p>
-                {actionButtons}
-              </div>
-            </div>,
-          ]
-          return variants[completedVariant] ?? variants[0]
-        })() : (<>
-        {!compact && !hasVisiblePanels && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-full max-w-xl min-h-52 rounded-lg border border-border bg-surface-3 px-5 py-7 text-center flex flex-col items-center justify-center">
-              <p className="text-2xl font-semibold">No panel tab is shown</p>
-              <p className="mt-3 text-base text-muted-foreground">Use the panel tabs in the header to open one.</p>
-            </div>
-          </div>
-        )}
-
-        {/* Terminal Panel */}
-        {(compact || panelVisibility.terminal) && (
-        <div
-          data-panel-id="terminal"
-          className={cn(
-            "min-w-0 shrink-0 overflow-hidden flex flex-col transition-shadow duration-200",
-            !compact && "rounded-md bg-surface-1 border border-border",
-            !compact && multipleVisiblePanels && focusedPanel === 'terminal' && "shadow-[0_0_18px_rgba(255,255,255,0.25)]"
-          )}
-          style={compact ? { flex: 1 } : containerWidth > 0 ? { width: resolvedWidths.terminal, order: panelOrderIdx.terminal ?? 0 } : { flex: 1, order: panelOrderIdx.terminal ?? 0 }}
-        >
-          {ownership.hasOtherOwner('terminal') ? (
-            <PanelOwnerStub
-              panelLabel="Agent"
-              icon={TerminalIcon}
-              activeElsewhere
-              onActivate={() => ownership.claim('terminal')}
-              onActivateAndClose={() => ownership.claimAndCloseOther('terminal')}
-            />
-          ) : (<>
-          {projectPathMissing && project?.path && (
-            <div className="shrink-0 bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <span className="text-sm text-amber-500">
-                Project path not found: <code className="bg-amber-500/10 px-1 rounded">{project.path}</code>
-              </span>
-            </div>
-          )}
-          {(() => {
-            const currentConversationId = getConversationIdForMode(task)
-            return (
-              detectedSessionId &&
-              currentConversationId &&
-              detectedSessionId !== currentConversationId
-            )
-          })() && (
-            <div className="shrink-0 bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <span className="text-sm text-amber-500">
-                Session mismatch: terminal using {detectedSessionId}
-              </span>
-              <Button
-                size="sm"
-                variant="outline"
-                className="ml-auto h-6 text-xs"
-                onClick={handleUpdateSessionId}
-              >
-                Update DB
-                <kbd className="ml-2 opacity-70" style={{ fontFamily: 'system-ui' }}>{syncSessionIdShortcut}</kbd>
-              </Button>
-            </div>
-          )}
-          {showSessionBanner && (
-            <div className="shrink-0 bg-blue-500/10 border-b border-blue-500/20 px-4 py-1.5 flex items-center gap-2">
-              <TerminalIcon className="h-3.5 w-3.5 text-blue-500" />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="text-xs text-blue-500 cursor-default">
-                    Session not saved — resume won't work until detected
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-72">
-                  The AI provider's session ID hasn't been captured yet. Without it, closing and reopening this task will start a fresh conversation instead of resuming. Click "Run {sessionIdCommand}" to detect it automatically.
-                </TooltipContent>
-
-              </Tooltip>
-              <Button
-                size="sm"
-                variant="outline"
-                className="ml-auto h-6 text-xs"
-                onClick={handleDetectSessionId}
-              >
-                Run {sessionIdCommand}
-              </Button>
-            </div>
-          )}
-          {showUnavailableBanner && (
-            <div className="shrink-0 bg-amber-500/10 border-b border-amber-500/20 px-4 py-1.5 flex items-center gap-2">
-              <Info className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-              <span className="text-xs text-amber-500">
-                Session ID detection not available for this provider — don't close the tab or resume won't work. Providers with resume: Claude Code, Codex, Gemini, Qwen, Copilot
-              </span>
-              <button
-                className="ml-auto text-amber-500 hover:text-amber-400 shrink-0"
-                onClick={() => setSessionUnavailableDismissed(task?.id ?? null)}
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          )}
-          {showSlayNudge && (
-            <SlayNudgeBanner projectPath={effectiveRepoPath ?? project?.path ?? ''} projectId={task?.project_id ?? project?.id} onDismiss={dismissSlayNudge} onSetupComplete={recheckSlayNudge} />
-          )}
-          {/* Terminal + mode bar wrapper */}
-          <div className="flex-1 min-h-0 overflow-hidden">
-              {isResizing ? (
-                <div className="h-full bg-black" />
-              ) : (effectiveRepoPath || project?.path) && !projectPathMissing ? (
-                <TerminalContainer
-                  ref={terminalContainerRef}
-                  key={`${terminalKey}-${task.project_id}-${effectiveRepoPath || ''}-${task.worktree_path || ''}-${task.base_dir || ''}`}
-                  taskId={task.id}
-                  isActive={isActive}
-                  hasShortcutFocus={shortcutActive}
-                  cwd={effectiveRepoPath || project?.path || ''}
-                  defaultMode={task.terminal_mode}
-                  conversationId={getConversationIdForMode(task) || undefined}
-                  existingConversationId={getConversationIdForMode(task) || undefined}
-                  supportsSessionId={modes.find(m => m.id === task.terminal_mode)?.initialCommand?.includes('{id}') ?? false}
-                  initialPrompt={getQuickRunPrompt(task.id)}
-                  providerFlags={getProviderFlagsForMode(task)}
-                  executionContext={project?.execution_context}
-                  focusRequestId={terminalFocusRequestId}
-                  onConversationCreated={handleSessionCreated}
-                  onSessionInvalid={handleSessionInvalid}
-                  onReady={handleTerminalReady}
-                  onRetry={handleRestartTerminal}
-                  onFocusRequestHandled={handleTerminalFocusRequestHandled}
-                  onMainTabActiveChange={setIsMainTabActive}
-                  onOpenUrl={openDevServerInBrowser}
-                  onOpenFile={handleQuickOpenFile}
-                  onMainReset={handleResetTerminal}
-                  overlay={isActive && loopConfigured ? (
-                    <LoopModeBanner
-                      config={task.loop_config!}
-                      status={loopStatus}
-                      iteration={loopIteration}
-                      onStart={startLoop}
-                      onPause={pauseLoop}
-                      onResume={resumeLoop}
-                      onStop={stopLoop}
-                      onEditConfig={() => setLoopDialogOpen(true)}
-                    />
-                  ) : undefined}
-                  mainTabContextMenu={
-                    <>
-                      <ContextMenuRadioGroup
-                        value={task.terminal_mode}
-                        onValueChange={(value) => {
-                          if (modes.some((m) => m.id === value)) handleModeChange(value as TerminalMode)
+        {isTaskCompleted && !openCompletedAnyway ? (
+          (() => {
+            const actionButtonClass =
+              'inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-surface-1/80 backdrop-blur px-3 py-1.5 text-sm cursor-pointer hover:bg-accent'
+            const actionButtons = (
+              <div className="mt-6 grid grid-cols-2 gap-2 w-full max-w-sm mx-auto">
+                <button
+                  type="button"
+                  className={actionButtonClass}
+                  onClick={() => onCloseTab(task.id)}
+                >
+                  <Check className="size-4 text-emerald-400" strokeWidth={3} />
+                  Close task
+                </button>
+                <button
+                  type="button"
+                  className={actionButtonClass}
+                  onClick={() => setOpenCompletedAnyway(true)}
+                >
+                  <Eye className="size-4 text-sky-400" strokeWidth={3} />
+                  Show details
+                </button>
+                {resolveColumns(project?.columns_config)
+                  .filter((col) => col.category === 'started')
+                  .map((col) => {
+                    const optStyle = getColumnStatusStyle(col.id, project?.columns_config)
+                    const OptIcon = optStyle?.icon ?? Circle
+                    return (
+                      <button
+                        key={col.id}
+                        type="button"
+                        className={actionButtonClass}
+                        onClick={async () => {
+                          const updated = await window.api.db.updateTask({
+                            id: task.id,
+                            status: col.id
+                          })
+                          handleTaskUpdate(updated)
                         }}
                       >
-                        {(() => {
-                          const visibleModes = getVisibleModes(modes, task.terminal_mode)
-                          const { builtin, custom } = groupTerminalModes(visibleModes)
-                          const renderItem = (mode: typeof visibleModes[number]) => {
-                            const ModeIcon = MODE_ICONS[mode.id as TerminalMode] ?? TerminalIcon
-                            return (
-                              <ContextMenuRadioItem key={mode.id} value={mode.id}>
-                                <span className="flex items-center gap-2">
-                                  <ModeIcon className="size-3.5" />
-                                  {getModeLabel(mode)}
-                                </span>
-                              </ContextMenuRadioItem>
-                            )
-                          }
-                          return (
-                            <>
-                              {builtin.map(renderItem)}
-                              {custom.map(renderItem)}
-                            </>
-                          )
-                        })()}
-                      </ContextMenuRadioGroup>
-                      <ContextMenuSeparator />
-                      <ContextMenuItem onSelect={() => setFlagsPopoverOpen(true)}>
-                        <span className="flex items-center gap-2">
-                          <Flag className="size-3.5" />
-                          Edit flags
-                        </span>
-                      </ContextMenuItem>
-                    </>
-                  }
-                  mainTabAccessories={
-                    <div data-testid="terminal-mode-trigger" className="flex items-center gap-1" onDoubleClick={(e) => e.stopPropagation()}>
-                      <span className="truncate text-sm">
-                        {getModeLabel(modes.find((m) => m.id === task.terminal_mode) ?? { id: task.terminal_mode, label: task.terminal_mode })}
-                      </span>
-                      <ChevronDown
-                        data-testid="terminal-mode-dropdown"
-                        aria-label="Open provider menu"
-                        role="button"
-                        className="size-3 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          const tab = (e.currentTarget as unknown as HTMLElement).closest('[data-tab-main="true"]')
-                          if (!tab) return
-                          const rect = (e.currentTarget as unknown as HTMLElement).getBoundingClientRect()
-                          tab.dispatchEvent(new MouseEvent('contextmenu', {
-                            bubbles: true,
-                            cancelable: true,
-                            view: window,
-                            clientX: rect.left,
-                            clientY: rect.bottom,
-                          }))
-                        }}
+                        <OptIcon className={cn('size-4', optStyle?.iconClass)} strokeWidth={3} />
+                        Move to {col.label}
+                      </button>
+                    )
+                  })}
+              </div>
+            )
+            const variantLabels = [
+              'Trophy hero',
+              'Sword slash',
+              'Confetti light',
+              'Medallion',
+              'Stamp'
+            ]
+            const switcher = (
+              <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-md border border-border bg-surface-1/80 backdrop-blur px-2 py-1 text-xs text-muted-foreground">
+                <Shuffle className="size-3" strokeWidth={2.5} />
+                <select
+                  value={completedVariant}
+                  onChange={(e) => setCompletedVariant(Number(e.target.value))}
+                  className="bg-transparent outline-none cursor-pointer text-foreground"
+                >
+                  {variantLabels.map((label, i) => (
+                    <option key={i} value={i} className="bg-surface-1 text-foreground">
+                      {i + 1}. {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )
+            const variants = [
+              // V1: Trophy hero — soft glow bg, big trophy
+              <div
+                key="v1"
+                className="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+              >
+                {switcher}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_closest-side_at_50%_50%,_rgba(245,158,11,0.12)_25%,_transparent_100%)] pointer-events-none" />
+                <div className="relative flex flex-col items-center text-center">
+                  <div className="size-20 rounded-full bg-amber-500/15 flex items-center justify-center mb-5 ring-4 ring-amber-500/10">
+                    <Trophy className="size-10 text-amber-500" strokeWidth={2} />
+                  </div>
+                  <p className="text-5xl font-bold tracking-tight">Slayed!</p>
+                  <p className="mt-3 text-base text-muted-foreground">
+                    Task wrapped. Take the win.
+                  </p>
+                  {actionButtons}
+                </div>
+              </div>,
+              // V2: Sword slash — angled accent line + sword icon
+              <div
+                key="v2"
+                className="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+              >
+                {switcher}
+                <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-rose-500/40 to-transparent -rotate-6 pointer-events-none" />
+                <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-rose-500/20 to-transparent rotate-3 translate-y-3 pointer-events-none" />
+                <div className="relative flex flex-col items-center text-center">
+                  <Swords className="size-12 text-rose-500 mb-4 -rotate-12" strokeWidth={2} />
+                  <p className="text-5xl font-bold tracking-tight">Task slayed</p>
+                  <p className="mt-3 text-base text-muted-foreground">Clean cut. Onto the next.</p>
+                  {actionButtons}
+                </div>
+              </div>,
+              // V3: Confetti light — few tasteful pieces, big check
+              <div
+                key="v3"
+                className="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+              >
+                {switcher}
+                <PartyPopper className="absolute top-[18%] left-[22%] size-6 text-fuchsia-400/60 -rotate-12" />
+                <Sparkles className="absolute top-[24%] right-[24%] size-5 text-amber-400/60" />
+                <Sparkles className="absolute bottom-[26%] left-[28%] size-5 text-emerald-400/60" />
+                <PartyPopper className="absolute bottom-[20%] right-[22%] size-6 text-sky-400/60 rotate-12" />
+                <div className="relative flex flex-col items-center text-center">
+                  <div className="size-20 rounded-full bg-emerald-500/15 flex items-center justify-center mb-5 ring-4 ring-emerald-500/10">
+                    <CheckCircle2 className="size-11 text-emerald-500" strokeWidth={2.25} />
+                  </div>
+                  <p className="text-5xl font-bold tracking-tight">You slayed it!</p>
+                  <p className="mt-3 text-base text-muted-foreground">Another one in the books.</p>
+                  {actionButtons}
+                </div>
+              </div>,
+              // V4: Medallion — gradient circle badge
+              <div key="v4" className="flex-1 flex flex-col items-center justify-center relative">
+                {switcher}
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative mb-5">
+                    <div className="size-24 rounded-full bg-gradient-to-br from-emerald-400/40 via-emerald-500/30 to-emerald-700/40 flex items-center justify-center ring-2 ring-emerald-500/50 shadow-[0_0_40px_rgba(16,185,129,0.25)]">
+                      <Flame
+                        className="size-12 text-emerald-400"
+                        strokeWidth={2}
+                        fill="currentColor"
+                        fillOpacity={0.2}
                       />
                     </div>
-                  }
-                  rightContent={
-                    <Tooltip open={!isMainTabActive && !task.is_temporary ? undefined : false}>
-                      <TooltipTrigger asChild>
-                        <div className={cn(
-                          "flex items-center gap-2 transition-opacity",
-                          !isMainTabActive && !task.is_temporary && "opacity-40 pointer-events-none"
-                        )}>
-                          {loopModeAvailable && task.terminal_mode !== 'terminal' && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <IconButton
-                                  variant={loopConfigured ? 'default' : 'ghost'}
-                                  className="size-7"
-                                  aria-label="Loop command"
-                                  onClick={() => {
-                                    if (isLoopActive(loopStatus)) stopLoop()
-                                    if (loopConfigured) {
-                                      handleLoopConfigChange(null)
-                                    } else {
-                                      setLoopDialogOpen(true)
-                                    }
-                                  }}
-                                >
-                                  <Repeat className="size-3.5" />
-                                </IconButton>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom">Loop command</TooltipContent>
-                            </Tooltip>
-                          )}
-
-                          {task.terminal_mode !== 'terminal' && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <IconButton
-                                  data-testid="agent-power-off"
-                                  variant="ghost"
-                                  className="size-7"
-                                  aria-label="Shut down agent"
-                                  onClick={() => void handleStopAgent()}
-                                >
-                                  <Power className="size-3.5" />
-                                </IconButton>
-                              </TooltipTrigger>
-                              <TooltipContent side="bottom">Shut down agent</TooltipContent>
-                            </Tooltip>
-                          )}
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <IconButton data-testid="terminal-menu-trigger" variant="ghost" aria-label="Terminal menu" className="size-7">
-                                <MoreHorizontal className="size-3.5" />
-                              </IconButton>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-60">
-                              <DropdownMenuItem onClick={handleInjectTitle}>
-                                Inject title
-                                <span className="ml-auto text-xs text-muted-foreground">{terminalInjectTitleShortcut}</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => void handleInjectDescription()}>
-                                Inject description
-                                <span className="ml-auto text-xs text-muted-foreground">{terminalInjectDescShortcut}</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={handleCopyHistory}>
-                                Copy history
-                              </DropdownMenuItem>
-                              {task.terminal_mode !== 'terminal' && (
-                                <DropdownMenuItem
-                                  disabled={!getConversationIdForMode(task)}
-                                  onClick={handleCopyConversationId}
-                                >
-                                  Copy conversation ID
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={handleReattachTerminal}>
-                                Re-attach terminal
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleRestartTerminal}>
-                                Restart terminal
-                                <span className="ml-auto pl-4 text-xs text-muted-foreground">{terminalRestartShortcut}</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={handleResetTerminal}>
-                                Reset terminal
-                              </DropdownMenuItem>
-                              {task.terminal_mode !== 'terminal' && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => void handleDoctor()}>
-                                    Doctor
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                          <Dialog open={flagsPopoverOpen} onOpenChange={setFlagsPopoverOpen}>
-                            <DialogContent className="max-w-md">
-                              <DialogHeader>
-                                <DialogTitle>
-                                  {task.terminal_mode === 'ccs' ? 'CCS profile' : `CLI flags for ${task.terminal_mode}`}
-                                </DialogTitle>
-                              </DialogHeader>
-                              {task.terminal_mode === 'ccs' ? (
-                                <div className="space-y-2">
-                                  <Select
-                                    value={getProviderFlags(task.provider_config, 'ccs') || '__none__'}
-                                    onValueChange={async (val) => {
-                                      const profile = val === '__none__' ? '' : val
-                                      const updated = await window.api.db.updateTask({
-                                        id: task.id,
-                                        providerConfig: setProviderFlags(task.provider_config, 'ccs', profile)
-                                      })
-                                      if (updated) onTaskUpdated(updated)
-                                    }}
-                                  >
-                                    <SelectTrigger className="w-full">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="__none__">Default</SelectItem>
-                                      {ccsProfiles.map((p) => (
-                                        <SelectItem key={p} value={p}>{p}</SelectItem>
-                                      ))}
-                                      {(() => {
-                                        const currentProfile = getProviderFlags(task.provider_config, 'ccs')
-                                        return currentProfile && !ccsProfiles.includes(currentProfile) ? (
-                                          <SelectItem value={currentProfile}>{currentProfile}</SelectItem>
-                                        ) : null
-                                      })()}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              ) : (
-                                <div className="space-y-3">
-                                  <div className="text-xs text-muted-foreground">
-                                    Passed to the provider on startup (e.g. --no-cache). Overrides defaults in settings.
-                                  </div>
-                                  <Input
-                                    autoFocus
-                                    value={flagsInputValue}
-                                    onChange={(e) => setFlagsInputValue(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault()
-                                        void handleFlagsSave(flagsInputValue)
-                                        setFlagsPopoverOpen(false)
-                                      } else if (e.key === 'Escape') {
-                                        e.preventDefault()
-                                        setFlagsInputValue(getProviderFlagsForMode(task))
-                                        setFlagsPopoverOpen(false)
-                                      }
-                                    }}
-                                    placeholder="Flags"
-                                  />
-                                  <div className="flex gap-2 justify-end">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => { void handleSetDefaultFlags() }}
-                                      disabled={task.terminal_mode === 'terminal'}
-                                    >
-                                      Reset to default
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      onClick={() => {
-                                        void handleFlagsSave(flagsInputValue)
-                                        setFlagsPopoverOpen(false)
-                                      }}
-                                    >
-                                      Save
-                                    </Button>
-                                  </div>
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>Switch to Main tab to use these controls</TooltipContent>
-                    </Tooltip>
-                  }
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
-                  <div className="text-center p-8">
-                    <p className="mb-2">No repository path configured</p>
-                    <p className="text-sm">
-                      Set a repository path in project settings to use the terminal
-                    </p>
                   </div>
+                  <p className="text-[11px] uppercase tracking-[0.4em] text-emerald-500 font-bold">
+                    Slayer
+                  </p>
+                  <p className="mt-2 text-4xl font-bold tracking-tight">Task slayed</p>
+                  <p className="mt-3 text-base text-muted-foreground">
+                    Earned. Want to peek inside?
+                  </p>
+                  {actionButtons}
                 </div>
-              )}
-          </div>
-          </>)}
-        </div>
-        )}
+              </div>,
+              // V5: Stamp — visible rotated SLAYED banner
+              <div
+                key="v5"
+                className="flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+              >
+                {switcher}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+                  <span className="text-emerald-500/[0.08] font-black tracking-[0.2em] text-[clamp(5rem,15vw,13rem)] leading-none -rotate-12">
+                    SLAYED
+                  </span>
+                </div>
+                <div className="relative flex flex-col items-center text-center">
+                  <div className="-rotate-6 inline-flex items-center gap-2 rounded-md border-2 border-emerald-500/70 bg-emerald-500/10 px-4 py-1.5 mb-5">
+                    <CheckCircle2 className="size-5 text-emerald-500" strokeWidth={2.5} />
+                    <span className="text-emerald-500 font-bold tracking-[0.25em] uppercase text-sm">
+                      Slayed
+                    </span>
+                  </div>
+                  <p className="text-4xl font-bold tracking-tight">Stamped & done</p>
+                  <p className="mt-3 text-base text-muted-foreground">Locked in the win column.</p>
+                  {actionButtons}
+                </div>
+              </div>
+            ]
+            return variants[completedVariant] ?? variants[0]
+          })()
+        ) : (
+          <>
+            {!compact && !hasVisiblePanels && (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="w-full max-w-xl min-h-52 rounded-lg border border-border bg-surface-3 px-5 py-7 text-center flex flex-col items-center justify-center">
+                  <p className="text-2xl font-semibold">No panel tab is shown</p>
+                  <p className="mt-3 text-base text-muted-foreground">
+                    Use the panel tabs in the header to open one.
+                  </p>
+                </div>
+              </div>
+            )}
 
-        {/* Non-terminal panels hidden in compact mode */}
-        {!compact && panelVisibility.browser && getFirstVisibleTaskPanelId() !== 'browser' && (
-          <ResizeHandle
-            width={resolvedWidths.browser ?? 200}
-            minWidth={200}
-            onWidthChange={(w) => updatePanelSizes({ browser: w })}
-            onDragStart={() => setIsResizing(true)}
-            onDragEnd={() => setIsResizing(false)}
-            onReset={resetAllPanels}
-            style={panelOrderStyle('browser')}
-          />
-        )}
+            {/* Terminal Panel */}
+            {(compact || panelVisibility.terminal) && (
+              <div
+                data-panel-id="terminal"
+                className={cn(
+                  'min-w-0 shrink-0 overflow-hidden flex flex-col transition-shadow duration-200',
+                  !compact && 'rounded-md bg-surface-1 border border-border',
+                  !compact &&
+                    multipleVisiblePanels &&
+                    focusedPanel === 'terminal' &&
+                    'shadow-[0_0_18px_rgba(255,255,255,0.25)]'
+                )}
+                style={
+                  compact
+                    ? { flex: 1 }
+                    : containerWidth > 0
+                      ? { width: resolvedWidths.terminal, order: panelOrderIdx.terminal ?? 0 }
+                      : { flex: 1, order: panelOrderIdx.terminal ?? 0 }
+                }
+              >
+                {ownership.hasOtherOwner('terminal') ? (
+                  <PanelOwnerStub
+                    panelLabel="Agent"
+                    icon={TerminalIcon}
+                    activeElsewhere
+                    onActivate={() => ownership.claim('terminal')}
+                    onActivateAndClose={() => ownership.claimAndCloseOther('terminal')}
+                  />
+                ) : (
+                  <>
+                    {projectPathMissing && project?.path && (
+                      <div className="shrink-0 bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <span className="text-sm text-amber-500">
+                          Project path not found:{' '}
+                          <code className="bg-amber-500/10 px-1 rounded">{project.path}</code>
+                        </span>
+                      </div>
+                    )}
+                    {(() => {
+                      const currentConversationId = getConversationIdForMode(task)
+                      return (
+                        detectedSessionId &&
+                        currentConversationId &&
+                        detectedSessionId !== currentConversationId
+                      )
+                    })() && (
+                      <div className="shrink-0 bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        <span className="text-sm text-amber-500">
+                          Session mismatch: terminal using {detectedSessionId}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="ml-auto h-6 text-xs"
+                          onClick={handleUpdateSessionId}
+                        >
+                          Update DB
+                          <kbd className="ml-2 opacity-70" style={{ fontFamily: 'system-ui' }}>
+                            {syncSessionIdShortcut}
+                          </kbd>
+                        </Button>
+                      </div>
+                    )}
+                    {showSessionBanner && (
+                      <div className="shrink-0 bg-blue-500/10 border-b border-blue-500/20 px-4 py-1.5 flex items-center gap-2">
+                        <TerminalIcon className="h-3.5 w-3.5 text-blue-500" />
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-xs text-blue-500 cursor-default">
+                              Session not saved — resume won't work until detected
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom" className="max-w-72">
+                            The AI provider's session ID hasn't been captured yet. Without it,
+                            closing and reopening this task will start a fresh conversation instead
+                            of resuming. Click "Run {sessionIdCommand}" to detect it automatically.
+                          </TooltipContent>
+                        </Tooltip>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="ml-auto h-6 text-xs"
+                          onClick={handleDetectSessionId}
+                        >
+                          Run {sessionIdCommand}
+                        </Button>
+                      </div>
+                    )}
+                    {showUnavailableBanner && (
+                      <div className="shrink-0 bg-amber-500/10 border-b border-amber-500/20 px-4 py-1.5 flex items-center gap-2">
+                        <Info className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        <span className="text-xs text-amber-500">
+                          Session ID detection not available for this provider — don't close the tab
+                          or resume won't work. Providers with resume: Claude Code, Codex, Gemini,
+                          Qwen, Copilot
+                        </span>
+                        <button
+                          className="ml-auto text-amber-500 hover:text-amber-400 shrink-0"
+                          onClick={() => setSessionUnavailableDismissed(task?.id ?? null)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+                    {showSlayNudge && (
+                      <SlayNudgeBanner
+                        projectPath={effectiveRepoPath ?? project?.path ?? ''}
+                        projectId={task?.project_id ?? project?.id}
+                        onDismiss={dismissSlayNudge}
+                        onSetupComplete={recheckSlayNudge}
+                      />
+                    )}
+                    {/* Terminal + mode bar wrapper */}
+                    <div className="flex-1 min-h-0 overflow-hidden">
+                      {isResizing ? (
+                        <div className="h-full bg-black" />
+                      ) : (effectiveRepoPath || project?.path) && !projectPathMissing ? (
+                        <TerminalContainer
+                          ref={terminalContainerRef}
+                          key={`${terminalKey}-${task.project_id}-${effectiveRepoPath || ''}-${task.worktree_path || ''}-${task.base_dir || ''}`}
+                          taskId={task.id}
+                          isActive={isActive}
+                          hasShortcutFocus={shortcutActive}
+                          cwd={effectiveRepoPath || project?.path || ''}
+                          defaultMode={task.terminal_mode}
+                          conversationId={getConversationIdForMode(task) || undefined}
+                          existingConversationId={getConversationIdForMode(task) || undefined}
+                          supportsSessionId={
+                            modes
+                              .find((m) => m.id === task.terminal_mode)
+                              ?.initialCommand?.includes('{id}') ?? false
+                          }
+                          initialPrompt={getQuickRunPrompt(task.id)}
+                          providerFlags={getProviderFlagsForMode(task)}
+                          executionContext={project?.execution_context}
+                          focusRequestId={terminalFocusRequestId}
+                          onConversationCreated={handleSessionCreated}
+                          onSessionInvalid={handleSessionInvalid}
+                          onReady={handleTerminalReady}
+                          onRetry={handleRestartTerminal}
+                          onFocusRequestHandled={handleTerminalFocusRequestHandled}
+                          onMainTabActiveChange={setIsMainTabActive}
+                          onOpenUrl={openDevServerInBrowser}
+                          onOpenFile={handleQuickOpenFile}
+                          onMainReset={handleResetTerminal}
+                          overlay={
+                            isActive && loopConfigured ? (
+                              <LoopModeBanner
+                                config={task.loop_config!}
+                                status={loopStatus}
+                                iteration={loopIteration}
+                                onStart={startLoop}
+                                onPause={pauseLoop}
+                                onResume={resumeLoop}
+                                onStop={stopLoop}
+                                onEditConfig={() => setLoopDialogOpen(true)}
+                              />
+                            ) : undefined
+                          }
+                          mainTabContextMenu={
+                            <>
+                              <ContextMenuRadioGroup
+                                value={task.terminal_mode}
+                                onValueChange={(value) => {
+                                  if (modes.some((m) => m.id === value))
+                                    handleModeChange(value as TerminalMode)
+                                }}
+                              >
+                                {(() => {
+                                  const visibleModes = getVisibleModes(modes, task.terminal_mode)
+                                  const { builtin, custom } = groupTerminalModes(visibleModes)
+                                  const renderItem = (mode: (typeof visibleModes)[number]) => {
+                                    const ModeIcon =
+                                      MODE_ICONS[mode.id as TerminalMode] ?? TerminalIcon
+                                    return (
+                                      <ContextMenuRadioItem key={mode.id} value={mode.id}>
+                                        <span className="flex items-center gap-2">
+                                          <ModeIcon className="size-3.5" />
+                                          {getModeLabel(mode)}
+                                        </span>
+                                      </ContextMenuRadioItem>
+                                    )
+                                  }
+                                  return (
+                                    <>
+                                      {builtin.map(renderItem)}
+                                      {custom.map(renderItem)}
+                                    </>
+                                  )
+                                })()}
+                              </ContextMenuRadioGroup>
+                              <ContextMenuSeparator />
+                              <ContextMenuItem onSelect={() => setFlagsPopoverOpen(true)}>
+                                <span className="flex items-center gap-2">
+                                  <Flag className="size-3.5" />
+                                  Edit flags
+                                </span>
+                              </ContextMenuItem>
+                            </>
+                          }
+                          mainTabAccessories={
+                            <div
+                              data-testid="terminal-mode-trigger"
+                              className="flex items-center gap-1"
+                              onDoubleClick={(e) => e.stopPropagation()}
+                            >
+                              <span className="truncate text-sm">
+                                {getModeLabel(
+                                  modes.find((m) => m.id === task.terminal_mode) ?? {
+                                    id: task.terminal_mode,
+                                    label: task.terminal_mode
+                                  }
+                                )}
+                              </span>
+                              <ChevronDown
+                                data-testid="terminal-mode-dropdown"
+                                aria-label="Open provider menu"
+                                role="button"
+                                className="size-3 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  const tab = (e.currentTarget as unknown as HTMLElement).closest(
+                                    '[data-tab-main="true"]'
+                                  )
+                                  if (!tab) return
+                                  const rect = (
+                                    e.currentTarget as unknown as HTMLElement
+                                  ).getBoundingClientRect()
+                                  tab.dispatchEvent(
+                                    new MouseEvent('contextmenu', {
+                                      bubbles: true,
+                                      cancelable: true,
+                                      view: window,
+                                      clientX: rect.left,
+                                      clientY: rect.bottom
+                                    })
+                                  )
+                                }}
+                              />
+                            </div>
+                          }
+                          rightContent={
+                            <Tooltip
+                              open={!isMainTabActive && !task.is_temporary ? undefined : false}
+                            >
+                              <TooltipTrigger asChild>
+                                <div
+                                  className={cn(
+                                    'flex items-center gap-2 transition-opacity',
+                                    !isMainTabActive &&
+                                      !task.is_temporary &&
+                                      'opacity-40 pointer-events-none'
+                                  )}
+                                >
+                                  {loopModeAvailable && task.terminal_mode !== 'terminal' && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <IconButton
+                                          variant={loopConfigured ? 'default' : 'ghost'}
+                                          className="size-7"
+                                          aria-label="Loop command"
+                                          onClick={() => {
+                                            if (isLoopActive(loopStatus)) stopLoop()
+                                            if (loopConfigured) {
+                                              handleLoopConfigChange(null)
+                                            } else {
+                                              setLoopDialogOpen(true)
+                                            }
+                                          }}
+                                        >
+                                          <Repeat className="size-3.5" />
+                                        </IconButton>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="bottom">Loop command</TooltipContent>
+                                    </Tooltip>
+                                  )}
 
-        {/* Browser Panel */}
-        {!compact && panelVisibility.browser && (
-          <div data-panel-id="browser" className={cn("shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden transition-shadow duration-200", multipleVisiblePanels && focusedPanel === 'browser' && "shadow-[0_0_18px_rgba(255,255,255,0.25)]")} style={{ width: resolvedWidths.browser, ...panelOrderStyle('browser') }}>
-            {ownership.hasOtherOwner('browser') ? (
-              <PanelOwnerStub
-                panelLabel="Browser"
-                icon={Globe}
-                activeElsewhere
-                onActivate={() => ownership.claim('browser')}
-                onActivateAndClose={() => ownership.claimAndCloseOther('browser')}
-              />
-            ) : (
-              <BrowserPanel
-                ref={browserPanelRef}
-                className="h-full"
-                tabs={browserTabs}
-                onTabsChange={handleBrowserTabsChange}
-                onRequestHide={() => handlePanelToggle('browser', false)}
-                taskId={task.id}
-                projectId={task.project_id}
-                isResizing={isResizing}
-                isActive={isActive}
-                onElementSnippet={handleInsertElementSnippet}
-                onScreenshot={handleScreenshot}
-                canUseDomPicker={panelVisibility.terminal}
+                                  {task.terminal_mode !== 'terminal' && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <IconButton
+                                          data-testid="agent-power-off"
+                                          variant="ghost"
+                                          className="size-7"
+                                          aria-label="Shut down agent"
+                                          onClick={() => void handleStopAgent()}
+                                        >
+                                          <Power className="size-3.5" />
+                                        </IconButton>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="bottom">Shut down agent</TooltipContent>
+                                    </Tooltip>
+                                  )}
+
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <IconButton
+                                        data-testid="terminal-menu-trigger"
+                                        variant="ghost"
+                                        aria-label="Terminal menu"
+                                        className="size-7"
+                                      >
+                                        <MoreHorizontal className="size-3.5" />
+                                      </IconButton>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-60">
+                                      <DropdownMenuItem onClick={handleInjectTitle}>
+                                        Inject title
+                                        <span className="ml-auto text-xs text-muted-foreground">
+                                          {terminalInjectTitleShortcut}
+                                        </span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => void handleInjectDescription()}
+                                      >
+                                        Inject description
+                                        <span className="ml-auto text-xs text-muted-foreground">
+                                          {terminalInjectDescShortcut}
+                                        </span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={handleCopyHistory}>
+                                        Copy history
+                                      </DropdownMenuItem>
+                                      {task.terminal_mode !== 'terminal' && (
+                                        <DropdownMenuItem
+                                          disabled={!getConversationIdForMode(task)}
+                                          onClick={handleCopyConversationId}
+                                        >
+                                          Copy conversation ID
+                                        </DropdownMenuItem>
+                                      )}
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={handleReattachTerminal}>
+                                        Re-attach terminal
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={handleRestartTerminal}>
+                                        Restart terminal
+                                        <span className="ml-auto pl-4 text-xs text-muted-foreground">
+                                          {terminalRestartShortcut}
+                                        </span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={handleResetTerminal}>
+                                        Reset terminal
+                                      </DropdownMenuItem>
+                                      {task.terminal_mode !== 'terminal' && (
+                                        <>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem onClick={() => void handleDoctor()}>
+                                            Doctor
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                  <Dialog
+                                    open={flagsPopoverOpen}
+                                    onOpenChange={setFlagsPopoverOpen}
+                                  >
+                                    <DialogContent className="max-w-md">
+                                      <DialogHeader>
+                                        <DialogTitle>
+                                          {task.terminal_mode === 'ccs'
+                                            ? 'CCS profile'
+                                            : `CLI flags for ${task.terminal_mode}`}
+                                        </DialogTitle>
+                                      </DialogHeader>
+                                      {task.terminal_mode === 'ccs' ? (
+                                        <div className="space-y-2">
+                                          <Select
+                                            value={
+                                              getProviderFlags(task.provider_config, 'ccs') ||
+                                              '__none__'
+                                            }
+                                            onValueChange={async (val) => {
+                                              const profile = val === '__none__' ? '' : val
+                                              const updated = await window.api.db.updateTask({
+                                                id: task.id,
+                                                providerConfig: setProviderFlags(
+                                                  task.provider_config,
+                                                  'ccs',
+                                                  profile
+                                                )
+                                              })
+                                              if (updated) onTaskUpdated(updated)
+                                            }}
+                                          >
+                                            <SelectTrigger className="w-full">
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="__none__">Default</SelectItem>
+                                              {ccsProfiles.map((p) => (
+                                                <SelectItem key={p} value={p}>
+                                                  {p}
+                                                </SelectItem>
+                                              ))}
+                                              {(() => {
+                                                const currentProfile = getProviderFlags(
+                                                  task.provider_config,
+                                                  'ccs'
+                                                )
+                                                return currentProfile &&
+                                                  !ccsProfiles.includes(currentProfile) ? (
+                                                  <SelectItem value={currentProfile}>
+                                                    {currentProfile}
+                                                  </SelectItem>
+                                                ) : null
+                                              })()}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      ) : (
+                                        <div className="space-y-3">
+                                          <div className="text-xs text-muted-foreground">
+                                            Passed to the provider on startup (e.g. --no-cache).
+                                            Overrides defaults in settings.
+                                          </div>
+                                          <Input
+                                            autoFocus
+                                            value={flagsInputValue}
+                                            onChange={(e) => setFlagsInputValue(e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                e.preventDefault()
+                                                void handleFlagsSave(flagsInputValue)
+                                                setFlagsPopoverOpen(false)
+                                              } else if (e.key === 'Escape') {
+                                                e.preventDefault()
+                                                setFlagsInputValue(getProviderFlagsForMode(task))
+                                                setFlagsPopoverOpen(false)
+                                              }
+                                            }}
+                                            placeholder="Flags"
+                                          />
+                                          <div className="flex gap-2 justify-end">
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => {
+                                                void handleSetDefaultFlags()
+                                              }}
+                                              disabled={task.terminal_mode === 'terminal'}
+                                            >
+                                              Reset to default
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              onClick={() => {
+                                                void handleFlagsSave(flagsInputValue)
+                                                setFlagsPopoverOpen(false)
+                                              }}
+                                            >
+                                              Save
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </DialogContent>
+                                  </Dialog>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Switch to Main tab to use these controls
+                              </TooltipContent>
+                            </Tooltip>
+                          }
+                        />
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-muted-foreground">
+                          <div className="text-center p-8">
+                            <p className="mb-2">No repository path configured</p>
+                            <p className="text-sm">
+                              Set a repository path in project settings to use the terminal
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Non-terminal panels hidden in compact mode */}
+            {!compact && panelVisibility.browser && getFirstVisibleTaskPanelId() !== 'browser' && (
+              <ResizeHandle
+                width={resolvedWidths.browser ?? 200}
+                minWidth={200}
+                onWidthChange={(w) => updatePanelSizes({ browser: w })}
+                onDragStart={() => setIsResizing(true)}
+                onDragEnd={() => setIsResizing(false)}
+                onReset={resetAllPanels}
+                style={panelOrderStyle('browser')}
               />
             )}
-          </div>
-        )}
 
-        {/* Resize handle before Editor */}
-        {!compact && panelVisibility.editor && getFirstVisibleTaskPanelId() !== 'editor' && (
-          <ResizeHandle
-            width={resolvedWidths.editor ?? 250}
-            minWidth={250}
-            onWidthChange={(w) => updatePanelSizes({ editor: w })}
-            onDragStart={() => setIsResizing(true)}
-            onDragEnd={() => setIsResizing(false)}
-            onReset={resetAllPanels}
-            style={panelOrderStyle('editor')}
-          />
-        )}
-
-        {/* File Editor Panel */}
-        {!compact && panelVisibility.editor && (
-          <div data-panel-id="editor" className={cn("shrink-0 overflow-hidden rounded-md bg-surface-1 border border-border transition-shadow duration-200", multipleVisiblePanels && focusedPanel === 'editor' && "shadow-[0_0_18px_rgba(255,255,255,0.25)]")} style={{ width: resolvedWidths.editor, ...panelOrderStyle('editor') }}>
-            {ownership.hasOtherOwner('editor') ? (
-              <PanelOwnerStub
-                panelLabel="Editor"
-                icon={FileCode}
-                activeElsewhere
-                onActivate={() => ownership.claim('editor')}
-                onActivateAndClose={() => ownership.claimAndCloseOther('editor')}
-              />
-            ) : effectiveRepoPath ? (
-              <FileEditorView
-                ref={fileEditorRefCallback}
-                projectPath={effectiveRepoPath}
-                initialEditorState={task.editor_open_files}
-                onEditorStateChange={handleEditorStateChange}
-              />
-            ) : null}
-          </div>
-        )}
-
-        {/* Resize handle before Artifacts */}
-        {!compact && panelVisibility.artifacts && getFirstVisibleTaskPanelId() !== 'artifacts' && (
-          <ResizeHandle
-            width={resolvedWidths.artifacts ?? 300}
-            minWidth={200}
-            onWidthChange={(w) => updatePanelSizes({ artifacts: w })}
-            onDragStart={() => setIsResizing(true)}
-            onDragEnd={() => setIsResizing(false)}
-            onReset={resetAllPanels}
-            style={panelOrderStyle('artifacts')}
-          />
-        )}
-
-        {/* Artifacts Panel */}
-        {!compact && panelVisibility.artifacts && (
-          <div data-panel-id="artifacts" className={cn("shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden flex flex-col transition-shadow duration-200", multipleVisiblePanels && focusedPanel === 'artifacts' && "shadow-[0_0_18px_rgba(255,255,255,0.25)]")} style={{ width: resolvedWidths.artifacts, ...panelOrderStyle('artifacts') }}>
-            {ownership.hasOtherOwner('artifacts') ? (
-              <PanelOwnerStub
-                panelLabel="Artifacts"
-                icon={Paperclip}
-                activeElsewhere
-                onActivate={() => ownership.claim('artifacts')}
-                onActivateAndClose={() => ownership.claimAndCloseOther('artifacts')}
-              />
-            ) : (
-              <ArtifactsPanel ref={artifactsPanelRef} taskId={task.id} isResizing={isResizing} initialActiveArtifactId={task.active_artifact_id} onActiveArtifactIdChange={handleActiveArtifactIdChange} />
+            {/* Browser Panel */}
+            {!compact && panelVisibility.browser && (
+              <div
+                data-panel-id="browser"
+                className={cn(
+                  'shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden transition-shadow duration-200',
+                  multipleVisiblePanels &&
+                    focusedPanel === 'browser' &&
+                    'shadow-[0_0_18px_rgba(255,255,255,0.25)]'
+                )}
+                style={{ width: resolvedWidths.browser, ...panelOrderStyle('browser') }}
+              >
+                {ownership.hasOtherOwner('browser') ? (
+                  <PanelOwnerStub
+                    panelLabel="Browser"
+                    icon={Globe}
+                    activeElsewhere
+                    onActivate={() => ownership.claim('browser')}
+                    onActivateAndClose={() => ownership.claimAndCloseOther('browser')}
+                  />
+                ) : (
+                  <BrowserPanel
+                    ref={browserPanelRef}
+                    className="h-full"
+                    tabs={browserTabs}
+                    onTabsChange={handleBrowserTabsChange}
+                    onRequestHide={() => handlePanelToggle('browser', false)}
+                    taskId={task.id}
+                    projectId={task.project_id}
+                    isResizing={isResizing}
+                    isActive={isActive}
+                    onElementSnippet={handleInsertElementSnippet}
+                    onScreenshot={handleScreenshot}
+                    canUseDomPicker={panelVisibility.terminal}
+                  />
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {/* Web Panels (custom + predefined) */}
-        {!compact && enabledWebPanels.map((wp) => {
-          if (!panelVisibility[wp.id]) return null
-          const hasLeftNeighbor = getFirstVisibleTaskPanelId() !== wp.id
-          return (
-            <div key={wp.id} className="contents">
-              {hasLeftNeighbor && (
+            {/* Resize handle before Editor */}
+            {!compact && panelVisibility.editor && getFirstVisibleTaskPanelId() !== 'editor' && (
+              <ResizeHandle
+                width={resolvedWidths.editor ?? 250}
+                minWidth={250}
+                onWidthChange={(w) => updatePanelSizes({ editor: w })}
+                onDragStart={() => setIsResizing(true)}
+                onDragEnd={() => setIsResizing(false)}
+                onReset={resetAllPanels}
+                style={panelOrderStyle('editor')}
+              />
+            )}
+
+            {/* File Editor Panel */}
+            {!compact && panelVisibility.editor && (
+              <div
+                data-panel-id="editor"
+                className={cn(
+                  'shrink-0 overflow-hidden rounded-md bg-surface-1 border border-border transition-shadow duration-200',
+                  multipleVisiblePanels &&
+                    focusedPanel === 'editor' &&
+                    'shadow-[0_0_18px_rgba(255,255,255,0.25)]'
+                )}
+                style={{ width: resolvedWidths.editor, ...panelOrderStyle('editor') }}
+              >
+                {ownership.hasOtherOwner('editor') ? (
+                  <PanelOwnerStub
+                    panelLabel="Editor"
+                    icon={FileCode}
+                    activeElsewhere
+                    onActivate={() => ownership.claim('editor')}
+                    onActivateAndClose={() => ownership.claimAndCloseOther('editor')}
+                  />
+                ) : effectiveRepoPath ? (
+                  <FileEditorView
+                    ref={fileEditorRefCallback}
+                    projectPath={effectiveRepoPath}
+                    initialEditorState={task.editor_open_files}
+                    onEditorStateChange={handleEditorStateChange}
+                  />
+                ) : null}
+              </div>
+            )}
+
+            {/* Resize handle before Artifacts */}
+            {!compact &&
+              panelVisibility.artifacts &&
+              getFirstVisibleTaskPanelId() !== 'artifacts' && (
                 <ResizeHandle
-                  width={resolvedWidths[wp.id] ?? 200}
+                  width={resolvedWidths.artifacts ?? 300}
                   minWidth={200}
-                  onWidthChange={(w) => updatePanelSizes({ [wp.id]: w })}
+                  onWidthChange={(w) => updatePanelSizes({ artifacts: w })}
                   onDragStart={() => setIsResizing(true)}
                   onDragEnd={() => setIsResizing(false)}
                   onReset={resetAllPanels}
-                  style={panelOrderStyle(wp.id)}
+                  style={panelOrderStyle('artifacts')}
                 />
               )}
-              <div data-panel-id={wp.id} className={cn("shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden transition-shadow duration-200", multipleVisiblePanels && focusedPanel === wp.id && "shadow-[0_0_18px_rgba(255,255,255,0.25)]")} style={{ width: resolvedWidths[wp.id], ...panelOrderStyle(wp.id) }}>
-                {ownership.hasOtherOwner(wp.id) ? (
-                  <PanelOwnerStub
-                    panelLabel={wp.name}
-                    icon={Globe}
-                    activeElsewhere
-                    onActivate={() => ownership.claim(wp.id)}
-                    onActivateAndClose={() => ownership.claimAndCloseOther(wp.id)}
-                  />
-                ) : (
-                  <WebPanelView
-                    taskId={task.id}
-                    panelId={wp.id}
-                    url={task.web_panel_urls?.[wp.id] || wp.baseUrl}
-                    baseUrl={wp.baseUrl}
-                    name={wp.name}
-                    blockDesktopHandoff={wp.blockDesktopHandoff === true}
-                    handoffProtocol={wp.handoffProtocol}
-                    handoffHostScope={wp.handoffHostScope}
-                    onUrlChange={handleWebPanelUrlChange}
-                    onFaviconChange={handleWebPanelFaviconChange}
-                    isResizing={isResizing}
-                    isActive={isActive}
-                  />
+
+            {/* Artifacts Panel */}
+            {!compact && panelVisibility.artifacts && (
+              <div
+                data-panel-id="artifacts"
+                className={cn(
+                  'shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden flex flex-col transition-shadow duration-200',
+                  multipleVisiblePanels &&
+                    focusedPanel === 'artifacts' &&
+                    'shadow-[0_0_18px_rgba(255,255,255,0.25)]'
                 )}
-              </div>
-            </div>
-          )
-        })}
-
-        {/* Resize handle before Diff */}
-        {!compact && panelVisibility.diff && getFirstVisibleTaskPanelId() !== 'diff' && (
-          <ResizeHandle
-            width={resolvedWidths.diff ?? 50}
-            minWidth={50}
-            onWidthChange={(w) => updatePanelSizes({ diff: w })}
-            onDragStart={() => setIsResizing(true)}
-            onDragEnd={() => setIsResizing(false)}
-            onReset={resetAllPanels}
-            style={panelOrderStyle('diff')}
-          />
-        )}
-
-        {/* Git Panel */}
-        {!compact && panelVisibility.diff && (
-          <div data-panel-id="diff" data-testid="task-git-panel" className={cn("shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden flex flex-col transition-shadow duration-200", multipleVisiblePanels && focusedPanel === 'diff' && "shadow-[0_0_18px_rgba(255,255,255,0.25)]")} style={{ width: resolvedWidths.diff, ...panelOrderStyle('diff') }}>
-            {ownership.hasOtherOwner('diff') ? (
-              <PanelOwnerStub
-                panelLabel="Git"
-                icon={GitBranch}
-                activeElsewhere
-                onActivate={() => ownership.claim('diff')}
-                onActivateAndClose={() => ownership.claimAndCloseOther('diff')}
-              />
-            ) : (
-              <UnifiedGitPanel
-                ref={gitPanelRef}
-                task={task}
-                projectId={task.project_id}
-                projectPath={resolvedGitViewPath}
-                completedStatus={completedStatus}
-                visible={panelVisibility.diff}
-                defaultTab={gitDefaultTab}
-                onTabChange={handleGitTabChange}
-                pollIntervalMs={5000}
-                onUpdateTask={updateTaskAndNotify}
-                onTaskUpdated={handleTaskUpdate}
-                detectedRepos={viewableRepos.map(r => ({ name: r.name, path: r.path, kind: r.kind }))}
-                selectedRepoName={viewableRepos.find(r => r.path === resolvedGitViewPath)?.name ?? null}
-                isRepoStale={false}
-                onRepoChange={handleRepoChange}
-              />
-            )}
-          </div>
-        )}
-
-        {/* Resize handle before Settings */}
-        {!compact && panelVisibility.settings && getFirstVisibleTaskPanelId() !== 'settings' && (
-          <ResizeHandle
-            width={resolvedWidths.settings ?? 440}
-            minWidth={200}
-            onWidthChange={(w) => updatePanelSizes({ settings: w })}
-            onDragStart={() => setIsResizing(true)}
-            onDragEnd={() => setIsResizing(false)}
-            onReset={resetAllPanels}
-            style={panelOrderStyle('settings')}
-          />
-        )}
-
-        {/* Settings Panel */}
-        {!compact && panelVisibility.settings && (
-        <div data-panel-id="settings" data-testid="task-settings-panel" className={cn("shrink-0 rounded-md bg-surface-1 border border-border p-3 flex flex-col gap-4 overflow-y-auto transition-shadow duration-200", multipleVisiblePanels && focusedPanel === 'settings' && "shadow-[0_0_18px_rgba(255,255,255,0.25)]")} style={{ width: resolvedWidths.settings, ...panelOrderStyle('settings') }}>
-          {ownership.hasOtherOwner('settings') ? (
-            <PanelOwnerStub
-              panelLabel="Settings"
-              icon={Settings2}
-              activeElsewhere
-              onActivate={() => ownership.claim('settings')}
-              onActivateAndClose={() => ownership.claimAndCloseOther('settings')}
-            />
-          ) : (
-          <TaskSettingsPanel
-            taskId={task.id}
-            renderDefaultContent={() => {
-              // Open cards: content-sized up to fair share of available space.
-              // Closed cards: header only (auto).
-              // Units in rem so values track Tailwind scale directly:
-              //   gap-4 = 1rem, min-h-8 (card header) = 2rem.
-              // Share = (container − closed×header − total-gap) / openCount
-              const openCount = [descriptionOpen, subTasksOpen, artifactsOpen].filter(Boolean).length
-              const closedCount = 3 - openCount
-              const share = openCount > 0
-                ? `calc((100% - ${closedCount * 2}rem - 2rem) / ${openCount})`
-                : '100%'
-              const rowFor = (open: boolean): string => open ? `fit-content(${share})` : 'auto'
-              const cardRows = [
-                rowFor(descriptionOpen),
-                rowFor(subTasksOpen),
-                rowFor(artifactsOpen),
-              ].join(' ')
-              return (
-              <>
-
-          {/* External sync links */}
-          <ExternalSyncCard taskId={task.id} onUpdate={handleTaskUpdate} />
-
-          {/* Cards grid: open cards share remaining space (1fr), closed cards collapse to header (auto) */}
-          <div data-testid="settings-cards-grid" className="flex-1 min-h-0 grid gap-4 content-start" style={{ gridTemplateRows: cardRows }}>
-
-          {/* Description */}
-          <Collapsible data-testid="settings-description-card" open={descriptionOpen} onOpenChange={setDescriptionOpen} className="flex flex-col rounded-md border border-border overflow-hidden min-h-0">
-            <div className={cn("flex w-full items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 text-xs font-medium text-muted-foreground", descriptionOpen && "border-b border-border")}>
-              <CollapsibleTrigger className="flex items-center gap-1.5 hover:text-foreground transition-colors [&[data-state=open]>svg:first-child]:rotate-90">
-                <ChevronRight className="size-3 transition-transform" />
-                Description
-              </CollapsibleTrigger>
-              <div className="ml-auto flex items-center gap-0.5">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <IconButton type="button" variant="ghost" aria-label={descriptionExpanded ? "Default height" : "Full height"} className={cn("size-5 hover:text-foreground", descriptionExpanded ? "text-foreground bg-muted" : "text-muted-foreground")} onClick={() => setDescriptionExpanded((v) => { if (!v) { setDetailsOpen(false); setSubTasksOpen(false); setArtifactsOpen(false) } else { setDetailsOpen(true); setSubTasksOpen(true); setArtifactsOpen(true) } return !v })}>
-                      <IconArrowsVertical size={12} />
-                    </IconButton>
-                  </TooltipTrigger>
-                  <TooltipContent>{descriptionExpanded ? "Default height" : "Full height"}</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <IconButton type="button" variant="ghost" aria-label="Fullscreen" className="size-5 text-muted-foreground hover:text-foreground" onClick={() => setDescriptionFullscreen(true)}>
-                      <IconArrowsMaximize size={12} />
-                    </IconButton>
-                  </TooltipTrigger>
-                  <TooltipContent>Fullscreen</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-            {descriptionOpen && (
-              <div className="flex flex-col min-h-0 flex-1">
-                <RichTextEditor
-                  value={descriptionValue}
-                  onChange={(md) => { descriptionDirty.current = true; setDescriptionValue(md) }}
-                  onBlur={handleDescriptionSave}
-                  placeholder="Add description..."
-                  testId="task-description-editor"
-                  variant="inline"
-                  fontFamily={notesFontFamily}
-                  checkedHighlight={notesCheckedHighlight}
-                  showToolbar={notesShowToolbar}
-                  spellcheck={notesSpellcheck}
-                  themeColors={notesThemeColors}
-                  artifacts={artifacts.map(a => ({ id: a.id, title: a.title, type: RENDER_MODE_INFO[getEffectiveRenderMode(a.title, a.render_mode)].label }))}
-                  onArtifactClick={(artifactId) => {
-                    if (!panelVisibility.artifacts) handlePanelToggle('artifacts', true)
-                    artifactsPanelRef.current?.selectArtifact(artifactId)
-                  }}
-                  onUploadImages={handleUploadImages}
-                />
-              </div>
-            )}
-          </Collapsible>
-
-          {/* Sub-tasks */}
-          <Collapsible data-testid="settings-subtasks-card" open={subTasksOpen} onOpenChange={setSubTasksOpen} className="group/sub rounded-md border border-border overflow-hidden flex flex-col min-h-0">
-            <div className="shrink-0 flex w-full items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 min-h-8 text-xs font-medium text-muted-foreground group-data-[state=open]/sub:border-b border-border">
-              <CollapsibleTrigger className="flex items-center gap-1.5 hover:text-foreground transition-colors [&[data-state=open]>svg:first-child]:rotate-90">
-                <ChevronRight className="size-3 transition-transform" />
-                Sub-tasks
-              </CollapsibleTrigger>
-              {subTasks.length > 0 && (
-                <span className="ml-auto text-muted-foreground/60 text-[10px]">
-                  {subTasks.filter((s) => isTerminalStatus(s.status, project?.columns_config ?? null)).length}/{subTasks.length}
-                </span>
-              )}
-            </div>
-            <CollapsibleContent className="p-2 flex flex-col flex-1 min-h-0">
-              <DndContext sensors={subTaskSensors} collisionDetection={closestCenter} onDragEnd={handleSubTaskDragEnd}>
-              <SortableContext items={subTasks.map(s => s.id)} strategy={verticalListSortingStrategy}>
-              <div className="flex flex-col gap-0.5 flex-1 min-h-0 overflow-y-auto overscroll-contain">
-                {subTasks.map(sub => (
-                  <SortableSubTask
-                    key={sub.id}
-                    sub={sub}
-                    columns={project?.columns_config}
-                    statusOptions={statusOptions}
-                    onNavigate={onNavigateToTask}
-                    onUpdate={handleUpdateSubTask}
-                    onDelete={handleDeleteSubTask}
-                  />
-                ))}
-                {addingSubTask ? (
-                  <div className="flex items-center gap-2 py-1 px-1">
-                    <Input
-                      ref={subTaskInputRef}
-                      value={subTaskTitle}
-                      onChange={(e) => setSubTaskTitle(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') { e.preventDefault(); handleCreateSubTask() }
-                        if (e.key === 'Escape') { setAddingSubTask(false); setSubTaskTitle('') }
-                      }}
-                      placeholder="Sub-task title..."
-                      className="h-6 text-xs"
-                      autoFocus
-                    />
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setAddingSubTask(true)}
-                    className="flex items-center gap-1.5 py-1 px-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 mt-1"
-                  >
-                    <Plus className="size-3" />
-                    Add subtask
-                  </button>
-                )}
-              </div>
-              </SortableContext>
-              </DndContext>
-            </CollapsibleContent>
-          </Collapsible>
-
-          {/* Artifacts */}
-          <Collapsible data-testid="settings-artifacts-card" open={artifactsOpen} onOpenChange={setArtifactsOpen} className="group/artifacts rounded-md border border-border overflow-hidden flex flex-col min-h-0">
-            <div className="flex w-full items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 min-h-8 text-xs font-medium text-muted-foreground group-data-[state=open]/artifacts:border-b border-border">
-              <CollapsibleTrigger className="flex items-center gap-1.5 hover:text-foreground transition-colors [&[data-state=open]>svg:first-child]:rotate-90">
-                <ChevronRight className="size-3 transition-transform" />
-                Artifacts
-              </CollapsibleTrigger>
-              {artifacts.length > 0 && (
-                <span className="ml-auto text-muted-foreground/60 text-[10px]">{artifacts.length}</span>
-              )}
-            </div>
-            <CollapsibleContent className="p-2 flex flex-col flex-1 min-h-0">
-              <div className="flex flex-col gap-0.5 flex-1 min-h-0 overflow-y-auto overscroll-contain">
-                {artifacts.map(artifact => (
-                  <button
-                    key={artifact.id}
-                    type="button"
-                    className="flex items-center gap-2 py-1 px-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 text-left"
-                    onClick={() => {
-                      if (!panelVisibility.artifacts) handlePanelToggle('artifacts', true)
-                      artifactsPanelRef.current?.selectArtifact(artifact.id)
-                    }}
-                  >
-                    <Paperclip className="size-3 shrink-0" />
-                    <span className="truncate">{artifact.title}</span>
-                    <span className="ml-auto text-[10px] opacity-60">{getExtensionFromTitle(artifact.title) || 'file'}</span>
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!panelVisibility.artifacts) handlePanelToggle('artifacts', true)
-                    artifactsPanelRef.current?.createArtifact()
-                  }}
-                  className="flex items-center gap-1.5 py-1 px-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 mt-1"
-                >
-                  <Plus className="size-3" />
-                  Add artifact
-                </button>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          </div>
-
-          {/* Details */}
-          <Collapsible open={descriptionExpanded && descriptionOpen ? detailsOpen : true} onOpenChange={setDetailsOpen} className="shrink-0 mt-auto">
-            {descriptionExpanded && descriptionOpen && (
-              <CollapsibleTrigger className="flex w-full items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2.5 py-1.5 min-h-8 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors [&[data-state=open]>svg:first-child]:rotate-90">
-                <ChevronRight className="size-3 transition-transform" />
-                Details
-              </CollapsibleTrigger>
-            )}
-            <CollapsibleContent className={descriptionExpanded && descriptionOpen ? "pt-4" : ""}>
-              <TaskMetadataSidebar
-                task={task}
-                tags={tags}
-                taskTagIds={taskTagIds}
-                onUpdate={handleTaskUpdate}
-                onTagsChange={handleTagsChange}
-                onTagCreated={(tag) => setTags((prev) => [...prev, tag])}
-              />
-
-          <div className="flex flex-col gap-3 mt-5">
-
-          {/* Working directory */}
-          <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-              Working directory
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="size-3 text-muted-foreground/60 cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-72 text-xs">
-                  <p>Override the project directory for this task.</p>
-                  <p className="mt-1.5">Priority (highest first):</p>
-                  <ol className="mt-0.5 list-decimal list-inside">
-                    <li>Worktree</li>
-                    <li>Custom directory</li>
-                    <li>Project path</li>
-                  </ol>
-                </TooltipContent>
-              </Tooltip>
-            </span>
-            <div className="flex items-center gap-1">
-              <div className="flex-1 min-w-0 text-xs text-muted-foreground truncate px-2 py-1.5 rounded border border-border bg-muted/30" title={effectiveRepoPath ?? 'No directory set'}>
-                {effectiveRepoPath ?? 'No directory set'}
-                {task.worktree_path && <span className="ml-1 text-[10px] opacity-60">(worktree)</span>}
-                {!task.worktree_path && task.base_dir && <span className="ml-1 text-[10px] opacity-60">(custom)</span>}
-              </div>
-              <button
-                className="shrink-0 h-7 w-7 flex items-center justify-center rounded hover:bg-muted"
-                title="Change working directory"
-                onClick={async () => {
-                  const result = await window.api.dialog.showOpenDialog({
-                    title: 'Select Working Directory',
-                    defaultPath: task.base_dir ?? effectiveRepoPath ?? undefined,
-                    properties: ['openDirectory']
-                  })
-                  if (result.canceled || !result.filePaths[0]) return
-                  await updateTaskAndNotify({ id: task.id, baseDir: result.filePaths[0] })
-                }}
+                style={{ width: resolvedWidths.artifacts, ...panelOrderStyle('artifacts') }}
               >
-                <FileCode className="size-3.5 text-muted-foreground" />
-              </button>
-              {task.base_dir && (
-                <button
-                  className="shrink-0 h-7 w-7 flex items-center justify-center rounded hover:bg-muted"
-                  title="Clear custom directory"
-                  onClick={() => { void updateTaskAndNotify({ id: task.id, baseDir: null }) }}
-                >
-                  <X className="size-3.5 text-muted-foreground" />
-                </button>
-              )}
-            </div>
-            {task.worktree_path && (
-              <Button variant="outline" size="sm" className="text-xs w-full justify-start" onClick={() => { void updateTaskAndNotify({ id: task.id, worktreePath: null, worktreeParentBranch: null }) }}>
-                <GitBranch className="mr-1.5 size-3" />
-                Detach worktree
-              </Button>
+                {ownership.hasOtherOwner('artifacts') ? (
+                  <PanelOwnerStub
+                    panelLabel="Artifacts"
+                    icon={Paperclip}
+                    activeElsewhere
+                    onActivate={() => ownership.claim('artifacts')}
+                    onActivateAndClose={() => ownership.claimAndCloseOther('artifacts')}
+                  />
+                ) : (
+                  <ArtifactsPanel
+                    ref={artifactsPanelRef}
+                    taskId={task.id}
+                    isResizing={isResizing}
+                    initialActiveArtifactId={task.active_artifact_id}
+                    onActiveArtifactIdChange={handleActiveArtifactIdChange}
+                  />
+                )}
+              </div>
             )}
-            {task.worktree_path && task.base_dir && (
-              <span className="text-[10px] text-amber-400/80">Worktree active — custom dir overridden</span>
-            )}
-          </div>
 
-          {/* Danger zone */}
-          <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Danger zone</span>
-            <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={isArchived ? handleUnarchive : () => setArchiveDialogOpen(true)}>
-              <Archive className="mr-1.5 size-3" />
-              {isArchived ? 'Unarchive' : 'Archive'}
-            </Button>
-            <Button variant="outline" size="sm" className="flex-1 text-xs text-destructive hover:text-destructive" onClick={() => setDeleteDialogOpen(true)}>
-              <Trash2 className="mr-1.5 size-3" />
-              Delete
-            </Button>
-            </div>
-          </div>
+            {/* Web Panels (custom + predefined) */}
+            {!compact &&
+              enabledWebPanels.map((wp) => {
+                if (!panelVisibility[wp.id]) return null
+                const hasLeftNeighbor = getFirstVisibleTaskPanelId() !== wp.id
+                return (
+                  <div key={wp.id} className="contents">
+                    {hasLeftNeighbor && (
+                      <ResizeHandle
+                        width={resolvedWidths[wp.id] ?? 200}
+                        minWidth={200}
+                        onWidthChange={(w) => updatePanelSizes({ [wp.id]: w })}
+                        onDragStart={() => setIsResizing(true)}
+                        onDragEnd={() => setIsResizing(false)}
+                        onReset={resetAllPanels}
+                        style={panelOrderStyle(wp.id)}
+                      />
+                    )}
+                    <div
+                      data-panel-id={wp.id}
+                      className={cn(
+                        'shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden transition-shadow duration-200',
+                        multipleVisiblePanels &&
+                          focusedPanel === wp.id &&
+                          'shadow-[0_0_18px_rgba(255,255,255,0.25)]'
+                      )}
+                      style={{ width: resolvedWidths[wp.id], ...panelOrderStyle(wp.id) }}
+                    >
+                      {ownership.hasOtherOwner(wp.id) ? (
+                        <PanelOwnerStub
+                          panelLabel={wp.name}
+                          icon={Globe}
+                          activeElsewhere
+                          onActivate={() => ownership.claim(wp.id)}
+                          onActivateAndClose={() => ownership.claimAndCloseOther(wp.id)}
+                        />
+                      ) : (
+                        <WebPanelView
+                          taskId={task.id}
+                          panelId={wp.id}
+                          url={task.web_panel_urls?.[wp.id] || wp.baseUrl}
+                          baseUrl={wp.baseUrl}
+                          name={wp.name}
+                          blockDesktopHandoff={wp.blockDesktopHandoff === true}
+                          handoffProtocol={wp.handoffProtocol}
+                          handoffHostScope={wp.handoffHostScope}
+                          onUrlChange={handleWebPanelUrlChange}
+                          onFaviconChange={handleWebPanelFaviconChange}
+                          isResizing={isResizing}
+                          isActive={isActive}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
 
-          </div>
-            </CollapsibleContent>
-          </Collapsible>
-              </>
-              )
-            }}
-          />
-          )}
-
-        </div>
-        )}
-
-        {/* Resize handle before Processes */}
-        {!compact && panelVisibility.processes && getFirstVisibleTaskPanelId() !== 'processes' && (
-          <ResizeHandle
-            width={resolvedWidths.processes ?? 300}
-            minWidth={200}
-            onWidthChange={(w) => updatePanelSizes({ processes: w })}
-            onDragStart={() => setIsResizing(true)}
-            onDragEnd={() => setIsResizing(false)}
-            onReset={resetAllPanels}
-            style={panelOrderStyle('processes')}
-          />
-        )}
-
-        {/* Processes Panel */}
-        {!compact && panelVisibility.processes && (
-          <div data-panel-id="processes" className={cn("shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden flex flex-col transition-shadow duration-200", multipleVisiblePanels && focusedPanel === 'processes' && "shadow-[0_0_18px_rgba(255,255,255,0.25)]")} style={{ width: resolvedWidths.processes, ...panelOrderStyle('processes') }}>
-            {ownership.hasOtherOwner('processes') ? (
-              <PanelOwnerStub
-                panelLabel="Processes"
-                icon={Cpu}
-                activeElsewhere
-                onActivate={() => ownership.claim('processes')}
-                onActivateAndClose={() => ownership.claimAndCloseOther('processes')}
+            {/* Resize handle before Diff */}
+            {!compact && panelVisibility.diff && getFirstVisibleTaskPanelId() !== 'diff' && (
+              <ResizeHandle
+                width={resolvedWidths.diff ?? 50}
+                minWidth={50}
+                onWidthChange={(w) => updatePanelSizes({ diff: w })}
+                onDragStart={() => setIsResizing(true)}
+                onDragEnd={() => setIsResizing(false)}
+                onReset={resetAllPanels}
+                style={panelOrderStyle('diff')}
               />
-            ) : (
-              <ProcessesPanel taskId={task.id} projectId={project?.id ?? null} cwd={effectiveRepoPath || project?.path} terminalSessionId={getMainSessionId(task.id)} onOpenUrl={openDevServerInBrowser} />
             )}
-          </div>
+
+            {/* Git Panel */}
+            {!compact && panelVisibility.diff && (
+              <div
+                data-panel-id="diff"
+                data-testid="task-git-panel"
+                className={cn(
+                  'shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden flex flex-col transition-shadow duration-200',
+                  multipleVisiblePanels &&
+                    focusedPanel === 'diff' &&
+                    'shadow-[0_0_18px_rgba(255,255,255,0.25)]'
+                )}
+                style={{ width: resolvedWidths.diff, ...panelOrderStyle('diff') }}
+              >
+                {ownership.hasOtherOwner('diff') ? (
+                  <PanelOwnerStub
+                    panelLabel="Git"
+                    icon={GitBranch}
+                    activeElsewhere
+                    onActivate={() => ownership.claim('diff')}
+                    onActivateAndClose={() => ownership.claimAndCloseOther('diff')}
+                  />
+                ) : (
+                  <UnifiedGitPanel
+                    ref={gitPanelRef}
+                    task={task}
+                    projectId={task.project_id}
+                    projectPath={resolvedGitViewPath}
+                    completedStatus={completedStatus}
+                    visible={panelVisibility.diff}
+                    defaultTab={gitDefaultTab}
+                    onTabChange={handleGitTabChange}
+                    pollIntervalMs={5000}
+                    onUpdateTask={updateTaskAndNotify}
+                    onTaskUpdated={handleTaskUpdate}
+                    detectedRepos={viewableRepos.map((r) => ({
+                      name: r.name,
+                      path: r.path,
+                      kind: r.kind
+                    }))}
+                    selectedRepoName={
+                      viewableRepos.find((r) => r.path === resolvedGitViewPath)?.name ?? null
+                    }
+                    isRepoStale={false}
+                    onRepoChange={handleRepoChange}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Resize handle before Settings */}
+            {!compact &&
+              panelVisibility.settings &&
+              getFirstVisibleTaskPanelId() !== 'settings' && (
+                <ResizeHandle
+                  width={resolvedWidths.settings ?? 440}
+                  minWidth={200}
+                  onWidthChange={(w) => updatePanelSizes({ settings: w })}
+                  onDragStart={() => setIsResizing(true)}
+                  onDragEnd={() => setIsResizing(false)}
+                  onReset={resetAllPanels}
+                  style={panelOrderStyle('settings')}
+                />
+              )}
+
+            {/* Settings Panel */}
+            {!compact && panelVisibility.settings && (
+              <div
+                data-panel-id="settings"
+                data-testid="task-settings-panel"
+                className={cn(
+                  'shrink-0 rounded-md bg-surface-1 border border-border p-3 flex flex-col gap-4 overflow-y-auto transition-shadow duration-200',
+                  multipleVisiblePanels &&
+                    focusedPanel === 'settings' &&
+                    'shadow-[0_0_18px_rgba(255,255,255,0.25)]'
+                )}
+                style={{ width: resolvedWidths.settings, ...panelOrderStyle('settings') }}
+              >
+                {ownership.hasOtherOwner('settings') ? (
+                  <PanelOwnerStub
+                    panelLabel="Settings"
+                    icon={Settings2}
+                    activeElsewhere
+                    onActivate={() => ownership.claim('settings')}
+                    onActivateAndClose={() => ownership.claimAndCloseOther('settings')}
+                  />
+                ) : (
+                  <TaskSettingsPanel
+                    taskId={task.id}
+                    renderDefaultContent={() => {
+                      // Open cards: content-sized up to fair share of available space.
+                      // Closed cards: header only (auto).
+                      // Units in rem so values track Tailwind scale directly:
+                      //   gap-4 = 1rem, min-h-8 (card header) = 2rem.
+                      // Share = (container − closed×header − total-gap) / openCount
+                      const openCount = [descriptionOpen, subTasksOpen, artifactsOpen].filter(
+                        Boolean
+                      ).length
+                      const closedCount = 3 - openCount
+                      const share =
+                        openCount > 0
+                          ? `calc((100% - ${closedCount * 2}rem - 2rem) / ${openCount})`
+                          : '100%'
+                      const rowFor = (open: boolean): string =>
+                        open ? `fit-content(${share})` : 'auto'
+                      const cardRows = [
+                        rowFor(descriptionOpen),
+                        rowFor(subTasksOpen),
+                        rowFor(artifactsOpen)
+                      ].join(' ')
+                      return (
+                        <>
+                          {/* External sync links */}
+                          <ExternalSyncCard taskId={task.id} onUpdate={handleTaskUpdate} />
+
+                          {/* Cards grid: open cards share remaining space (1fr), closed cards collapse to header (auto) */}
+                          <div
+                            data-testid="settings-cards-grid"
+                            className="flex-1 min-h-0 grid gap-4 content-start"
+                            style={{ gridTemplateRows: cardRows }}
+                          >
+                            {/* Description */}
+                            <Collapsible
+                              data-testid="settings-description-card"
+                              open={descriptionOpen}
+                              onOpenChange={setDescriptionOpen}
+                              className="flex flex-col rounded-md border border-border overflow-hidden min-h-0"
+                            >
+                              <div
+                                className={cn(
+                                  'flex w-full items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 text-xs font-medium text-muted-foreground',
+                                  descriptionOpen && 'border-b border-border'
+                                )}
+                              >
+                                <CollapsibleTrigger className="flex items-center gap-1.5 hover:text-foreground transition-colors [&[data-state=open]>svg:first-child]:rotate-90">
+                                  <ChevronRight className="size-3 transition-transform" />
+                                  Description
+                                </CollapsibleTrigger>
+                                <div className="ml-auto flex items-center gap-0.5">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <IconButton
+                                        type="button"
+                                        variant="ghost"
+                                        aria-label={
+                                          descriptionExpanded ? 'Default height' : 'Full height'
+                                        }
+                                        className={cn(
+                                          'size-5 hover:text-foreground',
+                                          descriptionExpanded
+                                            ? 'text-foreground bg-muted'
+                                            : 'text-muted-foreground'
+                                        )}
+                                        onClick={() =>
+                                          setDescriptionExpanded((v) => {
+                                            if (!v) {
+                                              setDetailsOpen(false)
+                                              setSubTasksOpen(false)
+                                              setArtifactsOpen(false)
+                                            } else {
+                                              setDetailsOpen(true)
+                                              setSubTasksOpen(true)
+                                              setArtifactsOpen(true)
+                                            }
+                                            return !v
+                                          })
+                                        }
+                                      >
+                                        <IconArrowsVertical size={12} />
+                                      </IconButton>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      {descriptionExpanded ? 'Default height' : 'Full height'}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <IconButton
+                                        type="button"
+                                        variant="ghost"
+                                        aria-label="Fullscreen"
+                                        className="size-5 text-muted-foreground hover:text-foreground"
+                                        onClick={() => setDescriptionFullscreen(true)}
+                                      >
+                                        <IconArrowsMaximize size={12} />
+                                      </IconButton>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Fullscreen</TooltipContent>
+                                  </Tooltip>
+                                </div>
+                              </div>
+                              {descriptionOpen && (
+                                <div className="flex flex-col min-h-0 flex-1">
+                                  <RichTextEditor
+                                    value={descriptionValue}
+                                    onChange={(md) => {
+                                      descriptionDirty.current = true
+                                      setDescriptionValue(md)
+                                    }}
+                                    onBlur={handleDescriptionSave}
+                                    placeholder="Add description..."
+                                    testId="task-description-editor"
+                                    variant="inline"
+                                    fontFamily={notesFontFamily}
+                                    checkedHighlight={notesCheckedHighlight}
+                                    showToolbar={notesShowToolbar}
+                                    spellcheck={notesSpellcheck}
+                                    themeColors={notesThemeColors}
+                                    artifacts={artifacts.map((a) => ({
+                                      id: a.id,
+                                      title: a.title,
+                                      type: RENDER_MODE_INFO[
+                                        getEffectiveRenderMode(a.title, a.render_mode)
+                                      ].label
+                                    }))}
+                                    onArtifactClick={(artifactId) => {
+                                      if (!panelVisibility.artifacts)
+                                        handlePanelToggle('artifacts', true)
+                                      artifactsPanelRef.current?.selectArtifact(artifactId)
+                                    }}
+                                    onUploadImages={handleUploadImages}
+                                  />
+                                </div>
+                              )}
+                            </Collapsible>
+
+                            {/* Sub-tasks */}
+                            <Collapsible
+                              data-testid="settings-subtasks-card"
+                              open={subTasksOpen}
+                              onOpenChange={setSubTasksOpen}
+                              className="group/sub rounded-md border border-border overflow-hidden flex flex-col min-h-0"
+                            >
+                              <div className="shrink-0 flex w-full items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 min-h-8 text-xs font-medium text-muted-foreground group-data-[state=open]/sub:border-b border-border">
+                                <CollapsibleTrigger className="flex items-center gap-1.5 hover:text-foreground transition-colors [&[data-state=open]>svg:first-child]:rotate-90">
+                                  <ChevronRight className="size-3 transition-transform" />
+                                  Sub-tasks
+                                </CollapsibleTrigger>
+                                {subTasks.length > 0 && (
+                                  <span className="ml-auto text-muted-foreground/60 text-[10px]">
+                                    {
+                                      subTasks.filter((s) =>
+                                        isTerminalStatus(s.status, project?.columns_config ?? null)
+                                      ).length
+                                    }
+                                    /{subTasks.length}
+                                  </span>
+                                )}
+                              </div>
+                              <CollapsibleContent className="p-2 flex flex-col flex-1 min-h-0">
+                                <DndContext
+                                  sensors={subTaskSensors}
+                                  collisionDetection={closestCenter}
+                                  onDragEnd={handleSubTaskDragEnd}
+                                >
+                                  <SortableContext
+                                    items={subTasks.map((s) => s.id)}
+                                    strategy={verticalListSortingStrategy}
+                                  >
+                                    <div className="flex flex-col gap-0.5 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+                                      {subTasks.map((sub) => (
+                                        <SortableSubTask
+                                          key={sub.id}
+                                          sub={sub}
+                                          columns={project?.columns_config}
+                                          statusOptions={statusOptions}
+                                          onNavigate={onNavigateToTask}
+                                          onUpdate={handleUpdateSubTask}
+                                          onDelete={handleDeleteSubTask}
+                                        />
+                                      ))}
+                                      {addingSubTask ? (
+                                        <div className="flex items-center gap-2 py-1 px-1">
+                                          <Input
+                                            ref={subTaskInputRef}
+                                            value={subTaskTitle}
+                                            onChange={(e) => setSubTaskTitle(e.target.value)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') {
+                                                e.preventDefault()
+                                                handleCreateSubTask()
+                                              }
+                                              if (e.key === 'Escape') {
+                                                setAddingSubTask(false)
+                                                setSubTaskTitle('')
+                                              }
+                                            }}
+                                            placeholder="Sub-task title..."
+                                            className="h-6 text-xs"
+                                            autoFocus
+                                          />
+                                        </div>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          onClick={() => setAddingSubTask(true)}
+                                          className="flex items-center gap-1.5 py-1 px-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 mt-1"
+                                        >
+                                          <Plus className="size-3" />
+                                          Add subtask
+                                        </button>
+                                      )}
+                                    </div>
+                                  </SortableContext>
+                                </DndContext>
+                              </CollapsibleContent>
+                            </Collapsible>
+
+                            {/* Artifacts */}
+                            <Collapsible
+                              data-testid="settings-artifacts-card"
+                              open={artifactsOpen}
+                              onOpenChange={setArtifactsOpen}
+                              className="group/artifacts rounded-md border border-border overflow-hidden flex flex-col min-h-0"
+                            >
+                              <div className="flex w-full items-center gap-1.5 bg-muted/50 px-2.5 py-1.5 min-h-8 text-xs font-medium text-muted-foreground group-data-[state=open]/artifacts:border-b border-border">
+                                <CollapsibleTrigger className="flex items-center gap-1.5 hover:text-foreground transition-colors [&[data-state=open]>svg:first-child]:rotate-90">
+                                  <ChevronRight className="size-3 transition-transform" />
+                                  Artifacts
+                                </CollapsibleTrigger>
+                                {artifacts.length > 0 && (
+                                  <span className="ml-auto text-muted-foreground/60 text-[10px]">
+                                    {artifacts.length}
+                                  </span>
+                                )}
+                              </div>
+                              <CollapsibleContent className="p-2 flex flex-col flex-1 min-h-0">
+                                <div className="flex flex-col gap-0.5 flex-1 min-h-0 overflow-y-auto overscroll-contain">
+                                  {artifacts.map((artifact) => (
+                                    <button
+                                      key={artifact.id}
+                                      type="button"
+                                      className="flex items-center gap-2 py-1 px-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 text-left"
+                                      onClick={() => {
+                                        if (!panelVisibility.artifacts)
+                                          handlePanelToggle('artifacts', true)
+                                        artifactsPanelRef.current?.selectArtifact(artifact.id)
+                                      }}
+                                    >
+                                      <Paperclip className="size-3 shrink-0" />
+                                      <span className="truncate">{artifact.title}</span>
+                                      <span className="ml-auto text-[10px] opacity-60">
+                                        {getExtensionFromTitle(artifact.title) || 'file'}
+                                      </span>
+                                    </button>
+                                  ))}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (!panelVisibility.artifacts)
+                                        handlePanelToggle('artifacts', true)
+                                      artifactsPanelRef.current?.createArtifact()
+                                    }}
+                                    className="flex items-center gap-1.5 py-1 px-1 rounded text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 mt-1"
+                                  >
+                                    <Plus className="size-3" />
+                                    Add artifact
+                                  </button>
+                                </div>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          </div>
+
+                          {/* Details */}
+                          <Collapsible
+                            open={descriptionExpanded && descriptionOpen ? detailsOpen : true}
+                            onOpenChange={setDetailsOpen}
+                            className="shrink-0 mt-auto"
+                          >
+                            {descriptionExpanded && descriptionOpen && (
+                              <CollapsibleTrigger className="flex w-full items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2.5 py-1.5 min-h-8 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors [&[data-state=open]>svg:first-child]:rotate-90">
+                                <ChevronRight className="size-3 transition-transform" />
+                                Details
+                              </CollapsibleTrigger>
+                            )}
+                            <CollapsibleContent
+                              className={descriptionExpanded && descriptionOpen ? 'pt-4' : ''}
+                            >
+                              <TaskMetadataSidebar
+                                task={task}
+                                tags={tags}
+                                taskTagIds={taskTagIds}
+                                onUpdate={handleTaskUpdate}
+                                onTagsChange={handleTagsChange}
+                                onTagCreated={(tag) => setTags((prev) => [...prev, tag])}
+                              />
+
+                              <div className="flex flex-col gap-3 mt-5">
+                                {/* Working directory */}
+                                <div className="flex flex-col gap-2">
+                                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                                    Working directory
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Info className="size-3 text-muted-foreground/60 cursor-help" />
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="max-w-72 text-xs">
+                                        <p>Override the project directory for this task.</p>
+                                        <p className="mt-1.5">Priority (highest first):</p>
+                                        <ol className="mt-0.5 list-decimal list-inside">
+                                          <li>Worktree</li>
+                                          <li>Custom directory</li>
+                                          <li>Project path</li>
+                                        </ol>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <div
+                                      className="flex-1 min-w-0 text-xs text-muted-foreground truncate px-2 py-1.5 rounded border border-border bg-muted/30"
+                                      title={effectiveRepoPath ?? 'No directory set'}
+                                    >
+                                      {effectiveRepoPath ?? 'No directory set'}
+                                      {task.worktree_path && (
+                                        <span className="ml-1 text-[10px] opacity-60">
+                                          (worktree)
+                                        </span>
+                                      )}
+                                      {!task.worktree_path && task.base_dir && (
+                                        <span className="ml-1 text-[10px] opacity-60">
+                                          (custom)
+                                        </span>
+                                      )}
+                                    </div>
+                                    <button
+                                      className="shrink-0 h-7 w-7 flex items-center justify-center rounded hover:bg-muted"
+                                      title="Change working directory"
+                                      onClick={async () => {
+                                        const result = await window.api.dialog.showOpenDialog({
+                                          title: 'Select Working Directory',
+                                          defaultPath:
+                                            task.base_dir ?? effectiveRepoPath ?? undefined,
+                                          properties: ['openDirectory']
+                                        })
+                                        if (result.canceled || !result.filePaths[0]) return
+                                        await updateTaskAndNotify({
+                                          id: task.id,
+                                          baseDir: result.filePaths[0]
+                                        })
+                                      }}
+                                    >
+                                      <FileCode className="size-3.5 text-muted-foreground" />
+                                    </button>
+                                    {task.base_dir && (
+                                      <button
+                                        className="shrink-0 h-7 w-7 flex items-center justify-center rounded hover:bg-muted"
+                                        title="Clear custom directory"
+                                        onClick={() => {
+                                          void updateTaskAndNotify({ id: task.id, baseDir: null })
+                                        }}
+                                      >
+                                        <X className="size-3.5 text-muted-foreground" />
+                                      </button>
+                                    )}
+                                  </div>
+                                  {task.worktree_path && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-xs w-full justify-start"
+                                      onClick={() => {
+                                        void updateTaskAndNotify({
+                                          id: task.id,
+                                          worktreePath: null,
+                                          worktreeParentBranch: null
+                                        })
+                                      }}
+                                    >
+                                      <GitBranch className="mr-1.5 size-3" />
+                                      Detach worktree
+                                    </Button>
+                                  )}
+                                  {task.worktree_path && task.base_dir && (
+                                    <span className="text-[10px] text-amber-400/80">
+                                      Worktree active — custom dir overridden
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Danger zone */}
+                                <div className="flex flex-col gap-2">
+                                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                                    Danger zone
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="flex-1 text-xs"
+                                      onClick={
+                                        isArchived
+                                          ? handleUnarchive
+                                          : () => setArchiveDialogOpen(true)
+                                      }
+                                    >
+                                      <Archive className="mr-1.5 size-3" />
+                                      {isArchived ? 'Unarchive' : 'Archive'}
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="flex-1 text-xs text-destructive hover:text-destructive"
+                                      onClick={() => setDeleteDialogOpen(true)}
+                                    >
+                                      <Trash2 className="mr-1.5 size-3" />
+                                      Delete
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        </>
+                      )
+                    }}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Resize handle before Processes */}
+            {!compact &&
+              panelVisibility.processes &&
+              getFirstVisibleTaskPanelId() !== 'processes' && (
+                <ResizeHandle
+                  width={resolvedWidths.processes ?? 300}
+                  minWidth={200}
+                  onWidthChange={(w) => updatePanelSizes({ processes: w })}
+                  onDragStart={() => setIsResizing(true)}
+                  onDragEnd={() => setIsResizing(false)}
+                  onReset={resetAllPanels}
+                  style={panelOrderStyle('processes')}
+                />
+              )}
+
+            {/* Processes Panel */}
+            {!compact && panelVisibility.processes && (
+              <div
+                data-panel-id="processes"
+                className={cn(
+                  'shrink-0 rounded-md bg-surface-1 border border-border overflow-hidden flex flex-col transition-shadow duration-200',
+                  multipleVisiblePanels &&
+                    focusedPanel === 'processes' &&
+                    'shadow-[0_0_18px_rgba(255,255,255,0.25)]'
+                )}
+                style={{ width: resolvedWidths.processes, ...panelOrderStyle('processes') }}
+              >
+                {ownership.hasOtherOwner('processes') ? (
+                  <PanelOwnerStub
+                    panelLabel="Processes"
+                    icon={Cpu}
+                    activeElsewhere
+                    onActivate={() => ownership.claim('processes')}
+                    onActivateAndClose={() => ownership.claimAndCloseOther('processes')}
+                  />
+                ) : (
+                  <ProcessesPanel
+                    taskId={task.id}
+                    projectId={project?.id ?? null}
+                    cwd={effectiveRepoPath || project?.path}
+                    terminalSessionId={getMainSessionId(task.id)}
+                    onOpenUrl={openDevServerInBrowser}
+                  />
+                )}
+              </div>
+            )}
+          </>
         )}
-        </>)}
       </div>
 
       <LoopModeDialog
         open={loopDialogOpen}
-        onOpenChange={(open) => { setLoopDialogOpen(open) }}
-        config={task.loop_config ?? { prompt: '', criteriaType: 'contains', criteriaPattern: '', maxIterations: 50 }}
-        onSave={(cfg) => { handleLoopConfigChange(cfg); setLoopDialogOpen(false) }}
+        onOpenChange={(open) => {
+          setLoopDialogOpen(open)
+        }}
+        config={
+          task.loop_config ?? {
+            prompt: '',
+            criteriaType: 'contains',
+            criteriaPattern: '',
+            maxIterations: 50
+          }
+        }
+        onSave={(cfg) => {
+          handleLoopConfigChange(cfg)
+          setLoopDialogOpen(false)
+        }}
       />
 
       <DeleteTaskDialog
@@ -3232,7 +4103,9 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchive}>{isArchived ? 'Unarchive' : 'Archive'}</AlertDialogAction>
+            <AlertDialogAction onClick={handleArchive}>
+              {isArchived ? 'Unarchive' : 'Archive'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -3243,10 +4116,13 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
             <DialogTitle className="flex items-center gap-2">
               <Stethoscope className="size-4 text-muted-foreground" />
               Environment check
-              {task && (() => {
-                const modeLabel = modes.find(m => m.id === task.terminal_mode)?.label
-                return modeLabel ? <span className="text-muted-foreground font-normal text-sm">— {modeLabel}</span> : null
-              })()}
+              {task &&
+                (() => {
+                  const modeLabel = modes.find((m) => m.id === task.terminal_mode)?.label
+                  return modeLabel ? (
+                    <span className="text-muted-foreground font-normal text-sm">— {modeLabel}</span>
+                  ) : null
+                })()}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2 py-1">
@@ -3267,10 +4143,11 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
                 )}
               >
                 <div className="flex items-start gap-2">
-                  {r.ok
-                    ? <CheckCircle2 className="size-4 text-green-600 dark:text-green-400 shrink-0 mt-px" />
-                    : <XCircle className="size-4 text-red-500 dark:text-red-400 shrink-0 mt-px" />
-                  }
+                  {r.ok ? (
+                    <CheckCircle2 className="size-4 text-green-600 dark:text-green-400 shrink-0 mt-px" />
+                  ) : (
+                    <XCircle className="size-4 text-red-500 dark:text-red-400 shrink-0 mt-px" />
+                  )}
                   <div className="min-w-0 space-y-0.5">
                     <p className="text-sm font-medium leading-none">{r.check}</p>
                     <p className="text-xs text-muted-foreground">{r.detail}</p>
@@ -3302,14 +4179,17 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
         showToolbar={notesShowToolbar}
         spellcheck={notesSpellcheck}
         themeColors={notesThemeColors}
-        artifacts={artifacts.map(a => ({ id: a.id, title: a.title, type: RENDER_MODE_INFO[getEffectiveRenderMode(a.title, a.render_mode)].label }))}
+        artifacts={artifacts.map((a) => ({
+          id: a.id,
+          title: a.title,
+          type: RENDER_MODE_INFO[getEffectiveRenderMode(a.title, a.render_mode)].label
+        }))}
         onArtifactClick={(artifactId) => {
           if (!panelVisibility.artifacts) handlePanelToggle('artifacts', true)
           artifactsPanelRef.current?.selectArtifact(artifactId)
         }}
         onUploadImages={handleUploadImages}
       />
-
     </div>
   )
 })

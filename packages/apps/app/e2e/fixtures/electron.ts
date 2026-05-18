@@ -77,8 +77,11 @@ function ensureDir(dirPath: string): void {
 export function ensureGitRepo(dirPath: string): void {
   try {
     const toplevel = execSync('git rev-parse --show-toplevel', {
-      cwd: dirPath, stdio: 'pipe',
-    }).toString().trim()
+      cwd: dirPath,
+      stdio: 'pipe'
+    })
+      .toString()
+      .trim()
     if (toplevel !== dirPath) throw new Error('not own repo')
   } catch {
     execSync('git init', { cwd: dirPath, stdio: 'pipe' })
@@ -86,7 +89,10 @@ export function ensureGitRepo(dirPath: string): void {
     execSync('git config user.email "test@test.com"', { cwd: dirPath, stdio: 'pipe' })
     fs.writeFileSync(path.join(dirPath, 'README.md'), '# test\n')
     execSync('git add -A', { cwd: dirPath, stdio: 'pipe' })
-    execSync('git -c commit.gpgsign=false commit -m "Initial commit"', { cwd: dirPath, stdio: 'pipe' })
+    execSync('git -c commit.gpgsign=false commit -m "Initial commit"', {
+      cwd: dirPath,
+      stdio: 'pipe'
+    })
   }
 }
 
@@ -188,12 +194,12 @@ async function resolveMainWindow(
 
       try {
         await windowPage.waitForSelector('#root', {
-          timeout: Math.max(200, timeoutMs - (Date.now() - startedAt)),
+          timeout: Math.max(200, timeoutMs - (Date.now() - startedAt))
         })
         return {
           page: windowPage,
           observedWindowUrls: Array.from(observedWindowUrls),
-          rootReadyMs: Date.now() - startedAt,
+          rootReadyMs: Date.now() - startedAt
         }
       } catch {
         // Keep polling until timeout so slow bootstrap can still recover.
@@ -227,7 +233,7 @@ async function launchElectronWithRetry(args: {
       workerArtifactsDir: args.workerArtifactsDir,
       mainJsPath: MAIN_JS,
       executablePath: args.executablePath,
-      success: false,
+      success: false
     }
 
     let app: ElectronApplication | undefined
@@ -266,9 +272,15 @@ async function launchElectronWithRetry(args: {
           SLAYZONE_HOME_DIR: path.join(args.userDataDir, '.slayzone-home'),
           SLAYZONE_CLAUDE_SETTINGS_PATH: path.join(args.userDataDir, '.claude', 'settings.json'),
           SLAYZONE_GEMINI_SETTINGS_PATH: path.join(args.userDataDir, '.gemini', 'settings.json'),
-          SLAYZONE_OPENCODE_PLUGIN_PATH: path.join(args.userDataDir, '.config', 'opencode', 'plugin', 'slayzone-notify.js'),
-          XDG_CONFIG_HOME: path.join(args.userDataDir, '.config'),
-        },
+          SLAYZONE_OPENCODE_PLUGIN_PATH: path.join(
+            args.userDataDir,
+            '.config',
+            'opencode',
+            'plugin',
+            'slayzone-notify.js'
+          ),
+          XDG_CONFIG_HOME: path.join(args.userDataDir, '.config')
+        }
       })
 
       stopAttemptLogCapture = startProcessLogCapture(
@@ -337,7 +349,7 @@ export const test = base.extend<ElectronFixtures>({
         const launched = await launchElectronWithRetry({
           userDataDir,
           workerArtifactsDir,
-          executablePath,
+          executablePath
         })
 
         sharedApp = launched.app
@@ -349,7 +361,7 @@ export const test = base.extend<ElectronFixtures>({
           createdAt: new Date().toISOString(),
           userDataDir,
           testProjectPath: TEST_PROJECT_PATH,
-          attempts: launched.attempts,
+          attempts: launched.attempts
         })
 
         attachSessionLogCapture(sharedApp, workerArtifactsDir)
@@ -366,7 +378,7 @@ export const test = base.extend<ElectronFixtures>({
       if (sharedWorkerArtifactsDir) {
         writeJson(path.join(sharedWorkerArtifactsDir, 'worker-finish.json'), {
           finishedAt: new Date().toISOString(),
-          note: 'Worker teardown completed',
+          note: 'Worker teardown completed'
         })
       }
 
@@ -374,7 +386,7 @@ export const test = base.extend<ElectronFixtures>({
       sharedPage = undefined
       sharedWorkerArtifactsDir = undefined
     },
-    { scope: 'worker' },
+    { scope: 'worker' }
   ],
 
   mainWindow: [
@@ -400,8 +412,8 @@ export const test = base.extend<ElectronFixtures>({
 
       await use(sharedPage)
     },
-    { scope: 'worker' },
-  ],
+    { scope: 'worker' }
+  ]
 })
 
 /** Seed helpers — call window.api methods to create test data without UI interaction */
@@ -418,8 +430,13 @@ export function seed(page: Page) {
       dueDate?: string
     }) => page.evaluate((d) => window.api.db.createTask(d), data),
 
-    updateTask: (data: { id: string; status?: string; priority?: number; progress?: number; dueDate?: string | null }) =>
-      page.evaluate((d) => window.api.db.updateTask(d), data),
+    updateTask: (data: {
+      id: string
+      status?: string
+      priority?: number
+      progress?: number
+      dueDate?: string | null
+    }) => page.evaluate((d) => window.api.db.updateTask(d), data),
 
     deleteTask: (id: string) => page.evaluate((i) => window.api.db.deleteTask(i), id),
 
@@ -446,13 +463,13 @@ export function seed(page: Page) {
     setTagsForTask: (taskId: string, tagIds: string[]) =>
       page.evaluate(({ t, tags }) => window.api.taskTags.setTagsForTask(t, tags), {
         t: taskId,
-        tags: tagIds,
+        tags: tagIds
       }),
 
     addBlocker: (taskId: string, blockerTaskId: string) =>
       page.evaluate(({ t, b }) => window.api.taskDependencies.addBlocker(t, b), {
         t: taskId,
-        b: blockerTaskId,
+        b: blockerTaskId
       }),
 
     getProjects: () => page.evaluate(() => window.api.db.getProjects()),
@@ -472,8 +489,7 @@ export function seed(page: Page) {
         position: number
         category: 'triage' | 'backlog' | 'unstarted' | 'started' | 'completed' | 'canceled'
       }> | null
-    }) =>
-      page.evaluate((d) => window.api.db.updateProject(d), data),
+    }) => page.evaluate((d) => window.api.db.updateProject(d), data),
 
     deleteProject: (id: string) => page.evaluate((i) => window.api.db.deleteProject(i), id),
 
@@ -494,14 +510,17 @@ export function seed(page: Page) {
 
     // --- Artifacts ---
 
-    createArtifact: (data: { taskId: string; title: string; content?: string; folderId?: string | null }) =>
-      page.evaluate((d) => window.api.artifacts.create(d), data),
+    createArtifact: (data: {
+      taskId: string
+      title: string
+      content?: string
+      folderId?: string | null
+    }) => page.evaluate((d) => window.api.artifacts.create(d), data),
 
     getArtifacts: (taskId: string) =>
       page.evaluate((id) => window.api.artifacts.getByTask(id), taskId),
 
-    deleteArtifact: (id: string) =>
-      page.evaluate((i) => window.api.artifacts.delete(i), id),
+    deleteArtifact: (id: string) => page.evaluate((i) => window.api.artifacts.delete(i), id),
 
     createArtifactFolder: (data: { taskId: string; name: string; parentId?: string | null }) =>
       page.evaluate((d) => window.api.artifactFolders.create(d), data),
@@ -514,7 +533,7 @@ export function seed(page: Page) {
       page.evaluate(async () => {
         await (window as any).__slayzone_refreshData?.()
         await new Promise((resolve) => setTimeout(resolve, 50))
-      }),
+      })
   }
 }
 
@@ -527,13 +546,20 @@ export async function clickProject(page: Page, abbrev: string) {
   for (let attempt = 0; attempt < 25; attempt += 1) {
     if ((await target.count()) > 0) {
       await target.scrollIntoViewIfNeeded().catch(() => {})
-      const clicked = await target.click({ timeout: 1_000 }).then(() => true).catch(async () => {
-        return await target.click({ force: true, timeout: 1_000 }).then(() => true).catch(() => false)
-      })
+      const clicked = await target
+        .click({ timeout: 1_000 })
+        .then(() => true)
+        .catch(async () => {
+          return await target
+            .click({ force: true, timeout: 1_000 })
+            .then(() => true)
+            .catch(() => false)
+        })
       if (clicked) return
     }
     await page.evaluate(async () => {
-      const refresh = (window as { __slayzone_refreshData?: () => Promise<void> | void }).__slayzone_refreshData
+      const refresh = (window as { __slayzone_refreshData?: () => Promise<void> | void })
+        .__slayzone_refreshData
       await refresh?.()
     })
     await page.waitForTimeout(100)
@@ -562,7 +588,9 @@ export async function clickSettings(page: Page) {
     await page.keyboard.press('Meta+,').catch(() => {})
     if (await dialog.isVisible({ timeout: 500 }).catch(() => false)) return
 
-    const sidebarSettingsButton = page.getByRole('button', { name: 'Settings', exact: true }).first()
+    const sidebarSettingsButton = page
+      .getByRole('button', { name: 'Settings', exact: true })
+      .first()
     if (await sidebarSettingsButton.isVisible({ timeout: 300 }).catch(() => false)) {
       await sidebarSettingsButton.click({ force: true }).catch(() => {})
       if (await dialog.isVisible({ timeout: 500 }).catch(() => false)) return
@@ -608,7 +636,9 @@ export async function openProjectSettings(page: Page, abbrev: string): Promise<L
   }
 
   // Clean up any stray modal/dialog left by prior specs.
-  const openDialogs = page.locator('[role="dialog"][data-state="open"], [role="dialog"][aria-modal="true"]')
+  const openDialogs = page.locator(
+    '[role="dialog"][data-state="open"], [role="dialog"][aria-modal="true"]'
+  )
   for (let attempt = 0; attempt < 4; attempt += 1) {
     if ((await openDialogs.count()) === 0) break
     const top = openDialogs.last()
@@ -632,11 +662,18 @@ export async function openProjectSettings(page: Page, abbrev: string): Promise<L
       await blob.scrollIntoViewIfNeeded().catch(() => {})
 
       // Right-click → Settings via evaluate (fast, avoids Playwright actionability overhead)
-      await blob.evaluate((node) => {
-        node.dispatchEvent(new MouseEvent('contextmenu', {
-          bubbles: true, cancelable: true, button: 2, buttons: 2,
-        }))
-      }).catch(() => {})
+      await blob
+        .evaluate((node) => {
+          node.dispatchEvent(
+            new MouseEvent('contextmenu', {
+              bubbles: true,
+              cancelable: true,
+              button: 2,
+              buttons: 2
+            })
+          )
+        })
+        .catch(() => {})
 
       const settingsItem = page.getByRole('menuitem', { name: 'Settings' }).first()
       if (await settingsItem.isVisible({ timeout: 1_000 }).catch(() => false)) {
@@ -644,13 +681,22 @@ export async function openProjectSettings(page: Page, abbrev: string): Promise<L
       }
     } else {
       const projectId = await page.evaluate((projectAbbrev) => {
-        return window.api.db.getProjects()
-          .then((projects) => projects.find((project) => project.name.slice(0, 2).toUpperCase() === projectAbbrev)?.id ?? null)
+        return window.api.db
+          .getProjects()
+          .then(
+            (projects) =>
+              projects.find((project) => project.name.slice(0, 2).toUpperCase() === projectAbbrev)
+                ?.id ?? null
+          )
       }, abbrev)
       if (projectId) {
-        await page.evaluate((id) => {
-          window.dispatchEvent(new CustomEvent('open-project-settings', { detail: { projectId: id } }))
-        }, projectId).catch(() => {})
+        await page
+          .evaluate((id) => {
+            window.dispatchEvent(
+              new CustomEvent('open-project-settings', { detail: { projectId: id } })
+            )
+          }, projectId)
+          .catch(() => {})
       }
     }
 

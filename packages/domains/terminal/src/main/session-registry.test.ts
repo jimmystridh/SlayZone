@@ -36,7 +36,7 @@ function expect<T>(actual: T) {
     },
     toBeTruthy() {
       if (!actual) throw new Error(`Expected truthy, got ${JSON.stringify(actual)}`)
-    },
+    }
   }
 }
 
@@ -45,7 +45,7 @@ console.log('\nSessionRegistry tests\n')
 test('mergeSessions: tags PTY entries with kind:"pty"', () => {
   const out = mergeSessions({
     ptys: [{ sessionId: 'task-1', state: 'idle' }],
-    chats: [],
+    chats: []
   })
   expect(out).toEqual([{ sessionId: 'task-1', state: 'idle', kind: 'pty' }])
 })
@@ -53,7 +53,7 @@ test('mergeSessions: tags PTY entries with kind:"pty"', () => {
 test('mergeSessions: tags chat entries with kind:"chat"', () => {
   const out = mergeSessions({
     ptys: [],
-    chats: [{ sessionId: 'task-1:tab-A', state: 'idle' }],
+    chats: [{ sessionId: 'task-1:tab-A', state: 'idle' }]
   })
   expect(out).toEqual([{ sessionId: 'task-1:tab-A', state: 'idle', kind: 'chat' }])
 })
@@ -61,7 +61,7 @@ test('mergeSessions: tags chat entries with kind:"chat"', () => {
 test('mergeSessions: merges both, PTY first', () => {
   const out = mergeSessions({
     ptys: [{ sessionId: 'task-pty', state: 'running' }],
-    chats: [{ sessionId: 'task-chat:tab-A', state: 'idle' }],
+    chats: [{ sessionId: 'task-chat:tab-A', state: 'idle' }]
   })
   expect(out.length).toBe(2)
   expect(out[0].kind).toBe('pty')
@@ -75,7 +75,7 @@ test('mergeSessions: drops chat dup on collision, keeps PTY', () => {
   try {
     const out = mergeSessions({
       ptys: [{ sessionId: 'task-1:tab-A', state: 'running' }],
-      chats: [{ sessionId: 'task-1:tab-A', state: 'idle' }],
+      chats: [{ sessionId: 'task-1:tab-A', state: 'idle' }]
     })
     expect(out.length).toBe(1)
     expect(out[0].kind).toBe('pty')
@@ -97,7 +97,7 @@ test('mergeSessions: preserves all chat states unchanged', () => {
   for (const s of states) {
     const out = mergeSessions({
       ptys: [],
-      chats: [{ sessionId: `t:${s}`, state: s }],
+      chats: [{ sessionId: `t:${s}`, state: s }]
     })
     expect(out[0].state).toBe(s)
   }

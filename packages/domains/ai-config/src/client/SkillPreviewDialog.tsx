@@ -1,5 +1,12 @@
 import { FolderPlus, Library, RefreshCw, X } from 'lucide-react'
-import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@slayzone/ui'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@slayzone/ui'
 import type { SkillRegistryEntry } from '../shared'
 
 interface SkillPreviewDialogProps {
@@ -13,7 +20,16 @@ interface SkillPreviewDialogProps {
   installing?: boolean
 }
 
-export function SkillPreviewDialog({ entry, onOpenChange, onAddToLibrary, onAddToProject, onUpdate, onUninstall, hasProject, installing }: SkillPreviewDialogProps) {
+export function SkillPreviewDialog({
+  entry,
+  onOpenChange,
+  onAddToLibrary,
+  onAddToProject,
+  onUpdate,
+  onUninstall,
+  hasProject,
+  installing
+}: SkillPreviewDialogProps) {
   if (!entry) return null
 
   const isInLibrary = !!entry.installed_library_item_id

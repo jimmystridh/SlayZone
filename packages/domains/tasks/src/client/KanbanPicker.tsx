@@ -57,12 +57,7 @@ export function KanbanPicker({
       <PopoverAnchor asChild>
         <div style={anchorStyle} />
       </PopoverAnchor>
-      <PopoverContent
-        side="right"
-        align="start"
-        sideOffset={8}
-        className="w-44 p-1"
-      >
+      <PopoverContent side="right" align="start" sideOffset={8} className="w-44 p-1">
         {pickerState.type === 'status' ? (
           <PickerList
             items={statusOptions.map((s) => {
@@ -165,12 +160,7 @@ function PickerList({
   )
 
   return (
-    <div
-      ref={containerRef}
-      tabIndex={-1}
-      onKeyDown={handleKeyDown}
-      className="outline-none"
-    >
+    <div ref={containerRef} tabIndex={-1} onKeyDown={handleKeyDown} className="outline-none">
       {items.map((item, i) => (
         <button
           key={item.key}

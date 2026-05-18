@@ -21,11 +21,16 @@ function test(name: string, fn: () => void): void {
 
 function eq<T>(actual: T, expected: T, label?: string): void {
   if (actual !== expected) {
-    throw new Error(`${label ? label + ': ' : ''}expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+    throw new Error(
+      `${label ? label + ': ' : ''}expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+    )
   }
 }
 
-function mockPosix(initial: { soft: number | null; hard: number | null }, opts: { setrlimitThrows?: boolean } = {}): PosixModule & { lastSet?: { soft?: number | null; hard?: number | null } } {
+function mockPosix(
+  initial: { soft: number | null; hard: number | null },
+  opts: { setrlimitThrows?: boolean } = {}
+): PosixModule & { lastSet?: { soft?: number | null; hard?: number | null } } {
   const state = { ...initial }
   const mod: PosixModule & { lastSet?: { soft?: number | null; hard?: number | null } } = {
     getrlimit: () => ({ soft: state.soft, hard: state.hard }),
@@ -45,17 +50,22 @@ console.log('\nraiseFdLimitWith')
 console.log('─'.repeat(40))
 
 test('win32 — no-op, returns windows-unsupported', () => {
-  const r = raiseFdLimitWith(() => { throw new Error('should not be called') }, 'win32')
+  const r = raiseFdLimitWith(() => {
+    throw new Error('should not be called')
+  }, 'win32')
   eq(r.ok, true)
   eq(r.raised, false)
   eq(r.reason, 'windows-unsupported')
 })
 
 test('posix load failure — returns load-failed', () => {
-  const r = raiseFdLimitWith(() => { throw new Error('native bindings missing') }, 'darwin')
+  const r = raiseFdLimitWith(() => {
+    throw new Error('native bindings missing')
+  }, 'darwin')
   eq(r.ok, false)
   eq(r.raised, false)
-  if (!r.reason?.startsWith('load-failed')) throw new Error(`expected load-failed reason, got ${r.reason}`)
+  if (!r.reason?.startsWith('load-failed'))
+    throw new Error(`expected load-failed reason, got ${r.reason}`)
 })
 
 test('soft already high (== target) — no raise, reason=already-high', () => {
@@ -111,7 +121,8 @@ test('setrlimit throws (EPERM) — returns setrlimit-failed reason', () => {
   const r = raiseFdLimitWith(() => posix, 'darwin')
   eq(r.ok, false)
   eq(r.raised, false)
-  if (!r.reason?.startsWith('setrlimit-failed')) throw new Error(`expected setrlimit-failed reason, got ${r.reason}`)
+  if (!r.reason?.startsWith('setrlimit-failed'))
+    throw new Error(`expected setrlimit-failed reason, got ${r.reason}`)
 })
 
 console.log('\n' + '─'.repeat(40))

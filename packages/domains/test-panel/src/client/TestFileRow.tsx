@@ -13,7 +13,15 @@ interface TestFileRowProps {
   onManageLabels: () => void
 }
 
-export function TestFileRow({ path, note, fileLabels, labels, onToggleLabel, onNoteChange, onManageLabels }: TestFileRowProps): React.JSX.Element {
+export function TestFileRow({
+  path,
+  note,
+  fileLabels,
+  labels,
+  onToggleLabel,
+  onNoteChange,
+  onManageLabels
+}: TestFileRowProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
@@ -29,7 +37,9 @@ export function TestFileRow({ path, note, fileLabels, labels, onToggleLabel, onN
   return (
     <Card className="cursor-pointer px-3 py-2.5 gap-0" onClick={handleCardClick}>
       <div className="flex items-start gap-2">
-        <ChevronRight className={`h-3 w-3 shrink-0 mt-1 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+        <ChevronRight
+          className={`h-3 w-3 shrink-0 mt-1 transition-transform ${expanded ? 'rotate-90' : ''}`}
+        />
         <div className="flex-1 min-w-0">
           <p className="text-sm truncate">{path}</p>
           {firstLine && !expanded && (
@@ -64,15 +74,23 @@ export function TestFileRow({ path, note, fileLabels, labels, onToggleLabel, onN
                   className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-sm hover:bg-muted/50 transition-colors"
                   onClick={() => onToggleLabel(l.id)}
                 >
-                  <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: l.color }} />
+                  <div
+                    className="h-3 w-3 rounded-full shrink-0"
+                    style={{ backgroundColor: l.color }}
+                  />
                   <span className="truncate">{l.name}</span>
-                  {assignedIds.has(l.id) && <Check className="ml-auto h-3 w-3 text-muted-foreground" />}
+                  {assignedIds.has(l.id) && (
+                    <Check className="ml-auto h-3 w-3 text-muted-foreground" />
+                  )}
                 </button>
               ))}
               <Separator className="my-1" />
               <button
                 className="flex items-center gap-2 w-full px-2 py-1.5 rounded text-sm hover:bg-muted/50 transition-colors text-muted-foreground"
-                onClick={() => { onManageLabels(); setOpen(false) }}
+                onClick={() => {
+                  onManageLabels()
+                  setOpen(false)
+                }}
               >
                 Manage Labels...
               </button>
@@ -83,7 +101,9 @@ export function TestFileRow({ path, note, fileLabels, labels, onToggleLabel, onN
       {expanded && (
         <div className="mt-2 ml-5 relative" data-note-area>
           {!note && (
-            <p className="text-xs text-muted-foreground/50 absolute pointer-events-none">Add a note...</p>
+            <p className="text-xs text-muted-foreground/50 absolute pointer-events-none">
+              Add a note...
+            </p>
           )}
           <div
             contentEditable

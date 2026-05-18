@@ -13,9 +13,13 @@ import {
   Tags,
   Trash2,
   User,
-  XCircle,
+  XCircle
 } from 'lucide-react'
-import type { ActivityEvent, ActivityEventCursor, AutomationActionRun } from '@slayzone/history/shared'
+import type {
+  ActivityEvent,
+  ActivityEventCursor,
+  AutomationActionRun
+} from '@slayzone/history/shared'
 import { Button } from '@slayzone/ui'
 
 interface TaskHistoryPanelProps {
@@ -46,75 +50,75 @@ function getEventMarkerMeta(event: ActivityEvent): {
       return {
         icon: <Plus className="size-3.5" />,
         wrapperClassName: 'text-sky-400',
-        testId: 'history-marker-task-created',
+        testId: 'history-marker-task-created'
       }
     case 'task.title_changed':
     case 'task.description_changed':
       return {
         icon: <Pencil className="size-3.5" />,
         wrapperClassName: 'text-violet-400',
-        testId: `history-marker-${event.kind.replace(/\./g, '-')}`,
+        testId: `history-marker-${event.kind.replace(/\./g, '-')}`
       }
     case 'task.status_changed':
       return {
         icon: <CheckCircle2 className="size-3.5" />,
         wrapperClassName: 'text-emerald-500',
-        testId: 'history-marker-task-status-changed',
+        testId: 'history-marker-task-status-changed'
       }
     case 'task.priority_changed':
       return {
         icon: <Flag className="size-3.5" />,
         wrapperClassName: 'text-amber-400',
-        testId: 'history-marker-task-priority-changed',
+        testId: 'history-marker-task-priority-changed'
       }
     case 'task.assignee_changed':
       return {
         icon: <User className="size-3.5" />,
         wrapperClassName: 'text-cyan-400',
-        testId: 'history-marker-task-assignee-changed',
+        testId: 'history-marker-task-assignee-changed'
       }
     case 'task.due_date_changed':
       return {
         icon: <Calendar className="size-3.5" />,
         wrapperClassName: 'text-orange-400',
-        testId: 'history-marker-task-due-date-changed',
+        testId: 'history-marker-task-due-date-changed'
       }
     case 'task.tags_changed':
       return {
         icon: <Tags className="size-3.5" />,
         wrapperClassName: 'text-pink-400',
-        testId: 'history-marker-task-tags-changed',
+        testId: 'history-marker-task-tags-changed'
       }
     case 'task.archived':
       return {
         icon: <Archive className="size-3.5" />,
         wrapperClassName: 'text-muted-foreground',
-        testId: 'history-marker-task-archived',
+        testId: 'history-marker-task-archived'
       }
     case 'task.unarchived':
     case 'task.restored':
       return {
         icon: <RotateCcw className="size-3.5" />,
         wrapperClassName: 'text-lime-400',
-        testId: `history-marker-${event.kind.replace(/\./g, '-')}`,
+        testId: `history-marker-${event.kind.replace(/\./g, '-')}`
       }
     case 'task.deleted':
       return {
         icon: <Trash2 className="size-3.5" />,
         wrapperClassName: 'text-destructive',
-        testId: 'history-marker-task-deleted',
+        testId: 'history-marker-task-deleted'
       }
     case 'automation.run_failed':
       return {
         icon: <XCircle className="size-3.5" />,
         wrapperClassName: 'text-destructive',
-        testId: 'history-marker-automation-run-failed',
+        testId: 'history-marker-automation-run-failed'
       }
     case 'automation.run_succeeded':
       return {
         icon: <CheckCircle2 className="size-3.5" />,
         wrapperClassName: 'text-emerald-500',
-        testId: 'history-marker-automation-run-succeeded',
+        testId: 'history-marker-automation-run-succeeded'
       }
   }
 
@@ -127,7 +131,9 @@ export function TaskHistoryPanel({ taskId }: TaskHistoryPanelProps): React.JSX.E
   const [loadingMore, setLoadingMore] = useState(false)
   const [nextCursor, setNextCursor] = useState<ActivityEventCursor | null>(null)
   const [expandedRunIds, setExpandedRunIds] = useState<Record<string, boolean>>({})
-  const [actionRunsByRunId, setActionRunsByRunId] = useState<Record<string, AutomationActionRun[]>>({})
+  const [actionRunsByRunId, setActionRunsByRunId] = useState<Record<string, AutomationActionRun[]>>(
+    {}
+  )
   const [, setTimestampTick] = useState(0)
 
   useEffect(() => {
@@ -151,7 +157,9 @@ export function TaskHistoryPanel({ taskId }: TaskHistoryPanelProps): React.JSX.E
       setNextCursor(result.nextCursor)
       setLoading(false)
     })
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [taskId])
 
   async function toggleAutomationDetails(runId: string): Promise<void> {
@@ -168,7 +176,7 @@ export function TaskHistoryPanel({ taskId }: TaskHistoryPanelProps): React.JSX.E
     try {
       const result = await window.api.history.listForTask(taskId, {
         limit: TASK_HISTORY_PAGE_SIZE,
-        before: nextCursor,
+        before: nextCursor
       })
       setEvents((prev) => [...prev, ...result.events])
       setNextCursor(result.nextCursor)
@@ -211,7 +219,10 @@ export function TaskHistoryPanel({ taskId }: TaskHistoryPanelProps): React.JSX.E
           <div key={event.id} className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-4">
             <div className="relative flex justify-center">
               {index < events.length - 1 && (
-                <div className="absolute bottom-[-20px] left-1/2 top-6 w-px -translate-x-1/2 bg-border" aria-hidden="true" />
+                <div
+                  className="absolute bottom-[-20px] left-1/2 top-6 w-px -translate-x-1/2 bg-border"
+                  aria-hidden="true"
+                />
               )}
               <div
                 data-testid={marker.testId}
@@ -223,21 +234,27 @@ export function TaskHistoryPanel({ taskId }: TaskHistoryPanelProps): React.JSX.E
 
             <div className="min-w-0">
               <div className="flex min-h-6 items-baseline gap-3">
-                <div className="min-w-0 flex-1 text-sm font-medium leading-6 text-foreground">{event.summary}</div>
+                <div className="min-w-0 flex-1 text-sm font-medium leading-6 text-foreground">
+                  {event.summary}
+                </div>
                 <div className="flex shrink-0 items-center gap-3">
                   {isAutomation && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      aria-label={isExpanded ? 'Hide automation run details' : 'Show automation run details'}
+                      aria-label={
+                        isExpanded ? 'Hide automation run details' : 'Show automation run details'
+                      }
                       className="h-auto px-0 py-0 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
                       onClick={() => void toggleAutomationDetails(event.entityId)}
                     >
                       {isExpanded ? 'Hide details' : 'Show details'}
                     </Button>
                   )}
-                  <div className="shrink-0 text-xs text-muted-foreground">{formatHistoryTimestamp(event.createdAt)}</div>
+                  <div className="shrink-0 text-xs text-muted-foreground">
+                    {formatHistoryTimestamp(event.createdAt)}
+                  </div>
                 </div>
               </div>
               {isAutomation && isExpanded && (
@@ -246,9 +263,13 @@ export function TaskHistoryPanel({ taskId }: TaskHistoryPanelProps): React.JSX.E
                     <div key={run.id} className="border-b border-border px-3 py-3 last:border-b-0">
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <div className="text-xs font-medium text-foreground">{run.command}</div>
-                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{run.status}</div>
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                          {run.status}
+                        </div>
                         {run.durationMs !== null && (
-                          <div className="text-[11px] text-muted-foreground">{run.durationMs} ms</div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {run.durationMs} ms
+                          </div>
                         )}
                       </div>
                       {run.outputTail && (
@@ -256,13 +277,24 @@ export function TaskHistoryPanel({ taskId }: TaskHistoryPanelProps): React.JSX.E
                           {run.outputTail}
                         </pre>
                       )}
-                      {run.error && <div className="mt-2 text-xs text-destructive">{run.error}</div>}
-                      {!run.outputTail && !run.error && actionIndex === actionRuns.length - 1 && run.status === 'success' && (
-                        <div className="mt-2 text-xs text-muted-foreground">Completed without saved output.</div>
+                      {run.error && (
+                        <div className="mt-2 text-xs text-destructive">{run.error}</div>
                       )}
+                      {!run.outputTail &&
+                        !run.error &&
+                        actionIndex === actionRuns.length - 1 &&
+                        run.status === 'success' && (
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            Completed without saved output.
+                          </div>
+                        )}
                     </div>
                   ))}
-                  {actionRuns.length === 0 && <div className="px-3 py-3 text-xs text-muted-foreground">No action details.</div>}
+                  {actionRuns.length === 0 && (
+                    <div className="px-3 py-3 text-xs text-muted-foreground">
+                      No action details.
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -270,7 +302,14 @@ export function TaskHistoryPanel({ taskId }: TaskHistoryPanelProps): React.JSX.E
         )
       })}
       {nextCursor && (
-        <Button type="button" variant="outline" size="sm" className="ml-10" onClick={() => void loadMore()} disabled={loadingMore}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="ml-10"
+          onClick={() => void loadMore()}
+          disabled={loadingMore}
+        >
           {loadingMore ? 'Loading more...' : 'Load more'}
         </Button>
       )}

@@ -8,7 +8,11 @@ test.describe('Tag input field responsive overflow', () => {
   test.beforeAll(async ({ mainWindow, electronApp }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Overflow Test', color: '#3b82f6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Overflow Test',
+      color: '#3b82f6',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const task = await s.createTask({ projectId: p.id, title: 'Many tags task' })
@@ -18,18 +22,27 @@ test.describe('Tag input field responsive overflow', () => {
     const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7']
     const tagIds: string[] = []
     for (let i = 0; i < tagNames.length; i++) {
-      const tag = await s.createTag({ name: tagNames[i], color: colors[i], textColor: '#ffffff', projectId: p.id })
+      const tag = await s.createTag({
+        name: tagNames[i],
+        color: colors[i],
+        textColor: '#ffffff',
+        projectId: p.id
+      })
       tagIds.push(tag.id)
     }
     await s.setTagsForTask(task.id, tagIds)
     await s.refreshData()
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
-    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({
+      timeout: 5_000
+    })
 
     // Open the task detail
     await mainWindow.getByText('Many tags task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
 
     // Dismiss alert dialog if present
     const dialog = mainWindow.getByRole('alertdialog')
@@ -59,7 +72,9 @@ test.describe('Tag input field responsive overflow', () => {
     // All 6 tags should be visible as checkboxes in the popover
     const tagNames = ['frontend', 'backend', 'database', 'security', 'performance', 'documentation']
     for (const name of tagNames) {
-      await expect(mainWindow.locator('[role="dialog"]').getByText(name)).toBeVisible({ timeout: 2_000 })
+      await expect(mainWindow.locator('[role="dialog"]').getByText(name)).toBeVisible({
+        timeout: 2_000
+      })
     }
 
     // Close popover by pressing Escape

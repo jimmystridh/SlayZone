@@ -26,7 +26,13 @@ interface UseChatModeOpts {
 }
 
 interface ChatModeApi {
-  setMode: (opts: { tabId: string; taskId: string; mode: string; cwd: string; chatMode: AgentMode }) => Promise<SessionInfoLite>
+  setMode: (opts: {
+    tabId: string
+    taskId: string
+    mode: string
+    cwd: string
+    chatMode: AgentMode
+  }) => Promise<SessionInfoLite>
   getMode: (taskId: string, mode: string) => Promise<AgentMode>
   getInfo: (tabId: string) => Promise<SessionInfoLite | null>
   getAutoEligibility?: () => Promise<AutoModeCapability>
@@ -65,7 +71,10 @@ function getApi(): ChatModeApi {
  */
 export function useChatMode({ taskId, mode, tabId, cwd, livePermissionMode }: UseChatModeOpts) {
   const [chatMode, setChatModeState] = useState<AgentMode>('auto-accept')
-  const [autoCapability, setAutoCapability] = useState<AutoModeCapability>({ eligible: false, optedIn: false })
+  const [autoCapability, setAutoCapability] = useState<AutoModeCapability>({
+    eligible: false,
+    optedIn: false
+  })
   const lastAppliedLiveRef = useRef<string | null | undefined>(undefined)
   // Latest user-requested target. Updated synchronously on every click so the
   // loop in `handleModeChange` always picks up the freshest intent.
@@ -98,7 +107,9 @@ export function useChatMode({ taskId, mode, tabId, cwd, livePermissionMode }: Us
         /* keep default */
       }
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [taskId, mode, tabId])
 
   // Drift sync: apply live permission mode only on transitions. A stale
@@ -123,65 +134,76 @@ export function useChatMode({ taskId, mode, tabId, cwd, livePermissionMode }: Us
     const fn = getApi().getAutoEligibility
     if (!fn) return
     void fn()
-      .then((cap) => { if (!cancelled) setAutoCapability(cap) })
-      .catch(() => { /* keep default (hidden) */ })
-    return () => { cancelled = true }
+      .then((cap) => {
+        if (!cancelled) setAutoCapability(cap)
+      })
+      .catch(() => {
+        /* keep default (hidden) */
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  const handleModeChange = useCallback(async (next: AgentMode) => {
-    if (next === chatMode) return
-    if (next === 'auto' && !autoCapability.optedIn) {
-      toast('Auto mode requires Max/Team/Enterprise + opt-in via `claude` CLI')
-      return
-    }
-    // Optimistic flip happens on every click, regardless of in-flight IPCs.
-    // The loop below picks up `pendingModeRef` as the latest target.
-    pendingModeRef.current = next
-    setChatModeState(next)
+  const handleModeChange = useCallback(
+    async (next: AgentMode) => {
+      if (next === chatMode) return
+      if (next === 'auto' && !autoCapability.optedIn) {
+        toast('Auto mode requires Max/Team/Enterprise + opt-in via `claude` CLI')
+        return
+      }
+      // Optimistic flip happens on every click, regardless of in-flight IPCs.
+      // The loop below picks up `pendingModeRef` as the latest target.
+      pendingModeRef.current = next
+      setChatModeState(next)
 
-    // Loop already running? Just update the target ref and return; the active
-    // loop will fire a new IPC for the latest target on its next iteration.
-    // Keeps backend serialized one-IPC-at-a-time per tab.
-    if (loopRunningRef.current) return
-    loopRunningRef.current = true
+      // Loop already running? Just update the target ref and return; the active
+      // loop will fire a new IPC for the latest target on its next iteration.
+      // Keeps backend serialized one-IPC-at-a-time per tab.
+      if (loopRunningRef.current) return
+      loopRunningRef.current = true
 
-    const prev = confirmedModeRef.current
-    let lastError: unknown = null
-    try {
-      while (pendingModeRef.current !== null) {
-        const target: AgentMode = pendingModeRef.current
-        let info: SessionInfoLite
-        try {
-          info = await getApi().setMode({ tabId, taskId, mode, cwd, chatMode: target })
-        } catch (err) {
-          lastError = err
-          break
+      const prev = confirmedModeRef.current
+      let lastError: unknown = null
+      try {
+        while (pendingModeRef.current !== null) {
+          const target: AgentMode = pendingModeRef.current
+          let info: SessionInfoLite
+          try {
+            info = await getApi().setMode({ tabId, taskId, mode, cwd, chatMode: target })
+          } catch (err) {
+            lastError = err
+            break
+          }
+          // Did the user supersede during the await? If so, drop the response
+          // and loop again with the new target.
+          if (pendingModeRef.current !== target) continue
+          // Latest target — apply server resolution (may downgrade) and exit.
+          const resolved = info?.chatMode ?? target
+          setChatModeState(resolved)
+          confirmedModeRef.current = resolved
+          pendingModeRef.current = null
         }
-        // Did the user supersede during the await? If so, drop the response
-        // and loop again with the new target.
-        if (pendingModeRef.current !== target) continue
-        // Latest target — apply server resolution (may downgrade) and exit.
-        const resolved = info?.chatMode ?? target
-        setChatModeState(resolved)
-        confirmedModeRef.current = resolved
+      } finally {
+        loopRunningRef.current = false
         pendingModeRef.current = null
       }
-    } finally {
-      loopRunningRef.current = false
-      pendingModeRef.current = null
-    }
-    if (lastError !== null) {
-      // Revert to the last confirmed mode; subprocess state may be uncertain
-      // after a failed respawn but drift sync re-converges on the next
-      // turn-init.
-      setChatModeState(prev)
-      toast(`Mode change failed: ${lastError instanceof Error ? lastError.message : String(lastError)}`)
-      // Re-throw so callers awaiting the mode change can branch on success
-      // (e.g. ExitPlanMode "Approve & exit" sends "Approved" only if the mode
-      // actually flipped).
-      throw lastError
-    }
-  }, [chatMode, autoCapability.optedIn, tabId, taskId, mode, cwd])
+      if (lastError !== null) {
+        // Revert to the last confirmed mode; subprocess state may be uncertain
+        // after a failed respawn but drift sync re-converges on the next
+        // turn-init.
+        setChatModeState(prev)
+        toast(
+          `Mode change failed: ${lastError instanceof Error ? lastError.message : String(lastError)}`
+        )
+        // Re-throw so callers awaiting the mode change can branch on success
+        // (e.g. ExitPlanMode "Approve & exit" sends "Approved" only if the mode
+        // actually flipped).
+        throw lastError
+      }
+    },
+    [chatMode, autoCapability.optedIn, tabId, taskId, mode, cwd]
+  )
 
   return { chatMode, handleModeChange, autoCapability }
 }

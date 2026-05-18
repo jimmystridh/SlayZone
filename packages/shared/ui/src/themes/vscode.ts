@@ -41,7 +41,7 @@ export const vscode: UnifiedThemeDefinition = {
       surface2: '#2B2B2B',
       surface3: '#353535',
       modal: '#181818',
-      modalBorder: '#313131',
+      modalBorder: '#313131'
     },
     terminal: {
       background: '#181818',
@@ -65,7 +65,7 @@ export const vscode: UnifiedThemeDefinition = {
       brightBlue: '#3B8EEA',
       brightMagenta: '#D670D6',
       brightCyan: '#29B8DB',
-      brightWhite: '#E5E5E5',
+      brightWhite: '#E5E5E5'
     },
     editor: {
       background: '#1F1F1F',
@@ -85,8 +85,8 @@ export const vscode: UnifiedThemeDefinition = {
       variable: '#9CDCFE',
       property: '#9CDCFE',
       link: '#4DAAFC',
-      heading: '#D4D4D4',
-    },
+      heading: '#D4D4D4'
+    }
   },
   light: {
     chrome: {
@@ -126,7 +126,7 @@ export const vscode: UnifiedThemeDefinition = {
       surface2: '#FFFFFF',
       surface3: '#FFFFFF',
       modal: '#FFFFFF',
-      modalBorder: '#C8C8C8',
+      modalBorder: '#C8C8C8'
     },
     terminal: {
       background: '#F8F8F8',
@@ -150,7 +150,7 @@ export const vscode: UnifiedThemeDefinition = {
       brightBlue: '#0451A5',
       brightMagenta: '#BC05BC',
       brightCyan: '#0598BC',
-      brightWhite: '#A5A5A5',
+      brightWhite: '#A5A5A5'
     },
     editor: {
       background: '#FFFFFF',
@@ -170,7 +170,7 @@ export const vscode: UnifiedThemeDefinition = {
       variable: '#001080',
       property: '#001080',
       link: '#0078D4',
-      heading: '#3B3B3B',
-    },
-  },
+      heading: '#3B3B3B'
+    }
+  }
 }

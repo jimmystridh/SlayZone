@@ -20,7 +20,7 @@ function expect<T>(v: T) {
   return {
     toBe(e: T) {
       if (v !== e) throw new Error(`expected ${JSON.stringify(e)}, got ${JSON.stringify(v)}`)
-    },
+    }
   }
 }
 
@@ -84,14 +84,16 @@ const cases: Array<[string, ReturnType<typeof mapEventType>]> = [
   // Unknown → null.
   ['', null],
   ['UnknownThing', null],
-  ['random', null],
+  ['random', null]
 ]
 
 for (const [input, expected] of cases) {
   test(`map "${input}" → ${expected}`, () => expect(mapEventType(input)).toBe(expected))
 }
 
-const overrideCases: Array<[string, Parameters<typeof mapEventType>[1], ReturnType<typeof mapEventType>]> = [
+const overrideCases: Array<
+  [string, Parameters<typeof mapEventType>[1], ReturnType<typeof mapEventType>]
+> = [
   ['BeforeAgent', 'gemini', 'agent-start'],
   ['AfterAgent', 'gemini', 'agent-stop'],
   ['AfterTool', 'gemini', 'agent-start'],
@@ -100,11 +102,12 @@ const overrideCases: Array<[string, Parameters<typeof mapEventType>[1], ReturnTy
   ['SessionEnd', 'gemini', 'session-end'],
   ['after_tool', 'codex', 'agent-stop'],
   ['AfterTool', 'codex', 'agent-stop'],
-  ['Stop', 'claude-code', 'agent-stop'],
+  ['Stop', 'claude-code', 'agent-stop']
 ]
 
 for (const [input, agentId, expected] of overrideCases) {
-  test(`map "${input}" (${agentId}) → ${expected}`, () => expect(mapEventType(input, agentId)).toBe(expected))
+  test(`map "${input}" (${agentId}) → ${expected}`, () =>
+    expect(mapEventType(input, agentId)).toBe(expected))
 }
 
 test('HOOK_SUPPORTED_AGENT_IDS contains claude-code', () => {

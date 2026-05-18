@@ -73,21 +73,28 @@ export function GlobalAgentSidePanel({
   useEffect(() => {
     if (!isActive || !sessionId) return
     window.api.pty.claimSession(sessionId)
-    const onFocus = () => { window.api.pty.claimSession(sessionId) }
+    const onFocus = () => {
+      window.api.pty.claimSession(sessionId)
+    }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [isActive, sessionId])
 
   return (
-    <div className="relative h-full rounded-md bg-surface-1 border border-border overflow-hidden flex flex-col" style={{ width }}>
+    <div
+      className="relative h-full rounded-md bg-surface-1 border border-border overflow-hidden flex flex-col"
+      style={{ width }}
+    >
       <div className="flex items-center shrink-0 h-10 px-2 gap-2 border-b border-border bg-surface-1">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Global Agent</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Global Agent
+        </span>
         <div className="ml-auto flex items-center gap-2">
           {onModeChange && (
             <Select
               value={mode}
               onValueChange={(value) => {
-                if (modes.some(m => m.id === value)) onModeChange(value as TerminalMode)
+                if (modes.some((m) => m.id === value)) onModeChange(value as TerminalMode)
               }}
             >
               <SelectTrigger
@@ -97,14 +104,18 @@ export function GlobalAgentSidePanel({
               >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent position="popper" align="end" className="min-w-[var(--radix-select-trigger-width)] max-h-none">
-                {builtin.map(m => (
+              <SelectContent
+                position="popper"
+                align="end"
+                className="min-w-[var(--radix-select-trigger-width)] max-h-none"
+              >
+                {builtin.map((m) => (
                   <SelectItem key={m.id} value={m.id}>
                     {getModeLabel(m)}
                   </SelectItem>
                 ))}
                 {custom.length > 0 && builtin.length > 0 && <SelectSeparator />}
-                {custom.map(m => (
+                {custom.map((m) => (
                   <SelectItem key={m.id} value={m.id}>
                     {getModeLabel(m)}
                   </SelectItem>

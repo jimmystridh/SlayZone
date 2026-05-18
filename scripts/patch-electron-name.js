@@ -113,4 +113,6 @@ if (fs.existsSync(appIconPath)) {
   console.log('Skipping icon replacement (source icon not found)')
 }
 
-console.log(`\n✅ Electron patched successfully! "${APP_NAME}" will appear in macOS menu bar and Cmd+Tab.`)
+console.log(
+  `\n✅ Electron patched successfully! "${APP_NAME}" will appear in macOS menu bar and Cmd+Tab.`
+)

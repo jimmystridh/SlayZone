@@ -22,7 +22,9 @@ function test(name: string, fn: () => void) {
 
 function assert(actual: unknown, expected: unknown, label?: string) {
   if (actual !== expected) {
-    throw new Error(`${label ? label + ': ' : ''}expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+    throw new Error(
+      `${label ? label + ': ' : ''}expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+    )
   }
 }
 
@@ -79,11 +81,17 @@ test('matches http URL', () => {
 })
 
 test('matches URL with path', () => {
-  assert(matchUrl('see https://github.com/xtermjs/xterm.js/issues/123'), 'https://github.com/xtermjs/xterm.js/issues/123')
+  assert(
+    matchUrl('see https://github.com/xtermjs/xterm.js/issues/123'),
+    'https://github.com/xtermjs/xterm.js/issues/123'
+  )
 })
 
 test('matches URL with query string', () => {
-  assert(matchUrl('go to https://example.com/search?q=test&page=1'), 'https://example.com/search?q=test&page=1')
+  assert(
+    matchUrl('go to https://example.com/search?q=test&page=1'),
+    'https://example.com/search?q=test&page=1'
+  )
 })
 
 test('matches URL with fragment', () => {
@@ -146,11 +154,17 @@ test('matches multiple URLs', () => {
 })
 
 test('matches URL in Claude Code output', () => {
-  assert(matchUrl('  Created PR: https://github.com/org/repo/pull/42'), 'https://github.com/org/repo/pull/42')
+  assert(
+    matchUrl('  Created PR: https://github.com/org/repo/pull/42'),
+    'https://github.com/org/repo/pull/42'
+  )
 })
 
 test('matches URL in npm output', () => {
-  assert(matchUrl('npm warn deprecated https://registry.npmjs.org/pkg'), 'https://registry.npmjs.org/pkg')
+  assert(
+    matchUrl('npm warn deprecated https://registry.npmjs.org/pkg'),
+    'https://registry.npmjs.org/pkg'
+  )
 })
 
 test('matches HTTPS (uppercase)', () => {
@@ -231,9 +245,7 @@ console.log('\nmapStringIndex')
 console.log('─'.repeat(40))
 
 test('maps index within first line', () => {
-  const term = mockTerminal([
-    { text: 'hello world', isWrapped: false }
-  ])
+  const term = mockTerminal([{ text: 'hello world', isWrapped: false }])
   assertDeep(mapStringIndex(term, 0, 0, 5), [0, 5])
 })
 
@@ -255,16 +267,12 @@ test('maps index at line boundary', () => {
 })
 
 test('maps with startCol offset', () => {
-  const term = mockTerminal([
-    { text: '0123456789', isWrapped: false }
-  ])
+  const term = mockTerminal([{ text: '0123456789', isWrapped: false }])
   assertDeep(mapStringIndex(term, 0, 3, 4), [0, 7])
 })
 
 test('returns [-1, -1] for out-of-bounds line', () => {
-  const term = mockTerminal([
-    { text: 'short', isWrapped: false }
-  ])
+  const term = mockTerminal([{ text: 'short', isWrapped: false }])
   assertDeep(mapStringIndex(term, 0, 0, 100), [-1, -1])
 })
 
@@ -330,7 +338,10 @@ test('matches absolute path with line:col', () => {
 
 // Nested paths
 test('matches deeply nested path', () => {
-  assert(matchFile('packages/domains/terminal/src/client/Terminal.tsx'), 'packages/domains/terminal/src/client/Terminal.tsx')
+  assert(
+    matchFile('packages/domains/terminal/src/client/Terminal.tsx'),
+    'packages/domains/terminal/src/client/Terminal.tsx'
+  )
 })
 
 // Real terminal output patterns
@@ -411,7 +422,7 @@ test('extends URL through soft-continuation lines (first line)', async () => {
   const term = mockTerminal([
     { text: '  https://example.com/auth?client_id=abc&response_type=', isWrapped: false },
     { text: '  code&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback', isWrapped: false },
-    { text: '  &scope=read+write&state=xyz123', isWrapped: false },
+    { text: '  &scope=read+write&state=xyz123', isWrapped: false }
   ])
   const links = await getLinks(term, 1)
   assert(links.length, 1, 'should find 1 link')
@@ -426,7 +437,7 @@ test('resolves URL from continuation line (middle line)', async () => {
   const term = mockTerminal([
     { text: '  https://example.com/auth?client_id=abc&response_type=', isWrapped: false },
     { text: '  code&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback', isWrapped: false },
-    { text: '  &scope=read+write&state=xyz123', isWrapped: false },
+    { text: '  &scope=read+write&state=xyz123', isWrapped: false }
   ])
   const links = await getLinks(term, 2)
   assert(links.length, 1, 'should find 1 link')
@@ -441,7 +452,7 @@ test('resolves URL from continuation line (last line)', async () => {
   const term = mockTerminal([
     { text: '  https://example.com/auth?client_id=abc&response_type=', isWrapped: false },
     { text: '  code&redirect_uri=callback', isWrapped: false },
-    { text: '  &state=xyz123', isWrapped: false },
+    { text: '  &state=xyz123', isWrapped: false }
   ])
   const links = await getLinks(term, 3)
   assert(links.length, 1, 'should find 1 link')
@@ -451,7 +462,7 @@ test('resolves URL from continuation line (last line)', async () => {
 test('does not false-positive on indented non-URL text', async () => {
   const term = mockTerminal([
     { text: '  some random text here', isWrapped: false },
-    { text: '  abcdef123456', isWrapped: false },
+    { text: '  abcdef123456', isWrapped: false }
   ])
   const links = await getLinks(term, 2)
   assert(links.length, 0, 'should not create link without URL above')
@@ -460,7 +471,7 @@ test('does not false-positive on indented non-URL text', async () => {
 test('stops soft-continuation at line with whitespace', async () => {
   const term = mockTerminal([
     { text: '  https://example.com/path?q=', isWrapped: false },
-    { text: '  value one two', isWrapped: false },
+    { text: '  value one two', isWrapped: false }
   ])
   const links = await getLinks(term, 1)
   assert(links.length, 1, 'should find 1 link')
@@ -471,7 +482,7 @@ test('stops soft-continuation at line with whitespace', async () => {
 test('does not resolve non-indented continuation line', async () => {
   const term = mockTerminal([
     { text: '  https://example.com/path?q=', isWrapped: false },
-    { text: 'continuation_no_indent', isWrapped: false },
+    { text: 'continuation_no_indent', isWrapped: false }
   ])
   // Line 2 is not indented, so _resolveUrlFromContext should reject it
   const links = await getLinks(term, 2)
@@ -480,18 +491,40 @@ test('does not resolve non-indented continuation line', async () => {
 
 test('Claude Code OAuth URL pattern', async () => {
   const term = mockTerminal([
-    { text: '                                                                                                ', isWrapped: false },
-    { text: '  https://claude.ai/oauth/authorize?code=true&client_id=9d1c250a-e61b-44d9-88ed-5944d1962f5e&response_type=', isWrapped: false },
-    { text: '  code&redirect_uri=https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode%2Fcallback&scope=org%3Acreate_api_key+', isWrapped: false },
-    { text: '  user%3Aprofile+user%3Ainference+user%3Asessions%3Aclaude_code+user%3Amcp_servers+user%3Afile_upload&code_', isWrapped: false },
-    { text: '  challenge=O44F0Xd8JqqCj_xNOrBLO88VYMQ-PdpZZooZ4_g63Bk&code_challenge_method=S256&state=AYImunry9UZ6y_JIYR', isWrapped: false },
+    {
+      text: '                                                                                                ',
+      isWrapped: false
+    },
+    {
+      text: '  https://claude.ai/oauth/authorize?code=true&client_id=9d1c250a-e61b-44d9-88ed-5944d1962f5e&response_type=',
+      isWrapped: false
+    },
+    {
+      text: '  code&redirect_uri=https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode%2Fcallback&scope=org%3Acreate_api_key+',
+      isWrapped: false
+    },
+    {
+      text: '  user%3Aprofile+user%3Ainference+user%3Asessions%3Aclaude_code+user%3Amcp_servers+user%3Afile_upload&code_',
+      isWrapped: false
+    },
+    {
+      text: '  challenge=O44F0Xd8JqqCj_xNOrBLO88VYMQ-PdpZZooZ4_g63Bk&code_challenge_method=S256&state=AYImunry9UZ6y_JIYR',
+      isWrapped: false
+    },
     { text: '  ziVxJESlTyNu4t-tYKiNqy2Wg', isWrapped: false },
-    { text: '                                                                                                ', isWrapped: false },
+    {
+      text: '                                                                                                ',
+      isWrapped: false
+    }
   ])
   // Test from the first URL line
   const links1 = await getLinks(term, 2)
   assert(links1.length, 1, 'first URL line should have link')
-  assert(links1[0].text.startsWith('https://claude.ai/oauth/authorize'), true, 'should start with scheme')
+  assert(
+    links1[0].text.startsWith('https://claude.ai/oauth/authorize'),
+    true,
+    'should start with scheme'
+  )
   assert(links1[0].text.endsWith('ziVxJESlTyNu4t-tYKiNqy2Wg'), true, 'should include last fragment')
 
   // Test from a middle continuation line
@@ -515,7 +548,9 @@ test('Claude Code OAuth URL pattern', async () => {
 function getLinksSync(term: Terminal, bufferLineNumber: number): ILink[] {
   const provider = new WebLinkProvider(term, () => {})
   let result: ILink[] = []
-  provider.provideLinks(bufferLineNumber, (links) => { result = links ?? [] })
+  provider.provideLinks(bufferLineNumber, (links) => {
+    result = links ?? []
+  })
   return result
 }
 
@@ -523,7 +558,7 @@ test('first-line link range extends through soft-continuation lines', () => {
   const term = mockTerminal([
     { text: '  https://example.com/auth?client_id=abc&response_type=', isWrapped: false },
     { text: '  code&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback', isWrapped: false },
-    { text: '  &scope=read+write&state=xyz123', isWrapped: false },
+    { text: '  &scope=read+write&state=xyz123', isWrapped: false }
   ])
   const links = getLinksSync(term, 1)
   assert(links.length, 1, 'should find 1 link')
@@ -536,13 +571,31 @@ test('first-line link range extends through soft-continuation lines', () => {
 
 test('OAuth URL first-line range spans all continuation lines', () => {
   const term = mockTerminal([
-    { text: '                                                                                                ', isWrapped: false },
-    { text: '  https://claude.ai/oauth/authorize?code=true&client_id=9d1c250a-e61b-44d9-88ed-5944d1962f5e&response_type=', isWrapped: false },
-    { text: '  code&redirect_uri=https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode%2Fcallback&scope=org%3Acreate_api_key+', isWrapped: false },
-    { text: '  user%3Aprofile+user%3Ainference+user%3Asessions%3Aclaude_code+user%3Amcp_servers+user%3Afile_upload&code_', isWrapped: false },
-    { text: '  challenge=O44F0Xd8JqqCj_xNOrBLO88VYMQ-PdpZZooZ4_g63Bk&code_challenge_method=S256&state=AYImunry9UZ6y_JIYR', isWrapped: false },
+    {
+      text: '                                                                                                ',
+      isWrapped: false
+    },
+    {
+      text: '  https://claude.ai/oauth/authorize?code=true&client_id=9d1c250a-e61b-44d9-88ed-5944d1962f5e&response_type=',
+      isWrapped: false
+    },
+    {
+      text: '  code&redirect_uri=https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode%2Fcallback&scope=org%3Acreate_api_key+',
+      isWrapped: false
+    },
+    {
+      text: '  user%3Aprofile+user%3Ainference+user%3Asessions%3Aclaude_code+user%3Amcp_servers+user%3Afile_upload&code_',
+      isWrapped: false
+    },
+    {
+      text: '  challenge=O44F0Xd8JqqCj_xNOrBLO88VYMQ-PdpZZooZ4_g63Bk&code_challenge_method=S256&state=AYImunry9UZ6y_JIYR',
+      isWrapped: false
+    },
     { text: '  ziVxJESlTyNu4t-tYKiNqy2Wg', isWrapped: false },
-    { text: '                                                                                                ', isWrapped: false },
+    {
+      text: '                                                                                                ',
+      isWrapped: false
+    }
   ])
   const links = getLinksSync(term, 2) // first URL line
   assert(links.length, 1, 'should find 1 link')
@@ -561,7 +614,9 @@ import { FileLinkProvider } from './web-link-provider'
 function getFileLinksSync(term: Terminal, bufferLineNumber: number): ILink[] {
   const provider = new FileLinkProvider(term, () => {})
   let result: ILink[] = []
-  provider.provideLinks(bufferLineNumber, (links) => { result = links ?? [] })
+  provider.provideLinks(bufferLineNumber, (links) => {
+    result = links ?? []
+  })
   return result
 }
 
@@ -570,30 +625,45 @@ test('detects file path split across wrapped lines (first line)', () => {
   // wrapped at col 60
   const term = mockTerminal([
     { text: '⏺ Update(packages/domains/ai-config/src/shared/skill-market', isWrapped: false },
-    { text: 'place-registry.ts)', isWrapped: true },
+    { text: 'place-registry.ts)', isWrapped: true }
   ])
   const links = getFileLinksSync(term, 1)
   assert(links.length, 1, 'should find 1 file link on first line')
-  assert(links[0].text, 'packages/domains/ai-config/src/shared/skill-marketplace-registry.ts', 'full path')
+  assert(
+    links[0].text,
+    'packages/domains/ai-config/src/shared/skill-marketplace-registry.ts',
+    'full path'
+  )
 })
 
 test('detects file path split across wrapped lines (continuation line)', () => {
   const term = mockTerminal([
     { text: '⏺ Update(packages/domains/ai-config/src/shared/skill-market', isWrapped: false },
-    { text: 'place-registry.ts)', isWrapped: true },
+    { text: 'place-registry.ts)', isWrapped: true }
   ])
   const links = getFileLinksSync(term, 2)
   assert(links.length, 1, 'should find 1 file link on continuation line')
-  assert(links[0].text, 'packages/domains/ai-config/src/shared/skill-marketplace-registry.ts', 'full path')
+  assert(
+    links[0].text,
+    'packages/domains/ai-config/src/shared/skill-marketplace-registry.ts',
+    'full path'
+  )
 })
 
 test('non-wrapped file path still works', () => {
   const term = mockTerminal([
-    { text: '⏺ Update(packages/domains/ai-config/src/shared/skill-marketplace-registry.ts)', isWrapped: false },
+    {
+      text: '⏺ Update(packages/domains/ai-config/src/shared/skill-marketplace-registry.ts)',
+      isWrapped: false
+    }
   ])
   const links = getFileLinksSync(term, 1)
   assert(links.length, 1, 'should find 1 file link')
-  assert(links[0].text, 'packages/domains/ai-config/src/shared/skill-marketplace-registry.ts', 'full path')
+  assert(
+    links[0].text,
+    'packages/domains/ai-config/src/shared/skill-marketplace-registry.ts',
+    'full path'
+  )
 })
 
 console.log('─'.repeat(40))

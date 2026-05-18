@@ -1,4 +1,4 @@
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 test.describe('Provider config roundtrip', () => {
@@ -8,7 +8,11 @@ test.describe('Provider config roundtrip', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'ProvCfg RT', color: '#f97316', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'ProvCfg RT',
+      color: '#f97316',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     const t = await s.createTask({ projectId: p.id, title: 'Provider config task', status: 'todo' })
     taskId = t.id
@@ -106,12 +110,13 @@ test.describe('Provider config roundtrip', () => {
 
   test('create task with explicit flags override', async ({ mainWindow }) => {
     const task = await mainWindow.evaluate(
-      (pid) => window.api.db.createTask({
-        projectId: pid,
-        title: 'Custom flags task',
-        claudeFlags: '--my-custom-flag',
-        codexFlags: '--custom-codex',
-      }),
+      (pid) =>
+        window.api.db.createTask({
+          projectId: pid,
+          title: 'Custom flags task',
+          claudeFlags: '--my-custom-flag',
+          codexFlags: '--custom-codex'
+        }),
       projectId
     )
     expect(task?.claude_flags).toBe('--my-custom-flag')
@@ -120,8 +125,8 @@ test.describe('Provider config roundtrip', () => {
 
   test('default flags setting is used for new tasks', async ({ mainWindow }) => {
     // Set a custom default via terminal_modes table
-    await mainWindow.evaluate(
-      () => window.api.terminalModes.update('claude-code', { defaultFlags: '--test-default-flag' })
+    await mainWindow.evaluate(() =>
+      window.api.terminalModes.update('claude-code', { defaultFlags: '--test-default-flag' })
     )
 
     const task = await mainWindow.evaluate(
@@ -131,8 +136,10 @@ test.describe('Provider config roundtrip', () => {
     expect(task?.claude_flags).toBe('--test-default-flag')
 
     // Restore default
-    await mainWindow.evaluate(
-      () => window.api.terminalModes.update('claude-code', { defaultFlags: '--allow-dangerously-skip-permissions' })
+    await mainWindow.evaluate(() =>
+      window.api.terminalModes.update('claude-code', {
+        defaultFlags: '--allow-dangerously-skip-permissions'
+      })
     )
   })
 })

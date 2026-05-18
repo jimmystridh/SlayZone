@@ -3,12 +3,7 @@ import { realpathSync } from 'node:fs'
 import type { Database } from 'better-sqlite3'
 import type { AgentEvent } from '@slayzone/terminal/shared'
 import { snapshotWorktree, deleteTurnRef, diffIsEmptyCached, diffIsEmpty } from './git-snapshot'
-import {
-  insertTurn,
-  deleteTurn,
-  getLatestTurnForWorktree,
-  findTurnsToPrune,
-} from './db'
+import { insertTurn, deleteTurn, getLatestTurnForWorktree, findTurnsToPrune } from './db'
 
 /**
  * Check whether a prompt text is "clean" enough to store as a preview.
@@ -116,7 +111,7 @@ export async function recordTurnBoundary(
       prompt_preview: isCleanPrompt(promptText)
         ? promptText.replace(/\s+/g, ' ').trim().slice(0, 200)
         : '',
-      created_at: Date.now(),
+      created_at: Date.now()
     })
   } catch (err) {
     console.error('[turn-tracker] insertTurn failed:', err)

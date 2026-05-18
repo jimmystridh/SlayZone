@@ -29,7 +29,7 @@ export function TerminalProgressDot({
   noTooltip = false,
   needsAttention = false,
   size = 14,
-  className,
+  className
 }: TerminalProgressDotProps): React.JSX.Element | null {
   const baseStyle = getTerminalStateStyle(state)
   const stateStyle = needsAttention ? ATTENTION_STATE_STYLE : baseStyle
@@ -42,20 +42,35 @@ export function TerminalProgressDot({
   const isRunning = !needsAttention && state === 'running'
 
   const blob = (
-    <span className={cn('relative inline-flex items-center justify-center shrink-0 size-3.5', className)}>
-      {showProgress && (
-        <ProgressRing value={progress!} size={size} strokeWidth={1.5} className="absolute inset-0" />
+    <span
+      className={cn(
+        'relative inline-flex items-center justify-center shrink-0 size-3.5',
+        className
       )}
-      {showState && (
-        isRunning ? (
+    >
+      {showProgress && (
+        <ProgressRing
+          value={progress!}
+          size={size}
+          strokeWidth={1.5}
+          className="absolute inset-0"
+        />
+      )}
+      {showState &&
+        (isRunning ? (
           <Loader2
-            className={cn('relative z-10 size-3 animate-spin', stateStyle?.textColor ?? 'text-green-500')}
+            className={cn(
+              'relative z-10 size-3 animate-spin',
+              stateStyle?.textColor ?? 'text-green-500'
+            )}
             aria-label={stateLabel}
           />
         ) : (
-          <span className={cn('relative z-10 size-2 rounded-full', dotColor)} aria-label={stateLabel} />
-        )
-      )}
+          <span
+            className={cn('relative z-10 size-2 rounded-full', dotColor)}
+            aria-label={stateLabel}
+          />
+        ))}
     </span>
   )
 
@@ -63,8 +78,10 @@ export function TerminalProgressDot({
 
   const tooltipText = [
     showState ? stateLabel : null,
-    showProgress ? `${Math.round(progress!)}%` : null,
-  ].filter(Boolean).join(' - ')
+    showProgress ? `${Math.round(progress!)}%` : null
+  ]
+    .filter(Boolean)
+    .join(' - ')
 
   return (
     <Tooltip>

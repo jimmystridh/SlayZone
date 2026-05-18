@@ -10,7 +10,7 @@ function makeKeyEvent(overrides: Partial<KeyboardEvent>): KeyboardEvent {
     altKey: false,
     preventDefault: vi.fn(),
     stopPropagation: vi.fn(),
-    ...overrides,
+    ...overrides
   } as unknown as KeyboardEvent
 }
 

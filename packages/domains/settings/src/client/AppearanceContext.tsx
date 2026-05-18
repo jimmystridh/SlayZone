@@ -23,7 +23,7 @@ export function AppearanceProvider({
   const [localRevision, setLocalRevision] = useState(0)
 
   useEffect(() => {
-    const handler = () => setLocalRevision(r => r + 1)
+    const handler = () => setLocalRevision((r) => r + 1)
     window.addEventListener('sz:settings-changed', handler)
     return () => window.removeEventListener('sz:settings-changed', handler)
   }, [])
@@ -64,69 +64,93 @@ export function AppearanceProvider({
       window.api.settings.get('chat_show_message_meta'),
       window.api.settings.get('editor_markdown_view_mode'),
       window.api.settings.get('editor_minimap_enabled'),
-      window.api.settings.get('editor_toc_enabled'),
-    ]).then(([
-      termSize, editorSize, reduceMotion, colorTints,
-      wordWrap, tabSize, indentTabs, renderWs,
-      termFamily, termScrollback,
-      diffContext, diffWs,
-      diffContinuous, diffTreeColl, diffSbS, diffWrap,
-      browserZoom, browserUrl, browserDevices,
-      notesFontFamily, notesReadability, legacyNotesLineSpacing, notesWidth, notesCheckedHighlight, notesShowToolbar, notesSpellcheck,
-      chatWidth,
-      chatShowTools, chatShowLastMessageTools, chatFileEditsOpenByDefault, chatShowMessageMeta,
-      mdViewMode, minimapEnabled, tocEnabled,
-    ]) => {
-      // One-shot migration: notes_line_spacing → notes_readability
-      let readabilityValue = notesReadability
-      if (!readabilityValue && legacyNotesLineSpacing) {
-        readabilityValue = legacyNotesLineSpacing
-        window.api.settings.set('notes_readability', legacyNotesLineSpacing)
-        window.api.settings.set('notes_line_spacing', '')
+      window.api.settings.get('editor_toc_enabled')
+    ]).then(
+      ([
+        termSize,
+        editorSize,
+        reduceMotion,
+        colorTints,
+        wordWrap,
+        tabSize,
+        indentTabs,
+        renderWs,
+        termFamily,
+        termScrollback,
+        diffContext,
+        diffWs,
+        diffContinuous,
+        diffTreeColl,
+        diffSbS,
+        diffWrap,
+        browserZoom,
+        browserUrl,
+        browserDevices,
+        notesFontFamily,
+        notesReadability,
+        legacyNotesLineSpacing,
+        notesWidth,
+        notesCheckedHighlight,
+        notesShowToolbar,
+        notesSpellcheck,
+        chatWidth,
+        chatShowTools,
+        chatShowLastMessageTools,
+        chatFileEditsOpenByDefault,
+        chatShowMessageMeta,
+        mdViewMode,
+        minimapEnabled,
+        tocEnabled
+      ]) => {
+        // One-shot migration: notes_line_spacing → notes_readability
+        let readabilityValue = notesReadability
+        if (!readabilityValue && legacyNotesLineSpacing) {
+          readabilityValue = legacyNotesLineSpacing
+          window.api.settings.set('notes_readability', legacyNotesLineSpacing)
+          window.api.settings.set('notes_line_spacing', '')
+        }
+        const d = appearanceDefaults
+        performance.mark('sz:appearance:end')
+        setSettings({
+          terminalFontSize: termSize ? parseInt(termSize, 10) : d.terminalFontSize,
+          editorFontSize: editorSize ? parseInt(editorSize, 10) : d.editorFontSize,
+          reduceMotion: reduceMotion === '1',
+          colorTintsEnabled: colorTints !== '0',
+          editorWordWrap: wordWrap === 'on' ? 'on' : 'off',
+          editorTabSize: tabSize === '4' ? 4 : 2,
+          editorIndentTabs: indentTabs === '1',
+          editorRenderWhitespace: renderWs === 'all' ? 'all' : 'none',
+          terminalFontFamily: termFamily || d.terminalFontFamily,
+          terminalScrollback: termScrollback ? parseInt(termScrollback, 10) : d.terminalScrollback,
+          diffContextLines:
+            diffContext === '0' || diffContext === '5' || diffContext === 'all' ? diffContext : '3',
+          diffIgnoreWhitespace: diffWs === '1',
+          diffContinuousFlow: diffContinuous === '1',
+          diffTreeCollapsed: diffTreeColl === '1',
+          diffSideBySide: diffSbS === '1',
+          diffWrap: diffWrap === '1',
+          browserDefaultZoom: browserZoom ? parseInt(browserZoom, 10) : d.browserDefaultZoom,
+          browserDefaultUrl: browserUrl || '',
+          browserDeviceDefaults: tryParseJson<BrowserDeviceDefaults | null>(browserDevices, null),
+          notesFontFamily: notesFontFamily === 'mono' ? 'mono' : 'sans',
+          notesReadability: readabilityValue === 'compact' ? 'compact' : 'normal',
+          notesWidth: notesWidth === 'wide' ? 'wide' : 'narrow',
+          notesCheckedHighlight: notesCheckedHighlight === '1',
+          notesShowToolbar: notesShowToolbar === '1',
+          notesSpellcheck: notesSpellcheck !== '0',
+          chatWidth: chatWidth === 'wide' ? 'wide' : 'narrow',
+          chatShowTools: chatShowTools !== '0',
+          chatShowLastMessageTools: chatShowLastMessageTools !== '0',
+          chatFileEditsOpenByDefault: chatFileEditsOpenByDefault !== '0',
+          chatShowMessageMeta: chatShowMessageMeta !== '0',
+          editorMarkdownViewMode:
+            mdViewMode === 'split' || mdViewMode === 'code' ? mdViewMode : 'rich',
+          editorMinimapEnabled: minimapEnabled === '1',
+          editorTocEnabled: tocEnabled === '1'
+        })
       }
-      const d = appearanceDefaults
-      performance.mark('sz:appearance:end')
-      setSettings({
-        terminalFontSize: termSize ? parseInt(termSize, 10) : d.terminalFontSize,
-        editorFontSize: editorSize ? parseInt(editorSize, 10) : d.editorFontSize,
-        reduceMotion: reduceMotion === '1',
-        colorTintsEnabled: colorTints !== '0',
-        editorWordWrap: wordWrap === 'on' ? 'on' : 'off',
-        editorTabSize: tabSize === '4' ? 4 : 2,
-        editorIndentTabs: indentTabs === '1',
-        editorRenderWhitespace: renderWs === 'all' ? 'all' : 'none',
-        terminalFontFamily: termFamily || d.terminalFontFamily,
-        terminalScrollback: termScrollback ? parseInt(termScrollback, 10) : d.terminalScrollback,
-        diffContextLines: (diffContext === '0' || diffContext === '5' || diffContext === 'all') ? diffContext : '3',
-        diffIgnoreWhitespace: diffWs === '1',
-        diffContinuousFlow: diffContinuous === '1',
-        diffTreeCollapsed: diffTreeColl === '1',
-        diffSideBySide: diffSbS === '1',
-        diffWrap: diffWrap === '1',
-        browserDefaultZoom: browserZoom ? parseInt(browserZoom, 10) : d.browserDefaultZoom,
-        browserDefaultUrl: browserUrl || '',
-        browserDeviceDefaults: tryParseJson<BrowserDeviceDefaults | null>(browserDevices, null),
-        notesFontFamily: notesFontFamily === 'mono' ? 'mono' : 'sans',
-        notesReadability: readabilityValue === 'compact' ? 'compact' : 'normal',
-        notesWidth: notesWidth === 'wide' ? 'wide' : 'narrow',
-        notesCheckedHighlight: notesCheckedHighlight === '1',
-        notesShowToolbar: notesShowToolbar === '1',
-        notesSpellcheck: notesSpellcheck !== '0',
-        chatWidth: chatWidth === 'wide' ? 'wide' : 'narrow',
-        chatShowTools: chatShowTools !== '0',
-        chatShowLastMessageTools: chatShowLastMessageTools !== '0',
-        chatFileEditsOpenByDefault: chatFileEditsOpenByDefault !== '0',
-        chatShowMessageMeta: chatShowMessageMeta !== '0',
-        editorMarkdownViewMode: (mdViewMode === 'split' || mdViewMode === 'code') ? mdViewMode : 'rich',
-        editorMinimapEnabled: minimapEnabled === '1',
-        editorTocEnabled: tocEnabled === '1',
-      })
-    })
+    )
   }, [settingsRevision, localRevision])
 
-  return (
-    <AppearanceContext.Provider value={settings}>
-      {children}
-    </AppearanceContext.Provider>
-  )
+  return <AppearanceContext.Provider value={settings}>{children}</AppearanceContext.Provider>
 }

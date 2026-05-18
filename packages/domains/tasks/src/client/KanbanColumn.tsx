@@ -263,8 +263,10 @@ export function KanbanColumn({
       <div className="mb-2 flex items-center justify-between px-2 select-none">
         <div className="flex items-center gap-2">
           {(() => {
-            if (column.id === '__blocked__') return <ShieldAlert className="size-4 text-red-500" strokeWidth={2.5} />
-            if (column.id === '__snoozed__') return <AlarmClockOff className="size-4 text-orange-500" strokeWidth={2.5} />
+            if (column.id === '__blocked__')
+              return <ShieldAlert className="size-4 text-red-500" strokeWidth={2.5} />
+            if (column.id === '__snoozed__')
+              return <AlarmClockOff className="size-4 text-orange-500" strokeWidth={2.5} />
             const style = getColumnStatusStyle(column.id, columns)
             if (!style) return null
             const Icon = style.icon
@@ -331,7 +333,9 @@ export function KanbanColumn({
                 isFocused={focusedTaskId === task.id}
                 isSelected={selectedTaskIds?.has(task.id)}
                 isMultiDragGhost={
-                  !!activeColumnId && (selectedTaskIds?.has(task.id) ?? false) && (selectedTaskIds?.size ?? 0) > 1
+                  !!activeColumnId &&
+                  (selectedTaskIds?.has(task.id) ?? false) &&
+                  (selectedTaskIds?.size ?? 0) > 1
                 }
                 selectedTaskIds={selectedTaskIds}
                 allTasks={allTasks}

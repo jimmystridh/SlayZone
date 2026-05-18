@@ -46,21 +46,32 @@ export function useTabLifecycle({
     const taskIds = new Set(tasks.map((t) => t.id))
     const store = useTabStore.getState()
     const prev = store.tabs
-    const removedTabs = prev.filter((tab): tab is Extract<Tab, { type: 'task' }> => tab.type === 'task' && !taskIds.has(tab.taskId))
+    const removedTabs = prev.filter(
+      (tab): tab is Extract<Tab, { type: 'task' }> =>
+        tab.type === 'task' && !taskIds.has(tab.taskId)
+    )
     if (removedTabs.length > 0) {
       const newClosed = [...store.closedTabs, ...removedTabs]
       while (newClosed.length > 20) newClosed.shift()
       useTabStore.setState({ closedTabs: newClosed })
     }
     const filtered = prev.filter((tab) => tab.type !== 'task' || taskIds.has(tab.taskId))
-    const newActive = filtered.length < prev.length ? Math.min(store.activeTabIndex, filtered.length - 1) : store.activeTabIndex
+    const newActive =
+      filtered.length < prev.length
+        ? Math.min(store.activeTabIndex, filtered.length - 1)
+        : store.activeTabIndex
     const updated = filtered.map((tab) => {
       if (tab.type !== 'task') return tab
       const task = tasks.find((t) => t.id === tab.taskId)
       if (task) {
         const isSubTask = !!task.parent_id
         const isTemporary = !!task.is_temporary
-        if (task.title !== tab.title || task.status !== tab.status || isSubTask !== tab.isSubTask || isTemporary !== tab.isTemporary) {
+        if (
+          task.title !== tab.title ||
+          task.status !== tab.status ||
+          isSubTask !== tab.isSubTask ||
+          isTemporary !== tab.isTemporary
+        ) {
           return { ...tab, title: task.title, status: task.status, isSubTask, isTemporary }
         }
       }

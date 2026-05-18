@@ -1,15 +1,11 @@
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
-import {
-  switchTerminalMode,
-  getMainSessionId,
-  waitForPtySession,
-} from '../fixtures/terminal'
+import { switchTerminalMode, getMainSessionId, waitForPtySession } from '../fixtures/terminal'
 import {
   ensureBrowserPanelVisible,
   getActiveViewId,
   openTaskViaSearch,
-  testInvoke,
+  testInvoke
 } from '../fixtures/browser-view'
 import { getTestUrl, TEST_HOST_MATCH } from '../fixtures/test-server'
 
@@ -28,20 +24,30 @@ test.describe('DOM picker to terminal', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: projectName, color: '#22c55e', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: projectName,
+      color: '#22c55e',
+      path: TEST_PROJECT_PATH
+    })
     const t = await s.createTask({ projectId: p.id, title: 'DOM picker task', status: 'todo' })
     taskId = t.id
     sessionId = getMainSessionId(taskId)
     await s.refreshData()
 
     await openTaskViaSearch(mainWindow, 'DOM picker task')
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
-    await expect(mainWindow.locator('[data-testid="terminal-tabbar"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('[data-testid="terminal-tabbar"]:visible').first()).toBeVisible(
+      { timeout: 5_000 }
+    )
     await switchTerminalMode(mainWindow, 'terminal')
     await waitForPtySession(mainWindow, sessionId)
 
     await ensureBrowserPanelVisible(mainWindow)
-    await expect(mainWindow.locator('[data-browser-panel="true"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('[data-browser-panel="true"]:visible').first()).toBeVisible({
+      timeout: 5_000
+    })
     viewId = await getActiveViewId(mainWindow, taskId)
   })
 
@@ -49,13 +55,22 @@ test.describe('DOM picker to terminal', () => {
     await ensureBrowserPanelVisible(mainWindow)
 
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/'))
-    await expect.poll(async () => {
-      return String(await testInvoke(mainWindow, 'browser:get-url', viewId) ?? '')
-    }, { timeout: 15_000 }).toContain(TEST_HOST_MATCH)
+    await expect
+      .poll(
+        async () => {
+          return String((await testInvoke(mainWindow, 'browser:get-url', viewId)) ?? '')
+        },
+        { timeout: 15_000 }
+      )
+      .toContain(TEST_HOST_MATCH)
 
     await expect(pickerButton(mainWindow)).toBeEnabled({ timeout: 10_000 })
 
-    if (await activeOverlay(mainWindow).isVisible().catch(() => false)) {
+    if (
+      await activeOverlay(mainWindow)
+        .isVisible()
+        .catch(() => false)
+    ) {
       await pickerButton(mainWindow).click()
       await expect(activeOverlay(mainWindow)).not.toBeVisible({ timeout: 3_000 })
     }

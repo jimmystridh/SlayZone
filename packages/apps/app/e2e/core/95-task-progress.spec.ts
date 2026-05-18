@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, resetApp, TEST_PROJECT_PATH } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  resetApp,
+  TEST_PROJECT_PATH
+} from '../fixtures/electron'
 import { spawnSync } from 'child_process'
 import path from 'path'
 import fs from 'fs'
@@ -36,7 +44,11 @@ test.describe('Task progress', () => {
     expect(mcpPort).toBeTruthy()
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Progress Test', color: '#6366f1', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Progress Test',
+      color: '#6366f1',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
 
     const t1 = await s.createTask({ projectId, title: 'UI progress task', status: 'todo' })
@@ -55,11 +67,11 @@ test.describe('Task progress', () => {
   const runCli = (...args: string[]) =>
     spawnSync('node', [SLAY_JS, ...args], {
       env: { ...process.env, SLAYZONE_DB_PATH: dbPath, SLAYZONE_MCP_PORT: String(mcpPort) },
-      encoding: 'utf8',
+      encoding: 'utf8'
     })
 
   test('default progress is 0 on new tasks', async ({ mainWindow }) => {
-    const tasks = await seed(mainWindow).getTasks() as Array<{ id: string; progress: number }>
+    const tasks = (await seed(mainWindow).getTasks()) as Array<{ id: string; progress: number }>
     const t = tasks.find((x) => x.id === openTaskId)
     expect(t?.progress).toBe(0)
   })
@@ -69,7 +81,7 @@ test.describe('Task progress', () => {
     expect(r.status).toBe(0)
     expect(r.stdout).toContain('75%')
 
-    const tasks = await seed(mainWindow).getTasks() as Array<{ id: string; progress: number }>
+    const tasks = (await seed(mainWindow).getTasks()) as Array<{ id: string; progress: number }>
     const t = tasks.find((x) => x.id === cliTaskId)
     expect(t?.progress).toBe(75)
   })
@@ -91,7 +103,9 @@ test.describe('Task progress', () => {
     // aria-label is "<percent>% complete".
     const card = mainWindow.locator(`[data-task-id="${openTaskId}"]:visible`).first()
     await expect(card).toBeVisible({ timeout: 5_000 })
-    await expect(card.locator('[aria-label*="40% complete"]').first()).toBeVisible({ timeout: 5_000 })
+    await expect(card.locator('[aria-label*="40% complete"]').first()).toBeVisible({
+      timeout: 5_000
+    })
   })
 
   test('progress indicator hidden on done tasks', async ({ mainWindow }) => {

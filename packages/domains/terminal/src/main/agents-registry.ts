@@ -43,7 +43,7 @@ async function scanDir(root: string, source: AgentSource): Promise<AgentInfo[]> 
 export async function listAgents(cwd: string): Promise<AgentInfo[]> {
   const [user, project] = await Promise.all([
     scanDir(path.join(os.homedir(), '.claude', 'agents'), 'user'),
-    scanDir(path.join(cwd, '.claude', 'agents'), 'project'),
+    scanDir(path.join(cwd, '.claude', 'agents'), 'project')
   ])
   const byName = new Map<string, AgentInfo>()
   for (const a of user) byName.set(a.name, a)

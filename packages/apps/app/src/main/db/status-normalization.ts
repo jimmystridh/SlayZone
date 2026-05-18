@@ -6,9 +6,10 @@ export function normalizeProjectStatusData(db: Database.Database): void {
   const hasColumnsConfig = projectColumns.some((column) => column.name === 'columns_config')
   if (!hasColumnsConfig) return
 
-  const projects = db
-    .prepare('SELECT id, columns_config FROM projects')
-    .all() as Array<{ id: string; columns_config: string | null }>
+  const projects = db.prepare('SELECT id, columns_config FROM projects').all() as Array<{
+    id: string
+    columns_config: string | null
+  }>
 
   if (projects.length === 0) return
 
@@ -26,7 +27,10 @@ export function normalizeProjectStatusData(db: Database.Database): void {
       const resolvedColumns = resolveColumns(parsedColumns)
       const normalizedJson = JSON.stringify(resolvedColumns)
 
-      if (project.columns_config && (parsedColumns === null || project.columns_config !== normalizedJson)) {
+      if (
+        project.columns_config &&
+        (parsedColumns === null || project.columns_config !== normalizedJson)
+      ) {
         // Invalid/stale JSON configs are normalized to a canonical validated payload.
         updateProjectColumns.run(normalizedJson, project.id)
       }

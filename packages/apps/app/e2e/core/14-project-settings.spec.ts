@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, projectBlob, resetApp} from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  projectBlob,
+  resetApp
+} from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import type { Page, Locator } from '@playwright/test'
 
@@ -9,10 +17,10 @@ declare global {
 }
 
 function testInvoke(page: import('@playwright/test').Page, channel: string, ...args: unknown[]) {
-  return page.evaluate(
-    ({ ch, a }) => window.__testInvoke(ch, ...a),
-    { ch: channel, a: args }
-  ) as Promise<any>
+  return page.evaluate(({ ch, a }) => window.__testInvoke(ch, ...a), {
+    ch: channel,
+    a: args
+  }) as Promise<any>
 }
 
 /** Click a testid-identified button via evaluate (immune to element detach).
@@ -22,7 +30,10 @@ async function clickByTestId(mainWindow: Page, testId: string): Promise<void> {
     // Wait briefly for button to exist and not be disabled
     for (let i = 0; i < 10; i++) {
       const el = document.querySelector(`[data-testid="${tid}"]`) as HTMLButtonElement | null
-      if (el && !el.disabled) { el.click(); return }
+      if (el && !el.disabled) {
+        el.click()
+        return
+      }
       await new Promise((r) => setTimeout(r, 100))
     }
     // Last resort: click even if disabled
@@ -114,15 +125,16 @@ test.describe('Project settings & context menu', () => {
     // so orphaned duplicates accumulate across tests that re-import the same
     // GitHub issues. Clear providers first (removes links), then delete tasks
     // (deleteTask blocks if external_links exist).
-    await mainWindow.evaluate(
-      async (pid) => {
-        await window.api.integrations.clearProjectProvider({ projectId: pid, provider: 'linear' }).catch(() => {})
-        await window.api.integrations.clearProjectProvider({ projectId: pid, provider: 'github' }).catch(() => {})
-        const tasks = await window.api.db.getTasksByProject(pid) as Array<{ id: string }>
-        for (const task of tasks) await window.api.db.deleteTask(task.id)
-      },
-      projectId
-    )
+    await mainWindow.evaluate(async (pid) => {
+      await window.api.integrations
+        .clearProjectProvider({ projectId: pid, provider: 'linear' })
+        .catch(() => {})
+      await window.api.integrations
+        .clearProjectProvider({ projectId: pid, provider: 'github' })
+        .catch(() => {})
+      const tasks = (await window.api.db.getTasksByProject(pid)) as Array<{ id: string }>
+      for (const task of tasks) await window.api.db.deleteTask(task.id)
+    }, projectId)
     await testInvoke(mainWindow, 'integrations:test:clear-github-mocks')
     await testInvoke(mainWindow, 'integrations:test:seed-github-connection', {
       id: GITHUB_REPO_CONNECTION_ID,
@@ -142,28 +154,30 @@ test.describe('Project settings & context menu', () => {
       issues: GITHUB_REPOSITORY_ISSUES
     })
     await mainWindow.evaluate(
-      ({ pid, cid }) => window.api.integrations.setProjectMapping({
-        projectId: pid,
-        provider: 'github',
-        connectionId: cid,
-        externalTeamId: 'acme',
-        externalTeamKey: 'acme#1',
-        externalProjectId: 'PVT_test',
-        syncMode: 'one_way'
-      }),
+      ({ pid, cid }) =>
+        window.api.integrations.setProjectMapping({
+          projectId: pid,
+          provider: 'github',
+          connectionId: cid,
+          externalTeamId: 'acme',
+          externalTeamKey: 'acme#1',
+          externalProjectId: 'PVT_test',
+          syncMode: 'one_way'
+        }),
       { pid: projectId, cid: GITHUB_REPO_CONNECTION_ID }
     )
     await mainWindow.evaluate(
-      ({ pid, statuses }) => window.api.integrations.applyStatusSync({
-        projectId: pid,
-        provider: 'github',
-        statuses
-      }),
+      ({ pid, statuses }) =>
+        window.api.integrations.applyStatusSync({
+          projectId: pid,
+          provider: 'github',
+          statuses
+        }),
       { pid: projectId, statuses: GITHUB_STATUS_OPTIONS }
     )
-    const githubConnections = await mainWindow.evaluate(
-      () => window.api.integrations.listConnections('github')
-    ) as Array<{ id: string }>
+    const githubConnections = (await mainWindow.evaluate(() =>
+      window.api.integrations.listConnections('github')
+    )) as Array<{ id: string }>
     for (const connection of githubConnections) {
       await testInvoke(mainWindow, 'integrations:test:set-github-repositories', {
         connectionId: connection.id,
@@ -200,7 +214,7 @@ test.describe('Project settings & context menu', () => {
       // Dismiss dialog — may need multiple attempts because Escape can be
       // swallowed by focused sub-elements (dropdowns, popovers, etc.)
       for (let attempt = 0; attempt < 4; attempt++) {
-        if (!await settingsHeading.isVisible().catch(() => false)) break
+        if (!(await settingsHeading.isVisible().catch(() => false))) break
         const overlay = mainWindow.locator('[data-radix-dialog-overlay]')
         if (await overlay.isVisible({ timeout: 300 }).catch(() => false)) {
           await overlay.click({ position: { x: 5, y: 5 }, force: true })
@@ -217,9 +231,10 @@ test.describe('Project settings & context menu', () => {
     await mainWindow.getByRole('menuitem', { name: 'Settings' }).click()
     await expect(settingsHeading).toBeVisible({ timeout: 5_000 })
 
-    const integrationsReady = entry === 'github_projects'
-      ? mainWindow.getByTestId('project-integration-provider-github')
-      : mainWindow.getByTestId('project-integration-provider-github-issues')
+    const integrationsReady =
+      entry === 'github_projects'
+        ? mainWindow.getByTestId('project-integration-provider-github')
+        : mainWindow.getByTestId('project-integration-provider-github-issues')
     await clickSettingsTab(
       mainWindow,
       mainWindow.getByTestId('settings-tab-integrations'),
@@ -237,7 +252,11 @@ test.describe('Project settings & context menu', () => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
     // Create a dedicated project for this test
-    const project = await s.createProject({ name: 'Settings Test', color: '#10b981', path: TEST_PROJECT_PATH })
+    const project = await s.createProject({
+      name: 'Settings Test',
+      color: '#10b981',
+      path: TEST_PROJECT_PATH
+    })
     projectId = project.id
     projectAbbrev = project.name.slice(0, 2).toUpperCase()
     await s.refreshData()
@@ -249,12 +268,16 @@ test.describe('Project settings & context menu', () => {
     const blob = projectBlob(mainWindow, projectAbbrev)
     await blob.click({ button: 'right' })
 
-    await expect(mainWindow.getByRole('menuitem', { name: 'Settings' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'Settings' })).toBeVisible({
+      timeout: 3_000
+    })
     await expect(mainWindow.getByRole('menuitem', { name: 'Delete' })).toBeVisible()
 
     // Dismiss context menu so it doesn't block subsequent tests
     await mainWindow.keyboard.press('Escape')
-    await expect(mainWindow.getByRole('menuitem', { name: 'Settings' })).not.toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'Settings' })).not.toBeVisible({
+      timeout: 3_000
+    })
   })
 
   test('context menu Settings opens project settings dialog', async ({ mainWindow }) => {
@@ -263,7 +286,9 @@ test.describe('Project settings & context menu', () => {
     await blob.click({ button: 'right' })
     await mainWindow.getByRole('menuitem', { name: 'Settings' }).click()
 
-    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' })).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' })).toBeVisible({
+      timeout: 5_000
+    })
     // General tab is default — verify name input exists
     await expect(mainWindow.locator('#edit-name')).toBeVisible({ timeout: 3_000 })
     // Switch to Integrations tab
@@ -276,7 +301,9 @@ test.describe('Project settings & context menu', () => {
     if (await githubProjectsProvider.isEnabled().catch(() => false)) {
       await githubProjectsProvider.click()
     }
-    await expect(mainWindow.getByTestId('project-integration-provider-github-issues')).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByTestId('project-integration-provider-github-issues')).toBeVisible({
+      timeout: 3_000
+    })
     // Switch back to General for the next test (edit name)
     await clickSettingsTab(
       mainWindow,
@@ -303,36 +330,51 @@ test.describe('Project settings & context menu', () => {
     await expect(repoCard.getByText('1 selected')).toBeVisible()
 
     await repoCard.getByTestId('github-repo-import-issues').click()
-    await expect.poll(async () => {
-      const tasks = await seed(mainWindow).getTasks()
-      return tasks.some((task: { project_id: string; title: string }) =>
-        task.project_id === projectId && task.title === 'Repository issue alpha'
+    await expect
+      .poll(
+        async () => {
+          const tasks = await seed(mainWindow).getTasks()
+          return tasks.some(
+            (task: { project_id: string; title: string }) =>
+              task.project_id === projectId && task.title === 'Repository issue alpha'
+          )
+        },
+        { timeout: 5_000 }
       )
-    }, { timeout: 5_000 }).toBe(true)
+      .toBe(true)
   })
 
-  test('linked GitHub repository issue row shows Linked and is not selectable', async ({ mainWindow }) => {
+  test('linked GitHub repository issue row shows Linked and is not selectable', async ({
+    mainWindow
+  }) => {
     await seedGithubRepoMocks(mainWindow)
     await mainWindow.evaluate(
-      ({ pid, cid, repo }) => window.api.integrations.importGithubRepositoryIssues({
-        projectId: pid,
-        connectionId: cid,
-        repositoryFullName: repo,
-        selectedIssueIds: ['gh-issue-101'],
-        limit: 50
-      }),
+      ({ pid, cid, repo }) =>
+        window.api.integrations.importGithubRepositoryIssues({
+          projectId: pid,
+          connectionId: cid,
+          repositoryFullName: repo,
+          selectedIssueIds: ['gh-issue-101'],
+          limit: 50
+        }),
       { pid: projectId, cid: GITHUB_REPO_CONNECTION_ID, repo: GITHUB_REPOSITORY_FULL_NAME }
     )
 
     const repoCard = await openProjectSettingsIntegrations(mainWindow, 'github_issues')
     if (!repoCard) throw new Error('Expected repo card')
 
-    await expect.poll(async () => {
-      const tasks = await seed(mainWindow).getTasks()
-      return tasks.some((task: { project_id: string; title: string }) =>
-        task.project_id === projectId && task.title === 'Repository issue alpha'
+    await expect
+      .poll(
+        async () => {
+          const tasks = await seed(mainWindow).getTasks()
+          return tasks.some(
+            (task: { project_id: string; title: string }) =>
+              task.project_id === projectId && task.title === 'Repository issue alpha'
+          )
+        },
+        { timeout: 5_000 }
       )
-    }, { timeout: 5_000 }).toBe(true)
+      .toBe(true)
 
     const reloadIssuesButton = repoCard.getByTestId('github-repo-load-issues')
     await expect(reloadIssuesButton).toBeEnabled({ timeout: 5_000 })
@@ -352,29 +394,30 @@ test.describe('Project settings & context menu', () => {
   test('GitHub bulk sync controls check diffs and run push/pull', async ({ mainWindow }) => {
     await seedGithubRepoMocks(mainWindow)
     await mainWindow.evaluate(
-      ({ pid, cid, repo }) => window.api.integrations.importGithubRepositoryIssues({
-        projectId: pid,
-        connectionId: cid,
-        repositoryFullName: repo,
-        limit: 50
-      }),
+      ({ pid, cid, repo }) =>
+        window.api.integrations.importGithubRepositoryIssues({
+          projectId: pid,
+          connectionId: cid,
+          repositoryFullName: repo,
+          limit: 50
+        }),
       { pid: projectId, cid: GITHUB_REPO_CONNECTION_ID, repo: GITHUB_REPOSITORY_FULL_NAME }
     )
     // Do data manipulation BEFORE opening dialog to avoid re-render closing it
-    const importedTasks = await seed(mainWindow).getTasks() as Array<{
+    const importedTasks = (await seed(mainWindow).getTasks()) as Array<{
       id: string
       project_id: string
       title: string
     }>
-    const alphaTask = importedTasks.find((task) =>
-      task.project_id === projectId && task.title === 'Repository issue alpha'
+    const alphaTask = importedTasks.find(
+      (task) => task.project_id === projectId && task.title === 'Repository issue alpha'
     )
     if (!alphaTask) throw new Error('Expected imported alpha task')
 
-    await mainWindow.evaluate(
-      ({ id, title }) => window.api.db.updateTask({ id, title }),
-      { id: alphaTask.id, title: 'Repository issue alpha local changed' }
-    )
+    await mainWindow.evaluate(({ id, title }) => window.api.db.updateTask({ id, title }), {
+      id: alphaTask.id,
+      title: 'Repository issue alpha local changed'
+    })
     await setGithubRepoIssues(mainWindow, GITHUB_REPOSITORY_ISSUES_REMOTE_AHEAD)
 
     /** Wait for button to be enabled, click it, then wait for result text in dialog. */
@@ -407,43 +450,55 @@ test.describe('Project settings & context menu', () => {
 
     await clickSyncButton('project-check-diffs', 'Remote ahead: 1')
     await clickSyncButton('project-pull-remote-ahead')
-    await expect.poll(async () => {
-      const tasks = await seed(mainWindow).getTasks() as Array<{ project_id: string; title: string }>
-      return tasks.some((task) =>
-        task.project_id === projectId && task.title === 'Repository issue beta remote refreshed'
+    await expect
+      .poll(
+        async () => {
+          const tasks = (await seed(mainWindow).getTasks()) as Array<{
+            project_id: string
+            title: string
+          }>
+          return tasks.some(
+            (task) =>
+              task.project_id === projectId &&
+              task.title === 'Repository issue beta remote refreshed'
+          )
+        },
+        { timeout: 3_000 }
       )
-    }, { timeout: 3_000 }).toBe(true)
+      .toBe(true)
   })
 
   test('GitHub repo import skips issues linked to another project', async ({ mainWindow }) => {
     await seedGithubRepoMocks(mainWindow)
     await mainWindow.evaluate(
-      ({ pid, cid, repo }) => window.api.integrations.importGithubRepositoryIssues({
-        projectId: pid,
-        connectionId: cid,
-        repositoryFullName: repo,
-        selectedIssueIds: ['gh-issue-101'],
-        limit: 50
-      }),
+      ({ pid, cid, repo }) =>
+        window.api.integrations.importGithubRepositoryIssues({
+          projectId: pid,
+          connectionId: cid,
+          repositoryFullName: repo,
+          selectedIssueIds: ['gh-issue-101'],
+          limit: 50
+        }),
       { pid: projectId, cid: GITHUB_REPO_CONNECTION_ID, repo: GITHUB_REPOSITORY_FULL_NAME }
     )
 
-    const otherProject = await seed(mainWindow).createProject({
+    const otherProject = (await seed(mainWindow).createProject({
       name: 'Overlap Target',
       color: '#f97316',
       path: TEST_PROJECT_PATH
-    }) as { id: string }
+    })) as { id: string }
 
-    const result = await mainWindow.evaluate(
-      ({ pid, cid, repo }) => window.api.integrations.importGithubRepositoryIssues({
-        projectId: pid,
-        connectionId: cid,
-        repositoryFullName: repo,
-        selectedIssueIds: ['gh-issue-101'],
-        limit: 50
-      }),
+    const result = (await mainWindow.evaluate(
+      ({ pid, cid, repo }) =>
+        window.api.integrations.importGithubRepositoryIssues({
+          projectId: pid,
+          connectionId: cid,
+          repositoryFullName: repo,
+          selectedIssueIds: ['gh-issue-101'],
+          limit: 50
+        }),
       { pid: otherProject.id, cid: GITHUB_REPO_CONNECTION_ID, repo: GITHUB_REPOSITORY_FULL_NAME }
-    ) as { imported: number; created: number; updated: number; skippedAlreadyLinked: number }
+    )) as { imported: number; created: number; updated: number; skippedAlreadyLinked: number }
 
     expect(result.imported).toBe(0)
     expect(result.created).toBe(0)
@@ -479,18 +534,24 @@ test.describe('Project settings & context menu', () => {
       mainWindow.getByTestId('project-column-review')
     )
     await mainWindow.getByTestId('delete-project-column-review').click()
-    await expect(mainWindow.getByTestId('project-column-review')).not.toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByTestId('project-column-review')).not.toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByTestId('save-project-columns').click()
 
     const updatedTasks = await s.getTasks()
-    const updatedTask = updatedTasks.find((t: { id: string; status: string }) => t.id === remapTask.id)
+    const updatedTask = updatedTasks.find(
+      (t: { id: string; status: string }) => t.id === remapTask.id
+    )
     expect(updatedTask?.status).toBe('inbox')
 
     const refreshedProjects = await s.getProjects()
     const refreshedProject = refreshedProjects.find((p: { id: string }) => p.id === project.id) as {
       columns_config: Array<{ id: string }> | null
     }
-    expect(Boolean(refreshedProject?.columns_config?.some((column) => column.id === 'review'))).toBe(false)
+    expect(
+      Boolean(refreshedProject?.columns_config?.some((column) => column.id === 'review'))
+    ).toBe(false)
   })
 
   test('edit project name in settings dialog', async ({ mainWindow }) => {
@@ -499,7 +560,9 @@ test.describe('Project settings & context menu', () => {
       const blob = projectBlob(mainWindow, projectAbbrev)
       await blob.click({ button: 'right' })
       await mainWindow.getByRole('menuitem', { name: 'Settings' }).click()
-      await expect(mainWindow.getByRole('heading', { name: 'Project Settings' })).toBeVisible({ timeout: 5_000 })
+      await expect(mainWindow.getByRole('heading', { name: 'Project Settings' })).toBeVisible({
+        timeout: 5_000
+      })
       await clickSettingsTab(
         mainWindow,
         mainWindow.getByRole('button', { name: 'General', exact: true }),
@@ -513,7 +576,9 @@ test.describe('Project settings & context menu', () => {
     await mainWindow.getByRole('button', { name: 'Save' }).click()
 
     // Dialog should close
-    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' })).not.toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' })).not.toBeVisible({
+      timeout: 3_000
+    })
 
     // Sidebar should show new abbreviation
     projectAbbrev = 'XY'

@@ -6,7 +6,7 @@ import {
   getSessionInfo,
   getSessionTerminalState,
   isSessionAwaitingUserInput,
-  registerChatQueueDrainer,
+  registerChatQueueDrainer
 } from './chat-transport-manager'
 import {
   listChatQueue,
@@ -14,7 +14,7 @@ import {
   removeChatQueueItem,
   clearChatQueue,
   popChatQueueHead,
-  requeueAtHead,
+  requeueAtHead
 } from './chat-queue-store'
 import type { QueuedChatMessage } from '../shared/types'
 

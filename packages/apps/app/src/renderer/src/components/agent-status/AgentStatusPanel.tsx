@@ -1,5 +1,12 @@
 import { X, Circle } from 'lucide-react'
-import { IconButton, cn, Tooltip, TooltipTrigger, TooltipContent, getColumnStatusStyle } from '@slayzone/ui'
+import {
+  IconButton,
+  cn,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  getColumnStatusStyle
+} from '@slayzone/ui'
 import { track } from '@slayzone/telemetry/client'
 import type { ColumnConfig } from '@slayzone/projects/shared'
 import type { IdleTask } from './useIdleTasks'
@@ -67,59 +74,59 @@ export function AgentStatusPanel({
 
       <div className="flex-1 min-h-0 relative">
         <div className="absolute inset-0 overflow-y-auto px-2 pt-2 space-y-2">
-        {sortedTasks.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">No agents idle</p>
-        ) : (
-          sortedTasks.map(({ task, sessionId, lastOutputTime }) => {
-            const columns = columnsByProjectId.get(task.project_id) ?? null
-            const statusStyle = getColumnStatusStyle(task.status, columns)
-            const StatusIcon = statusStyle?.icon ?? Circle
-            const statusLabel = statusStyle?.label ?? task.status
-            const statusIconClass = statusStyle?.iconClass ?? 'text-muted-foreground'
-            return (
-            <div
-              key={task.id}
-              className="rounded-lg border bg-surface-2 p-3 shadow-sm hover:bg-accent/50 transition-colors cursor-pointer"
-              onClick={() => {
-                track('notification_clicked')
-                onNavigate(task.id)
-              }}
-            >
-              <div className="flex items-start gap-2">
-                <StatusIcon
-                  aria-label={statusLabel}
-                  strokeWidth={2.5}
-                  className={cn('size-3.5 flex-shrink-0 mt-0.5', statusIconClass)}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium">{task.title}</div>
+          {sortedTasks.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No agents idle</p>
+          ) : (
+            sortedTasks.map(({ task, sessionId, lastOutputTime }) => {
+              const columns = columnsByProjectId.get(task.project_id) ?? null
+              const statusStyle = getColumnStatusStyle(task.status, columns)
+              const StatusIcon = statusStyle?.icon ?? Circle
+              const statusLabel = statusStyle?.label ?? task.status
+              const statusIconClass = statusStyle?.iconClass ?? 'text-muted-foreground'
+              return (
+                <div
+                  key={task.id}
+                  className="rounded-lg border bg-surface-2 p-3 shadow-sm hover:bg-accent/50 transition-colors cursor-pointer"
+                  onClick={() => {
+                    track('notification_clicked')
+                    onNavigate(task.id)
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <StatusIcon
+                      aria-label={statusLabel}
+                      strokeWidth={2.5}
+                      className={cn('size-3.5 flex-shrink-0 mt-0.5', statusIconClass)}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium">{task.title}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t">
+                    <span className="text-xs text-muted-foreground">
+                      {statusLabel} · Idle {formatIdleTime(lastOutputTime)}
+                    </span>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <IconButton
+                          aria-label="Dismiss from list"
+                          variant="ghost"
+                          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDismiss(sessionId)
+                          }}
+                        >
+                          <X className="size-3" />
+                        </IconButton>
+                      </TooltipTrigger>
+                      <TooltipContent>Hide until next agent activity</TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between mt-2 pt-2 border-t">
-                <span className="text-xs text-muted-foreground">
-                  {statusLabel} · Idle {formatIdleTime(lastOutputTime)}
-                </span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <IconButton
-                      aria-label="Dismiss from list"
-                      variant="ghost"
-                      className="h-6 w-6 text-muted-foreground hover:text-foreground"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onDismiss(sessionId)
-                      }}
-                    >
-                      <X className="size-3" />
-                    </IconButton>
-                  </TooltipTrigger>
-                  <TooltipContent>Hide until next agent activity</TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-            )
-          })
-        )}
+              )
+            })
+          )}
         </div>
       </div>
     </div>

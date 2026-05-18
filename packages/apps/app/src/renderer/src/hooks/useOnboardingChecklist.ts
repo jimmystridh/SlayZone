@@ -66,7 +66,8 @@ function isTruthy(value: string | null): boolean {
 function isPersistedChecklistStateV1(value: unknown): value is PersistedChecklistStateV1 {
   if (!value || typeof value !== 'object') return false
   const candidate = value as Partial<PersistedChecklistStateV1>
-  if (candidate.version !== CHECKLIST_STATE_VERSION || typeof candidate.dismissed !== 'boolean') return false
+  if (candidate.version !== CHECKLIST_STATE_VERSION || typeof candidate.dismissed !== 'boolean')
+    return false
   if (!candidate.completed || typeof candidate.completed !== 'object') return false
 
   const completed = candidate.completed as Partial<PersistedChecklistStateV1['completed']>
@@ -94,7 +95,10 @@ function parsePersistedChecklistState(raw: string | null): PersistedChecklistSta
   }
 }
 
-function areStatesEqual(left: PersistedChecklistStateV1, right: PersistedChecklistStateV1): boolean {
+function areStatesEqual(
+  left: PersistedChecklistStateV1,
+  right: PersistedChecklistStateV1
+): boolean {
   return (
     left.dismissed === right.dismissed &&
     left.completed.setupGuide === right.completed.setupGuide &&
@@ -112,20 +116,22 @@ export function useOnboardingChecklist({
   onJoinCommunity,
   onFollowOnX
 }: UseOnboardingChecklistOptions): UseOnboardingChecklistResult {
-  const [persistedState, setPersistedState] = useState<PersistedChecklistStateV1>(DEFAULT_PERSISTED_STATE)
+  const [persistedState, setPersistedState] =
+    useState<PersistedChecklistStateV1>(DEFAULT_PERSISTED_STATE)
 
   const persistState = useCallback(async (state: PersistedChecklistStateV1): Promise<void> => {
     await window.api.settings.set(CHECKLIST_SETTINGS_KEY, JSON.stringify(state))
   }, [])
 
   const loadLegacyState = useCallback(async (): Promise<PersistedChecklistStateV1> => {
-    const [setupGuideRaw, takeTourRaw, joinCommunityRaw, followOnXRaw, dismissedRaw] = await Promise.all([
-      window.api.settings.get('onboarding_completed'),
-      window.api.settings.get('onboarding_tour_completed'),
-      window.api.settings.get('onboarding_joined_discord'),
-      window.api.settings.get('onboarding_followed_x'),
-      window.api.settings.get('onboarding_checklist_dismissed')
-    ])
+    const [setupGuideRaw, takeTourRaw, joinCommunityRaw, followOnXRaw, dismissedRaw] =
+      await Promise.all([
+        window.api.settings.get('onboarding_completed'),
+        window.api.settings.get('onboarding_tour_completed'),
+        window.api.settings.get('onboarding_joined_discord'),
+        window.api.settings.get('onboarding_followed_x'),
+        window.api.settings.get('onboarding_checklist_dismissed')
+      ])
 
     const dismissed = isTruthy(dismissedRaw)
     if (dismissed) {
@@ -178,14 +184,17 @@ export function useOnboardingChecklist({
     }
   }, [loadLegacyState, persistState])
 
-  const updatePersistedState = useCallback((updater: (previous: PersistedChecklistStateV1) => PersistedChecklistStateV1): void => {
-    setPersistedState((previous) => {
-      const next = updater(previous)
-      if (areStatesEqual(previous, next)) return previous
-      void persistState(next)
-      return next
-    })
-  }, [persistState])
+  const updatePersistedState = useCallback(
+    (updater: (previous: PersistedChecklistStateV1) => PersistedChecklistStateV1): void => {
+      setPersistedState((previous) => {
+        const next = updater(previous)
+        if (areStatesEqual(previous, next)) return previous
+        void persistState(next)
+        return next
+      })
+    },
+    [persistState]
+  )
 
   const markSetupGuideCompleted = useCallback((): void => {
     updatePersistedState((previous) => ({
@@ -319,15 +328,21 @@ export function useOnboardingChecklist({
     followOnX
   ])
 
-  const remainingCount = useMemo(() => steps.reduce((count, step) => (step.completed ? count : count + 1), 0), [steps])
+  const remainingCount = useMemo(
+    () => steps.reduce((count, step) => (step.completed ? count : count + 1), 0),
+    [steps]
+  )
 
-  const checklist = useMemo<OnboardingChecklistState>(() => ({
-    steps,
-    dismissed: persistedState.dismissed,
-    remainingCount,
-    hasRemaining: remainingCount > 0,
-    onDismiss: dismissChecklist
-  }), [steps, persistedState.dismissed, remainingCount, dismissChecklist])
+  const checklist = useMemo<OnboardingChecklistState>(
+    () => ({
+      steps,
+      dismissed: persistedState.dismissed,
+      remainingCount,
+      hasRemaining: remainingCount > 0,
+      onDismiss: dismissChecklist
+    }),
+    [steps, persistedState.dismissed, remainingCount, dismissChecklist]
+  )
 
   return {
     checklist,

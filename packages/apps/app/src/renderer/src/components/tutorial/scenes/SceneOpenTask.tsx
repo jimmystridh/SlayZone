@@ -13,24 +13,30 @@ interface MockTask {
 }
 
 const COLS = [
-  { title: 'Backlog', tasks: [
-    { id: 't1', title: 'Set up authentication' },
-    { id: 't2', title: 'Design system tokens' },
-  ]},
-  { title: 'In Progress', tasks: [
-    { id: 't3', title: 'Build kanban board' },
-  ]},
-  { title: 'Done', tasks: [
-    { id: 't4', title: 'Landing page' },
-  ]},
+  {
+    title: 'Backlog',
+    tasks: [
+      { id: 't1', title: 'Set up authentication' },
+      { id: 't2', title: 'Design system tokens' }
+    ]
+  },
+  { title: 'In Progress', tasks: [{ id: 't3', title: 'Build kanban board' }] },
+  { title: 'Done', tasks: [{ id: 't4', title: 'Landing page' }] }
 ]
 
 /* ── Terminal lines (static, no typing) ───────────────────────────────── */
 
-
 /* ── Sub-components ───────────────────────────────────────────────────── */
 
-function KanbanCard({ task, delay, highlight }: { task: MockTask; delay: number; highlight?: boolean }): React.JSX.Element {
+function KanbanCard({
+  task,
+  delay,
+  highlight
+}: {
+  task: MockTask
+  delay: number
+  highlight?: boolean
+}): React.JSX.Element {
   return (
     <motion.div
       className={`bg-surface-1 border rounded-lg px-3 py-3 ${highlight ? 'ring-2 ring-primary' : ''}`}
@@ -108,13 +114,15 @@ function TaskView(): React.JSX.Element {
               {[
                 { label: 'Project', value: 'SlayZone', dot: 'bg-blue-500' },
                 { label: 'Status', value: 'In Progress' },
-                { label: 'Priority', value: 'High' },
+                { label: 'Priority', value: 'High' }
               ].map((field) => (
                 <div key={field.label}>
                   <span className="text-[14px] text-muted-foreground/50">{field.label}</span>
                   <div className="h-10 mt-1 rounded border bg-muted/30 flex items-center justify-between px-3">
                     <div className="flex items-center gap-2">
-                      {field.dot && <span className={`w-3 h-3 rounded-full ${field.dot} shrink-0`} />}
+                      {field.dot && (
+                        <span className={`w-3 h-3 rounded-full ${field.dot} shrink-0`} />
+                      )}
                       <span className="text-[14px] font-medium">{field.value}</span>
                     </div>
                     <ChevronDown className="size-4 text-muted-foreground/40" />
@@ -174,10 +182,12 @@ export function SceneOpenTask(): React.JSX.Element {
         )}
       </AnimatePresence>
       {phase === 'kanban' && (
-        <AnimatedCursor waypoints={[
-          { x: '50%', y: '50%', delay: 0.5, click: false },
-          { x: '42%', y: '16%', delay: 1.8 },
-        ]} />
+        <AnimatedCursor
+          waypoints={[
+            { x: '50%', y: '50%', delay: 0.5, click: false },
+            { x: '42%', y: '16%', delay: 1.8 }
+          ]}
+        />
       )}
     </SceneShell>
   )

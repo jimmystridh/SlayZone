@@ -8,7 +8,10 @@ import { readCredential, storeCredential } from './credentials.js'
 class FakeDb {
   private store = new Map<string, string>()
 
-  prepare(sql: string): { run: (...args: unknown[]) => void; get: (...args: unknown[]) => { value: string } | undefined } {
+  prepare(sql: string): {
+    run: (...args: unknown[]) => void
+    get: (...args: unknown[]) => { value: string } | undefined
+  } {
     if (sql.startsWith('INSERT OR REPLACE INTO settings')) {
       return {
         run: (key, value) => {
@@ -82,41 +85,29 @@ function runTest(name: string, fn: () => void): void {
 console.log('\ncredentials fallback')
 
 runTest('rejects plaintext fallback when not explicitly enabled', () => {
-  withEnv(
-    { SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS: undefined, NODE_ENV: 'development' },
-    () => {
-      const ref = `cred-${crypto.randomUUID()}`
-      assert.throws(() => storeCredential(db as never, ref, 'secret'))
-    }
-  )
+  withEnv({ SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS: undefined, NODE_ENV: 'development' }, () => {
+    const ref = `cred-${crypto.randomUUID()}`
+    assert.throws(() => storeCredential(db as never, ref, 'secret'))
+  })
 })
 
 runTest('allows plaintext fallback when explicitly enabled', () => {
-  withEnv(
-    { SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS: '1', NODE_ENV: 'development' },
-    () => {
-      const ref = `cred-${crypto.randomUUID()}`
-      storeCredential(db as never, ref, 'secret-enabled')
-      assert.equal(readCredential(db as never, ref), 'secret-enabled')
-    }
-  )
+  withEnv({ SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS: '1', NODE_ENV: 'development' }, () => {
+    const ref = `cred-${crypto.randomUUID()}`
+    storeCredential(db as never, ref, 'secret-enabled')
+    assert.equal(readCredential(db as never, ref), 'secret-enabled')
+  })
 })
 
 runTest('blocks reading plain credentials when fallback is disabled later', () => {
   const ref = `cred-${crypto.randomUUID()}`
-  withEnv(
-    { SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS: '1', NODE_ENV: 'development' },
-    () => {
-      storeCredential(db as never, ref, 'secret-blocked')
-    }
-  )
+  withEnv({ SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS: '1', NODE_ENV: 'development' }, () => {
+    storeCredential(db as never, ref, 'secret-blocked')
+  })
 
-  withEnv(
-    { SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS: undefined, NODE_ENV: 'development' },
-    () => {
-      assert.throws(() => readCredential(db as never, ref))
-    }
-  )
+  withEnv({ SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS: undefined, NODE_ENV: 'development' }, () => {
+    assert.throws(() => readCredential(db as never, ref))
+  })
 })
 
 console.log('\nDone')

@@ -43,7 +43,11 @@ export interface ChatViewState {
    * sees a normal completion. Returns false when the adapter lacks a
    * structured-input channel — caller should fall back to `sendMessage`.
    */
-  sendToolResult?: (args: { toolUseId: string; content: string; isError?: boolean }) => Promise<boolean>
+  sendToolResult?: (args: {
+    toolUseId: string
+    content: string
+    isError?: boolean
+  }) => Promise<boolean>
   /**
    * Live `can_use_tool` permission requests keyed by `tool_use_id`. Set when
    * the adapter runs with `--permission-prompt-tool stdio` and Claude calls
@@ -60,7 +64,11 @@ export interface ChatViewState {
   respondPermission?: (args: {
     requestId: string
     decision:
-      | { behavior: 'allow'; updatedInput?: Record<string, unknown>; updatedPermissions?: unknown[] }
+      | {
+          behavior: 'allow'
+          updatedInput?: Record<string, unknown>
+          updatedPermissions?: unknown[]
+        }
       | { behavior: 'deny'; message: string; interrupt?: boolean }
   }) => Promise<boolean>
   /**
@@ -96,7 +104,7 @@ export const ChatViewContext = createContext<ChatViewState>({
   showMessageMeta: true,
   search: { query: '', caseSensitive: false },
   timeline: [],
-  childIndex: new Map(),
+  childIndex: new Map()
 })
 
 export function useChatView(): ChatViewState {

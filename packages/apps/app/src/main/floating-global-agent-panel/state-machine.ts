@@ -102,9 +102,7 @@ function reattach(sessionId: string): Result {
 }
 
 function teardown(sessionId: string | null, nextState: State, reason: string): Result {
-  const actions: Action[] = [
-    { kind: 'unregister-floating-shortcut' }
-  ]
+  const actions: Action[] = [{ kind: 'unregister-floating-shortcut' }]
   if (sessionId) {
     actions.push(
       { kind: 'redirect-session-to-main', sessionId },

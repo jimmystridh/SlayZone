@@ -13,7 +13,10 @@
 
 export const FD_LIMIT_TARGET_SOFT = 65535
 
-interface RlimitPair { soft: number | null; hard: number | null }
+interface RlimitPair {
+  soft: number | null
+  hard: number | null
+}
 export interface PosixModule {
   getrlimit: (resource: string) => RlimitPair
   setrlimit: (resource: string, limits: { soft?: number | null; hard?: number | null }) => void
@@ -28,7 +31,7 @@ export interface FdLimitResult {
 }
 
 // posix returns null soft/hard to mean "unlimited"; treat that as infinity.
-const asNumber = (v: number | null): number => v === null ? Number.MAX_SAFE_INTEGER : v
+const asNumber = (v: number | null): number => (v === null ? Number.MAX_SAFE_INTEGER : v)
 
 /**
  * Pure logic — exported for unit testing. Takes an injectable posix loader
@@ -46,19 +49,42 @@ export function raiseFdLimitWith(
   try {
     posix = loadPosix()
   } catch (err) {
-    return { ok: false, soft: -1, hard: -1, raised: false, reason: `load-failed: ${err instanceof Error ? err.message : String(err)}` }
+    return {
+      ok: false,
+      soft: -1,
+      hard: -1,
+      raised: false,
+      reason: `load-failed: ${err instanceof Error ? err.message : String(err)}`
+    }
   }
 
   try {
     const before = posix.getrlimit('nofile')
     if (asNumber(before.soft) >= FD_LIMIT_TARGET_SOFT) {
-      return { ok: true, soft: before.soft ?? 'unlimited', hard: before.hard ?? 'unlimited', raised: false, reason: 'already-high' }
+      return {
+        ok: true,
+        soft: before.soft ?? 'unlimited',
+        hard: before.hard ?? 'unlimited',
+        raised: false,
+        reason: 'already-high'
+      }
     }
     posix.setrlimit('nofile', { soft: FD_LIMIT_TARGET_SOFT, hard: before.hard })
     const after = posix.getrlimit('nofile')
-    return { ok: true, soft: after.soft ?? 'unlimited', hard: after.hard ?? 'unlimited', raised: true }
+    return {
+      ok: true,
+      soft: after.soft ?? 'unlimited',
+      hard: after.hard ?? 'unlimited',
+      raised: true
+    }
   } catch (err) {
-    return { ok: false, soft: -1, hard: -1, raised: false, reason: `setrlimit-failed: ${err instanceof Error ? err.message : String(err)}` }
+    return {
+      ok: false,
+      soft: -1,
+      hard: -1,
+      raised: false,
+      reason: `setrlimit-failed: ${err instanceof Error ? err.message : String(err)}`
+    }
   }
 }
 

@@ -35,7 +35,10 @@ export function SearchPanel({ projectPath, onOpenFile }: SearchPanelProps) {
     setSearching(true)
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await window.api.fs.searchFiles(projectPath, query, { matchCase, regex: useRegex })
+        const res = await window.api.fs.searchFiles(projectPath, query, {
+          matchCase,
+          regex: useRegex
+        })
         setResults(res)
         setCollapsed(new Set())
         track('file_search_used', { had_results: res.length > 0 })
@@ -45,13 +48,15 @@ export function SearchPanel({ projectPath, onOpenFile }: SearchPanelProps) {
         setSearching(false)
       }
     }, 300)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
   }, [query, matchCase, useRegex, projectPath])
 
   const totalMatches = results.reduce((n, r) => n + r.matches.length, 0)
 
   const toggleCollapse = useCallback((path: string) => {
-    setCollapsed(prev => {
+    setCollapsed((prev) => {
       const next = new Set(prev)
       if (next.has(path)) next.delete(path)
       else next.add(path)
@@ -90,7 +95,9 @@ export function SearchPanel({ projectPath, onOpenFile }: SearchPanelProps) {
         {query.trim() && (
           <div className="text-xs text-muted-foreground px-0.5">
             {searching ? (
-              <span className="flex items-center gap-1"><Loader2 className="size-3 animate-spin" /> Searching...</span>
+              <span className="flex items-center gap-1">
+                <Loader2 className="size-3 animate-spin" /> Searching...
+              </span>
             ) : (
               `${totalMatches} result${totalMatches !== 1 ? 's' : ''} in ${results.length} file${results.length !== 1 ? 's' : ''}`
             )}
@@ -110,26 +117,42 @@ export function SearchPanel({ projectPath, onOpenFile }: SearchPanelProps) {
                 className="flex items-center gap-1.5 w-full px-2 py-0.5 hover:bg-muted/50 text-left"
                 onClick={() => toggleCollapse(file.path)}
               >
-                {isCollapsed
-                  ? <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
-                  : <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
-                }
+                {isCollapsed ? (
+                  <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
+                )}
                 <FileIcon fileName={fileName} className="size-4 shrink-0 [&_svg]:size-4" />
                 <span className="truncate text-foreground">{fileName}</span>
-                <span className="text-xs text-muted-foreground ml-auto shrink-0 tabular-nums">{file.matches.length}</span>
+                <span className="text-xs text-muted-foreground ml-auto shrink-0 tabular-nums">
+                  {file.matches.length}
+                </span>
               </button>
 
               {/* Match lines */}
-              {!isCollapsed && file.matches.map((match, i) => (
-                <button
-                  key={i}
-                  className="flex items-center gap-2 w-full pl-8 pr-2 py-0.5 hover:bg-muted/50 text-left"
-                  onClick={() => onOpenFile(file.path, { position: { line: match.line, col: match.col }, from: 'search' })}
-                >
-                  <span className="text-xs text-muted-foreground tabular-nums shrink-0 w-8 text-right">{match.line}</span>
-                  <HighlightedLine text={match.lineText} query={query} matchCase={matchCase} useRegex={useRegex} />
-                </button>
-              ))}
+              {!isCollapsed &&
+                file.matches.map((match, i) => (
+                  <button
+                    key={i}
+                    className="flex items-center gap-2 w-full pl-8 pr-2 py-0.5 hover:bg-muted/50 text-left"
+                    onClick={() =>
+                      onOpenFile(file.path, {
+                        position: { line: match.line, col: match.col },
+                        from: 'search'
+                      })
+                    }
+                  >
+                    <span className="text-xs text-muted-foreground tabular-nums shrink-0 w-8 text-right">
+                      {match.line}
+                    </span>
+                    <HighlightedLine
+                      text={match.lineText}
+                      query={query}
+                      matchCase={matchCase}
+                      useRegex={useRegex}
+                    />
+                  </button>
+                ))}
             </div>
           )
         })}
@@ -138,7 +161,17 @@ export function SearchPanel({ projectPath, onOpenFile }: SearchPanelProps) {
   )
 }
 
-function HighlightedLine({ text, query, matchCase, useRegex }: { text: string; query: string; matchCase: boolean; useRegex: boolean }) {
+function HighlightedLine({
+  text,
+  query,
+  matchCase,
+  useRegex
+}: {
+  text: string
+  query: string
+  matchCase: boolean
+  useRegex: boolean
+}) {
   const trimmed = text.trimStart()
   const parts: { text: string; highlight: boolean }[] = []
 
@@ -150,10 +183,14 @@ function HighlightedLine({ text, query, matchCase, useRegex }: { text: string; q
     let lastIndex = 0
     let m: RegExpExecArray | null
     while ((m = re.exec(trimmed)) !== null) {
-      if (m.index > lastIndex) parts.push({ text: trimmed.slice(lastIndex, m.index), highlight: false })
+      if (m.index > lastIndex)
+        parts.push({ text: trimmed.slice(lastIndex, m.index), highlight: false })
       parts.push({ text: m[0], highlight: true })
       lastIndex = re.lastIndex
-      if (m[0].length === 0) { re.lastIndex++; break }
+      if (m[0].length === 0) {
+        re.lastIndex++
+        break
+      }
     }
     if (lastIndex < trimmed.length) parts.push({ text: trimmed.slice(lastIndex), highlight: false })
   } catch {
@@ -163,9 +200,13 @@ function HighlightedLine({ text, query, matchCase, useRegex }: { text: string; q
   return (
     <span className="truncate text-xs text-muted-foreground">
       {parts.map((p, i) =>
-        p.highlight
-          ? <span key={i} className="text-foreground bg-amber-500/30 rounded-sm">{p.text}</span>
-          : <span key={i}>{p.text}</span>
+        p.highlight ? (
+          <span key={i} className="text-foreground bg-amber-500/30 rounded-sm">
+            {p.text}
+          </span>
+        ) : (
+          <span key={i}>{p.text}</span>
+        )
       )}
     </span>
   )

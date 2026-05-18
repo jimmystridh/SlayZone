@@ -5,8 +5,22 @@ import { track } from '@slayzone/telemetry/client'
 import { useHomePanelState } from '@/hooks/useHomePanelVisibility'
 
 export type HomePanel = 'kanban' | 'git' | 'editor' | 'processes' | 'tests' | 'automations'
-const DEFAULT_HOME_PANEL_ORDER: HomePanel[] = ['kanban', 'git', 'editor', 'processes', 'tests', 'automations']
-const HOME_PANEL_SIZE_KEY: Record<HomePanel, string> = { kanban: 'kanban', git: 'diff', editor: 'editor', processes: 'processes', tests: 'tests', automations: 'automations' }
+const DEFAULT_HOME_PANEL_ORDER: HomePanel[] = [
+  'kanban',
+  'git',
+  'editor',
+  'processes',
+  'tests',
+  'automations'
+]
+const HOME_PANEL_SIZE_KEY: Record<HomePanel, string> = {
+  kanban: 'kanban',
+  git: 'diff',
+  editor: 'editor',
+  processes: 'processes',
+  tests: 'tests',
+  automations: 'automations'
+}
 const HANDLE_WIDTH = 16
 
 export { DEFAULT_HOME_PANEL_ORDER as HOME_PANEL_ORDER, HOME_PANEL_SIZE_KEY }
@@ -19,7 +33,7 @@ export function useHomePanel(
   const HOME_PANEL_ORDER: HomePanel[] = useMemo(() => {
     if (!userOrderedIds || userOrderedIds.length === 0) return DEFAULT_HOME_PANEL_ORDER
     const known = new Set<string>(DEFAULT_HOME_PANEL_ORDER as string[])
-    const valid = userOrderedIds.filter(id => known.has(id)) as HomePanel[]
+    const valid = userOrderedIds.filter((id) => known.has(id)) as HomePanel[]
     const out: HomePanel[] = ['kanban']
     for (const id of valid) if (id !== 'kanban' && !out.includes(id)) out.push(id)
     for (const id of DEFAULT_HOME_PANEL_ORDER) if (!out.includes(id)) out.push(id)
@@ -30,19 +44,26 @@ export function useHomePanel(
   const visibilityRef = useRef(homePanelVisibility)
   visibilityRef.current = homePanelVisibility
 
-  const setHomePanelVisibility = useCallback((updater: (prev: Record<HomePanel, boolean>) => Record<HomePanel, boolean>) => {
-    const prev = visibilityRef.current
-    const next = updater(prev)
-    setHomePanelState(s => ({ ...s, visibility: next }))
-    for (const key of Object.keys(next) as HomePanel[]) {
-      if (next[key] !== prev[key]) track('panel_toggled', { panel: key, active: next[key], context: 'home' })
-    }
-  }, [setHomePanelState])
+  const setHomePanelVisibility = useCallback(
+    (updater: (prev: Record<HomePanel, boolean>) => Record<HomePanel, boolean>) => {
+      const prev = visibilityRef.current
+      const next = updater(prev)
+      setHomePanelState((s) => ({ ...s, visibility: next }))
+      for (const key of Object.keys(next) as HomePanel[]) {
+        if (next[key] !== prev[key])
+          track('panel_toggled', { panel: key, active: next[key], context: 'home' })
+      }
+    },
+    [setHomePanelState]
+  )
 
   const homeGitDefaultTab = homePanelState.gitTab as GitTabId
-  const setHomeGitDefaultTab = useCallback((tab: GitTabId) => {
-    setHomePanelState(s => ({ ...s, gitTab: tab }))
-  }, [setHomePanelState])
+  const setHomeGitDefaultTab = useCallback(
+    (tab: GitTabId) => {
+      setHomePanelState((s) => ({ ...s, gitTab: tab }))
+    },
+    [setHomePanelState]
+  )
 
   const homeGitPanelRef = useRef<UnifiedGitPanelHandle>(null)
   const homeEditorRef = useRef<FileEditorViewHandle>(null)
@@ -67,20 +88,26 @@ export function useHomePanel(
   const homeContainerRef = useCallback((el: HTMLDivElement | null) => {
     homeRoRef.current?.disconnect()
     if (el) {
-      homeRoRef.current = new ResizeObserver(([entry]) => setHomeContainerWidth(entry.contentRect.width))
+      homeRoRef.current = new ResizeObserver(([entry]) =>
+        setHomeContainerWidth(entry.contentRect.width)
+      )
       homeRoRef.current.observe(el)
     }
   }, [])
 
   const homeResolvedWidths = useMemo(() => {
-    const visible = HOME_PANEL_ORDER.filter(id => homePanelVisibility[id])
+    const visible = HOME_PANEL_ORDER.filter((id) => homePanelVisibility[id])
     const handleCount = Math.max(0, visible.length - 1)
     const available = homeContainerWidth - handleCount * HANDLE_WIDTH
     const sizeOf = (id: HomePanel) => panelSizes[HOME_PANEL_SIZE_KEY[id]] ?? 'auto'
-    const autoCount = visible.filter(id => sizeOf(id) === 'auto').length
-    const fixedSum = visible.filter(id => sizeOf(id) !== 'auto').reduce((s, id) => s + (sizeOf(id) as number), 0)
+    const autoCount = visible.filter((id) => sizeOf(id) === 'auto').length
+    const fixedSum = visible
+      .filter((id) => sizeOf(id) !== 'auto')
+      .reduce((s, id) => s + (sizeOf(id) as number), 0)
     const autoWidth = autoCount > 0 ? Math.max(200, (available - fixedSum) / autoCount) : 0
-    return Object.fromEntries(visible.map(id => [id, sizeOf(id) === 'auto' ? autoWidth : (sizeOf(id) as number)]))
+    return Object.fromEntries(
+      visible.map((id) => [id, sizeOf(id) === 'auto' ? autoWidth : (sizeOf(id) as number)])
+    )
   }, [homeContainerWidth, homePanelVisibility, panelSizes])
 
   return {
@@ -95,6 +122,6 @@ export function useHomePanel(
     homeEditorRefCallback,
     homeContainerRef,
     homeResolvedWidths,
-    orderedHomePanelIds: HOME_PANEL_ORDER,
+    orderedHomePanelIds: HOME_PANEL_ORDER
   }
 }

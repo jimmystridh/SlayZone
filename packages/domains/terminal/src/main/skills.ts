@@ -42,7 +42,7 @@ export async function listSkills(cwd: string): Promise<SkillInfo[]> {
   const [user, project, agents] = await Promise.all([
     scanDir(path.join(os.homedir(), '.claude', 'skills'), 'user'),
     scanDir(path.join(cwd, '.claude', 'skills'), 'project'),
-    scanDir(path.join(cwd, '.agents', 'skills'), 'agents'),
+    scanDir(path.join(cwd, '.agents', 'skills'), 'agents')
   ])
   const byName = new Map<string, SkillInfo>()
   for (const s of user) byName.set(s.name, s)

@@ -6,7 +6,13 @@ import type { TaskStatus } from '@slayzone/task/shared'
 export type ActiveView = 'tabs' | 'leaderboard' | 'usage-analytics' | 'context'
 
 export type TreeGroupBy = 'none' | 'status' | 'priority'
-export type TreeOrderBy = 'manual' | 'priority' | 'due_date' | 'title' | 'created' | 'last_interaction'
+export type TreeOrderBy =
+  | 'manual'
+  | 'priority'
+  | 'due_date'
+  | 'title'
+  | 'created'
+  | 'last_interaction'
 export type TreeOrderDir = 'asc' | 'desc'
 
 export type TaskHeaderPanelMode = 'tabs' | 'menu'
@@ -19,7 +25,14 @@ type LegacyTreeSubtaskMode = 'hide' | 'match' | 'all'
 // Tab type (matches TabBar.tsx in app)
 export type Tab =
   | { type: 'home' }
-  | { type: 'task'; taskId: string; title: string; status?: TaskStatus; isSubTask?: boolean; isTemporary?: boolean }
+  | {
+      type: 'task'
+      taskId: string
+      title: string
+      status?: TaskStatus
+      isSubTask?: boolean
+      isTemporary?: boolean
+    }
 
 type TaskTab = Extract<Tab, { type: 'task' }>
 
@@ -164,7 +177,47 @@ interface TabState {
   reopenClosedTab: () => void
 
   // Internal
-  _loadState: (state: { tabs: Tab[]; activeTabIndex: number; activeView?: ActiveView; selectedProjectId: string; projectScopedTabs?: boolean; sidebarView?: string; sidebarWidth?: number | null; sidebarAutoHide?: boolean; treeStatusFilter?: string[]; treePriorityFilter?: number[]; treeShowStatus?: boolean; treeShowPriority?: boolean; treeShowSubtasks?: boolean; treeShowAllSubtasks?: boolean; treeShowAllUndoneSubtasks?: boolean; treeSubtaskMode?: LegacyTreeSubtaskMode; treeIncludeAllSubtasks?: boolean; treeCrossOutDone?: boolean; treeShowOnlyActive?: boolean; treeShowTemporary?: boolean; treeShowBlocked?: boolean; treeShowSnoozed?: boolean; treeShowAllOpen?: boolean; treeHideInactive?: boolean; treeHideClosed?: boolean; treeShowWorktree?: boolean; treePinnedTaskIds?: string[]; treeCollapsedTaskIds?: string[]; treeGroupBy?: TreeGroupBy; treeOrderBy?: TreeOrderBy; treeOrderDir?: TreeOrderDir; treeGroupTemporary?: boolean; treeGroupPinned?: boolean; treeShowEmptyGroups?: boolean; taskHeaderPanelMode?: TaskHeaderPanelMode; taskHeaderPanelAlign?: TaskHeaderAlign; taskHeaderTitleAlign?: TaskHeaderAlign; projectLastActiveTab?: Record<string, string>; closedTabs?: TaskTab[] }) => void
+  _loadState: (state: {
+    tabs: Tab[]
+    activeTabIndex: number
+    activeView?: ActiveView
+    selectedProjectId: string
+    projectScopedTabs?: boolean
+    sidebarView?: string
+    sidebarWidth?: number | null
+    sidebarAutoHide?: boolean
+    treeStatusFilter?: string[]
+    treePriorityFilter?: number[]
+    treeShowStatus?: boolean
+    treeShowPriority?: boolean
+    treeShowSubtasks?: boolean
+    treeShowAllSubtasks?: boolean
+    treeShowAllUndoneSubtasks?: boolean
+    treeSubtaskMode?: LegacyTreeSubtaskMode
+    treeIncludeAllSubtasks?: boolean
+    treeCrossOutDone?: boolean
+    treeShowOnlyActive?: boolean
+    treeShowTemporary?: boolean
+    treeShowBlocked?: boolean
+    treeShowSnoozed?: boolean
+    treeShowAllOpen?: boolean
+    treeHideInactive?: boolean
+    treeHideClosed?: boolean
+    treeShowWorktree?: boolean
+    treePinnedTaskIds?: string[]
+    treeCollapsedTaskIds?: string[]
+    treeGroupBy?: TreeGroupBy
+    treeOrderBy?: TreeOrderBy
+    treeOrderDir?: TreeOrderDir
+    treeGroupTemporary?: boolean
+    treeGroupPinned?: boolean
+    treeShowEmptyGroups?: boolean
+    taskHeaderPanelMode?: TaskHeaderPanelMode
+    taskHeaderPanelAlign?: TaskHeaderAlign
+    taskHeaderTitleAlign?: TaskHeaderAlign
+    projectLastActiveTab?: Record<string, string>
+    closedTabs?: TaskTab[]
+  }) => void
 }
 
 function findWorktreeInsertIndex(taskId: string, tabs: Tab[], lookup: TaskLookup): number {
@@ -297,14 +350,14 @@ export const useTabStore = create<TabState>()(
       set((s) => ({
         treePinnedTaskIds: s.treePinnedTaskIds.includes(taskId)
           ? s.treePinnedTaskIds.filter((id) => id !== taskId)
-          : [...s.treePinnedTaskIds, taskId],
+          : [...s.treePinnedTaskIds, taskId]
       })),
 
     toggleTreeCollapsedTask: (taskId) =>
       set((s) => ({
         treeCollapsedTaskIds: s.treeCollapsedTaskIds.includes(taskId)
           ? s.treeCollapsedTaskIds.filter((id) => id !== taskId)
-          : [...s.treeCollapsedTaskIds, taskId],
+          : [...s.treeCollapsedTaskIds, taskId]
       })),
 
     setTabs: (tabs) => set({ tabs }),
@@ -406,35 +459,57 @@ export const useTabStore = create<TabState>()(
 
     _loadState: (state) => {
       // Strip legacy leaderboard/usage-analytics tabs from persisted state
-      const rawTabs = Array.isArray(state.tabs) && state.tabs.length > 0 ? state.tabs : [{ type: 'home' as const }]
-      const validTabs = rawTabs.filter((t: { type: string }) => t.type === 'home' || t.type === 'task')
+      const rawTabs =
+        Array.isArray(state.tabs) && state.tabs.length > 0
+          ? state.tabs
+          : [{ type: 'home' as const }]
+      const validTabs = rawTabs.filter(
+        (t: { type: string }) => t.type === 'home' || t.type === 'task'
+      )
       if (validTabs.length === 0 || validTabs[0]?.type !== 'home') {
         validTabs.unshift({ type: 'home' })
       }
       // Fresh app launch → kanban; Cmd+Shift+R reload → restore last tab
-      const isReload = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sz:session') === '1'
-      if (!isReload && typeof sessionStorage !== 'undefined') sessionStorage.setItem('sz:session', '1')
-      const clampedIndex = isReload ? Math.max(0, Math.min(state.activeTabIndex ?? 0, validTabs.length - 1)) : 0
+      const isReload =
+        typeof sessionStorage !== 'undefined' && sessionStorage.getItem('sz:session') === '1'
+      if (!isReload && typeof sessionStorage !== 'undefined')
+        sessionStorage.setItem('sz:session', '1')
+      const clampedIndex = isReload
+        ? Math.max(0, Math.min(state.activeTabIndex ?? 0, validTabs.length - 1))
+        : 0
       const activeView: ActiveView = isReload
-        ? (state.activeView === 'leaderboard' || state.activeView === 'usage-analytics' || state.activeView === 'context' ? state.activeView : 'tabs')
+        ? state.activeView === 'leaderboard' ||
+          state.activeView === 'usage-analytics' ||
+          state.activeView === 'context'
+          ? state.activeView
+          : 'tabs'
         : 'tabs'
       set({
         tabs: validTabs,
         activeTabIndex: clampedIndex,
         activeView,
-        selectedProjectId: typeof state.selectedProjectId === 'string' ? state.selectedProjectId : '',
+        selectedProjectId:
+          typeof state.selectedProjectId === 'string' ? state.selectedProjectId : '',
         projectScopedTabs: !!state.projectScopedTabs,
         sidebarView: typeof state.sidebarView === 'string' ? state.sidebarView : 'projects',
-        sidebarWidth: typeof state.sidebarWidth === 'number' && state.sidebarWidth > 0 ? state.sidebarWidth : null,
+        sidebarWidth:
+          typeof state.sidebarWidth === 'number' && state.sidebarWidth > 0
+            ? state.sidebarWidth
+            : null,
         sidebarAutoHide: !!state.sidebarAutoHide,
-        treeStatusFilter: Array.isArray(state.treeStatusFilter) && state.treeStatusFilter.every((s) => typeof s === 'string')
-          ? state.treeStatusFilter
-          : ['in_progress'],
-        treePriorityFilter: Array.isArray(state.treePriorityFilter) && state.treePriorityFilter.every((p) => typeof p === 'number')
-          ? state.treePriorityFilter
-          : [1, 2, 3, 4, 5],
+        treeStatusFilter:
+          Array.isArray(state.treeStatusFilter) &&
+          state.treeStatusFilter.every((s) => typeof s === 'string')
+            ? state.treeStatusFilter
+            : ['in_progress'],
+        treePriorityFilter:
+          Array.isArray(state.treePriorityFilter) &&
+          state.treePriorityFilter.every((p) => typeof p === 'number')
+            ? state.treePriorityFilter
+            : [1, 2, 3, 4, 5],
         treeShowStatus: typeof state.treeShowStatus === 'boolean' ? state.treeShowStatus : false,
-        treeShowPriority: typeof state.treeShowPriority === 'boolean' ? state.treeShowPriority : true,
+        treeShowPriority:
+          typeof state.treeShowPriority === 'boolean' ? state.treeShowPriority : true,
         treeShowSubtasks:
           typeof state.treeShowSubtasks === 'boolean'
             ? state.treeShowSubtasks
@@ -446,8 +521,11 @@ export const useTabStore = create<TabState>()(
             ? state.treeShowAllSubtasks
             : state.treeSubtaskMode === 'all' || state.treeIncludeAllSubtasks === true,
         treeShowAllUndoneSubtasks:
-          typeof state.treeShowAllUndoneSubtasks === 'boolean' ? state.treeShowAllUndoneSubtasks : false,
-        treeCrossOutDone: typeof state.treeCrossOutDone === 'boolean' ? state.treeCrossOutDone : false,
+          typeof state.treeShowAllUndoneSubtasks === 'boolean'
+            ? state.treeShowAllUndoneSubtasks
+            : false,
+        treeCrossOutDone:
+          typeof state.treeCrossOutDone === 'boolean' ? state.treeCrossOutDone : false,
         treeShowOnlyActive:
           typeof state.treeShowOnlyActive === 'boolean'
             ? state.treeShowOnlyActive
@@ -456,20 +534,25 @@ export const useTabStore = create<TabState>()(
               : typeof state.treeHideClosed === 'boolean'
                 ? state.treeHideClosed
                 : false,
-        treeShowTemporary: typeof state.treeShowTemporary === 'boolean' ? state.treeShowTemporary : true,
+        treeShowTemporary:
+          typeof state.treeShowTemporary === 'boolean' ? state.treeShowTemporary : true,
         treeShowBlocked: typeof state.treeShowBlocked === 'boolean' ? state.treeShowBlocked : true,
         treeShowSnoozed: typeof state.treeShowSnoozed === 'boolean' ? state.treeShowSnoozed : true,
         treeShowAllOpen: typeof state.treeShowAllOpen === 'boolean' ? state.treeShowAllOpen : true,
-        treeShowWorktree: typeof state.treeShowWorktree === 'boolean' ? state.treeShowWorktree : true,
-        treePinnedTaskIds: Array.isArray(state.treePinnedTaskIds) && state.treePinnedTaskIds.every((id) => typeof id === 'string')
-          ? state.treePinnedTaskIds
-          : [],
-        treeCollapsedTaskIds: Array.isArray(state.treeCollapsedTaskIds) && state.treeCollapsedTaskIds.every((id) => typeof id === 'string')
-          ? state.treeCollapsedTaskIds
-          : [],
+        treeShowWorktree:
+          typeof state.treeShowWorktree === 'boolean' ? state.treeShowWorktree : true,
+        treePinnedTaskIds:
+          Array.isArray(state.treePinnedTaskIds) &&
+          state.treePinnedTaskIds.every((id) => typeof id === 'string')
+            ? state.treePinnedTaskIds
+            : [],
+        treeCollapsedTaskIds:
+          Array.isArray(state.treeCollapsedTaskIds) &&
+          state.treeCollapsedTaskIds.every((id) => typeof id === 'string')
+            ? state.treeCollapsedTaskIds
+            : [],
         treeGroupBy:
-          state.treeGroupBy === 'priority' ||
-          state.treeGroupBy === 'none'
+          state.treeGroupBy === 'priority' || state.treeGroupBy === 'none'
             ? state.treeGroupBy
             : 'status',
         treeOrderBy:
@@ -481,15 +564,25 @@ export const useTabStore = create<TabState>()(
             ? state.treeOrderBy
             : 'manual',
         treeOrderDir: state.treeOrderDir === 'desc' ? 'desc' : 'asc',
-        treeGroupTemporary: typeof state.treeGroupTemporary === 'boolean' ? state.treeGroupTemporary : true,
+        treeGroupTemporary:
+          typeof state.treeGroupTemporary === 'boolean' ? state.treeGroupTemporary : true,
         treeGroupPinned: typeof state.treeGroupPinned === 'boolean' ? state.treeGroupPinned : true,
-        treeShowEmptyGroups: typeof state.treeShowEmptyGroups === 'boolean' ? state.treeShowEmptyGroups : false,
+        treeShowEmptyGroups:
+          typeof state.treeShowEmptyGroups === 'boolean' ? state.treeShowEmptyGroups : false,
         taskHeaderPanelMode: state.taskHeaderPanelMode === 'menu' ? 'menu' : 'tabs',
         taskHeaderPanelAlign: state.taskHeaderPanelAlign === 'left' ? 'left' : 'right',
         taskHeaderTitleAlign: state.taskHeaderTitleAlign === 'right' ? 'right' : 'left',
-        projectLastActiveTab: state.projectLastActiveTab && typeof state.projectLastActiveTab === 'object' ? state.projectLastActiveTab : {},
+        projectLastActiveTab:
+          state.projectLastActiveTab && typeof state.projectLastActiveTab === 'object'
+            ? state.projectLastActiveTab
+            : {},
         closedTabs: Array.isArray(state.closedTabs)
-          ? state.closedTabs.filter((t: { type?: string; taskId?: unknown }) => t?.type === 'task' && typeof t.taskId === 'string').slice(-20)
+          ? state.closedTabs
+              .filter(
+                (t: { type?: string; taskId?: unknown }) =>
+                  t?.type === 'task' && typeof t.taskId === 'string'
+              )
+              .slice(-20)
           : [],
         isLoaded: true
       })
@@ -499,35 +592,72 @@ export const useTabStore = create<TabState>()(
 
 // Eagerly load persisted state at module scope — runs before any component mounts,
 // eliminating race conditions between store hydration and React effects.
-export const tabStoreReady: Promise<void> = (typeof window !== 'undefined' && window.api?.settings
-  ? (performance.mark('sz:tabStore:start'),
-    window.api.settings.get('viewState')
-  ).then((value) => {
-    if (value) {
-      try {
-        useTabStore.getState()._loadState(JSON.parse(value))
-      } catch {
-        useTabStore.setState({ isLoaded: true })
-      }
-    } else {
-      useTabStore.getState()._loadState(
-        { tabs: [], activeTabIndex: 0, selectedProjectId: '' }
-      )
-    }
-  }).catch(() => {
-    // IPC failure — render with default state rather than permanent white screen
-    useTabStore.setState({ isLoaded: true })
-  }).finally(() => {
-    performance.mark('sz:tabStore:end')
-  })
-  : Promise.resolve()
-)
+export const tabStoreReady: Promise<void> =
+  typeof window !== 'undefined' && window.api?.settings
+    ? (performance.mark('sz:tabStore:start'), window.api.settings.get('viewState'))
+        .then((value) => {
+          if (value) {
+            try {
+              useTabStore.getState()._loadState(JSON.parse(value))
+            } catch {
+              useTabStore.setState({ isLoaded: true })
+            }
+          } else {
+            useTabStore
+              .getState()
+              ._loadState({ tabs: [], activeTabIndex: 0, selectedProjectId: '' })
+          }
+        })
+        .catch(() => {
+          // IPC failure — render with default state rather than permanent white screen
+          useTabStore.setState({ isLoaded: true })
+        })
+        .finally(() => {
+          performance.mark('sz:tabStore:end')
+        })
+    : Promise.resolve()
 
 // Debounced persistence — subscribe to tab/index/project changes and save
 let _debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 useTabStore.subscribe(
-  (state) => ({ tabs: state.tabs, activeTabIndex: state.activeTabIndex, activeView: state.activeView, selectedProjectId: state.selectedProjectId, projectScopedTabs: state.projectScopedTabs, sidebarView: state.sidebarView, sidebarWidth: state.sidebarWidth, sidebarAutoHide: state.sidebarAutoHide, treeStatusFilter: state.treeStatusFilter, treePriorityFilter: state.treePriorityFilter, treeShowStatus: state.treeShowStatus, treeShowPriority: state.treeShowPriority, treeShowSubtasks: state.treeShowSubtasks, treeShowAllSubtasks: state.treeShowAllSubtasks, treeShowAllUndoneSubtasks: state.treeShowAllUndoneSubtasks, treeCrossOutDone: state.treeCrossOutDone, treeShowOnlyActive: state.treeShowOnlyActive, treeShowTemporary: state.treeShowTemporary, treeShowBlocked: state.treeShowBlocked, treeShowSnoozed: state.treeShowSnoozed, treeShowAllOpen: state.treeShowAllOpen, treeShowWorktree: state.treeShowWorktree, treePinnedTaskIds: state.treePinnedTaskIds, treeCollapsedTaskIds: state.treeCollapsedTaskIds, treeGroupBy: state.treeGroupBy, treeOrderBy: state.treeOrderBy, treeOrderDir: state.treeOrderDir, treeGroupTemporary: state.treeGroupTemporary, treeGroupPinned: state.treeGroupPinned, treeShowEmptyGroups: state.treeShowEmptyGroups, taskHeaderPanelMode: state.taskHeaderPanelMode, taskHeaderPanelAlign: state.taskHeaderPanelAlign, taskHeaderTitleAlign: state.taskHeaderTitleAlign, projectLastActiveTab: state.projectLastActiveTab, closedTabs: state.closedTabs }),
+  (state) => ({
+    tabs: state.tabs,
+    activeTabIndex: state.activeTabIndex,
+    activeView: state.activeView,
+    selectedProjectId: state.selectedProjectId,
+    projectScopedTabs: state.projectScopedTabs,
+    sidebarView: state.sidebarView,
+    sidebarWidth: state.sidebarWidth,
+    sidebarAutoHide: state.sidebarAutoHide,
+    treeStatusFilter: state.treeStatusFilter,
+    treePriorityFilter: state.treePriorityFilter,
+    treeShowStatus: state.treeShowStatus,
+    treeShowPriority: state.treeShowPriority,
+    treeShowSubtasks: state.treeShowSubtasks,
+    treeShowAllSubtasks: state.treeShowAllSubtasks,
+    treeShowAllUndoneSubtasks: state.treeShowAllUndoneSubtasks,
+    treeCrossOutDone: state.treeCrossOutDone,
+    treeShowOnlyActive: state.treeShowOnlyActive,
+    treeShowTemporary: state.treeShowTemporary,
+    treeShowBlocked: state.treeShowBlocked,
+    treeShowSnoozed: state.treeShowSnoozed,
+    treeShowAllOpen: state.treeShowAllOpen,
+    treeShowWorktree: state.treeShowWorktree,
+    treePinnedTaskIds: state.treePinnedTaskIds,
+    treeCollapsedTaskIds: state.treeCollapsedTaskIds,
+    treeGroupBy: state.treeGroupBy,
+    treeOrderBy: state.treeOrderBy,
+    treeOrderDir: state.treeOrderDir,
+    treeGroupTemporary: state.treeGroupTemporary,
+    treeGroupPinned: state.treeGroupPinned,
+    treeShowEmptyGroups: state.treeShowEmptyGroups,
+    taskHeaderPanelMode: state.taskHeaderPanelMode,
+    taskHeaderPanelAlign: state.taskHeaderPanelAlign,
+    taskHeaderTitleAlign: state.taskHeaderTitleAlign,
+    projectLastActiveTab: state.projectLastActiveTab,
+    closedTabs: state.closedTabs
+  }),
   (slice) => {
     if (!useTabStore.getState().isLoaded) return
     if (_debounceTimer) clearTimeout(_debounceTimer)
@@ -541,7 +671,12 @@ useTabStore.subscribe(
 // Record last active tab per project. Fires when active tab, tabs list,
 // or selected project changes. Writes taskId for task tabs, 'home' for home.
 useTabStore.subscribe(
-  (state) => ({ activeTabIndex: state.activeTabIndex, tabs: state.tabs, selectedProjectId: state.selectedProjectId, _taskLookup: state._taskLookup }),
+  (state) => ({
+    activeTabIndex: state.activeTabIndex,
+    tabs: state.tabs,
+    selectedProjectId: state.selectedProjectId,
+    _taskLookup: state._taskLookup
+  }),
   ({ activeTabIndex, tabs, selectedProjectId, _taskLookup }) => {
     if (!useTabStore.getState().isLoaded) return
     const tab = tabs[activeTabIndex]

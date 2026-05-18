@@ -1,13 +1,13 @@
 import {
   BROWSER_CREATE_TASK_FROM_LINK_BRIDGE_KEY,
   BROWSER_CREATE_TASK_FROM_LINK_INSTALLED_KEY,
-  buildBrowserCreateTaskFromLinkCaptureScript,
+  buildBrowserCreateTaskFromLinkCaptureScript
 } from '../shared/browser-link-task-capture-script'
 
 export {
   BROWSER_CREATE_TASK_FROM_LINK_BRIDGE_KEY,
   BROWSER_CREATE_TASK_FROM_LINK_INSTALLED_KEY,
-  buildBrowserCreateTaskFromLinkCaptureScript,
+  buildBrowserCreateTaskFromLinkCaptureScript
 }
 
 export type BrowserModifiedLinkIntent = 'create-task' | 'open-external'
@@ -28,7 +28,12 @@ interface ClosestCapableTarget {
 }
 
 function isClosestCapableTarget(value: unknown): value is ClosestCapableTarget {
-  return typeof value === 'object' && value !== null && 'closest' in value && typeof value.closest === 'function'
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'closest' in value &&
+    typeof value.closest === 'function'
+  )
 }
 
 function readAnchorHref(anchor: Element): string {
@@ -37,7 +42,8 @@ function readAnchorHref(anchor: Element): string {
 }
 
 function readAnchorText(anchor: Element): string {
-  if ('innerText' in anchor && typeof anchor.innerText === 'string' && anchor.innerText.trim()) return anchor.innerText
+  if ('innerText' in anchor && typeof anchor.innerText === 'string' && anchor.innerText.trim())
+    return anchor.innerText
   return anchor.textContent || anchor.getAttribute('aria-label') || ''
 }
 
@@ -94,17 +100,22 @@ export function extractModifiedLinkPayload(event: MouseEvent): BrowserModifiedLi
   return {
     intent: altShift ? 'create-task' : 'open-external',
     url: href,
-    linkText: linkText.replace(/\s+/g, ' ').trim() || undefined,
+    linkText: linkText.replace(/\s+/g, ' ').trim() || undefined
   }
 }
 
-export function extractCreateTaskFromLinkPayload(event: MouseEvent): BrowserCreateTaskFromLinkCapturePayload | null {
+export function extractCreateTaskFromLinkPayload(
+  event: MouseEvent
+): BrowserCreateTaskFromLinkCapturePayload | null {
   const payload = extractModifiedLinkPayload(event)
   if (!payload || payload.intent !== 'create-task') return null
   return { url: payload.url, linkText: payload.linkText }
 }
 
-export function installBrowserCreateTaskFromLinkCapture(bridgeKey: string, installedKey: string): void {
+export function installBrowserCreateTaskFromLinkCapture(
+  bridgeKey: string,
+  installedKey: string
+): void {
   const bridgeWindow = window as unknown as Record<string, unknown>
   if (bridgeWindow[installedKey] === document) return
 
@@ -123,25 +134,33 @@ export function installBrowserCreateTaskFromLinkCapture(bridgeKey: string, insta
     }
   }
 
-  document.addEventListener('mousedown', (event) => {
-    const payload = extractModifiedLinkPayload(event)
-    if (!payload) return
+  document.addEventListener(
+    'mousedown',
+    (event) => {
+      const payload = extractModifiedLinkPayload(event)
+      if (!payload) return
 
-    // Chromium can decide modifier-based link actions on mouse down.
-    // Prevent here so the modified click never escapes into a new BrowserWindow / tab.
-    event.preventDefault()
-    event.stopPropagation()
-    forwardPayload(payload)
-  }, true)
+      // Chromium can decide modifier-based link actions on mouse down.
+      // Prevent here so the modified click never escapes into a new BrowserWindow / tab.
+      event.preventDefault()
+      event.stopPropagation()
+      forwardPayload(payload)
+    },
+    true
+  )
 
-  document.addEventListener('click', (event) => {
-    const payload = extractModifiedLinkPayload(event)
-    if (!payload) return
+  document.addEventListener(
+    'click',
+    (event) => {
+      const payload = extractModifiedLinkPayload(event)
+      if (!payload) return
 
-    event.preventDefault()
-    event.stopPropagation()
-    forwardPayload(payload)
-  }, true)
+      event.preventDefault()
+      event.stopPropagation()
+      forwardPayload(payload)
+    },
+    true
+  )
 
   bridgeWindow[installedKey] = document
 }

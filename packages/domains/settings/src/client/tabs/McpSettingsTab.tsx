@@ -7,16 +7,13 @@ export function McpSettingsTab() {
   const [actualPort, setActualPort] = useState('')
 
   useEffect(() => {
-    window.api.settings.get('mcp_preferred_port').then(val => setPreferredPort(val ?? ''))
-    window.api.settings.get('mcp_server_port').then(val => setActualPort(val ?? ''))
+    window.api.settings.get('mcp_preferred_port').then((val) => setPreferredPort(val ?? ''))
+    window.api.settings.get('mcp_server_port').then((val) => setActualPort(val ?? ''))
   }, [])
 
   return (
     <>
-      <SettingsTabIntro
-        title="MCP"
-        description="Configure the MCP server used by local tooling."
-      />
+      <SettingsTabIntro title="MCP" description="Configure the MCP server used by local tooling." />
 
       <div className="space-y-3">
         <Label className="text-base font-semibold">MCP Server</Label>
@@ -31,7 +28,10 @@ export function McpSettingsTab() {
             onBlur={() => {
               const port = parseInt(preferredPort, 10)
               if (preferredPort === '' || (port >= 1024 && port <= 65535)) {
-                window.api.settings.set('mcp_preferred_port', preferredPort === '' ? '' : String(port))
+                window.api.settings.set(
+                  'mcp_preferred_port',
+                  preferredPort === '' ? '' : String(port)
+                )
               }
             }}
           />

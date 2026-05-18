@@ -11,7 +11,7 @@ import {
   DialogDescription,
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
+  TooltipTrigger
 } from '@slayzone/ui'
 import { useDialogStore } from '@slayzone/settings'
 import type { PtyInfo } from '@slayzone/terminal/shared'
@@ -141,7 +141,8 @@ export function TerminalStatusDialog({ tasks, onTaskClick }: TerminalStatusDialo
     return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`
   }
 
-  const formatMemory = (rss: number): string => (rss >= 1024 ? `${(rss / 1024).toFixed(0)} MB` : `${rss} KB`)
+  const formatMemory = (rss: number): string =>
+    rss >= 1024 ? `${(rss / 1024).toFixed(0)} MB` : `${rss} KB`
 
   const count = ptys.length
 
@@ -150,7 +151,9 @@ export function TerminalStatusDialog({ tasks, onTaskClick }: TerminalStatusDialo
       <DialogContent className="max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Active Terminals</DialogTitle>
-          <DialogDescription className="sr-only">List of active terminal sessions</DialogDescription>
+          <DialogDescription className="sr-only">
+            List of active terminal sessions
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 min-h-0 overflow-y-auto">
           {count === 0 ? (
@@ -216,6 +219,8 @@ export function TerminalStatusDialog({ tasks, onTaskClick }: TerminalStatusDialo
 }
 
 /** @deprecated use TerminalStatusButton + render TerminalStatusDialog once at app root. */
-export function TerminalStatusPopover(props: TerminalStatusButtonProps & TerminalStatusDialogProps) {
+export function TerminalStatusPopover(
+  props: TerminalStatusButtonProps & TerminalStatusDialogProps
+) {
   return <TerminalStatusButton side={props.side} />
 }

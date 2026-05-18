@@ -31,12 +31,16 @@ export function useSnoozeWakeUp(tasks: Task[]): void {
       // Clear the snooze — this triggers tasks:changed → re-render
       try {
         await window.api.db.updateTask({ id: nearest.id, snoozedUntil: null })
-      } catch { /* task may have been deleted */ }
+      } catch {
+        /* task may have been deleted */
+      }
 
       // Desktop notification
       try {
         new Notification('Task unsnoozed', { body: nearest.title })
-      } catch { /* notifications may be blocked */ }
+      } catch {
+        /* notifications may be blocked */
+      }
     }, delay)
 
     return () => clearTimeout(timer)

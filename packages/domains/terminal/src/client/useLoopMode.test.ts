@@ -17,7 +17,8 @@ function test(name: string, fn: () => void | Promise<void>) {
 function expect<T>(actual: T) {
   return {
     toBe(expected: T) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     }
   }
 }

@@ -1,7 +1,7 @@
 // Content script — runs on every page.
 // 1. Injects a marker element so the test can detect it
 // 2. Sends a message to the background script to test messaging (with retry)
-(function () {
+;(function () {
   if (document.getElementById('slayzone-test-ext')) return
 
   var marker = document.createElement('div')

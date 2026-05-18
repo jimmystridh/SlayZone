@@ -14,7 +14,7 @@ export function createTrpcWsClient(opts: CreateTrpcClientOpts) {
   return {
     wsClient,
     client: createTRPCClient<AppRouter>({
-      links: [wsLink({ client: wsClient, transformer: superjson })],
-    }),
+      links: [wsLink({ client: wsClient, transformer: superjson })]
+    })
   }
 }

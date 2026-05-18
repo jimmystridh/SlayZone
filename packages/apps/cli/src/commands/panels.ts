@@ -3,11 +3,17 @@ import { openDb, notifyApp } from '../db'
 import type { PanelConfig, WebPanelDefinition } from '@slayzone/task/shared/types'
 import { DEFAULT_PANEL_CONFIG, isPanelEnabled } from '@slayzone/task/shared/types'
 import { mergePredefinedWebPanels, validatePanelShortcut } from '@slayzone/task/shared/panel-config'
-import { normalizeDesktopProtocol, inferProtocolFromUrl, inferHostScopeFromUrl } from '@slayzone/task/shared/handoff'
+import {
+  normalizeDesktopProtocol,
+  inferProtocolFromUrl,
+  inferHostScopeFromUrl
+} from '@slayzone/task/shared/handoff'
 import type { SlayDb } from '../db'
 
 function loadPanelConfig(db: SlayDb): PanelConfig {
-  const row = db.query<{ value: string }>(`SELECT value FROM settings WHERE key = 'panel_config' LIMIT 1`)
+  const row = db.query<{ value: string }>(
+    `SELECT value FROM settings WHERE key = 'panel_config' LIMIT 1`
+  )
   if (!row[0]?.value) return { ...DEFAULT_PANEL_CONFIG }
   try {
     return mergePredefinedWebPanels(JSON.parse(row[0].value) as PanelConfig)
@@ -17,15 +23,15 @@ function loadPanelConfig(db: SlayDb): PanelConfig {
 }
 
 function savePanelConfig(db: SlayDb, config: PanelConfig): void {
-  db.run(
-    `INSERT OR REPLACE INTO settings (key, value) VALUES (:key, :value)`,
-    { ':key': 'panel_config', ':value': JSON.stringify(config) }
-  )
+  db.run(`INSERT OR REPLACE INTO settings (key, value) VALUES (:key, :value)`, {
+    ':key': 'panel_config',
+    ':value': JSON.stringify(config)
+  })
 }
 
 function findPanel(config: PanelConfig, idOrName: string): WebPanelDefinition | undefined {
-  return config.webPanels.find(p =>
-    p.id === idOrName || p.name.toLowerCase() === idOrName.toLowerCase()
+  return config.webPanels.find(
+    (p) => p.id === idOrName || p.name.toLowerCase() === idOrName.toLowerCase()
   )
 }
 
@@ -58,8 +64,12 @@ export function panelsCommand(): Command {
       const idW = 12
       const nameW = 20
       const urlW = 35
-      console.log(`${'ID'.padEnd(idW)}  ${'NAME'.padEnd(nameW)}  ${'URL'.padEnd(urlW)}  ${'KEY'.padEnd(4)}  ON`)
-      console.log(`${'-'.repeat(idW)}  ${'-'.repeat(nameW)}  ${'-'.repeat(urlW)}  ${'-'.repeat(4)}  ${'-'.repeat(2)}`)
+      console.log(
+        `${'ID'.padEnd(idW)}  ${'NAME'.padEnd(nameW)}  ${'URL'.padEnd(urlW)}  ${'KEY'.padEnd(4)}  ON`
+      )
+      console.log(
+        `${'-'.repeat(idW)}  ${'-'.repeat(nameW)}  ${'-'.repeat(urlW)}  ${'-'.repeat(4)}  ${'-'.repeat(2)}`
+      )
       for (const wp of config.webPanels) {
         const id = wp.id.slice(0, 12).padEnd(idW)
         const name = wp.name.slice(0, nameW).padEnd(nameW)
@@ -125,7 +135,7 @@ export function panelsCommand(): Command {
         shortcut: opts.shortcut?.trim().toLowerCase() || undefined,
         blockDesktopHandoff: opts.blockHandoff || undefined,
         handoffProtocol,
-        handoffHostScope,
+        handoffHostScope
       }
 
       savePanelConfig(db, { ...config, webPanels: [...config.webPanels, newPanel] })
@@ -148,7 +158,10 @@ export function panelsCommand(): Command {
         process.exit(1)
       }
 
-      const next: PanelConfig = { ...config, webPanels: config.webPanels.filter(p => p.id !== wp.id) }
+      const next: PanelConfig = {
+        ...config,
+        webPanels: config.webPanels.filter((p) => p.id !== wp.id)
+      }
       if (wp.predefined) next.deletedPredefined = [...(config.deletedPredefined ?? []), wp.id]
 
       savePanelConfig(db, next)
@@ -173,7 +186,7 @@ export function panelsCommand(): Command {
 
       savePanelConfig(db, {
         ...config,
-        viewEnabled: { ...config.viewEnabled, task: { ...config.viewEnabled?.task, [wp.id]: true } },
+        viewEnabled: { ...config.viewEnabled, task: { ...config.viewEnabled?.task, [wp.id]: true } }
       })
       db.close()
       await notifyApp()
@@ -196,7 +209,10 @@ export function panelsCommand(): Command {
 
       savePanelConfig(db, {
         ...config,
-        viewEnabled: { ...config.viewEnabled, task: { ...config.viewEnabled?.task, [wp.id]: false } },
+        viewEnabled: {
+          ...config.viewEnabled,
+          task: { ...config.viewEnabled?.task, [wp.id]: false }
+        }
       })
       db.close()
       await notifyApp()

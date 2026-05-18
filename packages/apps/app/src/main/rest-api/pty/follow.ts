@@ -5,7 +5,10 @@ import type { RestApiDeps } from '../types'
 export function registerPtyFollowRoute(app: Express, _deps: RestApiDeps): void {
   app.get('/api/pty/:id/follow', (req, res) => {
     const id = req.params.id
-    if (!hasPty(id)) { res.status(404).json({ error: 'PTY session not found' }); return }
+    if (!hasPty(id)) {
+      res.status(404).json({ error: 'PTY session not found' })
+      return
+    }
 
     res.setHeader('Content-Type', 'text/event-stream')
     res.setHeader('Cache-Control', 'no-cache')

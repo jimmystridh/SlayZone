@@ -15,7 +15,7 @@ const LOADING_TEXTS = [
   'Debugging with console.log...',
   'Centering the div...',
   'Clearing the cache... again...',
-  'Reticulating stylesheets...',
+  'Reticulating stylesheets...'
 ]
 
 const SIZE = 18
@@ -29,11 +29,14 @@ export function BrowserLoadingAnimation() {
     const interval = setInterval(() => {
       setFade(false)
       timeoutId = setTimeout(() => {
-        setTextIndex(i => (i + 1) % LOADING_TEXTS.length)
+        setTextIndex((i) => (i + 1) % LOADING_TEXTS.length)
         setFade(true)
       }, 300)
     }, 3000)
-    return () => { clearInterval(interval); clearTimeout(timeoutId) }
+    return () => {
+      clearInterval(interval)
+      clearTimeout(timeoutId)
+    }
   }, [])
 
   return (
@@ -47,7 +50,7 @@ export function BrowserLoadingAnimation() {
             const cy = (SIZE - 1) / 2
             const dist = Math.sqrt((col - cx) ** 2 + (row - cy) ** 2)
             const maxDist = Math.sqrt(cx ** 2 + cy ** 2)
-            const edgeFade = 1 - (dist / maxDist)
+            const edgeFade = 1 - dist / maxDist
             const delay = dist * 0.12
 
             return (
@@ -57,7 +60,7 @@ export function BrowserLoadingAnimation() {
                 style={{
                   opacity: edgeFade * 0.12,
                   animation: `browser-pulse-grid 2.5s ease-in-out ${delay}s infinite`,
-                  ['--edge-fade' as string]: edgeFade,
+                  ['--edge-fade' as string]: edgeFade
                 }}
               />
             )

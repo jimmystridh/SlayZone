@@ -23,10 +23,14 @@ export async function listProjectFiles(
 
 async function tryGitLs(cwd: string, query: string, limit: number): Promise<FileMatch[] | null> {
   try {
-    const { stdout } = await execFileAsync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], {
-      cwd,
-      maxBuffer: 16 * 1024 * 1024,
-    })
+    const { stdout } = await execFileAsync(
+      'git',
+      ['ls-files', '--cached', '--others', '--exclude-standard'],
+      {
+        cwd,
+        maxBuffer: 16 * 1024 * 1024
+      }
+    )
     const q = query.toLowerCase()
     const out: FileMatch[] = []
     const seenDirs = new Set<string>()
@@ -53,7 +57,16 @@ async function tryGitLs(cwd: string, query: string, limit: number): Promise<File
 async function fsWalk(cwd: string, query: string, limit: number): Promise<FileMatch[]> {
   const q = query.toLowerCase()
   const out: FileMatch[] = []
-  const skip = new Set(['node_modules', '.git', 'dist', 'build', '.next', '.turbo', 'coverage', '.cache'])
+  const skip = new Set([
+    'node_modules',
+    '.git',
+    'dist',
+    'build',
+    '.next',
+    '.turbo',
+    'coverage',
+    '.cache'
+  ])
   const maxDepth = 4
 
   async function walk(dir: string, relDir: string, depth: number): Promise<void> {

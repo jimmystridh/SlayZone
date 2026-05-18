@@ -3,7 +3,11 @@ function pickElementInGuestPage() {
     const doc = document
     const w = window as Window & { __slzDomPickerCleanup?: () => void }
     if (typeof w.__slzDomPickerCleanup === 'function') {
-      try { w.__slzDomPickerCleanup() } catch { /* noop */ }
+      try {
+        w.__slzDomPickerCleanup()
+      } catch {
+        /* noop */
+      }
     }
 
     const overlay = doc.createElement('div')
@@ -59,13 +63,12 @@ function pickElementInGuestPage() {
     }
 
     const extractText = (el: Element): string => {
-      const raw = (
-        el.getAttribute('aria-label')
-        || el.getAttribute('alt')
-        || (el as HTMLElement).innerText
-        || el.textContent
-        || ''
-      )
+      const raw =
+        el.getAttribute('aria-label') ||
+        el.getAttribute('alt') ||
+        (el as HTMLElement).innerText ||
+        el.textContent ||
+        ''
       return raw.replace(/\s+/g, ' ').trim()
     }
 
@@ -126,9 +129,10 @@ function pickElementInGuestPage() {
       label.style.top = `${Math.max(8, rect.top - 30)}px`
       const tag = target.tagName.toLowerCase()
       const id = (target as HTMLElement).id ? `#${(target as HTMLElement).id}` : ''
-      label.textContent = target instanceof HTMLIFrameElement
-        ? `iframe${id} (inside frame selection is limited in v1)`
-        : `${tag}${id}`
+      label.textContent =
+        target instanceof HTMLIFrameElement
+          ? `iframe${id} (inside frame selection is limited in v1)`
+          : `${tag}${id}`
     }
 
     const onMove = (event: MouseEvent): void => {
@@ -141,15 +145,16 @@ function pickElementInGuestPage() {
       event.stopImmediatePropagation()
       const target = event.target instanceof Element ? event.target : null
       if (!target) return cleanup(null)
-      const note = target instanceof HTMLIFrameElement
-        ? 'Selection came from iframe boundary; inner-frame elements may need manual targeting.'
-        : undefined
+      const note =
+        target instanceof HTMLIFrameElement
+          ? 'Selection came from iframe boundary; inner-frame elements may need manual targeting.'
+          : undefined
       cleanup({
         url: location.href,
         tagName: target.tagName.toLowerCase(),
         textSample: extractText(target),
         selectorCandidates: selectorCandidates(target),
-        note,
+        note
       })
     }
 

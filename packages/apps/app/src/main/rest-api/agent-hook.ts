@@ -3,7 +3,11 @@ import express from 'express'
 import { z } from 'zod'
 import type { AgentLifecycleEvent, TerminalState, TerminalMode } from '@slayzone/terminal/shared'
 import { mapEventType } from '@slayzone/terminal/shared'
-import { findSessionByTaskIdAndMode, transitionStateFromHook, markSessionActiveFromHook } from '@slayzone/terminal/main'
+import {
+  findSessionByTaskIdAndMode,
+  transitionStateFromHook,
+  markSessionActiveFromHook
+} from '@slayzone/terminal/main'
 import { recordDiagnosticEvent } from '@slayzone/diagnostics/main'
 import { broadcastToWindows } from '../broadcast-to-windows'
 import type { RestApiDeps } from './types'
@@ -24,7 +28,7 @@ export interface TerminalStateBridge {
 const defaultBridge: TerminalStateBridge = {
   findSession: findSessionByTaskIdAndMode,
   transition: transitionStateFromHook,
-  markActive: markSessionActiveFromHook,
+  markActive: markSessionActiveFromHook
 }
 
 /**
@@ -82,7 +86,7 @@ const PayloadSchema = z.object({
   sessionId: z.string().optional(),
   taskId: z.string().optional(),
   cwd: z.string().optional(),
-  raw: z.unknown().optional(),
+  raw: z.unknown().optional()
 })
 
 /**
@@ -98,7 +102,7 @@ const PayloadSchema = z.object({
 export function registerAgentHookRoute(
   app: Express,
   _deps: RestApiDeps,
-  bridge: TerminalStateBridge = defaultBridge,
+  bridge: TerminalStateBridge = defaultBridge
 ): void {
   // Bumped from default 100kb — SessionStart payloads can carry the full tool list.
   const jsonParser = express.json({ limit: '1mb' })
@@ -118,7 +122,7 @@ export function registerAgentHookRoute(
     const event: AgentLifecycleEvent = {
       ...parsed.data,
       type,
-      timestamp: Date.now(),
+      timestamp: Date.now()
     }
     broadcastToWindows('agent:lifecycle', event)
 

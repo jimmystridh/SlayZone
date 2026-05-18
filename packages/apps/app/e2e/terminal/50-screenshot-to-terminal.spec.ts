@@ -6,9 +6,14 @@ import {
   getMainSessionId,
   waitForPtySession,
   waitForBufferContains,
-  readFullBuffer,
+  readFullBuffer
 } from '../fixtures/terminal'
-import { ensureBrowserPanelVisible, focusForAppShortcut, getActiveViewId, testInvoke } from '../fixtures/browser-view'
+import {
+  ensureBrowserPanelVisible,
+  focusForAppShortcut,
+  getActiveViewId,
+  testInvoke
+} from '../fixtures/browser-view'
 import { getTestUrl, TEST_HOST_MATCH } from '../fixtures/test-server'
 import path from 'path'
 import fs from 'fs'
@@ -25,7 +30,11 @@ test.describe('Screenshot browser to terminal', () => {
   test.beforeAll(async ({ electronApp, mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: projectName, color: '#06b6d4', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: projectName,
+      color: '#06b6d4',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'Screenshot task', status: 'todo' })
     taskId = t.id
@@ -44,14 +53,22 @@ test.describe('Screenshot browser to terminal', () => {
     await expect(btn).not.toBeVisible({ timeout: 3_000 })
   })
 
-  test('screenshot captures browser view and injects path into terminal', async ({ electronApp, mainWindow }) => {
+  test('screenshot captures browser view and injects path into terminal', async ({
+    electronApp,
+    mainWindow
+  }) => {
     // Open browser panel
     await ensureBrowserPanelVisible(mainWindow)
     const viewId = await getActiveViewId(mainWindow, taskId)
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/'))
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15_000 }).toContain(TEST_HOST_MATCH)
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15_000 }
+      )
+      .toContain(TEST_HOST_MATCH)
 
     // Wait for the active webview to become ready before expecting screenshot support.
     const btn = cameraButton(mainWindow)

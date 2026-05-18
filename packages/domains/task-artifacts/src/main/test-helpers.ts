@@ -60,7 +60,9 @@ export function makeTestEnv(): TestEnv {
       rmSync(dataDir, { recursive: true, force: true })
     },
     insertArtifact: (id, taskId = 'task-1', title = 'note.md') => {
-      realDb.prepare('INSERT INTO task_artifacts (id, task_id, title) VALUES (?, ?, ?)').run(id, taskId, title)
-    },
+      realDb
+        .prepare('INSERT INTO task_artifacts (id, task_id, title) VALUES (?, ?, ?)')
+        .run(id, taskId, title)
+    }
   }
 }

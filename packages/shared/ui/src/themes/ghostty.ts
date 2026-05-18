@@ -41,7 +41,7 @@ export const ghostty: UnifiedThemeDefinition = {
       surface2: '#2c313c',
       surface3: '#343a45',
       modal: '#1d1f21',
-      modalBorder: 'rgba(255, 255, 255, 0.25)',
+      modalBorder: 'rgba(255, 255, 255, 0.25)'
     },
     terminal: {
       background: '#282c34',
@@ -65,7 +65,7 @@ export const ghostty: UnifiedThemeDefinition = {
       brightBlue: '#83a5d6',
       brightMagenta: '#bc99d4',
       brightCyan: '#83beb1',
-      brightWhite: '#eaeaea',
+      brightWhite: '#eaeaea'
     },
     editor: {
       background: '#282c34',
@@ -85,7 +85,7 @@ export const ghostty: UnifiedThemeDefinition = {
       variable: '#abb2bf',
       property: '#e06c75',
       link: '#61afef',
-      heading: '#abb2bf',
-    },
-  },
+      heading: '#abb2bf'
+    }
+  }
 }

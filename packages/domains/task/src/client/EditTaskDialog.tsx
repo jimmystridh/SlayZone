@@ -6,30 +6,13 @@ import { CalendarIcon } from 'lucide-react'
 import type { Task } from '@slayzone/task/shared'
 import type { Project } from '@slayzone/projects/shared'
 import { getDefaultStatus } from '@slayzone/projects/shared'
-import {
-  updateTaskSchema,
-  type UpdateTaskFormData,
-  priorityOptions
-} from '@slayzone/task/shared'
+import { updateTaskSchema, type UpdateTaskFormData, priorityOptions } from '@slayzone/task/shared'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@slayzone/ui'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@slayzone/ui'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@slayzone/ui'
 import { Input } from '@slayzone/ui'
 import { Textarea } from '@slayzone/ui'
 import { Button } from '@slayzone/ui'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@slayzone/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@slayzone/ui'
 import { Popover, PopoverContent, PopoverTrigger } from '@slayzone/ui'
 import { Calendar } from '@slayzone/ui'
 import { buildStatusOptions, cn } from '@slayzone/ui'

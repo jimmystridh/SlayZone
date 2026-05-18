@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type MouseEvent as ReactMouseEvent
+} from 'react'
 import { createPortal } from 'react-dom'
 import { FileText, Plus, Save, Trash2 } from 'lucide-react'
 import { Button, Input, Label, Textarea, cn } from '@slayzone/ui'
@@ -14,9 +22,12 @@ export function InstructionVariantsView() {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const sortedVariants = useMemo(() => [...variants].sort((a, b) => a.slug.localeCompare(b.slug)), [variants])
+  const sortedVariants = useMemo(
+    () => [...variants].sort((a, b) => a.slug.localeCompare(b.slug)),
+    [variants]
+  )
   const selected = variants.find((v) => v.id === selectedId) ?? null
-  const dirty = selected ? (editContent !== originalContent || editName !== originalName) : false
+  const dirty = selected ? editContent !== originalContent || editName !== originalName : false
 
   const loadVariants = useCallback(async () => {
     setLoading(true)
@@ -28,7 +39,9 @@ export function InstructionVariantsView() {
     }
   }, [])
 
-  useEffect(() => { void loadVariants() }, [loadVariants])
+  useEffect(() => {
+    void loadVariants()
+  }, [loadVariants])
 
   const selectVariant = (variant: AiConfigItem) => {
     setSelectedId(variant.id)
@@ -44,7 +57,7 @@ export function InstructionVariantsView() {
       type: 'root_instructions',
       scope: 'library',
       slug,
-      content: '',
+      content: ''
     })
     setVariants((prev) => [created, ...prev])
     selectVariant(created)
@@ -57,7 +70,7 @@ export function InstructionVariantsView() {
       const updated = await window.api.aiConfig.updateItem({
         id: selectedId,
         slug: editName || undefined,
-        content: editContent,
+        content: editContent
       })
       if (updated) {
         setVariants((prev) => prev.map((v) => (v.id === updated.id ? updated : v)))
@@ -69,15 +82,18 @@ export function InstructionVariantsView() {
     }
   }, [selectedId, editContent, editName])
 
-  const handleDelete = useCallback(async (id: string) => {
-    await window.api.aiConfig.deleteItem(id)
-    setVariants((prev) => prev.filter((v) => v.id !== id))
-    if (selectedId === id) {
-      setSelectedId(null)
-      setEditContent('')
-      setEditName('')
-    }
-  }, [selectedId])
+  const handleDelete = useCallback(
+    async (id: string) => {
+      await window.api.aiConfig.deleteItem(id)
+      setVariants((prev) => prev.filter((v) => v.id !== id))
+      if (selectedId === id) {
+        setSelectedId(null)
+        setEditContent('')
+        setEditName('')
+      }
+    },
+    [selectedId]
+  )
 
   // Resizable split
   const [splitWidth, setSplitWidth] = useState(350)
@@ -107,14 +123,17 @@ export function InstructionVariantsView() {
   }
 
   return (
-    <div ref={containerRef} className="flex h-full w-full overflow-hidden rounded-lg border bg-surface-3">
+    <div
+      ref={containerRef}
+      className="flex h-full w-full overflow-hidden rounded-lg border bg-surface-3"
+    >
       {/* Portal: New Variant button in header */}
       {document.getElementById('context-manager-header-actions') &&
         createPortal(
           <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={handleCreate}>
             <Plus className="size-3 mr-1" /> New Variant
           </Button>,
-          document.getElementById('context-manager-header-actions')!,
+          document.getElementById('context-manager-header-actions')!
         )}
 
       {/* Left: variant list */}
@@ -144,15 +163,17 @@ export function InstructionVariantsView() {
             )
           })}
           {variants.length === 0 && (
-            <p className="px-2 py-4 text-center text-xs text-muted-foreground">
-              No variants yet
-            </p>
+            <p className="px-2 py-4 text-center text-xs text-muted-foreground">No variants yet</p>
           )}
         </div>
       </div>
 
       {/* Drag handle */}
-      <div className="relative flex w-3 shrink-0 cursor-col-resize items-center justify-center" onMouseDown={onDragStart} onDoubleClick={() => setSplitWidth(350)}>
+      <div
+        className="relative flex w-3 shrink-0 cursor-col-resize items-center justify-center"
+        onMouseDown={onDragStart}
+        onDoubleClick={() => setSplitWidth(350)}
+      >
         <div className="h-full w-px bg-border" />
       </div>
 
@@ -172,7 +193,12 @@ export function InstructionVariantsView() {
                 />
               </div>
               <div className="flex items-end gap-2 shrink-0 pb-px">
-                <Button size="sm" className="h-7 text-[11px]" onClick={handleSave} disabled={!dirty || saving}>
+                <Button
+                  size="sm"
+                  className="h-7 text-[11px]"
+                  onClick={handleSave}
+                  disabled={!dirty || saving}
+                >
                   <Save className="size-3 mr-1" />
                   {saving ? 'Saving...' : 'Save'}
                 </Button>
@@ -195,7 +221,6 @@ export function InstructionVariantsView() {
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setEditContent(e.target.value)}
               placeholder="Write instruction content..."
             />
-
           </>
         ) : (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">

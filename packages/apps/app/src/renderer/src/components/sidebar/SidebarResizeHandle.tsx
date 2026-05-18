@@ -17,7 +17,7 @@ export function SidebarResizeHandle({
   defaultWidth,
   onChange,
   onReset,
-  onDragStateChange,
+  onDragStateChange
 }: SidebarResizeHandleProps) {
   const startRef = useRef<{ x: number; w: number } | null>(null)
 

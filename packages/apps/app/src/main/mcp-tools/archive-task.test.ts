@@ -2,24 +2,42 @@
  * MCP: archive_task tool tests.
  * Run with: ELECTRON_RUN_AS_NODE=1 ./node_modules/.bin/electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/apps/app/src/main/mcp-tools/archive-task.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../../shared/test-utils/ipc-harness.js'
 import { captureMcpServer } from '../../../../../shared/test-utils/mcp-harness.js'
 import { spyTaskEvents } from '../../../../../shared/test-utils/event-spy.js'
-import { __ipcEmitCalls, __resetIpcEmitCalls } from '../../../../../shared/test-utils/mock-electron.js'
+import {
+  __ipcEmitCalls,
+  __resetIpcEmitCalls
+} from '../../../../../shared/test-utils/mock-electron.js'
 import { taskEvents } from '@slayzone/task/main'
 import { registerArchiveTaskTool } from './archive-task.js'
 
 const h = await createTestHarness()
 const projectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projectId, 'P', '#000', '/tmp/p')
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(projectId, 'P', '#000', '/tmp/p')
 
 let notifyCount = 0
 const stub = captureMcpServer()
-registerArchiveTaskTool(stub.server as never, { db: h.db, notifyRenderer: () => { notifyCount++ } })
+registerArchiveTaskTool(stub.server as never, {
+  db: h.db,
+  notifyRenderer: () => {
+    notifyCount++
+  }
+})
 
 function seedTask(): string {
   const id = crypto.randomUUID()
-  h.db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)')
+  h.db
+    .prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+    )
     .run(id, projectId, 'T', 'todo', 3, 0)
   return id
 }
@@ -39,7 +57,10 @@ await describe('mcp archive_task', () => {
     __resetIpcEmitCalls()
     const spy = spyTaskEvents(taskEvents, 'task:archived')
     notifyCount = 0
-    const res = await stub.invoke('archive_task', { id }) as { content: { type: string; text: string }[]; isError?: boolean }
+    const res = (await stub.invoke('archive_task', { id })) as {
+      content: { type: string; text: string }[]
+      isError?: boolean
+    }
     spy.stop()
     expect(res.isError === true).toBe(false)
     expect(res.content[0].type).toBe('text')
@@ -54,7 +75,10 @@ await describe('mcp archive_task', () => {
 
   test('error: returns isError when task not found', async () => {
     const ghost = crypto.randomUUID()
-    const res = await stub.invoke('archive_task', { id: ghost }) as { content: { text: string }[]; isError?: boolean }
+    const res = (await stub.invoke('archive_task', { id: ghost })) as {
+      content: { text: string }[]
+      isError?: boolean
+    }
     expect(res.isError).toBe(true)
     expect(res.content[0].text.includes('not found')).toBe(true)
   })

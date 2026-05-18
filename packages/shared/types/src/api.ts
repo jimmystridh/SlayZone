@@ -1,8 +1,37 @@
-import type { Project, CreateProjectInput, UpdateProjectInput, ExecutionContext } from '@slayzone/projects/shared'
-import type { Task, CreateTaskInput, UpdateTaskInput, DesktopHandoffPolicy, TaskTemplate, CreateTaskTemplateInput, UpdateTaskTemplateInput, TaskArtifact, CreateArtifactInput, UpdateArtifactInput, ArtifactFolder, CreateArtifactFolderInput, UpdateArtifactFolderInput } from '@slayzone/task/shared'
-import type { ArtifactVersion, VersionRef, DiffResult, PruneReport } from '@slayzone/task-artifacts/shared'
+import type {
+  Project,
+  CreateProjectInput,
+  UpdateProjectInput,
+  ExecutionContext
+} from '@slayzone/projects/shared'
+import type {
+  Task,
+  CreateTaskInput,
+  UpdateTaskInput,
+  DesktopHandoffPolicy,
+  TaskTemplate,
+  CreateTaskTemplateInput,
+  UpdateTaskTemplateInput,
+  TaskArtifact,
+  CreateArtifactInput,
+  UpdateArtifactInput,
+  ArtifactFolder,
+  CreateArtifactFolderInput,
+  UpdateArtifactFolderInput
+} from '@slayzone/task/shared'
+import type {
+  ArtifactVersion,
+  VersionRef,
+  DiffResult,
+  PruneReport
+} from '@slayzone/task-artifacts/shared'
 import type { Tag, CreateTagInput, UpdateTagInput } from '@slayzone/tags/shared'
-import type { FeedbackThread, FeedbackMessage, CreateFeedbackThreadInput, AddFeedbackMessageInput } from '@slayzone/feedback/shared'
+import type {
+  FeedbackThread,
+  FeedbackMessage,
+  CreateFeedbackThreadInput,
+  AddFeedbackMessageInput
+} from '@slayzone/feedback/shared'
 import type { AgentTurnRange } from '@slayzone/agent-turns/shared'
 import type {
   TerminalMode,
@@ -25,7 +54,7 @@ import type {
   AgentInfo,
   FileMatch,
   ChatSessionStateEntry,
-  QueuedChatMessage,
+  QueuedChatMessage
 } from '@slayzone/terminal/shared'
 
 export interface ChatSessionInfo {
@@ -49,9 +78,48 @@ export interface ChatSessionInfo {
   /** Resolved reasoning effort this session was spawned with. `null` = inherit. */
   chatEffort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max' | null
 }
-import type { TerminalTab, CreateTerminalTabInput, UpdateTerminalTabInput } from '@slayzone/task-terminals/shared'
+import type {
+  TerminalTab,
+  CreateTerminalTabInput,
+  UpdateTerminalTabInput
+} from '@slayzone/task-terminals/shared'
 import type { Theme, ThemePreference } from '@slayzone/settings/shared'
-import type { CreateWorktreeOpts, CreateWorktreeResult, CreateWorktreePhase, IgnoredFileNode, DetectedWorktree, MergeResult, MergeWithAIResult, GitDiffSnapshot, GitSyncResult, ConflictFileContent, ConflictAnalysis, RebaseProgress, CommitInfo, AheadBehind, StatusSummary, BranchListResult, DeleteBranchResult, PruneResult, DiffStatsSummary, WorktreeMetadata, RebaseOntoResult, DagCommit, ResolvedGraph, ForkGraphResult, GhPullRequest, GhPrTimelineEvent, CreatePrInput, CreatePrResult, MergePrInput, EditPrCommentInput, StashEntry, StashApplyResult, RepoEntry, ListProjectReposOpts } from '@slayzone/worktrees/shared'
+import type {
+  CreateWorktreeOpts,
+  CreateWorktreeResult,
+  CreateWorktreePhase,
+  IgnoredFileNode,
+  DetectedWorktree,
+  MergeResult,
+  MergeWithAIResult,
+  GitDiffSnapshot,
+  GitSyncResult,
+  ConflictFileContent,
+  ConflictAnalysis,
+  RebaseProgress,
+  CommitInfo,
+  AheadBehind,
+  StatusSummary,
+  BranchListResult,
+  DeleteBranchResult,
+  PruneResult,
+  DiffStatsSummary,
+  WorktreeMetadata,
+  RebaseOntoResult,
+  DagCommit,
+  ResolvedGraph,
+  ForkGraphResult,
+  GhPullRequest,
+  GhPrTimelineEvent,
+  CreatePrInput,
+  CreatePrResult,
+  MergePrInput,
+  EditPrCommentInput,
+  StashEntry,
+  StashApplyResult,
+  RepoEntry,
+  ListProjectReposOpts
+} from '@slayzone/worktrees/shared'
 import type { MergeContext } from '@slayzone/task/shared'
 import type {
   AiConfigItem,
@@ -84,10 +152,36 @@ import type {
   ListEntriesInput,
   SkillUpdateInfo
 } from '@slayzone/ai-config/shared'
-import type { DirEntry, ReadFileResult, FileSearchResult, SearchFilesOptions, GitStatusMap } from '@slayzone/file-editor/shared'
-import type { TestCategory, CreateTestCategoryInput, UpdateTestCategoryInput, TestProfile, ScanResult, TestLabel, CreateTestLabelInput, UpdateTestLabelInput, TestFileLabel, TestFileNote } from '@slayzone/test-panel/shared'
-import type { Automation, AutomationRun, CreateAutomationInput, UpdateAutomationInput } from '@slayzone/automations/shared'
-import type { AutomationActionRun, ListTaskHistoryOptions, ListTaskHistoryResult } from '@slayzone/history/shared'
+import type {
+  DirEntry,
+  ReadFileResult,
+  FileSearchResult,
+  SearchFilesOptions,
+  GitStatusMap
+} from '@slayzone/file-editor/shared'
+import type {
+  TestCategory,
+  CreateTestCategoryInput,
+  UpdateTestCategoryInput,
+  TestProfile,
+  ScanResult,
+  TestLabel,
+  CreateTestLabelInput,
+  UpdateTestLabelInput,
+  TestFileLabel,
+  TestFileNote
+} from '@slayzone/test-panel/shared'
+import type {
+  Automation,
+  AutomationRun,
+  CreateAutomationInput,
+  UpdateAutomationInput
+} from '@slayzone/automations/shared'
+import type {
+  AutomationActionRun,
+  ListTaskHistoryOptions,
+  ListTaskHistoryResult
+} from '@slayzone/history/shared'
 import type {
   ConnectGithubInput,
   ConnectLinearInput,
@@ -180,8 +274,8 @@ export interface LocalLeaderboardStats {
 export type ProcessStatus = 'running' | 'stopped' | 'completed' | 'error'
 
 export interface ProcessStats {
-  cpu: number   // % of one core
-  rss: number   // kilobytes
+  cpu: number // % of one core
+  rss: number // kilobytes
 }
 
 export interface ProcessInfo {
@@ -290,7 +384,10 @@ export interface ElectronAPI {
     getSubTasks: (parentId: string) => Promise<Task[]>
     createTask: (data: CreateTaskInput) => Promise<Task>
     updateTask: (data: UpdateTaskInput) => Promise<Task>
-    updateTasks: (data: { ids: string[]; updates: Omit<Partial<UpdateTaskInput>, 'id'> }) => Promise<Task[]>
+    updateTasks: (data: {
+      ids: string[]
+      updates: Omit<Partial<UpdateTaskInput>, 'id'>
+    }) => Promise<Task[]>
     deleteTask: (id: string) => Promise<boolean>
     deleteTasks: (ids: string[]) => Promise<{ deletedIds: string[]; blockedIds: string[] }>
     restoreTask: (id: string) => Promise<Task>
@@ -329,7 +426,9 @@ export interface ElectronAPI {
     getByTask: (taskId: string) => Promise<TaskArtifact[]>
     get: (id: string) => Promise<TaskArtifact | null>
     create: (data: CreateArtifactInput) => Promise<TaskArtifact>
-    update: (data: UpdateArtifactInput & { mutateVersion?: boolean }) => Promise<TaskArtifact | null>
+    update: (
+      data: UpdateArtifactInput & { mutateVersion?: boolean }
+    ) => Promise<TaskArtifact | null>
     delete: (id: string) => Promise<boolean>
     reorder: (data: string[] | { folderId: string | null; artifactIds: string[] }) => Promise<void>
     readContent: (id: string) => Promise<string | null>
@@ -337,10 +436,23 @@ export interface ElectronAPI {
     getMtime: (id: string) => Promise<number | null>
     onContentChanged: (callback: (artifactId: string) => void) => () => void
     upload: (data: { taskId: string; sourcePath: string; title?: string }) => Promise<TaskArtifact>
-    uploadBlob: (data: { taskId: string; title: string; bytes: Uint8Array; folderId?: string | null }) => Promise<TaskArtifact | null>
-    pasteFiles: (data: { sourcePaths: string[]; destTaskId: string; destFolderId: string | null }) => Promise<TaskArtifact[]>
+    uploadBlob: (data: {
+      taskId: string
+      title: string
+      bytes: Uint8Array
+      folderId?: string | null
+    }) => Promise<TaskArtifact | null>
+    pasteFiles: (data: {
+      sourcePaths: string[]
+      destTaskId: string
+      destFolderId: string | null
+    }) => Promise<TaskArtifact[]>
     cleanupTask: (taskId: string) => Promise<void>
-    uploadDir: (data: { taskId: string; dirPath: string; parentFolderId: string | null }) => Promise<{ folders: ArtifactFolder[]; artifacts: TaskArtifact[] }>
+    uploadDir: (data: {
+      taskId: string
+      dirPath: string
+      parentFolderId: string | null
+    }) => Promise<{ folders: ArtifactFolder[]; artifacts: TaskArtifact[] }>
     downloadFile: (id: string) => Promise<boolean>
     downloadFolder: (id: string) => Promise<boolean>
     downloadAsPdf: (id: string) => Promise<boolean>
@@ -348,12 +460,26 @@ export interface ElectronAPI {
     downloadAsHtml: (id: string) => Promise<boolean>
     downloadAllAsZip: (taskId: string) => Promise<boolean>
     versions: {
-      list: (data: { artifactId: string; limit?: number; offset?: number }) => Promise<ArtifactVersion[]>
+      list: (data: {
+        artifactId: string
+        limit?: number
+        offset?: number
+      }) => Promise<ArtifactVersion[]>
       read: (data: { artifactId: string; versionRef: VersionRef }) => Promise<string>
       create: (data: { artifactId: string; name?: string | null }) => Promise<ArtifactVersion>
-      rename: (data: { artifactId: string; versionRef: VersionRef; newName: string | null }) => Promise<ArtifactVersion>
+      rename: (data: {
+        artifactId: string
+        versionRef: VersionRef
+        newName: string | null
+      }) => Promise<ArtifactVersion>
       diff: (data: { artifactId: string; a: VersionRef; b?: VersionRef }) => Promise<DiffResult>
-      prune: (data: { artifactId: string; keepLast?: number; keepNamed?: boolean; keepCurrent?: boolean; dryRun?: boolean }) => Promise<PruneReport>
+      prune: (data: {
+        artifactId: string
+        keepLast?: number
+        keepNamed?: boolean
+        keepCurrent?: boolean
+        dryRun?: boolean
+      }) => Promise<PruneReport>
       setCurrent: (data: { artifactId: string; versionRef: VersionRef }) => Promise<ArtifactVersion>
     }
   }
@@ -382,7 +508,10 @@ export interface ElectronAPI {
     setBlockers: (taskId: string, blockerTaskIds: string[]) => Promise<void>
   }
   history: {
-    listForTask: (taskId: string, options?: ListTaskHistoryOptions) => Promise<ListTaskHistoryResult>
+    listForTask: (
+      taskId: string,
+      options?: ListTaskHistoryOptions
+    ) => Promise<ListTaskHistoryResult>
     getAutomationActionRuns: (runId: string) => Promise<AutomationActionRun[]>
   }
   feedback: {
@@ -431,7 +560,17 @@ export interface ElectronAPI {
     showOpenDialog: (options: {
       title?: string
       defaultPath?: string
-      properties?: Array<'openFile' | 'openDirectory' | 'multiSelections' | 'showHiddenFiles' | 'createDirectory' | 'promptToCreate' | 'noResolveAliases' | 'treatPackageAsDirectory' | 'dontAddToRecent'>
+      properties?: Array<
+        | 'openFile'
+        | 'openDirectory'
+        | 'multiSelections'
+        | 'showHiddenFiles'
+        | 'createDirectory'
+        | 'promptToCreate'
+        | 'noResolveAliases'
+        | 'treatPackageAsDirectory'
+        | 'dontAddToRecent'
+      >
       filters?: Array<{ name: string; extensions: string[] }>
     }) => Promise<{ canceled: boolean; filePaths: string[] }>
   }
@@ -463,8 +602,17 @@ export interface ElectronAPI {
     onTasksChanged: (callback: () => void) => () => void
     onSettingsChanged: (callback: () => void) => () => void
     onCloseTask: (callback: (taskId: string) => void) => () => void
-    onBrowserEnsurePanelOpen: (callback: (taskId: string, url?: string, tabId?: string) => void) => () => void
-    onBrowserCreateTab: (callback: (payload: { taskId: string; tabId: string; url?: string; background?: boolean }) => void) => () => void
+    onBrowserEnsurePanelOpen: (
+      callback: (taskId: string, url?: string, tabId?: string) => void
+    ) => () => void
+    onBrowserCreateTab: (
+      callback: (payload: {
+        taskId: string
+        tabId: string
+        url?: string
+        background?: boolean
+      }) => void
+    ) => () => void
     onOpenTask: (callback: (taskId: string, background?: boolean) => void) => () => void
     onOpenArtifact: (callback: (taskId: string, artifactId: string) => void) => () => void
     onScreenshotTrigger: (callback: () => void) => () => void
@@ -480,7 +628,14 @@ export interface ElectronAPI {
     restartForUpdate: () => Promise<void>
     checkForUpdates: () => Promise<void>
     cliStatus: () => Promise<{ installed: boolean; path?: string }>
-    installCli: () => Promise<{ ok: boolean; path?: string; permissionDenied?: boolean; elevationCancelled?: boolean; error?: string; pathNotInPATH?: boolean }>
+    installCli: () => Promise<{
+      ok: boolean
+      path?: string
+      permissionDenied?: boolean
+      elevationCancelled?: boolean
+      error?: string
+      pathNotInPATH?: boolean
+    }>
   }
   floatingGlobalAgentPanel: {
     setEnabled: (enabled: boolean) => Promise<{ kind: string }>
@@ -488,12 +643,34 @@ export interface ElectronAPI {
     setPanelOpen: (isOpen: boolean) => Promise<{ kind: string }>
     toggleCollapse: () => Promise<{ kind: string; collapsed: boolean }>
     resetSize: () => Promise<{ kind: string }>
-    detach: () => Promise<{ kind: string; sessionId: string | null; mode: 'auto' | 'manual' | null; hasCustomSize: boolean }>
-    reattach: () => Promise<{ kind: string; sessionId: string | null; mode: 'auto' | 'manual' | null; hasCustomSize: boolean }>
-    getState: () => Promise<{ kind: string; sessionId: string | null; mode: 'auto' | 'manual' | null; hasCustomSize: boolean }>
+    detach: () => Promise<{
+      kind: string
+      sessionId: string | null
+      mode: 'auto' | 'manual' | null
+      hasCustomSize: boolean
+    }>
+    reattach: () => Promise<{
+      kind: string
+      sessionId: string | null
+      mode: 'auto' | 'manual' | null
+      hasCustomSize: boolean
+    }>
+    getState: () => Promise<{
+      kind: string
+      sessionId: string | null
+      mode: 'auto' | 'manual' | null
+      hasCustomSize: boolean
+    }>
     getSession: () => Promise<{ sessionId: string; cwd: string; mode: string } | null>
     getConfig: () => Promise<{ style: string; position: string }>
-    onState: (callback: (state: { kind: string; sessionId: string | null; mode: 'auto' | 'manual' | null; hasCustomSize: boolean }) => void) => () => void
+    onState: (
+      callback: (state: {
+        kind: string
+        sessionId: string | null
+        mode: 'auto' | 'manual' | null
+        hasCustomSize: boolean
+      }) => void
+    ) => () => void
     onSessionChanged: (callback: () => void) => () => void
     onCollapseChanged: (callback: (collapsed: boolean) => void) => () => void
   }
@@ -509,12 +686,25 @@ export interface ElectronAPI {
   panels: {
     claim: (taskId: string, panelId: string) => Promise<{ ok: boolean; unchanged?: boolean }>
     claimAndCloseOther: (taskId: string, panelId: string) => Promise<{ ok: boolean }>
-    release: (taskId: string, panelId: string) => Promise<{ ok: boolean; unchanged?: boolean; reason?: string }>
+    release: (
+      taskId: string,
+      panelId: string
+    ) => Promise<{ ok: boolean; unchanged?: boolean; reason?: string }>
     releaseAllForTask: (taskId: string) => Promise<{ ok: boolean; released: number }>
     getOwnership: (taskId: string) => Promise<Array<{ panelId: string; ownerWindowId: number }>>
     getWindowId: () => Promise<number>
-    onOwnershipChanged: (callback: (payload: { taskId: string; ownership: Array<{ panelId: string; ownerWindowId: number }> }) => void) => () => void
-    onReleasedOnClose: (callback: (payload: { closedWindowId: number; released: Array<{ taskId: string; panelId: string }> }) => void) => () => void
+    onOwnershipChanged: (
+      callback: (payload: {
+        taskId: string
+        ownership: Array<{ panelId: string; ownerWindowId: number }>
+      }) => void
+    ) => () => void
+    onReleasedOnClose: (
+      callback: (payload: {
+        closedWindowId: number
+        released: Array<{ taskId: string; panelId: string }>
+      }) => void
+    ) => () => void
     onCloseRequest: (callback: (payload: { taskId: string; panelId: string }) => void) => () => void
   }
   window: {
@@ -538,7 +728,9 @@ export interface ElectronAPI {
   }
   pty: {
     create: (opts: PtyCreateOptions) => Promise<{ success: boolean; error?: string }>
-    testExecutionContext: (context: ExecutionContext) => Promise<{ success: boolean; error?: string }>
+    testExecutionContext: (
+      context: ExecutionContext
+    ) => Promise<{ success: boolean; error?: string }>
     ccsListProfiles: () => Promise<{ profiles: string[]; error?: string }>
     write: (sessionId: string, data: string) => Promise<boolean>
     submit: (sessionId: string, text: string) => Promise<boolean>
@@ -546,17 +738,13 @@ export interface ElectronAPI {
     kill: (sessionId: string) => Promise<boolean>
     exists: (sessionId: string) => Promise<boolean>
     getBuffer: (sessionId: string) => Promise<string | null>
-    clearBuffer: (
-      sessionId: string
-    ) => Promise<{ success: boolean; clearedSeq: number | null }>
+    clearBuffer: (sessionId: string) => Promise<{ success: boolean; clearedSeq: number | null }>
     getBufferSince: (sessionId: string, afterSeq: number) => Promise<BufferSinceResult | null>
     list: () => Promise<PtyInfo[]>
     onData: (callback: (sessionId: string, data: string, seq: number) => void) => () => void
     onExit: (callback: (sessionId: string, exitCode: number) => void) => () => void
     onRespawnSuggested: (callback: (taskId: string) => void) => () => void
-    onEnsureAlive: (
-      callback: (taskId: string, reqId: number, force: boolean) => void
-    ) => () => void
+    onEnsureAlive: (callback: (taskId: string, reqId: number, force: boolean) => void) => () => void
     ackEnsureAlive: (reqId: number, result: 'ok' | 'already-alive' | 'error') => void
     onSessionNotFound: (callback: (sessionId: string) => void) => () => void
     onStateChange: (
@@ -570,7 +758,12 @@ export interface ElectronAPI {
     onStats: (cb: (stats: Record<string, ProcessStats>) => void) => () => void
     getState: (sessionId: string) => Promise<TerminalState | null>
     validate: (mode: TerminalMode) => Promise<ValidationResult[]>
-    setTheme: (theme: { foreground: string; background: string; cursor: string; ansi?: readonly string[] }) => Promise<void>
+    setTheme: (theme: {
+      foreground: string
+      background: string
+      cursor: string
+      ansi?: readonly string[]
+    }) => Promise<void>
     setShellOverride: (value: string | null) => Promise<void>
     claimSession: (sessionId: string) => Promise<{ ok: boolean }>
   }
@@ -628,7 +821,11 @@ export interface ElectronAPI {
       args: {
         requestId: string
         decision:
-          | { behavior: 'allow'; updatedInput?: Record<string, unknown>; updatedPermissions?: unknown[] }
+          | {
+              behavior: 'allow'
+              updatedInput?: Record<string, unknown>
+              updatedPermissions?: unknown[]
+            }
           | { behavior: 'deny'; message: string; interrupt?: boolean }
       }
     ) => Promise<boolean>
@@ -703,7 +900,10 @@ export interface ElectronAPI {
       cwd: string
       chatModel: 'sonnet' | 'opus' | 'haiku'
     }) => Promise<ChatSessionInfo>
-    getEffort: (taskId: string, mode: string) => Promise<'low' | 'medium' | 'high' | 'xhigh' | 'max' | null>
+    getEffort: (
+      taskId: string,
+      mode: string
+    ) => Promise<'low' | 'medium' | 'high' | 'xhigh' | 'max' | null>
     setEffort: (opts: {
       tabId: string
       taskId: string
@@ -780,31 +980,61 @@ export interface ElectronAPI {
     listProjectRepos: (projectPath: string, opts?: ListProjectReposOpts) => Promise<RepoEntry[]>
     detectWorktrees: (repoPath: string) => Promise<DetectedWorktree[]>
     createWorktree: (opts: CreateWorktreeOpts) => Promise<CreateWorktreeResult>
-    onCreateWorktreePhase: (requestId: string, cb: (phase: CreateWorktreePhase) => void) => () => void
-    removeWorktree: (repoPath: string, worktreePath: string, branchToDelete?: string) => Promise<{ branchDeleted?: boolean; branchError?: string }>
+    onCreateWorktreePhase: (
+      requestId: string,
+      cb: (phase: CreateWorktreePhase) => void
+    ) => () => void
+    removeWorktree: (
+      repoPath: string,
+      worktreePath: string,
+      branchToDelete?: string
+    ) => Promise<{ branchDeleted?: boolean; branchError?: string }>
     init: (path: string) => Promise<void>
     getCurrentBranch: (path: string) => Promise<string | null>
     listBranches: (path: string) => Promise<string[]>
     checkoutBranch: (path: string, branch: string) => Promise<void>
     createBranch: (path: string, branch: string) => Promise<void>
     hasUncommittedChanges: (path: string) => Promise<boolean>
-    mergeIntoParent: (projectPath: string, parentBranch: string, sourceBranch: string) => Promise<MergeResult>
+    mergeIntoParent: (
+      projectPath: string,
+      parentBranch: string,
+      sourceBranch: string
+    ) => Promise<MergeResult>
     abortMerge: (path: string) => Promise<void>
-    mergeWithAI: (projectPath: string, worktreePath: string, parentBranch: string, sourceBranch: string) => Promise<MergeWithAIResult>
+    mergeWithAI: (
+      projectPath: string,
+      worktreePath: string,
+      parentBranch: string,
+      sourceBranch: string
+    ) => Promise<MergeWithAIResult>
     isMergeInProgress: (path: string) => Promise<boolean>
     getConflictedFiles: (path: string) => Promise<string[]>
-    getWorkingDiff: (path: string, opts?: { contextLines?: string; ignoreWhitespace?: boolean; fromSha?: string; toSha?: string }) => Promise<GitDiffSnapshot>
+    getWorkingDiff: (
+      path: string,
+      opts?: { contextLines?: string; ignoreWhitespace?: boolean; fromSha?: string; toSha?: string }
+    ) => Promise<GitDiffSnapshot>
     stageFile: (path: string, filePath: string) => Promise<void>
     unstageFile: (path: string, filePath: string) => Promise<void>
     discardFile: (path: string, filePath: string, untracked?: boolean) => Promise<void>
     stageAll: (path: string) => Promise<void>
     unstageAll: (path: string) => Promise<void>
-    getFileDiff: (repoPath: string, filePath: string, staged: boolean, opts?: { contextLines?: string; ignoreWhitespace?: boolean }) => Promise<string>
+    getFileDiff: (
+      repoPath: string,
+      filePath: string,
+      staged: boolean,
+      opts?: { contextLines?: string; ignoreWhitespace?: boolean }
+    ) => Promise<string>
     getUntrackedFileDiff: (repoPath: string, filePath: string) => Promise<string>
     getConflictContent: (repoPath: string, filePath: string) => Promise<ConflictFileContent>
     writeResolvedFile: (repoPath: string, filePath: string, content: string) => Promise<void>
     commitFiles: (repoPath: string, message: string) => Promise<void>
-    analyzeConflict: (mode: string, filePath: string, base: string | null, ours: string | null, theirs: string | null) => Promise<ConflictAnalysis>
+    analyzeConflict: (
+      mode: string,
+      filePath: string,
+      base: string | null,
+      ours: string | null,
+      theirs: string | null
+    ) => Promise<ConflictAnalysis>
     isRebaseInProgress: (path: string) => Promise<boolean>
     getRebaseProgress: (repoPath: string) => Promise<RebaseProgress | null>
     abortRebase: (path: string) => Promise<void>
@@ -837,14 +1067,40 @@ export interface ElectronAPI {
     getWorktreeMetadata: (path: string) => Promise<WorktreeMetadata>
     // DAG graph
     getCommitDag: (path: string, limit: number, branches?: string[]) => Promise<DagCommit[]>
-    getResolvedCommitDag: (path: string, limit: number, branches: string[] | undefined, baseBranch: string) => Promise<ResolvedGraph>
-    getResolvedForkGraph: (targetPath: string, repoPath: string, activeBranch: string, compareBranch: string, activeBranchLabel: string, compareBranchLabel: string) => Promise<ForkGraphResult | null>
+    getResolvedCommitDag: (
+      path: string,
+      limit: number,
+      branches: string[] | undefined,
+      baseBranch: string
+    ) => Promise<ResolvedGraph>
+    getResolvedForkGraph: (
+      targetPath: string,
+      repoPath: string,
+      activeBranch: string,
+      compareBranch: string,
+      activeBranchLabel: string,
+      compareBranchLabel: string
+    ) => Promise<ForkGraphResult | null>
     getResolvedUpstreamGraph: (repoPath: string, branch: string) => Promise<ForkGraphResult | null>
-    getResolvedRecentCommits: (path: string, count: number, branchName: string) => Promise<ResolvedGraph>
-    resolveChildBranches: (path: string, baseBranch: string) => Promise<{ children: string[]; merged: string[] }>
-    resolveCopyBehavior: (projectId?: string) => Promise<{ behavior: string; customPaths: string[] }>
+    getResolvedRecentCommits: (
+      path: string,
+      count: number,
+      branchName: string
+    ) => Promise<ResolvedGraph>
+    resolveChildBranches: (
+      path: string,
+      baseBranch: string
+    ) => Promise<{ children: string[]; merged: string[] }>
+    resolveCopyBehavior: (
+      projectId?: string
+    ) => Promise<{ behavior: string; customPaths: string[] }>
     getIgnoredFileTree: (repoPath: string) => Promise<IgnoredFileNode[]>
-    copyIgnoredFiles: (repoPath: string, worktreePath: string, paths: string[], mode?: 'all' | 'custom') => Promise<void>
+    copyIgnoredFiles: (
+      repoPath: string,
+      worktreePath: string,
+      paths: string[],
+      mode?: 'all' | 'custom'
+    ) => Promise<void>
     // GitHub CLI (gh)
     checkGhInstalled: () => Promise<boolean>
     hasGithubRemote: (repoPath: string) => Promise<boolean>
@@ -859,7 +1115,12 @@ export interface ElectronAPI {
     editPrComment: (input: EditPrCommentInput) => Promise<void>
     // Stash
     listStashes: (repoPath: string) => Promise<StashEntry[]>
-    createStash: (repoPath: string, message: string, includeUntracked: boolean, keepIndex: boolean) => Promise<GitSyncResult>
+    createStash: (
+      repoPath: string,
+      message: string,
+      includeUntracked: boolean,
+      keepIndex: boolean
+    ) => Promise<GitSyncResult>
     applyStash: (repoPath: string, index: number) => Promise<StashApplyResult>
     popStash: (repoPath: string, index: number) => Promise<StashApplyResult>
     dropStash: (repoPath: string, index: number) => Promise<GitSyncResult>
@@ -899,19 +1160,32 @@ export interface ElectronAPI {
     deleteItem: (id: string) => Promise<boolean>
     listProjectSelections: (projectId: string) => Promise<AiConfigProjectSelection[]>
     setProjectSelection: (input: SetAiConfigProjectSelectionInput) => Promise<void>
-    removeProjectSelection: (projectId: string, itemId: string, provider?: string) => Promise<boolean>
+    removeProjectSelection: (
+      projectId: string,
+      itemId: string,
+      provider?: string
+    ) => Promise<boolean>
     discoverContextFiles: (projectPath: string) => Promise<ContextFileInfo[]>
     readContextFile: (filePath: string, projectPath: string) => Promise<string>
     writeContextFile: (filePath: string, content: string, projectPath: string) => Promise<void>
     getContextTree: (projectPath: string, projectId: string) => Promise<ContextTreeEntry[]>
     reconcileProjectSkills: (projectId: string, projectPath: string) => Promise<number>
     loadLibraryItem: (input: LoadLibraryItemInput) => Promise<ContextTreeEntry>
-    syncLinkedFile: (projectId: string, projectPath: string, itemId: string, provider?: CliProvider) => Promise<ContextTreeEntry>
+    syncLinkedFile: (
+      projectId: string,
+      projectPath: string,
+      itemId: string,
+      provider?: CliProvider
+    ) => Promise<ContextTreeEntry>
     unlinkFile: (projectId: string, itemId: string) => Promise<boolean>
     renameContextFile: (oldPath: string, newPath: string, projectPath: string) => Promise<void>
     deleteContextFile: (filePath: string, projectPath: string, projectId: string) => Promise<void>
     deleteComputerFile: (filePath: string) => Promise<void>
-    createComputerFile: (provider: string, category: 'skill', slug: string) => Promise<ComputerFileEntry>
+    createComputerFile: (
+      provider: string,
+      category: 'skill',
+      slug: string
+    ) => Promise<ComputerFileEntry>
     writeComputerSkill: (provider: CliProvider, slug: string, content: string) => Promise<void>
     discoverMcpConfigs: (projectPath: string) => Promise<McpConfigFileResult[]>
     writeMcpServer: (input: WriteMcpServerInput) => Promise<void>
@@ -934,17 +1208,57 @@ export interface ElectronAPI {
     saveLibraryInstructions: (content: string, variantId?: string) => Promise<void>
     listInstructionVariants: () => Promise<AiConfigItem[]>
     getProjectInstructionVariant: (projectId: string) => Promise<AiConfigItem | null>
-    setProjectInstructionVariant: (projectId: string, variantItemId: string | null, projectPath?: string) => Promise<void>
+    setProjectInstructionVariant: (
+      projectId: string,
+      variantItemId: string | null,
+      projectPath?: string
+    ) => Promise<void>
     getRootInstructions: (projectId: string, projectPath: string) => Promise<RootInstructionsResult>
-    saveInstructionsContent: (projectId: string, projectPath: string, content: string) => Promise<RootInstructionsResult>
-    saveRootInstructions: (projectId: string, projectPath: string, content: string) => Promise<RootInstructionsResult>
-    readProviderInstructions: (projectPath: string, provider: CliProvider) => Promise<ProviderFileContent>
-    pushProviderInstructions: (projectId: string, projectPath: string, provider: CliProvider, content: string) => Promise<RootInstructionsResult>
-    pullProviderInstructions: (projectId: string, projectPath: string, provider: CliProvider) => Promise<RootInstructionsResult>
-    getProjectSkillsStatus: (projectId: string, projectPath: string) => Promise<ProjectSkillStatus[]>
-    readProviderSkill: (projectPath: string, provider: CliProvider, itemId: string) => Promise<ProviderFileContent>
-    getExpectedSkillContent: (projectPath: string, provider: CliProvider, itemId: string) => Promise<string>
-    pullProviderSkill: (projectId: string, projectPath: string, provider: CliProvider, itemId: string) => Promise<ProjectSkillStatus>
+    saveInstructionsContent: (
+      projectId: string,
+      projectPath: string,
+      content: string
+    ) => Promise<RootInstructionsResult>
+    saveRootInstructions: (
+      projectId: string,
+      projectPath: string,
+      content: string
+    ) => Promise<RootInstructionsResult>
+    readProviderInstructions: (
+      projectPath: string,
+      provider: CliProvider
+    ) => Promise<ProviderFileContent>
+    pushProviderInstructions: (
+      projectId: string,
+      projectPath: string,
+      provider: CliProvider,
+      content: string
+    ) => Promise<RootInstructionsResult>
+    pullProviderInstructions: (
+      projectId: string,
+      projectPath: string,
+      provider: CliProvider
+    ) => Promise<RootInstructionsResult>
+    getProjectSkillsStatus: (
+      projectId: string,
+      projectPath: string
+    ) => Promise<ProjectSkillStatus[]>
+    readProviderSkill: (
+      projectPath: string,
+      provider: CliProvider,
+      itemId: string
+    ) => Promise<ProviderFileContent>
+    getExpectedSkillContent: (
+      projectPath: string,
+      provider: CliProvider,
+      itemId: string
+    ) => Promise<string>
+    pullProviderSkill: (
+      projectId: string,
+      projectPath: string,
+      provider: CliProvider,
+      itemId: string
+    ) => Promise<ProjectSkillStatus>
     getComputerFiles: () => Promise<ComputerFileEntry[]>
     checkSlayConfigured: (projectPath: string) => Promise<boolean>
     setupSlay: (projectPath: string, projectId?: string) => Promise<{ ok: boolean; error?: string }>
@@ -977,7 +1291,11 @@ export interface ElectronAPI {
     copyIn: (rootPath: string, absoluteSrc: string, targetDir?: string) => Promise<string>
     showInFinder: (rootPath: string, targetPath: string) => Promise<void>
     listAllFiles: (rootPath: string) => Promise<string[]>
-    searchFiles: (rootPath: string, query: string, options?: SearchFilesOptions) => Promise<FileSearchResult[]>
+    searchFiles: (
+      rootPath: string,
+      query: string,
+      options?: SearchFilesOptions
+    ) => Promise<FileSearchResult[]>
     gitStatus: (rootPath: string) => Promise<GitStatusMap>
     watch: (rootPath: string) => Promise<void>
     unwatch: (rootPath: string) => Promise<void>
@@ -992,13 +1310,20 @@ export interface ElectronAPI {
   }
   usage: {
     fetch: (force?: boolean) => Promise<ProviderUsage[]>
-    test: (config: UsageProviderConfig) => Promise<{ ok: boolean; windows?: UsageWindow[]; error?: string }>
+    test: (
+      config: UsageProviderConfig
+    ) => Promise<{ ok: boolean; windows?: UsageWindow[]; error?: string }>
   }
   webview: {
     registerShortcuts: (webviewId: number) => Promise<void>
     setKeyboardPassthrough: (webviewId: number, enabled: boolean) => Promise<void>
-    setDesktopHandoffPolicy: (webviewId: number, policy: DesktopHandoffPolicy | null) => Promise<boolean>
-    onShortcut: (callback: (payload: { key: string; shift?: boolean; webviewId?: number }) => void) => () => void
+    setDesktopHandoffPolicy: (
+      webviewId: number,
+      policy: DesktopHandoffPolicy | null
+    ) => Promise<boolean>
+    onShortcut: (
+      callback: (payload: { key: string; shift?: boolean; webviewId?: number }) => void
+    ) => () => void
     openDevToolsBottom: (webviewId: number) => Promise<boolean>
     openDevToolsDetached: (webviewId: number) => Promise<boolean>
     closeDevTools: (webviewId: number) => Promise<boolean>
@@ -1032,20 +1357,25 @@ export interface ElectronAPI {
     destroyView: (viewId: string) => Promise<void>
     destroyAllForTask: (taskId: string) => Promise<void>
     reparentToCurrentWindow: (viewId: string) => Promise<{ ok: boolean }>
-    listViews: () => Promise<Array<{
-      viewId: string
-      taskId: string
-      tabId: string
-      kind: 'browser-tab' | 'web-panel'
-      visible: boolean
-      nativelyAttached: boolean
-      currentWindowId: number | null
-      url: string
-      partition: string
-    }>>
+    listViews: () => Promise<
+      Array<{
+        viewId: string
+        taskId: string
+        tabId: string
+        kind: 'browser-tab' | 'web-panel'
+        visible: boolean
+        nativelyAttached: boolean
+        currentWindowId: number | null
+        url: string
+        partition: string
+      }>
+    >
 
     // Bounds & visibility
-    setBounds: (viewId: string, bounds: { x: number; y: number; width: number; height: number }) => Promise<void>
+    setBounds: (
+      viewId: string,
+      bounds: { x: number; y: number; width: number; height: number }
+    ) => Promise<void>
     setVisible: (viewId: string, visible: boolean) => Promise<void>
     /** Agent lock: drop OS-origin input while keeping the view rendering. */
     setLocked: (viewId: string, locked: boolean) => Promise<void>
@@ -1066,48 +1396,72 @@ export interface ElectronAPI {
     removeCss: (viewId: string, key: string) => Promise<void>
     setZoom: (viewId: string, factor: number) => Promise<void>
     focus: (viewId: string) => Promise<void>
-    findInPage: (viewId: string, text: string, options?: { forward?: boolean; findNext?: boolean; matchCase?: boolean }) => Promise<number | null>
-    stopFindInPage: (viewId: string, action: 'clearSelection' | 'keepSelection' | 'activateSelection') => Promise<void>
+    findInPage: (
+      viewId: string,
+      text: string,
+      options?: { forward?: boolean; findNext?: boolean; matchCase?: boolean }
+    ) => Promise<number | null>
+    stopFindInPage: (
+      viewId: string,
+      action: 'clearSelection' | 'keepSelection' | 'activateSelection'
+    ) => Promise<void>
     getWebContentsId: (viewId: string) => Promise<number | null>
     setKeyboardPassthrough: (viewId: string, enabled: boolean) => Promise<void>
-    sendInputEvent: (viewId: string, input: { type: 'keyDown' | 'keyUp' | 'char'; keyCode: string; modifiers?: string[] }) => Promise<void>
+    sendInputEvent: (
+      viewId: string,
+      input: { type: 'keyDown' | 'keyUp' | 'char'; keyCode: string; modifiers?: string[] }
+    ) => Promise<void>
 
     // Events (M→R)
-    onBrowserViewShortcut: (cb: (payload: {
-      viewId: string
-      key: string
-      shift: boolean
-      alt: boolean
-      meta: boolean
-      control: boolean
-      kind?: string
-    }) => void) => () => void
+    onBrowserViewShortcut: (
+      cb: (payload: {
+        viewId: string
+        key: string
+        shift: boolean
+        alt: boolean
+        meta: boolean
+        control: boolean
+        kind?: string
+      }) => void
+    ) => () => void
 
     onBrowserViewFocused: (cb: (payload: { viewId: string }) => void) => () => void
 
     // DevTools
-    openDevTools: (viewId: string, mode: 'bottom' | 'right' | 'undocked' | 'detach') => Promise<void>
+    openDevTools: (
+      viewId: string,
+      mode: 'bottom' | 'right' | 'undocked' | 'detach'
+    ) => Promise<void>
     closeDevTools: (viewId: string) => Promise<void>
     isDevToolsOpen: (viewId: string) => Promise<boolean>
 
     // Chrome extensions (R→M)
-    getExtensions: () => Promise<{ id: string; name: string; version?: string; icon?: string; manifestVersion?: number }[]>
+    getExtensions: () => Promise<
+      { id: string; name: string; version?: string; icon?: string; manifestVersion?: number }[]
+    >
     loadExtension: () => Promise<{ id: string; name: string } | { error: string } | null>
     removeExtension: (extensionId: string) => Promise<void>
-    discoverBrowserExtensions: () => Promise<{
-      name: string
-      extensions: { id: string; name: string; version: string; path: string; alreadyImported: boolean; manifestVersion?: number }[]
-    }[]>
+    discoverBrowserExtensions: () => Promise<
+      {
+        name: string
+        extensions: {
+          id: string
+          name: string
+          version: string
+          path: string
+          alreadyImported: boolean
+          manifestVersion?: number
+        }[]
+      }[]
+    >
     importExtension: (path: string) => Promise<{ id: string; name: string } | { error: string }>
     activateExtension: (extensionId: string) => Promise<boolean>
     onCreateTaskFromLink: (cb: (intent: BrowserCreateTaskFromLinkIntent) => void) => () => void
 
     // Events (M→R)
-    onEvent: (cb: (event: {
-      viewId: string
-      type: string
-      [key: string]: unknown
-    }) => void) => () => void
+    onEvent: (
+      cb: (event: { viewId: string; type: string; [key: string]: unknown }) => void
+    ) => () => void
     /** Fires when a `slay tasks browser` mutation hits a tab. Renderer should
      *  stamp `agentTouched: true` on its local tabs state to avoid stale
      *  writebacks clobbering the server's flag. */
@@ -1118,12 +1472,17 @@ export interface ElectronAPI {
     connectLinear: (input: ConnectLinearInput) => Promise<IntegrationConnectionPublic>
     connectJira: (input: ConnectJiraInput) => Promise<IntegrationConnectionPublic>
     getJiraTransitions: (taskId: string) => Promise<JiraTransition[]>
-    updateConnection: (input: UpdateIntegrationConnectionInput) => Promise<IntegrationConnectionPublic>
+    updateConnection: (
+      input: UpdateIntegrationConnectionInput
+    ) => Promise<IntegrationConnectionPublic>
     listConnections: (provider?: IntegrationProvider) => Promise<IntegrationConnectionPublic[]>
     getConnectionUsage: (connectionId: string) => Promise<IntegrationConnectionUsage>
     disconnect: (connectionId: string) => Promise<boolean>
     clearProjectProvider: (input: ClearProjectProviderInput) => Promise<boolean>
-    getProjectConnection: (projectId: string, provider: IntegrationProvider) => Promise<string | null>
+    getProjectConnection: (
+      projectId: string,
+      provider: IntegrationProvider
+    ) => Promise<string | null>
     setProjectConnection: (input: SetProjectConnectionInput) => Promise<boolean>
     clearProjectConnection: (input: ClearProjectConnectionInput) => Promise<boolean>
     listGithubRepositories: (connectionId: string) => Promise<GithubRepositorySummary[]>
@@ -1144,11 +1503,17 @@ export interface ElectronAPI {
       input: ListLinearIssuesInput
     ) => Promise<{ issues: LinearIssueSummary[]; nextCursor: string | null }>
     setProjectMapping: (input: SetProjectMappingInput) => Promise<IntegrationProjectMapping>
-    getProjectMapping: (projectId: string, provider: IntegrationProvider) => Promise<IntegrationProjectMapping | null>
+    getProjectMapping: (
+      projectId: string,
+      provider: IntegrationProvider
+    ) => Promise<IntegrationProjectMapping | null>
     importLinearIssues: (input: ImportLinearIssuesInput) => Promise<ImportLinearIssuesResult>
     syncNow: (input: SyncNowInput) => Promise<SyncNowResult>
     getTaskSyncStatus: (taskId: string, provider: IntegrationProvider) => Promise<TaskSyncStatus>
-    getBatchTaskSyncStatus: (taskIds: string[], provider: IntegrationProvider) => Promise<BatchTaskSyncStatusItem[]>
+    getBatchTaskSyncStatus: (
+      taskIds: string[],
+      provider: IntegrationProvider
+    ) => Promise<BatchTaskSyncStatusItem[]>
     pushTask: (input: PushTaskInput) => Promise<PushTaskResult>
     pullTask: (input: PullTaskInput) => Promise<PullTaskResult>
     getLink: (taskId: string, provider: IntegrationProvider) => Promise<ExternalLink | null>
@@ -1156,7 +1521,10 @@ export interface ElectronAPI {
     pushUnlinkedTasks: (input: PushUnlinkedTasksInput) => Promise<PushUnlinkedTasksResult>
     fetchProviderStatuses: (input: FetchProviderStatusesInput) => Promise<ProviderStatus[]>
     applyStatusSync: (input: ApplyStatusSyncInput) => Promise<Project>
-    resyncProviderStatuses: (input: { projectId: string; provider: IntegrationProvider }) => Promise<StatusResyncPreview>
+    resyncProviderStatuses: (input: {
+      projectId: string
+      provider: IntegrationProvider
+    }) => Promise<StatusResyncPreview>
     // Generic provider-dispatched methods
     listProviderGroups: (connectionId: string) => Promise<ExternalGroup[]>
     listProviderScopes: (connectionId: string, groupId: string) => Promise<ExternalScope[]>
@@ -1166,14 +1534,47 @@ export interface ElectronAPI {
     importProviderIssues: (input: ImportProviderIssuesInput) => Promise<ImportProviderIssuesResult>
   }
   exportImport: {
-    exportAll: () => Promise<{ success: boolean; canceled?: boolean; path?: string; error?: string }>
-    exportProject: (projectId: string) => Promise<{ success: boolean; canceled?: boolean; path?: string; error?: string }>
-    import: () => Promise<{ success: boolean; canceled?: boolean; projectCount?: number; taskCount?: number; importedProjects?: Array<{ id: string; name: string }>; error?: string }>
+    exportAll: () => Promise<{
+      success: boolean
+      canceled?: boolean
+      path?: string
+      error?: string
+    }>
+    exportProject: (
+      projectId: string
+    ) => Promise<{ success: boolean; canceled?: boolean; path?: string; error?: string }>
+    import: () => Promise<{
+      success: boolean
+      canceled?: boolean
+      projectCount?: number
+      taskCount?: number
+      importedProjects?: Array<{ id: string; name: string }>
+      error?: string
+    }>
   }
   processes: {
-    create: (projectId: string | null, taskId: string | null, label: string, command: string, cwd: string, autoRestart: boolean) => Promise<string>
-    spawn: (projectId: string | null, taskId: string | null, label: string, command: string, cwd: string, autoRestart: boolean) => Promise<string>
-    update: (processId: string, updates: Partial<Pick<ProcessInfo, 'label' | 'command' | 'cwd' | 'autoRestart' | 'taskId' | 'projectId'>>) => Promise<boolean>
+    create: (
+      projectId: string | null,
+      taskId: string | null,
+      label: string,
+      command: string,
+      cwd: string,
+      autoRestart: boolean
+    ) => Promise<string>
+    spawn: (
+      projectId: string | null,
+      taskId: string | null,
+      label: string,
+      command: string,
+      cwd: string,
+      autoRestart: boolean
+    ) => Promise<string>
+    update: (
+      processId: string,
+      updates: Partial<
+        Pick<ProcessInfo, 'label' | 'command' | 'cwd' | 'autoRestart' | 'taskId' | 'projectId'>
+      >
+    ) => Promise<boolean>
     stop: (processId: string) => Promise<boolean>
     kill: (processId: string) => Promise<boolean>
     restart: (processId: string) => Promise<boolean>
@@ -1231,8 +1632,12 @@ export interface ElectronAPI {
   }
 
   usageAnalytics: {
-    query: (range: import('@slayzone/usage-analytics/shared').DateRange) => Promise<import('@slayzone/usage-analytics/shared').AnalyticsSummary>
-    refresh: (range: import('@slayzone/usage-analytics/shared').DateRange) => Promise<import('@slayzone/usage-analytics/shared').AnalyticsSummary>
+    query: (
+      range: import('@slayzone/usage-analytics/shared').DateRange
+    ) => Promise<import('@slayzone/usage-analytics/shared').AnalyticsSummary>
+    refresh: (
+      range: import('@slayzone/usage-analytics/shared').DateRange
+    ) => Promise<import('@slayzone/usage-analytics/shared').AnalyticsSummary>
     taskCost: (taskId: string) => Promise<{
       totalTokens: number
       byProvider: Array<{ provider: string; model: string; totalTokens: number; sessions: number }>

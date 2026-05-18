@@ -76,11 +76,16 @@ function flattenDiff(diff: FileDiff): FlattenResult {
     flat,
     oldContent: oldLines.join('\n'),
     newContent: newLines.join('\n'),
-    refs,
+    refs
   }
 }
 
-function applySpans(flat: FlatLine[], refs: LineRef[], oldSpans: HlSpan[][], newSpans: HlSpan[][]): FlatLine[] {
+function applySpans(
+  flat: FlatLine[],
+  refs: LineRef[],
+  oldSpans: HlSpan[][],
+  newSpans: HlSpan[][]
+): FlatLine[] {
   const out: FlatLine[] = new Array(flat.length)
   for (let i = 0; i < flat.length; i++) {
     const ref = refs[i]
@@ -116,7 +121,10 @@ function computeChunks(flat: FlatLine[], contextLines: ContextLines): (DisplayCh
     } else {
       const start = i
       const lines: FlatLine[] = []
-      while (i < flat.length && visible[i]) { lines.push(flat[i]); i++ }
+      while (i < flat.length && visible[i]) {
+        lines.push(flat[i])
+        i++
+      }
       out.push({ kind: 'visible', lines, firstIdx: start })
     }
   }
@@ -125,7 +133,13 @@ function computeChunks(flat: FlatLine[], contextLines: ContextLines): (DisplayCh
   return out
 }
 
-function renderContent(content: string, type: DiffLineType['type'], wrap: boolean, spans?: HlSpan[], highlights?: InlineHighlight[]) {
+function renderContent(
+  content: string,
+  type: DiffLineType['type'],
+  wrap: boolean,
+  spans?: HlSpan[],
+  highlights?: InlineHighlight[]
+) {
   const ws = wrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'
   const hasSpans = !!spans && spans.length > 0
   const hasHl = !!highlights && highlights.length > 0
@@ -136,8 +150,16 @@ function renderContent(content: string, type: DiffLineType['type'], wrap: boolea
 
   // Build sorted unique boundaries
   const b = new Set<number>([0, content.length])
-  if (hasSpans) for (const s of spans!) { b.add(s.from); b.add(s.to) }
-  if (hasHl) for (const h of highlights!) { b.add(h.start); b.add(h.end) }
+  if (hasSpans)
+    for (const s of spans!) {
+      b.add(s.from)
+      b.add(s.to)
+    }
+  if (hasHl)
+    for (const h of highlights!) {
+      b.add(h.start)
+      b.add(h.end)
+    }
   const points = [...b].sort((a, z) => a - z)
 
   // First pass: compute [from, to, className] segments. Second pass coalesces
@@ -173,7 +195,10 @@ function renderContent(content: string, type: DiffLineType['type'], wrap: boolea
       for (let k = sp; k < spanArr.length; k++) {
         const s = spanArr[k]
         if (s.from > from) break
-        if (s.to >= to) { tokenSpan = s; break }
+        if (s.to >= to) {
+          tokenSpan = s
+          break
+        }
       }
     }
     const highlighted = hasHl ? highlights!.some((h) => h.start <= from && h.end >= to) : false
@@ -217,7 +242,9 @@ const UnifiedLine = memo(function UnifiedLine({ item, wrap }: { item: FlatLine; 
       <span className="w-10 shrink-0 text-right pr-1.5 text-muted-foreground/50 select-none border-r border-border/30 tabular-nums">
         {line.newLineNo ?? ''}
       </span>
-      <span className="w-5 shrink-0 text-center select-none text-muted-foreground/60">{prefix}</span>
+      <span className="w-5 shrink-0 text-center select-none text-muted-foreground/60">
+        {prefix}
+      </span>
       <span
         className={cn(
           wrap ? 'min-w-0 flex-1' : 'shrink-0',
@@ -266,7 +293,7 @@ function buildSbsRows(lines: FlatLine[]): SideRow[] {
     for (let j = 0; j < max; j++) {
       rows.push({
         left: j < delN ? lines[delStart + j] : null,
-        right: j < addN ? lines[addStart + j] : null,
+        right: j < addN ? lines[addStart + j] : null
       })
     }
   }
@@ -274,7 +301,15 @@ function buildSbsRows(lines: FlatLine[]): SideRow[] {
   return rows
 }
 
-const SbsHalf = memo(function SbsHalf({ item, side, wrap }: { item: FlatLine | null; side: 'left' | 'right'; wrap: boolean }) {
+const SbsHalf = memo(function SbsHalf({
+  item,
+  side,
+  wrap
+}: {
+  item: FlatLine | null
+  side: 'left' | 'right'
+  wrap: boolean
+}) {
   if (!item) {
     return (
       <div className="flex w-full bg-muted/20 border-l-[3px] border-l-transparent">
@@ -300,7 +335,9 @@ const SbsHalf = memo(function SbsHalf({ item, side, wrap }: { item: FlatLine | n
       <span className="w-10 shrink-0 text-right pr-1.5 text-muted-foreground/50 select-none border-r border-border/30 tabular-nums">
         {lineNo ?? ''}
       </span>
-      <span className="w-5 shrink-0 text-center select-none text-muted-foreground/60">{prefix}</span>
+      <span className="w-5 shrink-0 text-center select-none text-muted-foreground/60">
+        {prefix}
+      </span>
       <span
         className={cn(
           wrap ? 'min-w-0 flex-1' : 'shrink-0',
@@ -352,7 +389,9 @@ function buildSbsRowList(chunks: (DisplayChunk | GapChunk)[]): SbsRow[] {
     if (c.kind === 'gap') {
       rows.push({ kind: 'gap', count: c.count, key: `g${ci}` })
     } else {
-      buildSbsRows(c.lines).forEach((row, ri) => rows.push({ kind: 'row', row, key: `v${ci}-${ri}` }))
+      buildSbsRows(c.lines).forEach((row, ri) =>
+        rows.push({ kind: 'row', row, key: `v${ci}-${ri}` })
+      )
     }
   })
   return rows
@@ -443,7 +482,13 @@ interface VirtualRowListProps<Row> {
 
 type ScrollState = { parent: HTMLElement; nested: false } | { parent: null; nested: true } | null
 
-function VirtualRowList<Row>({ rows, renderRow, estimateSize, rowKey, className }: VirtualRowListProps<Row>) {
+function VirtualRowList<Row>({
+  rows,
+  renderRow,
+  estimateSize,
+  rowKey,
+  className
+}: VirtualRowListProps<Row>) {
   const sentinelRef = useRef<HTMLDivElement | null>(null)
   const [scrollState, setScrollState] = useState<ScrollState>(null)
 
@@ -459,7 +504,7 @@ function VirtualRowList<Row>({ rows, renderRow, estimateSize, rowKey, className 
     getScrollElement: () => parent,
     estimateSize: () => estimateSize,
     overscan: 8,
-    getItemKey: (i) => rowKey(rows[i]),
+    getItemKey: (i) => rowKey(rows[i])
   })
 
   // Measurement frame: until scroll state known, reserve space with estimate.
@@ -494,7 +539,13 @@ function VirtualRowList<Row>({ rows, renderRow, estimateSize, rowKey, className 
           key={v.key}
           data-index={v.index}
           ref={virtualizer.measureElement}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, transform: `translateY(${v.start}px)` }}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            transform: `translateY(${v.start}px)`
+          }}
         >
           {renderRow(rows[v.index], v.index)}
         </div>
@@ -508,7 +559,12 @@ function VirtualRowList<Row>({ rows, renderRow, estimateSize, rowKey, className 
 // overlay scrollbars; useSbsSync mirrors scrollLeft so the two halves
 // stay locked together.
 
-export const DiffView = memo(function DiffView({ diff, sideBySide = false, wrap = false, contextLines = '3' }: DiffViewProps) {
+export const DiffView = memo(function DiffView({
+  diff,
+  sideBySide = false,
+  wrap = false,
+  contextLines = '3'
+}: DiffViewProps) {
   // Lazy inline-highlight pass: parseUnifiedDiff no longer runs this per-file.
   // Calling here means offscreen files in a large virtualized patch never pay
   // the cost. `ensureInlineHighlights` is idempotent via a flag on FileDiff.
@@ -523,22 +579,26 @@ export const DiffView = memo(function DiffView({ diff, sideBySide = false, wrap 
     setHighlighted(null)
     const { flat, refs, oldContent, newContent } = flattened
     if (flat.length === 0) return
-    Promise.all([
-      tokenizeContent(oldContent, diff.path),
-      tokenizeContent(newContent, diff.path),
-    ]).then(([oldSpans, newSpans]) => {
-      if (cancelled) return
-      setHighlighted(applySpans(flat, refs, oldSpans, newSpans))
-    }).catch(() => {
-      // highlight.ts already swallows/logs; fall through to plain rendering
-    })
-    return () => { cancelled = true }
+    Promise.all([tokenizeContent(oldContent, diff.path), tokenizeContent(newContent, diff.path)])
+      .then(([oldSpans, newSpans]) => {
+        if (cancelled) return
+        setHighlighted(applySpans(flat, refs, oldSpans, newSpans))
+      })
+      .catch(() => {
+        // highlight.ts already swallows/logs; fall through to plain rendering
+      })
+    return () => {
+      cancelled = true
+    }
   }, [flattened, diff.path])
 
   const flat = highlighted ?? flattened.flat
   const chunks = useMemo(() => computeChunks(flat, contextLines), [flat, contextLines])
 
-  const unifiedRows = useMemo(() => (sideBySide ? [] : buildUnifiedRows(chunks)), [chunks, sideBySide])
+  const unifiedRows = useMemo(
+    () => (sideBySide ? [] : buildUnifiedRows(chunks)),
+    [chunks, sideBySide]
+  )
   const sbsRows = useMemo(() => (sideBySide ? buildSbsRowList(chunks) : []), [chunks, sideBySide])
 
   const sbsSync = useSbsSync()
@@ -591,7 +651,9 @@ export const DiffView = memo(function DiffView({ diff, sideBySide = false, wrap 
             className={cn('basis-1/2 min-w-0', !wrap && 'overflow-x-auto')}
           >
             <div className={cn('flex flex-col', !wrap && 'min-w-full w-max')}>
-              {sbsRows.map((r) => <div key={r.key}>{renderLeft(r)}</div>)}
+              {sbsRows.map((r) => (
+                <div key={r.key}>{renderLeft(r)}</div>
+              ))}
             </div>
           </div>
           <div
@@ -600,7 +662,9 @@ export const DiffView = memo(function DiffView({ diff, sideBySide = false, wrap 
             className={cn('basis-1/2 min-w-0', !wrap && 'overflow-x-auto')}
           >
             <div className={cn('flex flex-col', !wrap && 'min-w-full w-max')}>
-              {sbsRows.map((r) => <div key={r.key}>{renderRight(r)}</div>)}
+              {sbsRows.map((r) => (
+                <div key={r.key}>{renderRight(r)}</div>
+              ))}
             </div>
           </div>
         </div>

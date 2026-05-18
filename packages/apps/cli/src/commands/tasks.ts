@@ -39,8 +39,14 @@ export function tasksCommand(): Command {
   cmd
     .command('create <title>')
     .description('Create a new task')
-    .option('--project <name|id>', 'Project name (partial, case-insensitive) or ID (defaults to $SLAYZONE_PROJECT_ID)')
-    .option('--description <text>', 'Task description (reference task specific artifacts via `[title](artifact:<artifact-id>)`)')
+    .option(
+      '--project <name|id>',
+      'Project name (partial, case-insensitive) or ID (defaults to $SLAYZONE_PROJECT_ID)'
+    )
+    .option(
+      '--description <text>',
+      'Task description (reference task specific artifacts via `[title](artifact:<artifact-id>)`)'
+    )
     .option('--status <status>', 'Initial status key')
     .option('--priority <n>', 'Priority 1-5 (1=highest)')
     .option('--due <date>', 'Due date (YYYY-MM-DD or ISO 8601)')
@@ -67,7 +73,10 @@ export function tasksCommand(): Command {
     .command('update [id]')
     .description('Update a task (id prefix supported; defaults to $SLAYZONE_TASK_ID)')
     .option('--title <title>', 'New title')
-    .option('--description <text>', 'New description (reference task specific artifacts via `[title](artifact:<artifact-id>)`)')
+    .option(
+      '--description <text>',
+      'New description (reference task specific artifacts via `[title](artifact:<artifact-id>)`)'
+    )
     .option('--append-description <text>', 'Append to existing description')
     .option('--status <status>', 'New status key')
     .option('--priority <n>', 'New priority 1-5')
@@ -76,13 +85,18 @@ export function tasksCommand(): Command {
     .option('--parent <id>', 'Reparent task under <id> (prefix supported, must be in same project)')
     .option('--no-parent', 'Detach task (make top-level)')
     .option('--permanent', 'Convert temporary task to a real task')
-    .option('--worktree-path <path>', 'Link a git worktree to this task (auto-derives parent branch + repo from project layout)')
+    .option(
+      '--worktree-path <path>',
+      'Link a git worktree to this task (auto-derives parent branch + repo from project layout)'
+    )
     .action(updateAction)
 
   // slay tasks progress
   cmd
     .command('progress <idOrValue> [value]')
-    .description('Set task progress 0-100. Use `<id> <value>` or `<value>` (id defaults to $SLAYZONE_TASK_ID).')
+    .description(
+      'Set task progress 0-100. Use `<id> <value>` or `<value>` (id defaults to $SLAYZONE_TASK_ID).'
+    )
     .action(progressAction)
 
   // slay tasks archive
@@ -100,7 +114,9 @@ export function tasksCommand(): Command {
   // slay tasks open
   cmd
     .command('open [id]')
-    .description('Open a task in the SlayZone app (id prefix supported; defaults to $SLAYZONE_TASK_ID)')
+    .description(
+      'Open a task in the SlayZone app (id prefix supported; defaults to $SLAYZONE_TASK_ID)'
+    )
     .option('--background', 'Open as background tab — do not switch focus or activate the tab')
     .option('--start', "Also start the task's main PTY (skip the idle gate)")
     .option('--no-wait', 'With --start: return immediately without waiting for the PTY to spawn')

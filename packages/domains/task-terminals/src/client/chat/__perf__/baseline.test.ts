@@ -46,7 +46,7 @@ function toEntry(m: ReplayMetrics): BaselineEntry {
     longestReducerMs: round(m.longestReducerMs),
     p99ReducerMs: round(m.p99ReducerMs),
     meanReducerMs: round(m.meanReducerMs),
-    totalReducerMs: round(m.totalReducerMs),
+    totalReducerMs: round(m.totalReducerMs)
   }
 }
 
@@ -78,7 +78,7 @@ function main(): void {
         `total=${m.totalReducerMs.toFixed(2)}ms  ` +
         `longest=${m.longestReducerMs.toFixed(4)}ms  ` +
         `p99=${m.p99ReducerMs.toFixed(4)}ms  ` +
-        `mean=${m.meanReducerMs.toFixed(4)}ms`,
+        `mean=${m.meanReducerMs.toFixed(4)}ms`
     )
   }
 
@@ -106,7 +106,7 @@ function main(): void {
     const checks: Array<{ key: keyof BaselineEntry; label: string }> = [
       { key: 'totalReducerMs', label: 'total' },
       { key: 'meanReducerMs', label: 'mean' },
-      { key: 'p99ReducerMs', label: 'p99' },
+      { key: 'p99ReducerMs', label: 'p99' }
     ]
     for (const { key, label } of checks) {
       const baseVal = base[key] as number
@@ -119,12 +119,12 @@ function main(): void {
       console.log(
         `  ${flag} ${cur.fixture.padEnd(22)} ${label.padEnd(8)} ` +
           `${baseVal.toFixed(4)}ms → ${curVal.toFixed(4)}ms ` +
-          `(${(delta * 100).toFixed(1)}%)${skipped ? ' [sub-threshold]' : ''}`,
+          `(${(delta * 100).toFixed(1)}%)${skipped ? ' [sub-threshold]' : ''}`
       )
     }
     if (cur.finalTimelineLength !== base.finalTimelineLength) {
       console.log(
-        `  ! ${cur.fixture.padEnd(22)} timeline length changed: ${base.finalTimelineLength} → ${cur.finalTimelineLength}`,
+        `  ! ${cur.fixture.padEnd(22)} timeline length changed: ${base.finalTimelineLength} → ${cur.finalTimelineLength}`
       )
     }
   }

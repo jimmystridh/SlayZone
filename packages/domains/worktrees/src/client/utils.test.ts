@@ -27,7 +27,8 @@ function test(name: string, fn: () => void) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     }
   }
 }
@@ -94,36 +95,55 @@ test('default template constant', () => {
 })
 
 test('resolve default template (posix)', () => {
-  expect(resolveWorktreeBasePathTemplate(DEFAULT_WORKTREE_BASE_PATH_TEMPLATE, '/home/user/dev/myapp')).toBe('/home/user/dev/myapp-workspaces')
+  expect(
+    resolveWorktreeBasePathTemplate(DEFAULT_WORKTREE_BASE_PATH_TEMPLATE, '/home/user/dev/myapp')
+  ).toBe('/home/user/dev/myapp-workspaces')
 })
 
 test('resolve default template trims trailing slash', () => {
-  expect(resolveWorktreeBasePathTemplate(DEFAULT_WORKTREE_BASE_PATH_TEMPLATE, '/home/user/dev/myapp/')).toBe('/home/user/dev/myapp-workspaces')
+  expect(
+    resolveWorktreeBasePathTemplate(DEFAULT_WORKTREE_BASE_PATH_TEMPLATE, '/home/user/dev/myapp/')
+  ).toBe('/home/user/dev/myapp-workspaces')
 })
 
 test('resolve {project} token (posix)', () => {
-  expect(resolveWorktreeBasePathTemplate('{project}/..', '/home/user/dev/myapp')).toBe('/home/user/dev')
+  expect(resolveWorktreeBasePathTemplate('{project}/..', '/home/user/dev/myapp')).toBe(
+    '/home/user/dev'
+  )
 })
 
 test('resolve {project} token (windows)', () => {
-  expect(resolveWorktreeBasePathTemplate('{project}\\..', 'C:\\Users\\user\\dev\\myapp')).toBe('C:\\Users\\user\\dev')
+  expect(resolveWorktreeBasePathTemplate('{project}\\..', 'C:\\Users\\user\\dev\\myapp')).toBe(
+    'C:\\Users\\user\\dev'
+  )
 })
 
 test('resolve {project-folder-name} token (posix)', () => {
-  expect(resolveWorktreeBasePathTemplate('/tmp/{project-folder-name}-wt', '/home/user/dev/myapp')).toBe('/tmp/myapp-wt')
+  expect(
+    resolveWorktreeBasePathTemplate('/tmp/{project-folder-name}-wt', '/home/user/dev/myapp')
+  ).toBe('/tmp/myapp-wt')
 })
 
 test('resolve {project-folder-name} token (windows)', () => {
-  expect(resolveWorktreeBasePathTemplate('C:\\tmp\\{project-folder-name}-wt', 'C:\\Users\\user\\dev\\myapp')).toBe('C:\\tmp\\myapp-wt')
+  expect(
+    resolveWorktreeBasePathTemplate(
+      'C:\\tmp\\{project-folder-name}-wt',
+      'C:\\Users\\user\\dev\\myapp'
+    )
+  ).toBe('C:\\tmp\\myapp-wt')
 })
 
 test('{project-folder-name} replaced before {project} (no double-substitution)', () => {
   // If order were wrong, '{project}' would expand inside the longer token name and break it.
-  expect(resolveWorktreeBasePathTemplate('/tmp/{project-folder-name}', '/home/user/dev/myapp')).toBe('/tmp/myapp')
+  expect(
+    resolveWorktreeBasePathTemplate('/tmp/{project-folder-name}', '/home/user/dev/myapp')
+  ).toBe('/tmp/myapp')
 })
 
 test('template without token is returned unchanged', () => {
-  expect(resolveWorktreeBasePathTemplate('/tmp/worktrees', '/home/user/dev/myapp')).toBe('/tmp/worktrees')
+  expect(resolveWorktreeBasePathTemplate('/tmp/worktrees', '/home/user/dev/myapp')).toBe(
+    '/tmp/worktrees'
+  )
 })
 
 test('normalizes explicit dot segments', () => {
@@ -131,11 +151,15 @@ test('normalizes explicit dot segments', () => {
 })
 
 test('resolves relative template against project path (posix)', () => {
-  expect(resolveWorktreeBasePathTemplate('../worktrees', '/home/user/dev/myapp')).toBe('/home/user/dev/worktrees')
+  expect(resolveWorktreeBasePathTemplate('../worktrees', '/home/user/dev/myapp')).toBe(
+    '/home/user/dev/worktrees'
+  )
 })
 
 test('resolves relative template against project path (windows)', () => {
-  expect(resolveWorktreeBasePathTemplate('..\\worktrees', 'C:\\Users\\user\\dev\\myapp')).toBe('C:\\Users\\user\\dev\\worktrees')
+  expect(resolveWorktreeBasePathTemplate('..\\worktrees', 'C:\\Users\\user\\dev\\myapp')).toBe(
+    'C:\\Users\\user\\dev\\worktrees'
+  )
 })
 
 test('joins worktree path with posix separator', () => {

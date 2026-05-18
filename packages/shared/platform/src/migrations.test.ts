@@ -10,7 +10,9 @@ function tmpDir(): string {
 
 function cleanup(...dirs: string[]) {
   for (const d of dirs) {
-    try { fs.rmSync(d, { recursive: true }) } catch {}
+    try {
+      fs.rmSync(d, { recursive: true })
+    } catch {}
   }
 }
 

@@ -4,12 +4,12 @@ import type { CliProvider, McpTarget, McpServerConfig, ProviderPathMapping } fro
 export const TERMINAL_MODE_TO_PROVIDER: Partial<Record<string, CliProvider>> = {
   'claude-code': 'claude',
   'claude-chat': 'claude',
-  'codex': 'codex',
-  'gemini': 'gemini',
+  codex: 'codex',
+  gemini: 'gemini',
   'cursor-agent': 'cursor',
-  'opencode': 'opencode',
+  opencode: 'opencode',
   'qwen-code': 'qwen',
-  'copilot': 'copilot',
+  copilot: 'copilot'
 }
 
 /** Resolve a terminal mode setting to a provider kind; falls back to 'claude'. */
@@ -24,52 +24,100 @@ export function defaultProviderFromMode(mode: string | null | undefined): CliPro
 export const PROVIDER_PATHS: Record<CliProvider, ProviderPathMapping> = {
   claude: {
     rootInstructions: 'CLAUDE.md',
-    skillsDir: '.claude/skills',
+    skillsDir: '.claude/skills'
   },
   codex: {
     rootInstructions: 'AGENTS.md',
-    skillsDir: '.agents/skills',
+    skillsDir: '.agents/skills'
   },
   cursor: {
     rootInstructions: 'AGENTS.md',
-    skillsDir: '.cursor/skills',
+    skillsDir: '.cursor/skills'
   },
   gemini: {
     rootInstructions: 'AGENTS.md',
-    skillsDir: '.agents/skills',
+    skillsDir: '.agents/skills'
   },
   opencode: {
     rootInstructions: 'OPENCODE.md',
-    skillsDir: 'skill',
+    skillsDir: 'skill'
   },
   qwen: {
     rootInstructions: 'QWEN.md',
-    skillsDir: '.qwen/skills',
+    skillsDir: '.qwen/skills'
   },
   copilot: {
     rootInstructions: 'AGENTS.md',
-    skillsDir: '.copilot/skills',
-  },
+    skillsDir: '.copilot/skills'
+  }
 }
 
 export interface ComputerProviderPaths {
   label: string
-  baseDir: string        // relative to $HOME
-  instructions?: string  // relative to baseDir
-  skillsDir?: string     // relative to baseDir
-  mcpConfig?: string     // relative to baseDir
-  hint?: string          // tooltip explaining what reads from this dir
+  baseDir: string // relative to $HOME
+  instructions?: string // relative to baseDir
+  skillsDir?: string // relative to baseDir
+  mcpConfig?: string // relative to baseDir
+  hint?: string // tooltip explaining what reads from this dir
 }
 
 export const COMPUTER_PROVIDER_PATHS: Record<string, ComputerProviderPaths> = {
-  claude:   { label: 'Claude Code', baseDir: '.claude', instructions: 'CLAUDE.md', skillsDir: 'skills', mcpConfig: '.mcp.json', hint: 'Used by Claude Code CLI' },
-  codex:    { label: 'Codex',       baseDir: '.codex',  instructions: 'AGENTS.md', hint: 'Used by Codex CLI' },
-  cursor:   { label: 'Cursor',      baseDir: '.cursor', mcpConfig: 'mcp.json', hint: 'Used by Cursor Agent' },
-  agents:   { label: 'Agents (shared)', baseDir: '.agents', skillsDir: 'skills', mcpConfig: 'settings.json', hint: 'Shared skills directory read by Codex and Gemini' },
-  gemini:   { label: 'Gemini',      baseDir: '.gemini', instructions: 'GEMINI.md', hint: 'Used by Gemini CLI' },
-  opencode: { label: 'OpenCode',    baseDir: '.config/opencode', instructions: 'AGENTS.md', skillsDir: 'skills', mcpConfig: 'opencode.json', hint: 'Used by OpenCode CLI' },
-  qwen:     { label: 'Qwen Code',   baseDir: '.qwen',   instructions: 'QWEN.md',   skillsDir: 'skills', hint: 'Used by Qwen Code CLI' },
-  copilot:  { label: 'Copilot',     baseDir: '.copilot', instructions: 'AGENTS.md', skillsDir: 'skills', mcpConfig: 'mcp-config.json', hint: 'Used by GitHub Copilot CLI' },
+  claude: {
+    label: 'Claude Code',
+    baseDir: '.claude',
+    instructions: 'CLAUDE.md',
+    skillsDir: 'skills',
+    mcpConfig: '.mcp.json',
+    hint: 'Used by Claude Code CLI'
+  },
+  codex: {
+    label: 'Codex',
+    baseDir: '.codex',
+    instructions: 'AGENTS.md',
+    hint: 'Used by Codex CLI'
+  },
+  cursor: {
+    label: 'Cursor',
+    baseDir: '.cursor',
+    mcpConfig: 'mcp.json',
+    hint: 'Used by Cursor Agent'
+  },
+  agents: {
+    label: 'Agents (shared)',
+    baseDir: '.agents',
+    skillsDir: 'skills',
+    mcpConfig: 'settings.json',
+    hint: 'Shared skills directory read by Codex and Gemini'
+  },
+  gemini: {
+    label: 'Gemini',
+    baseDir: '.gemini',
+    instructions: 'GEMINI.md',
+    hint: 'Used by Gemini CLI'
+  },
+  opencode: {
+    label: 'OpenCode',
+    baseDir: '.config/opencode',
+    instructions: 'AGENTS.md',
+    skillsDir: 'skills',
+    mcpConfig: 'opencode.json',
+    hint: 'Used by OpenCode CLI'
+  },
+  qwen: {
+    label: 'Qwen Code',
+    baseDir: '.qwen',
+    instructions: 'QWEN.md',
+    skillsDir: 'skills',
+    hint: 'Used by Qwen Code CLI'
+  },
+  copilot: {
+    label: 'Copilot',
+    baseDir: '.copilot',
+    instructions: 'AGENTS.md',
+    skillsDir: 'skills',
+    mcpConfig: 'mcp-config.json',
+    hint: 'Used by GitHub Copilot CLI'
+  }
 }
 
 export const PROVIDER_LABELS: Record<CliProvider, string> = {
@@ -79,7 +127,7 @@ export const PROVIDER_LABELS: Record<CliProvider, string> = {
   gemini: 'Gemini',
   opencode: 'OpenCode',
   qwen: 'Qwen Code',
-  copilot: 'Copilot',
+  copilot: 'Copilot'
 }
 
 export interface ProviderCapabilities {
@@ -95,7 +143,7 @@ export const PROVIDER_CAPABILITIES: Record<CliProvider, ProviderCapabilities> = 
   gemini: { configurable: true, mcpReadable: true, mcpWritable: false },
   opencode: { configurable: true, mcpReadable: true, mcpWritable: false },
   qwen: { configurable: true, mcpReadable: true, mcpWritable: true },
-  copilot: { configurable: true, mcpReadable: true, mcpWritable: false },
+  copilot: { configurable: true, mcpReadable: true, mcpWritable: false }
 }
 
 export interface McpTargetCapabilities {
@@ -104,16 +152,45 @@ export interface McpTargetCapabilities {
 }
 
 export const MCP_TARGET_CAPABILITIES: Record<McpTarget, McpTargetCapabilities> = {
-  claude: { configurable: PROVIDER_CAPABILITIES.claude.mcpReadable, writable: PROVIDER_CAPABILITIES.claude.mcpWritable },
-  codex: { configurable: PROVIDER_CAPABILITIES.codex.mcpReadable, writable: PROVIDER_CAPABILITIES.codex.mcpWritable },
-  cursor: { configurable: PROVIDER_CAPABILITIES.cursor.mcpReadable, writable: PROVIDER_CAPABILITIES.cursor.mcpWritable },
-  gemini: { configurable: PROVIDER_CAPABILITIES.gemini.mcpReadable, writable: PROVIDER_CAPABILITIES.gemini.mcpWritable },
-  opencode: { configurable: PROVIDER_CAPABILITIES.opencode.mcpReadable, writable: PROVIDER_CAPABILITIES.opencode.mcpWritable },
-  qwen: { configurable: PROVIDER_CAPABILITIES.qwen.mcpReadable, writable: PROVIDER_CAPABILITIES.qwen.mcpWritable },
-  copilot: { configurable: PROVIDER_CAPABILITIES.copilot.mcpReadable, writable: PROVIDER_CAPABILITIES.copilot.mcpWritable },
+  claude: {
+    configurable: PROVIDER_CAPABILITIES.claude.mcpReadable,
+    writable: PROVIDER_CAPABILITIES.claude.mcpWritable
+  },
+  codex: {
+    configurable: PROVIDER_CAPABILITIES.codex.mcpReadable,
+    writable: PROVIDER_CAPABILITIES.codex.mcpWritable
+  },
+  cursor: {
+    configurable: PROVIDER_CAPABILITIES.cursor.mcpReadable,
+    writable: PROVIDER_CAPABILITIES.cursor.mcpWritable
+  },
+  gemini: {
+    configurable: PROVIDER_CAPABILITIES.gemini.mcpReadable,
+    writable: PROVIDER_CAPABILITIES.gemini.mcpWritable
+  },
+  opencode: {
+    configurable: PROVIDER_CAPABILITIES.opencode.mcpReadable,
+    writable: PROVIDER_CAPABILITIES.opencode.mcpWritable
+  },
+  qwen: {
+    configurable: PROVIDER_CAPABILITIES.qwen.mcpReadable,
+    writable: PROVIDER_CAPABILITIES.qwen.mcpWritable
+  },
+  copilot: {
+    configurable: PROVIDER_CAPABILITIES.copilot.mcpReadable,
+    writable: PROVIDER_CAPABILITIES.copilot.mcpWritable
+  }
 }
 
-const MCP_TARGET_ORDER: McpTarget[] = ['claude', 'codex', 'cursor', 'gemini', 'opencode', 'qwen', 'copilot']
+const MCP_TARGET_ORDER: McpTarget[] = [
+  'claude',
+  'codex',
+  'cursor',
+  'gemini',
+  'opencode',
+  'qwen',
+  'copilot'
+]
 
 export function isConfigurableCliProvider(provider: string): provider is CliProvider {
   if (!Object.hasOwn(PROVIDER_CAPABILITIES, provider)) return false
@@ -152,7 +229,11 @@ export interface McpConfigSpec {
   write(existing: string | null, servers: Record<string, McpServerConfig>): string
 }
 
-function jsonMcpSpec(relativePath: string, serversKey: string, opts?: { writable?: boolean }): McpConfigSpec {
+function jsonMcpSpec(
+  relativePath: string,
+  serversKey: string,
+  opts?: { writable?: boolean }
+): McpConfigSpec {
   return {
     relativePath,
     writable: opts?.writable ?? true,
@@ -160,14 +241,22 @@ function jsonMcpSpec(relativePath: string, serversKey: string, opts?: { writable
       try {
         const parsed = JSON.parse(content)
         return (parsed?.[serversKey] as Record<string, McpServerConfig>) ?? {}
-      } catch { return {} }
+      } catch {
+        return {}
+      }
     },
     write(existing, servers) {
       let doc: Record<string, unknown> = {}
-      if (existing) { try { doc = JSON.parse(existing) } catch { /* ignore */ } }
+      if (existing) {
+        try {
+          doc = JSON.parse(existing)
+        } catch {
+          /* ignore */
+        }
+      }
       doc[serversKey] = servers
       return JSON.stringify(doc, null, 2) + '\n'
-    },
+    }
   }
 }
 
@@ -184,34 +273,42 @@ const opencodeMcpSpec: McpConfigSpec = {
         out[k] = { command: v.command, args: v.args ?? [], env: v.env }
       }
       return out
-    } catch { return {} }
+    } catch {
+      return {}
+    }
   },
   write(existing, servers) {
     let doc: Record<string, unknown> = {}
-    if (existing) { try { doc = JSON.parse(existing) } catch { /* ignore */ } }
+    if (existing) {
+      try {
+        doc = JSON.parse(existing)
+      } catch {
+        /* ignore */
+      }
+    }
     const mcp: Record<string, McpServerConfig & { type: string }> = {}
     for (const [k, v] of Object.entries(servers)) {
       mcp[k] = { type: 'local', command: v.command, args: v.args, env: v.env }
     }
     doc.mcp = mcp
     return JSON.stringify(doc, null, 2) + '\n'
-  },
+  }
 }
 
 // Project-level MCP config specs (relative to project root)
 export const PROJECT_MCP_SPECS: Partial<Record<McpTarget, McpConfigSpec>> = {
-  claude:   jsonMcpSpec('.mcp.json', 'mcpServers'),
-  cursor:   jsonMcpSpec('.cursor/mcp.json', 'mcpServers'),
-  gemini:   jsonMcpSpec('.agents/settings.json', 'mcpServers', { writable: false }),
+  claude: jsonMcpSpec('.mcp.json', 'mcpServers'),
+  cursor: jsonMcpSpec('.cursor/mcp.json', 'mcpServers'),
+  gemini: jsonMcpSpec('.agents/settings.json', 'mcpServers', { writable: false }),
   opencode: opencodeMcpSpec,
-  copilot:  jsonMcpSpec('.copilot/mcp-config.json', 'mcpServers', { writable: false }),
+  copilot: jsonMcpSpec('.copilot/mcp-config.json', 'mcpServers', { writable: false })
 }
 
 // Computer-level MCP config specs (relative to $HOME)
 export const COMPUTER_MCP_SPECS: Partial<Record<McpTarget, McpConfigSpec>> = {
-  claude:   jsonMcpSpec('.claude/.mcp.json', 'mcpServers'),
-  cursor:   jsonMcpSpec('.cursor/mcp.json', 'mcpServers'),
-  gemini:   jsonMcpSpec('.agents/settings.json', 'mcpServers', { writable: false }),
+  claude: jsonMcpSpec('.claude/.mcp.json', 'mcpServers'),
+  cursor: jsonMcpSpec('.cursor/mcp.json', 'mcpServers'),
+  gemini: jsonMcpSpec('.agents/settings.json', 'mcpServers', { writable: false }),
   opencode: { ...opencodeMcpSpec, relativePath: '.config/opencode/opencode.json' },
-  copilot:  jsonMcpSpec('.copilot/mcp-config.json', 'mcpServers', { writable: false }),
+  copilot: jsonMcpSpec('.copilot/mcp-config.json', 'mcpServers', { writable: false })
 }

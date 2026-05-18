@@ -8,10 +8,10 @@ import { execSync } from 'child_process'
 export default function globalSetup() {
   try {
     // Find Electron processes running our e2e main entry point
-    const out = execSync(
-      'pgrep -af "Electron.*out/main/index\\.js" || true',
-      { encoding: 'utf8', timeout: 5_000 }
-    ).trim()
+    const out = execSync('pgrep -af "Electron.*out/main/index\\.js" || true', {
+      encoding: 'utf8',
+      timeout: 5_000
+    }).trim()
 
     if (!out) return
 

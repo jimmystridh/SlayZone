@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 const BAD_PATH = '/tmp/nonexistent-slayzone-path-e2e'
@@ -38,6 +38,8 @@ test.describe('Error states', () => {
 
     await expect(mainWindow.getByText('Project path not found')).not.toBeVisible({ timeout: 5_000 })
     // Kanban columns should reappear
-    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({
+      timeout: 5_000
+    })
   })
 })

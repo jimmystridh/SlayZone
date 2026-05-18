@@ -6,7 +6,11 @@ import type { EditorView } from '@milkdown/prose/view'
 
 const LIST_ITEM_TYPES = ['list_item']
 
-function moveListItem(state: EditorState, dispatch: EditorView['dispatch'] | undefined, direction: 'up' | 'down'): boolean {
+function moveListItem(
+  state: EditorState,
+  dispatch: EditorView['dispatch'] | undefined,
+  direction: 'up' | 'down'
+): boolean {
   const { $from } = state.selection
 
   let depth: number | null = null
@@ -29,7 +33,7 @@ function moveListItem(state: EditorState, dispatch: EditorView['dispatch'] | und
   parent.forEach((child, offset) => {
     positions.push({
       from: parentContentStart + offset,
-      to: parentContentStart + offset + child.nodeSize,
+      to: parentContentStart + offset + child.nodeSize
     })
   })
 
@@ -69,7 +73,7 @@ export const listItemMovePlugin = $prose(() => {
         if (event.key === 'ArrowUp') return moveListItem(view.state, view.dispatch, 'up')
         if (event.key === 'ArrowDown') return moveListItem(view.state, view.dispatch, 'down')
         return false
-      },
-    },
+      }
+    }
   })
 })

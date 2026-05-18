@@ -5,7 +5,10 @@ export interface SubtasksOpts {
   json?: boolean
 }
 
-export async function subtasksAction(idPrefix: string | undefined, opts: SubtasksOpts): Promise<void> {
+export async function subtasksAction(
+  idPrefix: string | undefined,
+  opts: SubtasksOpts
+): Promise<void> {
   idPrefix = resolveId(idPrefix)
   const db = openDb()
 
@@ -14,9 +17,14 @@ export async function subtasksAction(idPrefix: string | undefined, opts: Subtask
     { ':prefix': idPrefix }
   )
 
-  if (parents.length === 0) { console.error(`Task not found: ${idPrefix}`); process.exit(1) }
+  if (parents.length === 0) {
+    console.error(`Task not found: ${idPrefix}`)
+    process.exit(1)
+  }
   if (parents.length > 1) {
-    console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${parents.map((t) => t.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${idPrefix}". Matches: ${parents.map((t) => t.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
 

@@ -15,12 +15,7 @@ export function InstructionsSection({ level, projectId, projectPath }: Instructi
   }
 
   if (level === 'project') {
-    return (
-      <ProjectInstructions
-        projectId={projectId}
-        projectPath={projectPath}
-      />
-    )
+    return <ProjectInstructions projectId={projectId} projectPath={projectPath} />
   }
 
   // Library level

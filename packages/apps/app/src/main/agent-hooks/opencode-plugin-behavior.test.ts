@@ -29,7 +29,7 @@ async function loadPlugin(opts: { notifyPath?: string; taskId?: string | null } 
 
   const tmpFile = path.join(
     fs.mkdtempSync(path.join(os.tmpdir(), 'opencode-plugin-test-')),
-    `plugin-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
+    `plugin-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`
   )
   fs.writeFileSync(tmpFile, src)
 
@@ -66,8 +66,8 @@ async function loadPlugin(opts: { notifyPath?: string; taskId?: string | null } 
       list: async () => {
         listCalls++
         return sessions
-      },
-    },
+      }
+    }
   }
 
   const handlers = (await mod.SlayzoneNotifyPlugin({ $, client })) as MockedHandlers
@@ -77,7 +77,7 @@ async function loadPlugin(opts: { notifyPath?: string; taskId?: string | null } 
     get listCalls() {
       return listCalls
     },
-    sessions,
+    sessions
   }
 }
 
@@ -103,14 +103,19 @@ describe('opencode plugin behavior', () => {
 
   test('session.created w/o parentID fires SessionStart', async () => {
     const p = await loadPlugin()
-    await p.handlers.event({ event: { type: 'session.created', properties: { info: { id: 's1' } } } })
+    await p.handlers.event({
+      event: { type: 'session.created', properties: { info: { id: 's1' } } }
+    })
     expect(hookEvents(p.shellCalls)).toEqual(['SessionStart'])
   })
 
   test('session.created w/ parentID does NOT fire SessionStart (child)', async () => {
     const p = await loadPlugin()
     await p.handlers.event({
-      event: { type: 'session.created', properties: { info: { id: 's-child', parentID: 's-root' } } },
+      event: {
+        type: 'session.created',
+        properties: { info: { id: 's-child', parentID: 's-root' } }
+      }
     })
     expect(p.shellCalls).toEqual([])
   })
@@ -118,9 +123,13 @@ describe('opencode plugin behavior', () => {
   test('session.deleted resolves child-ness from cache (no list() call)', async () => {
     const p = await loadPlugin()
     // Seed cache via session.created.
-    await p.handlers.event({ event: { type: 'session.created', properties: { info: { id: 's1' } } } })
+    await p.handlers.event({
+      event: { type: 'session.created', properties: { info: { id: 's1' } } }
+    })
     const before = p.listCalls
-    await p.handlers.event({ event: { type: 'session.deleted', properties: { info: { id: 's1' } } } })
+    await p.handlers.event({
+      event: { type: 'session.deleted', properties: { info: { id: 's1' } } }
+    })
     expect(p.listCalls).toBe(before)
     expect(hookEvents(p.shellCalls)).toEqual(['SessionStart', 'SessionEnd'])
   })
@@ -129,10 +138,10 @@ describe('opencode plugin behavior', () => {
     const p = await loadPlugin()
     p.sessions.data.push({ id: 's1' })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } }
     })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } }
     })
     expect(hookEvents(p.shellCalls)).toEqual(['Start'])
   })
@@ -141,13 +150,13 @@ describe('opencode plugin behavior', () => {
     const p = await loadPlugin()
     p.sessions.data.push({ id: 's1' })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } }
     })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'idle' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'idle' } } }
     })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'idle' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'idle' } } }
     })
     expect(hookEvents(p.shellCalls)).toEqual(['Start', 'Stop'])
   })
@@ -156,10 +165,16 @@ describe('opencode plugin behavior', () => {
     const p = await loadPlugin()
     p.sessions.data.push({ id: 'child', parentID: 'root' })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 'child', status: { type: 'busy' } } },
+      event: {
+        type: 'session.status',
+        properties: { sessionID: 'child', status: { type: 'busy' } }
+      }
     })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 'child', status: { type: 'idle' } } },
+      event: {
+        type: 'session.status',
+        properties: { sessionID: 'child', status: { type: 'idle' } }
+      }
     })
     expect(p.shellCalls).toEqual([])
   })
@@ -174,7 +189,7 @@ describe('opencode plugin behavior', () => {
     const src = fs.readFileSync(PLUGIN_SRC, 'utf8').split('{{NOTIFY_PATH}}').join('/n.sh')
     const tmpFile = path.join(
       fs.mkdtempSync(path.join(os.tmpdir(), 'opencode-plugin-test-')),
-      `plugin-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
+      `plugin-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`
     )
     fs.writeFileSync(tmpFile, src)
     ;(globalThis as Record<string, unknown>).__slayzoneOpencodePluginV1 = false
@@ -194,7 +209,7 @@ describe('opencode plugin behavior', () => {
     const client = { session: { list: () => Promise.reject(new Error('boom')) } }
     const handlers = await mod.SlayzoneNotifyPlugin({ $, client })
     await handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } }
     })
     expect(shellCalls).toEqual([])
     void overrideHandlers
@@ -204,13 +219,13 @@ describe('opencode plugin behavior', () => {
     const p = await loadPlugin()
     p.sessions.data.push({ id: 's1' }, { id: 's2' })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } }
     })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'idle' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'idle' } } }
     })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's2', status: { type: 'busy' } } },
+      event: { type: 'session.status', properties: { sessionID: 's2', status: { type: 'busy' } } }
     })
     expect(hookEvents(p.shellCalls)).toEqual(['Start', 'Stop', 'Start'])
   })
@@ -227,7 +242,7 @@ describe('opencode plugin behavior', () => {
     const p = await loadPlugin()
     p.sessions.data.push({ id: 's1' })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } }
     })
     await p.handlers.event({ event: { type: 'session.error', properties: { sessionID: 's1' } } })
     expect(hookEvents(p.shellCalls)).toEqual(['Start', 'Stop'])
@@ -249,7 +264,7 @@ describe('opencode plugin behavior', () => {
     const p = await loadPlugin({ notifyPath: '/custom/notify.sh' })
     p.sessions.data.push({ id: 's1' })
     await p.handlers.event({
-      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } },
+      event: { type: 'session.status', properties: { sessionID: 's1', status: { type: 'busy' } } }
     })
     expect(p.shellCalls[0]?.cmd).toContain('/custom/notify.sh')
   })
@@ -262,7 +277,7 @@ describe('opencode plugin behavior', () => {
     const src = fs.readFileSync(PLUGIN_SRC, 'utf8').split('{{NOTIFY_PATH}}').join('/n.sh')
     const tmpFile = path.join(
       fs.mkdtempSync(path.join(os.tmpdir(), 'opencode-plugin-test-')),
-      `plugin-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`,
+      `plugin-${Date.now()}-${Math.random().toString(36).slice(2)}.mjs`
     )
     fs.writeFileSync(tmpFile, src)
     const mod = (await import(pathToFileURL(tmpFile).href)) as {

@@ -1,4 +1,11 @@
-import { defaultEncodeSubmit, type TerminalAdapter, type PromptInfo, type ActivityState, type ErrorInfo, type ValidationResult } from './types'
+import {
+  defaultEncodeSubmit,
+  type TerminalAdapter,
+  type PromptInfo,
+  type ActivityState,
+  type ErrorInfo,
+  type ValidationResult
+} from './types'
 import { whichBinary, validateShellEnv } from '../shell-env'
 
 /**

@@ -14,7 +14,7 @@ interface TaskSettingsPanelProps {
 export function TaskSettingsPanel({
   taskId,
   renderDefaultContent,
-  renderHistoryContent,
+  renderHistoryContent
 }: TaskSettingsPanelProps): React.JSX.Element {
   const [view, setView] = useState<'default' | 'history'>('default')
   const [copied, setCopied] = useState(false)
@@ -53,15 +53,21 @@ export function TaskSettingsPanel({
           type="button"
           aria-label={view === 'history' ? 'Back to settings' : 'View activity'}
           className="ml-auto text-xs text-muted-foreground hover:text-foreground"
-          onClick={() => setView((current) => current === 'history' ? 'default' : 'history')}
+          onClick={() => setView((current) => (current === 'history' ? 'default' : 'history'))}
         >
           {view === 'history' ? 'Back to settings' : 'View activity'}
         </button>
       </div>
 
-      {view === 'history'
-        ? (renderHistoryContent ? renderHistoryContent() : <TaskHistoryPanel taskId={taskId} />)
-        : renderDefaultContent()}
+      {view === 'history' ? (
+        renderHistoryContent ? (
+          renderHistoryContent()
+        ) : (
+          <TaskHistoryPanel taskId={taskId} />
+        )
+      ) : (
+        renderDefaultContent()
+      )}
     </>
   )
 }

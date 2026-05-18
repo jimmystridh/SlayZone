@@ -46,7 +46,7 @@ export function SkillMarketplace({ projectId, projectPath }: SkillMarketplacePro
       const rows = await window.api.aiConfig.marketplace.listEntries({
         registryId: effectiveRegistryId ?? undefined,
         search: search || undefined,
-        projectId: projectId ?? undefined,
+        projectId: projectId ?? undefined
       })
       setEntries(rows)
     } finally {
@@ -60,9 +60,12 @@ export function SkillMarketplace({ projectId, projectPath }: SkillMarketplacePro
   }, [loadRegistries, loadEntries])
 
   useEffect(() => {
-    window.api.aiConfig.marketplace.ensureFresh().then(() => {
-      setRefreshKey(k => k + 1)
-    }).catch(() => {})
+    window.api.aiConfig.marketplace
+      .ensureFresh()
+      .then(() => {
+        setRefreshKey((k) => k + 1)
+      })
+      .catch(() => {})
   }, [])
 
   // Handle external navigation (e.g. clicking marketplace badge in skill list)
@@ -80,63 +83,83 @@ export function SkillMarketplace({ projectId, projectPath }: SkillMarketplacePro
     if (loading) return
     const pendingEntryId = useContextManagerStore.getState().marketplaceDrillEntryId
     if (!pendingEntryId) return
-    const entry = entries.find(e => e.id === pendingEntryId)
+    const entry = entries.find((e) => e.id === pendingEntryId)
     if (entry) {
       setPreviewEntry(entry)
       useContextManagerStore.setState({ marketplaceDrillEntryId: null })
     }
   }, [loading, entries])
 
-  const handleAddToLibrary = useCallback(async (entryId: string) => {
-    setInstalling(entryId)
-    try {
-      await window.api.aiConfig.marketplace.installSkill({ entryId, scope: 'library' })
-      toast.success('Skill added to library')
-      await loadEntries()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Install failed')
-    } finally {
-      setInstalling(null)
-    }
-  }, [loadEntries])
+  const handleAddToLibrary = useCallback(
+    async (entryId: string) => {
+      setInstalling(entryId)
+      try {
+        await window.api.aiConfig.marketplace.installSkill({ entryId, scope: 'library' })
+        toast.success('Skill added to library')
+        await loadEntries()
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Install failed')
+      } finally {
+        setInstalling(null)
+      }
+    },
+    [loadEntries]
+  )
 
-  const handleAddToProject = useCallback(async (entryId: string) => {
-    if (!projectId || !projectPath) return
-    setInstalling(entryId)
-    try {
-      const item = await window.api.aiConfig.marketplace.installSkill({ entryId, scope: 'project', projectId })
-      try { await window.api.aiConfig.syncLinkedFile(projectId, projectPath, item.id) } catch { /* sync self-heals on next Sync All */ }
-      toast.success('Skill added to project')
-      await loadEntries()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Install failed')
-    } finally {
-      setInstalling(null)
-    }
-  }, [loadEntries, projectId, projectPath])
+  const handleAddToProject = useCallback(
+    async (entryId: string) => {
+      if (!projectId || !projectPath) return
+      setInstalling(entryId)
+      try {
+        const item = await window.api.aiConfig.marketplace.installSkill({
+          entryId,
+          scope: 'project',
+          projectId
+        })
+        try {
+          await window.api.aiConfig.syncLinkedFile(projectId, projectPath, item.id)
+        } catch {
+          /* sync self-heals on next Sync All */
+        }
+        toast.success('Skill added to project')
+        await loadEntries()
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Install failed')
+      } finally {
+        setInstalling(null)
+      }
+    },
+    [loadEntries, projectId, projectPath]
+  )
 
-  const handleUpdate = useCallback(async (itemId: string, entryId: string) => {
-    setInstalling(entryId)
-    try {
-      await window.api.aiConfig.marketplace.updateSkill(itemId, entryId)
-      toast.success('Skill updated')
-      await loadEntries()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Update failed')
-    } finally {
-      setInstalling(null)
-    }
-  }, [loadEntries])
+  const handleUpdate = useCallback(
+    async (itemId: string, entryId: string) => {
+      setInstalling(entryId)
+      try {
+        await window.api.aiConfig.marketplace.updateSkill(itemId, entryId)
+        toast.success('Skill updated')
+        await loadEntries()
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Update failed')
+      } finally {
+        setInstalling(null)
+      }
+    },
+    [loadEntries]
+  )
 
-  const handleUninstall = useCallback(async (itemId: string) => {
-    try {
-      await window.api.aiConfig.deleteItem(itemId)
-      toast.success('Skill uninstalled')
-      await loadEntries()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Uninstall failed')
-    }
-  }, [loadEntries])
+  const handleUninstall = useCallback(
+    async (itemId: string) => {
+      try {
+        await window.api.aiConfig.deleteItem(itemId)
+        toast.success('Skill uninstalled')
+        await loadEntries()
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Uninstall failed')
+      }
+    },
+    [loadEntries]
+  )
 
   const handleRefreshAll = useCallback(async () => {
     setRefreshingAll(true)
@@ -152,36 +175,48 @@ export function SkillMarketplace({ projectId, projectPath }: SkillMarketplacePro
     }
   }, [loadEntries, loadRegistries])
 
-  const handleRefreshOne = useCallback(async (registryId: string) => {
-    setRefreshingId(registryId)
-    try {
-      await window.api.aiConfig.marketplace.refreshRegistry(registryId)
-      await loadEntries()
+  const handleRefreshOne = useCallback(
+    async (registryId: string) => {
+      setRefreshingId(registryId)
+      try {
+        await window.api.aiConfig.marketplace.refreshRegistry(registryId)
+        await loadEntries()
+        await loadRegistries()
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Refresh failed')
+      } finally {
+        setRefreshingId(null)
+      }
+    },
+    [loadEntries, loadRegistries]
+  )
+
+  const handleToggleRegistry = useCallback(
+    async (id: string, enabled: boolean) => {
+      await window.api.aiConfig.marketplace.toggleRegistry(id, enabled)
       await loadRegistries()
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Refresh failed')
-    } finally {
-      setRefreshingId(null)
-    }
-  }, [loadEntries, loadRegistries])
+      await loadEntries()
+    },
+    [loadRegistries, loadEntries]
+  )
 
-  const handleToggleRegistry = useCallback(async (id: string, enabled: boolean) => {
-    await window.api.aiConfig.marketplace.toggleRegistry(id, enabled)
-    await loadRegistries()
-    await loadEntries()
-  }, [loadRegistries, loadEntries])
+  const handleRemoveRegistry = useCallback(
+    async (id: string) => {
+      await window.api.aiConfig.marketplace.removeRegistry(id)
+      await loadRegistries()
+      await loadEntries()
+    },
+    [loadRegistries, loadEntries]
+  )
 
-  const handleRemoveRegistry = useCallback(async (id: string) => {
-    await window.api.aiConfig.marketplace.removeRegistry(id)
-    await loadRegistries()
-    await loadEntries()
-  }, [loadRegistries, loadEntries])
-
-  const handleAddRegistry = useCallback(async (githubUrl: string, branch?: string, path?: string) => {
-    await window.api.aiConfig.marketplace.addRegistry({ githubUrl, branch, path })
-    await loadRegistries()
-    await loadEntries()
-  }, [loadRegistries, loadEntries])
+  const handleAddRegistry = useCallback(
+    async (githubUrl: string, branch?: string, path?: string) => {
+      await window.api.aiConfig.marketplace.addRegistry({ githubUrl, branch, path })
+      await loadRegistries()
+      await loadEntries()
+    },
+    [loadRegistries, loadEntries]
+  )
 
   const handleDrillIn = useCallback((registryId: string) => {
     setActiveRegistryId(registryId)
@@ -202,7 +237,7 @@ export function SkillMarketplace({ projectId, projectPath }: SkillMarketplacePro
     setSelectedRegistry(null)
   }, [])
 
-  const activeRegistry = activeRegistryId ? registries.find(r => r.id === activeRegistryId) : null
+  const activeRegistry = activeRegistryId ? registries.find((r) => r.id === activeRegistryId) : null
   const isDrilledIn = browseMode === 'registries' && activeRegistry != null
   const showSkillGrid = browseMode === 'all' || activeRegistryId !== null
 
@@ -329,36 +364,43 @@ export function SkillMarketplace({ projectId, projectPath }: SkillMarketplacePro
         <>
           {/* Registries grid (default view, no drill-in) */}
           {browseMode === 'registries' && !activeRegistryId && (
-            <div className="grid gap-3 content-start overflow-y-auto flex-1" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))' }}>
-              {registries.filter(r => r.enabled).map((reg) => (
-                <button
-                  key={reg.id}
-                  onClick={() => handleDrillIn(reg.id)}
-                  className="rounded-lg border border-border/50 bg-surface-3 p-4 flex flex-col gap-2 text-left hover:border-border transition-colors h-fit"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-medium truncate">{reg.name}</h3>
-                    <span className="shrink-0 rounded-full bg-surface-3 px-2 py-0.5 text-[10px] text-muted-foreground">
-                      {reg.source_type}
-                    </span>
-                  </div>
-                  {reg.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">{reg.description}</p>
-                  )}
-                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60 mt-auto pt-2 border-t border-border/30">
-                    <span>{reg.entry_count ?? 0} skills</span>
-                    {reg.github_owner && (
-                      <span className="flex items-center gap-1">
-                        <ExternalLink className="size-2.5" />
-                        {reg.github_owner}/{reg.github_repo}
+            <div
+              className="grid gap-3 content-start overflow-y-auto flex-1"
+              style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))' }}
+            >
+              {registries
+                .filter((r) => r.enabled)
+                .map((reg) => (
+                  <button
+                    key={reg.id}
+                    onClick={() => handleDrillIn(reg.id)}
+                    className="rounded-lg border border-border/50 bg-surface-3 p-4 flex flex-col gap-2 text-left hover:border-border transition-colors h-fit"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-sm font-medium truncate">{reg.name}</h3>
+                      <span className="shrink-0 rounded-full bg-surface-3 px-2 py-0.5 text-[10px] text-muted-foreground">
+                        {reg.source_type}
                       </span>
+                    </div>
+                    {reg.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {reg.description}
+                      </p>
                     )}
-                    {reg.last_synced_at && (
-                      <span>Synced {new Date(reg.last_synced_at).toLocaleDateString()}</span>
-                    )}
-                  </div>
-                </button>
-              ))}
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60 mt-auto pt-2 border-t border-border/30">
+                      <span>{reg.entry_count ?? 0} skills</span>
+                      {reg.github_owner && (
+                        <span className="flex items-center gap-1">
+                          <ExternalLink className="size-2.5" />
+                          {reg.github_owner}/{reg.github_repo}
+                        </span>
+                      )}
+                      {reg.last_synced_at && (
+                        <span>Synced {new Date(reg.last_synced_at).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
             </div>
           )}
 
@@ -384,14 +426,17 @@ export function SkillMarketplace({ projectId, projectPath }: SkillMarketplacePro
                       onChange={(e) => setSelectedRegistry(e.target.value || null)}
                     >
                       <option value="">All registries</option>
-                      {registries.filter(r => r.enabled).map((r) => (
-                        <option key={r.id} value={r.id}>{r.name}</option>
-                      ))}
+                      {registries
+                        .filter((r) => r.enabled)
+                        .map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.name}
+                          </option>
+                        ))}
                     </select>
                   )}
                 </div>
               )}
-
 
               {loading ? (
                 <div className="flex items-center justify-center py-12 text-xs text-muted-foreground">
@@ -408,8 +453,13 @@ export function SkillMarketplace({ projectId, projectPath }: SkillMarketplacePro
                 <div className="flex flex-col gap-12 overflow-y-auto flex-1">
                   {[...groupedEntries.entries()].map(([category, categoryEntries]) => (
                     <div key={category}>
-                      <h3 className="text-lg font-semibold text-foreground mb-4 uppercase">{category}</h3>
-                      <div className="grid gap-3 content-start" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))' }}>
+                      <h3 className="text-lg font-semibold text-foreground mb-4 uppercase">
+                        {category}
+                      </h3>
+                      <div
+                        className="grid gap-3 content-start"
+                        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))' }}
+                      >
                         {categoryEntries.map((entry) => (
                           <SkillEntryCard
                             key={entry.id}

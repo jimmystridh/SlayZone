@@ -41,7 +41,7 @@ export const dracula: UnifiedThemeDefinition = {
       surface2: '#2e303e',
       surface3: '#363848',
       modal: '#21222c',
-      modalBorder: 'rgba(248, 248, 242, 0.25)',
+      modalBorder: 'rgba(248, 248, 242, 0.25)'
     },
     terminal: {
       background: '#282a36',
@@ -65,7 +65,7 @@ export const dracula: UnifiedThemeDefinition = {
       brightBlue: '#d6acff',
       brightMagenta: '#ff92df',
       brightCyan: '#a4ffff',
-      brightWhite: '#ffffff',
+      brightWhite: '#ffffff'
     },
     editor: {
       background: '#282a36',
@@ -85,7 +85,7 @@ export const dracula: UnifiedThemeDefinition = {
       variable: '#f8f8f2',
       property: '#66d9ef',
       link: '#8be9fd',
-      heading: '#f8f8f2',
-    },
-  },
+      heading: '#f8f8f2'
+    }
+  }
 }

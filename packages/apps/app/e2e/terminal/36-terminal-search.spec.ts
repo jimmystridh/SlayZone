@@ -1,27 +1,32 @@
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import {
   getMainSessionId,
   openTaskTerminal,
   runCommand,
   waitForBufferContains,
-  waitForPtySession,
+  waitForPtySession
 } from '../fixtures/terminal'
 
 /** Focus the xterm instance so keyboard shortcuts reach attachCustomKeyEventHandler */
 async function focusTerminal(page: import('@playwright/test').Page) {
   // xterm element may have zero dimensions in test layout; focus via its hidden textarea.
   // Multiple terminals may exist from prior test tabs, so poll until one is focusable.
-  await expect.poll(async () => {
-    return page.evaluate(() => {
-      // Get all xterm textareas; the last one is the active/visible terminal
-      const textareas = document.querySelectorAll('.xterm-helper-textarea')
-      const target = textareas[textareas.length - 1] as HTMLTextAreaElement | null
-      if (!target) return false
-      target.focus()
-      return document.activeElement === target
-    })
-  }, { timeout: 10_000 }).toBe(true)
+  await expect
+    .poll(
+      async () => {
+        return page.evaluate(() => {
+          // Get all xterm textareas; the last one is the active/visible terminal
+          const textareas = document.querySelectorAll('.xterm-helper-textarea')
+          const target = textareas[textareas.length - 1] as HTMLTextAreaElement | null
+          if (!target) return false
+          target.focus()
+          return document.activeElement === target
+        })
+      },
+      { timeout: 10_000 }
+    )
+    .toBe(true)
 }
 
 test.describe('Terminal search', () => {
@@ -32,14 +37,25 @@ test.describe('Terminal search', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Echo Search', color: '#8b5cf6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Echo Search',
+      color: '#8b5cf6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({ projectId: p.id, title: 'Search term task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Search term task',
+      status: 'in_progress'
+    })
     taskId = t.id
     sessionId = getMainSessionId(taskId)
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
 
     // Open terminal and seed it with content
@@ -120,10 +136,12 @@ test.describe('Terminal search', () => {
 
     // Press Enter to go to next match
     await mainWindow.keyboard.press('Enter')
-    await expect.poll(async () => {
-      const text = await countSpan.innerText()
-      return text.split('/')[0]
-    }).not.toBe(initialIdx)
+    await expect
+      .poll(async () => {
+        const text = await countSpan.innerText()
+        return text.split('/')[0]
+      })
+      .not.toBe(initialIdx)
 
     await mainWindow.keyboard.press('Escape')
   })

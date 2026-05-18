@@ -87,7 +87,6 @@ export async function parseCodexFiles(
       const rl = createInterface({ input: stream, crlfDelay: Infinity })
 
       rl.on('line', (line) => {
-
         let entry: CodexEntry
         try {
           entry = JSON.parse(line)
@@ -106,11 +105,14 @@ export async function parseCodexFiles(
 
         if (entry.type === 'event_msg' && entry.payload?.type === 'token_count') {
           // Use last_token_usage (per-turn delta), not total_token_usage (cumulative)
-          const usage = entry.payload.info?.last_token_usage ?? entry.payload.info?.total_token_usage
+          const usage =
+            entry.payload.info?.last_token_usage ?? entry.payload.info?.total_token_usage
           if (!usage) return
 
           const turnId = entry.payload.turn_id ?? entry.timestamp ?? ''
-          const id = createHash('md5').update(`codex:${sessionId}:${turnId}:${entry.timestamp}`).digest('hex')
+          const id = createHash('md5')
+            .update(`codex:${sessionId}:${turnId}:${entry.timestamp}`)
+            .digest('hex')
 
           records.push({
             id,

@@ -60,18 +60,18 @@ export function seedFullMapping(
   const mappingId = uid(`map-integ-${provider}`)
 
   db.prepare(`INSERT INTO projects (id, name, color, path, created_at, updated_at)
-    VALUES (?, ?, '#888888', '/tmp/integ-test', datetime('now'), datetime('now'))`)
-    .run(projectId, `Integration Test ${provider}`)
+    VALUES (?, ?, '#888888', '/tmp/integ-test', datetime('now'), datetime('now'))`).run(
+    projectId,
+    `Integration Test ${provider}`
+  )
 
   storeCredential(db, credRef, credential)
 
   db.prepare(`INSERT INTO integration_connections (id, provider, credential_ref, enabled)
-    VALUES (?, ?, ?, 1)`)
-    .run(connectionId, provider, credRef)
+    VALUES (?, ?, ?, 1)`).run(connectionId, provider, credRef)
 
   db.prepare(`INSERT INTO integration_project_connections (id, project_id, provider, connection_id)
-    VALUES (?, ?, ?, ?)`)
-    .run(crypto.randomUUID(), projectId, provider, connectionId)
+    VALUES (?, ?, ?, ?)`).run(crypto.randomUUID(), projectId, provider, connectionId)
 
   const repoOwner = opts.repoOwner ?? ''
   const repoName = opts.repoName ?? ''
@@ -79,13 +79,17 @@ export function seedFullMapping(
   db.prepare(`INSERT INTO integration_project_mappings
     (id, project_id, provider, connection_id, external_team_id, external_team_key,
      sync_mode, status_setup_complete, external_repo_owner, external_repo_name)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`)
-    .run(
-      mappingId, projectId, provider, connectionId,
-      opts.teamId, opts.teamKey,
-      opts.syncMode ?? 'two_way',
-      repoOwner, repoName
-    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`).run(
+    mappingId,
+    projectId,
+    provider,
+    connectionId,
+    opts.teamId,
+    opts.teamKey,
+    opts.syncMode ?? 'two_way',
+    repoOwner,
+    repoName
+  )
 
   if (provider === 'linear' && opts.workflowStates) {
     const statusMap: Record<string, string> = {
@@ -100,20 +104,24 @@ export function seedFullMapping(
       const localStatus = statusMap[state.type] ?? 'todo'
       db.prepare(`INSERT OR IGNORE INTO integration_state_mappings
         (id, provider, project_mapping_id, local_status, state_id, state_type)
-        VALUES (?, ?, ?, ?, ?, ?)`)
-        .run(crypto.randomUUID(), 'linear', mappingId, localStatus, state.id, state.type)
+        VALUES (?, ?, ?, ?, ?, ?)`).run(
+        crypto.randomUUID(),
+        'linear',
+        mappingId,
+        localStatus,
+        state.id,
+        state.type
+      )
     }
   }
 
   if (provider === 'github') {
     db.prepare(`INSERT OR IGNORE INTO integration_state_mappings
       (id, provider, project_mapping_id, local_status, state_id, state_type)
-      VALUES (?, 'github', ?, 'todo', 'open', 'open')`)
-      .run(crypto.randomUUID(), mappingId)
+      VALUES (?, 'github', ?, 'todo', 'open', 'open')`).run(crypto.randomUUID(), mappingId)
     db.prepare(`INSERT OR IGNORE INTO integration_state_mappings
       (id, provider, project_mapping_id, local_status, state_id, state_type)
-      VALUES (?, 'github', ?, 'done', 'closed', 'closed')`)
-      .run(crypto.randomUUID(), mappingId)
+      VALUES (?, 'github', ?, 'done', 'closed', 'closed')`).run(crypto.randomUUID(), mappingId)
   }
 
   return { projectId, connectionId, mappingId }
@@ -143,16 +151,24 @@ async function runCleanups(): Promise<void> {
   if (cleanupRan) return
   cleanupRan = true
   for (const fn of cleanupFns) {
-    try { await fn() } catch (e) {
+    try {
+      await fn()
+    } catch (e) {
       console.warn('  cleanup error:', e)
     }
   }
 }
 
 // Register handlers once
-process.on('exit', () => { void runCleanups() })
-process.on('SIGINT', () => { void runCleanups().then(() => process.exit(1)) })
-process.on('SIGTERM', () => { void runCleanups().then(() => process.exit(1)) })
+process.on('exit', () => {
+  void runCleanups()
+})
+process.on('SIGINT', () => {
+  void runCleanups().then(() => process.exit(1))
+})
+process.on('SIGTERM', () => {
+  void runCleanups().then(() => process.exit(1))
+})
 process.on('uncaughtException', (err) => {
   console.error('Uncaught exception:', err)
   void runCleanups().then(() => process.exit(1))
@@ -172,7 +188,8 @@ export async function cleanupLinearIssues(apiKey: string, issueIds: string[]): P
           variables: { id }
         })
       })
-      if (!res.ok) console.warn(`  cleanup: failed to archive Linear issue ${id}: HTTP ${res.status}`)
+      if (!res.ok)
+        console.warn(`  cleanup: failed to archive Linear issue ${id}: HTTP ${res.status}`)
     } catch (e) {
       console.warn(`  cleanup: failed to archive Linear issue ${id}:`, e)
     }
@@ -198,7 +215,8 @@ export async function cleanupGithubIssues(
           body: JSON.stringify({ state: 'closed' })
         }
       )
-      if (!res.ok) console.warn(`  cleanup: failed to close GitHub issue #${issue.number}: HTTP ${res.status}`)
+      if (!res.ok)
+        console.warn(`  cleanup: failed to close GitHub issue #${issue.number}: HTTP ${res.status}`)
     } catch (e) {
       console.warn(`  cleanup: failed to close GitHub issue #${issue.number}:`, e)
     }
@@ -211,15 +229,14 @@ export async function cleanupGithubIssues(
  * Run discovery for a SINGLE mapping only, not all mappings in the DB.
  * Prevents cross-contamination between test sections.
  */
-export async function runScopedDiscovery(
-  db: Database,
-  mappingId: string
-): Promise<void> {
+export async function runScopedDiscovery(db: Database, mappingId: string): Promise<void> {
   // Temporarily hide all other mappings by disabling their connections
-  const otherMappings = db.prepare(`
+  const otherMappings = db
+    .prepare(`
     SELECT DISTINCT pm.connection_id FROM integration_project_mappings pm
     WHERE pm.id != ? AND pm.status_setup_complete = 1
-  `).all(mappingId) as Array<{ connection_id: string }>
+  `)
+    .all(mappingId) as Array<{ connection_id: string }>
 
   const disabledIds: string[] = []
   for (const m of otherMappings) {

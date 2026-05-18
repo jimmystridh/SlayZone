@@ -21,7 +21,8 @@ export function DevServerToast({ url, onOpen, onDismiss }: DevServerToastProps):
         >
           <Globe className="size-5 text-blue-500 shrink-0" />
           <span className="text-sm">
-            Dev server detected at <code className="font-mono font-medium text-blue-400">{url}</code>
+            Dev server detected at{' '}
+            <code className="font-mono font-medium text-blue-400">{url}</code>
           </span>
           <button
             className="rounded-md bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-3.5 py-1.5 shrink-0 transition-colors"

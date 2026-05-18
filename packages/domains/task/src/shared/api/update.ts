@@ -75,7 +75,7 @@ export const updateTaskInputSchema = z
     repoName: z.string().nullable().optional(),
 
     // Reparent: undefined = no change, null = detach, string = new parent
-    parentId: z.string().nullable().optional(),
+    parentId: z.string().nullable().optional()
   })
   .strict()
 

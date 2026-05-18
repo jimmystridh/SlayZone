@@ -4,7 +4,11 @@ import { openDb } from '../../db'
 import { apiPatch } from '../../api'
 import { findSourceRepo, getCurrentBranch, isGitRepo } from '../../git'
 import { resolveStatusId } from '@slayzone/projects/shared'
-import { validateReparent, reparentErrorMessage, type ReparentTaskRow } from '@slayzone/task/shared/reparent-validation'
+import {
+  validateReparent,
+  reparentErrorMessage,
+  type ReparentTaskRow
+} from '@slayzone/task/shared/reparent-validation'
 import { getProjectColumnsConfig, resolveId } from './_shared'
 
 export interface UpdateOpts {
@@ -25,29 +29,51 @@ export async function updateAction(idPrefix: string | undefined, opts: UpdateOpt
     console.error('Cannot use both --description and --append-description.')
     process.exit(1)
   }
-  if (opts.title === undefined && opts.description === undefined && opts.appendDescription === undefined && opts.status === undefined
-    && opts.priority === undefined && opts.due === undefined && opts.parent === undefined && !opts.permanent
-    && opts.worktreePath === undefined) {
-    console.error('Provide at least one of --title, --description, --append-description, --status, --priority, --due, --no-due, --parent, --no-parent, --permanent, --worktree-path')
+  if (
+    opts.title === undefined &&
+    opts.description === undefined &&
+    opts.appendDescription === undefined &&
+    opts.status === undefined &&
+    opts.priority === undefined &&
+    opts.due === undefined &&
+    opts.parent === undefined &&
+    !opts.permanent &&
+    opts.worktreePath === undefined
+  ) {
+    console.error(
+      'Provide at least one of --title, --description, --append-description, --status, --priority, --due, --no-due, --parent, --no-parent, --permanent, --worktree-path'
+    )
     process.exit(1)
   }
 
   const db = openDb()
 
-  const tasks = db.query<{ id: string; title: string; project_id: string; description: string | null }>(
-    `SELECT id, title, project_id, description FROM tasks WHERE id LIKE :prefix || '%' LIMIT 2`,
-    { ':prefix': idPrefix }
-  )
+  const tasks = db.query<{
+    id: string
+    title: string
+    project_id: string
+    description: string | null
+  }>(`SELECT id, title, project_id, description FROM tasks WHERE id LIKE :prefix || '%' LIMIT 2`, {
+    ':prefix': idPrefix
+  })
 
-  if (tasks.length === 0) { console.error(`Task not found: ${idPrefix}`); process.exit(1) }
+  if (tasks.length === 0) {
+    console.error(`Task not found: ${idPrefix}`)
+    process.exit(1)
+  }
   if (tasks.length > 1) {
-    console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${idPrefix}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
 
   if (opts.priority) {
     const p = parseInt(opts.priority, 10)
-    if (isNaN(p) || p < 1 || p > 5) { console.error('Priority must be 1-5.'); process.exit(1) }
+    if (isNaN(p) || p < 1 || p > 5) {
+      console.error('Priority must be 1-5.')
+      process.exit(1)
+    }
   }
 
   const task = tasks[0]
@@ -69,9 +95,14 @@ export async function updateAction(idPrefix: string | undefined, opts: UpdateOpt
       `SELECT id FROM tasks WHERE id LIKE :prefix || '%' LIMIT 2`,
       { ':prefix': opts.parent }
     )
-    if (parentMatches.length === 0) { console.error(`Parent task not found: ${opts.parent}`); process.exit(1) }
+    if (parentMatches.length === 0) {
+      console.error(`Parent task not found: ${opts.parent}`)
+      process.exit(1)
+    }
     if (parentMatches.length > 1) {
-      console.error(`Ambiguous parent id prefix "${opts.parent}". Matches: ${parentMatches.map((t) => t.id.slice(0, 8)).join(', ')}`)
+      console.error(
+        `Ambiguous parent id prefix "${opts.parent}". Matches: ${parentMatches.map((t) => t.id.slice(0, 8)).join(', ')}`
+      )
       process.exit(1)
     }
     resolvedParentId = parentMatches[0].id
@@ -86,10 +117,12 @@ export async function updateAction(idPrefix: string | undefined, opts: UpdateOpt
           { ':id': id }
         )
         return rows[0] ?? null
-      },
+      }
     })
     if (!result.ok) {
-      console.error(reparentErrorMessage(result.error, { taskId: task.id, parentId: resolvedParentId }))
+      console.error(
+        reparentErrorMessage(result.error, { taskId: task.id, parentId: resolvedParentId })
+      )
       process.exit(1)
     }
   }
@@ -97,7 +130,8 @@ export async function updateAction(idPrefix: string | undefined, opts: UpdateOpt
   const body: Record<string, unknown> = {}
   if (opts.title !== undefined) body.title = opts.title
   if (opts.description !== undefined) body.description = opts.description || null
-  if (opts.appendDescription !== undefined) body.description = (task.description ?? '') + '\n' + opts.appendDescription
+  if (opts.appendDescription !== undefined)
+    body.description = (task.description ?? '') + '\n' + opts.appendDescription
   if (resolvedStatus) body.status = resolvedStatus
   if (opts.priority) body.priority = parseInt(opts.priority, 10)
   if (typeof opts.due === 'string') body.dueDate = opts.due
@@ -140,6 +174,9 @@ export async function updateAction(idPrefix: string | undefined, opts: UpdateOpt
   }
 
   db.close()
-  await apiPatch<{ ok: boolean; data: { id: string; title: string } }>(`/api/tasks/${task.id}`, body)
+  await apiPatch<{ ok: boolean; data: { id: string; title: string } }>(
+    `/api/tasks/${task.id}`,
+    body
+  )
   console.log(`Updated: ${task.id.slice(0, 8)}  ${opts.title ?? task.title}`)
 }

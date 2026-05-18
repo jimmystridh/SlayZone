@@ -18,10 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@slayzone/ui'
 import { Switch } from '@slayzone/ui'
 import { cn } from '@slayzone/ui'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@slayzone/ui'
-import {
-  resolveColumns,
-  type Project
-} from '@slayzone/projects/shared'
+import { resolveColumns, type Project } from '@slayzone/projects/shared'
 import type {
   ExternalLink,
   GithubIssueSummary,
@@ -96,7 +93,10 @@ function formatGithubImportMessage(result: ImportGithubRepositoryIssuesResult): 
   return parts.join(' \u2022 ')
 }
 
-function sortByMode<T extends { title: string; updatedAt: string }>(rows: T[], sort: ImportIssueSort): T[] {
+function sortByMode<T extends { title: string; updatedAt: string }>(
+  rows: T[],
+  sort: ImportIssueSort
+): T[] {
   const next = [...rows]
   next.sort((a, b) => {
     if (sort === 'updated_desc') {
@@ -144,7 +144,9 @@ export function IntegrationsTab({
   const [loadingIssues, setLoadingIssues] = useState(false)
   const [githubRepoIssueOptions, setGithubRepoIssueOptions] = useState<GithubIssueSummary[]>([])
   const [githubImportSort, setGithubImportSort] = useState<ImportIssueSort>('updated_desc')
-  const [selectedGithubRepoIssueIds, setSelectedGithubRepoIssueIds] = useState<Set<string>>(new Set())
+  const [selectedGithubRepoIssueIds, setSelectedGithubRepoIssueIds] = useState<Set<string>>(
+    new Set()
+  )
   const [githubRepoIssueQuery, setGithubRepoIssueQuery] = useState('')
   const [loadingGithubRepoIssues, setLoadingGithubRepoIssues] = useState(false)
   const [importingGithubRepoIssues, setImportingGithubRepoIssues] = useState(false)
@@ -155,12 +157,11 @@ export function IntegrationsTab({
   const [pushingSync, setPushingSync] = useState(false)
   const [pullingSync, setPullingSync] = useState(false)
   const [syncMessage, setSyncMessage] = useState('')
-  const [selectedIntegrationEntry, setSelectedIntegrationEntry] = useState<IntegrationSetupEntry | null>(
-    null
-  )
-  const [selectedIntegrationMode, setSelectedIntegrationMode] = useState<'continuous' | 'import' | null>(
-    integrationOnboardingProvider ? 'continuous' : null
-  )
+  const [selectedIntegrationEntry, setSelectedIntegrationEntry] =
+    useState<IntegrationSetupEntry | null>(null)
+  const [selectedIntegrationMode, setSelectedIntegrationMode] = useState<
+    'continuous' | 'import' | null
+  >(integrationOnboardingProvider ? 'continuous' : null)
   const [githubProjectConnectionId, setGithubProjectConnectionId] = useState('')
   const [linearProjectConnectionId, setLinearProjectConnectionId] = useState('')
   const [githubSyncProjects, setGithubSyncProjects] = useState<GithubProjectSummary[]>([])
@@ -190,7 +191,8 @@ export function IntegrationsTab({
     provider: IntegrationProvider
     mode: 'connect' | 'edit'
   } | null>(null)
-  const [disconnectingProjectConnectionProvider, setDisconnectingProjectConnectionProvider] = useState<IntegrationProvider | null>(null)
+  const [disconnectingProjectConnectionProvider, setDisconnectingProjectConnectionProvider] =
+    useState<IntegrationProvider | null>(null)
   const [switchingProvider, setSwitchingProvider] = useState(false)
   const [jiraEnabled, setJiraEnabled] = useState(window.api.app.isJiraIntegrationEnabledSync)
   const [syncStep, setSyncStep] = useState<1 | 2 | 3>(1)
@@ -208,7 +210,9 @@ export function IntegrationsTab({
   useEffect(() => {
     if (!open) return
     if (!integrationOnboardingProvider) return
-    setSelectedIntegrationEntry(integrationOnboardingProvider === 'github' ? 'github_projects' : 'linear')
+    setSelectedIntegrationEntry(
+      integrationOnboardingProvider === 'github' ? 'github_projects' : 'linear'
+    )
     setSelectedIntegrationMode('continuous')
     onIntegrationOnboardingHandled?.()
   }, [open, integrationOnboardingProvider, onIntegrationOnboardingHandled])
@@ -237,20 +241,26 @@ export function IntegrationsTab({
     setSelectedIntegrationEntry((current) => {
       return current
     })
-    const resolvedGithubConnectionId = loadedGithubProjectConnectionId &&
-      loadedGithubConnections.some((connection) => connection.id === loadedGithubProjectConnectionId)
-      ? loadedGithubProjectConnectionId
-      : loadedGithubMapping?.connection_id &&
-          loadedGithubConnections.some((connection) => connection.id === loadedGithubMapping.connection_id)
-        ? loadedGithubMapping.connection_id
-        : ''
-    const resolvedLinearConnectionId = loadedLinearProjectConnectionId &&
+    const resolvedGithubConnectionId =
+      loadedGithubProjectConnectionId &&
+      loadedGithubConnections.some(
+        (connection) => connection.id === loadedGithubProjectConnectionId
+      )
+        ? loadedGithubProjectConnectionId
+        : loadedGithubMapping?.connection_id &&
+            loadedGithubConnections.some(
+              (connection) => connection.id === loadedGithubMapping.connection_id
+            )
+          ? loadedGithubMapping.connection_id
+          : ''
+    const resolvedLinearConnectionId =
+      loadedLinearProjectConnectionId &&
       loadedConnections.some((connection) => connection.id === loadedLinearProjectConnectionId)
-      ? loadedLinearProjectConnectionId
-      : loadedMapping?.connection_id &&
-          loadedConnections.some((connection) => connection.id === loadedMapping.connection_id)
-        ? loadedMapping.connection_id
-        : ''
+        ? loadedLinearProjectConnectionId
+        : loadedMapping?.connection_id &&
+            loadedConnections.some((connection) => connection.id === loadedMapping.connection_id)
+          ? loadedMapping.connection_id
+          : ''
 
     setGithubProjectConnectionId(resolvedGithubConnectionId)
     setLinearProjectConnectionId(resolvedLinearConnectionId)
@@ -327,7 +337,12 @@ export function IntegrationsTab({
     setSelectedGithubRepoIssueIds(new Set())
     setGithubRepoIssueQuery('')
     setGithubRepoImportMessage('')
-  }, [selectedIntegrationEntry, githubProjectConnectionId, githubMapping?.connection_id, githubRepositoryFullName])
+  }, [
+    selectedIntegrationEntry,
+    githubProjectConnectionId,
+    githubMapping?.connection_id,
+    githubRepositoryFullName
+  ])
 
   useEffect(() => {
     if (!githubProjectConnectionId) {
@@ -337,12 +352,17 @@ export function IntegrationsTab({
     }
     setLoadingGithubSyncProjects(true)
     setSyncSettingsMessage('')
-    void window.api.integrations.listGithubProjects(githubProjectConnectionId)
+    void window.api.integrations
+      .listGithubProjects(githubProjectConnectionId)
       .then((projects) => {
         setGithubSyncProjects(projects)
         setGithubSyncProjectId((current) => {
-          if (current && projects.some((projectOption) => projectOption.id === current)) return current
-          if (githubMapping?.external_project_id && projects.some((projectOption) => projectOption.id === githubMapping.external_project_id)) {
+          if (current && projects.some((projectOption) => projectOption.id === current))
+            return current
+          if (
+            githubMapping?.external_project_id &&
+            projects.some((projectOption) => projectOption.id === githubMapping.external_project_id)
+          ) {
             return githubMapping.external_project_id
           }
           return projects[0]?.id ?? ''
@@ -368,14 +388,18 @@ export function IntegrationsTab({
     }
     setLoadingLinearSyncTeams(true)
     setSyncSettingsMessage('')
-    void window.api.integrations.listLinearTeams(linearProjectConnectionId)
+    void window.api.integrations
+      .listLinearTeams(linearProjectConnectionId)
       .then((result) => {
         const teams = Array.isArray(result) ? result : result.teams
         setLinearSyncTeams(teams)
         if (!Array.isArray(result)) setLinearOrgUrlKey(result.orgUrlKey)
         setLinearSyncTeamId((current) => {
           if (current && teams.some((team) => team.id === current)) return current
-          if (mapping?.external_team_id && teams.some((team) => team.id === mapping.external_team_id)) {
+          if (
+            mapping?.external_team_id &&
+            teams.some((team) => team.id === mapping.external_team_id)
+          ) {
             return mapping.external_team_id
           }
           return teams[0]?.id ?? ''
@@ -399,12 +423,17 @@ export function IntegrationsTab({
     }
     setLoadingLinearSyncProjects(true)
     setSyncSettingsMessage('')
-    void window.api.integrations.listLinearProjects(linearProjectConnectionId, linearSyncTeamId)
+    void window.api.integrations
+      .listLinearProjects(linearProjectConnectionId, linearSyncTeamId)
       .then((projects) => {
         setLinearSyncProjects(projects)
         setLinearSyncProjectId((current) => {
-          if (current && projects.some((projectOption) => projectOption.id === current)) return current
-          if (mapping?.external_project_id && projects.some((projectOption) => projectOption.id === mapping.external_project_id)) {
+          if (current && projects.some((projectOption) => projectOption.id === current))
+            return current
+          if (
+            mapping?.external_project_id &&
+            projects.some((projectOption) => projectOption.id === mapping.external_project_id)
+          ) {
             return mapping.external_project_id
           }
           return ''
@@ -430,7 +459,8 @@ export function IntegrationsTab({
     }
     setLoadingLinearImportTeams(true)
     setLinearImportSourceMessage('')
-    void window.api.integrations.listLinearTeams(linearProjectConnectionId)
+    void window.api.integrations
+      .listLinearTeams(linearProjectConnectionId)
       .then((result) => {
         const teams = Array.isArray(result) ? result : result.teams
         setLinearImportTeams(teams)
@@ -457,7 +487,8 @@ export function IntegrationsTab({
     }
     setLoadingLinearImportProjects(true)
     setLinearImportSourceMessage('')
-    void window.api.integrations.listLinearProjects(linearProjectConnectionId, linearImportTeamId)
+    void window.api.integrations
+      .listLinearProjects(linearProjectConnectionId, linearImportTeamId)
       .then((projects) => {
         setLinearImportProjects(projects)
         setLinearImportProjectId((current) => {
@@ -533,7 +564,9 @@ export function IntegrationsTab({
   }
 
   const handleDisconnectProjectConnection = async (provider: IntegrationProvider) => {
-    const confirmed = window.confirm(`Disconnect ${providerDisplayName(provider)} for this project?`)
+    const confirmed = window.confirm(
+      `Disconnect ${providerDisplayName(provider)} for this project?`
+    )
     if (!confirmed) return
 
     setDisconnectingProjectConnectionProvider(provider)
@@ -556,7 +589,9 @@ export function IntegrationsTab({
       setSyncSettingsMessage('Choose a GitHub Project first')
       return
     }
-    const selectedProject = githubSyncProjects.find((projectOption) => projectOption.id === githubSyncProjectId)
+    const selectedProject = githubSyncProjects.find(
+      (projectOption) => projectOption.id === githubSyncProjectId
+    )
     if (!selectedProject) {
       setSyncSettingsMessage('Choose a valid GitHub Project')
       return
@@ -624,7 +659,6 @@ export function IntegrationsTab({
     }
   }
 
-
   const handleSyncStepSetupContinue = async () => {
     const provider = syncSetupProvider
     if (!provider) return
@@ -647,7 +681,11 @@ export function IntegrationsTab({
         externalProjectId: updatedMapping.external_project_id ?? undefined
       })
 
-      if (!window.confirm(`This will replace your board columns with ${statuses.length} statuses from ${providerDisplayName(provider)}. Continue?`)) {
+      if (
+        !window.confirm(
+          `This will replace your board columns with ${statuses.length} statuses from ${providerDisplayName(provider)}. Continue?`
+        )
+      ) {
         return
       }
 
@@ -692,7 +730,9 @@ export function IntegrationsTab({
         added.length > 0 ? `${added.length} added` : '',
         removed.length > 0 ? `${removed.length} removed` : '',
         renamed.length > 0 ? `${renamed.length} renamed` : ''
-      ].filter(Boolean).join(', ')
+      ]
+        .filter(Boolean)
+        .join(', ')
       if (!window.confirm(`Provider statuses changed: ${summary}. Apply?`)) return
 
       const updated = await window.api.integrations.applyStatusSync({
@@ -749,7 +789,9 @@ export function IntegrationsTab({
       })
       setIssueOptions(result.issues)
       const importableIds = new Set(result.issues.filter((i) => !i.linkedTaskId).map((i) => i.id))
-      setSelectedIssueIds((previous) => new Set([...previous].filter((id) => importableIds.has(id))))
+      setSelectedIssueIds(
+        (previous) => new Set([...previous].filter((id) => importableIds.has(id)))
+      )
       if (result.issues.length === 0) {
         setImportMessage('No matching Linear issues found')
       }
@@ -802,8 +844,12 @@ export function IntegrationsTab({
         limit: 50
       })
       setGithubRepoIssueOptions(result.issues)
-      const importableIds = new Set(result.issues.filter((issue) => !issue.linkedTaskId).map((issue) => issue.id))
-      setSelectedGithubRepoIssueIds((previous) => new Set([...previous].filter((id) => importableIds.has(id))))
+      const importableIds = new Set(
+        result.issues.filter((issue) => !issue.linkedTaskId).map((issue) => issue.id)
+      )
+      setSelectedGithubRepoIssueIds(
+        (previous) => new Set([...previous].filter((id) => importableIds.has(id)))
+      )
       if (result.issues.length === 0) {
         setGithubRepoImportMessage('No matching GitHub repository issues found')
       } else if (importableIds.size === 0) {
@@ -825,7 +871,9 @@ export function IntegrationsTab({
       const importableIdSet = new Set(
         githubRepoIssueOptions.filter((issue) => !issue.linkedTaskId).map((issue) => issue.id)
       )
-      const selectedImportableIds = [...selectedGithubRepoIssueIds].filter((id) => importableIdSet.has(id))
+      const selectedImportableIds = [...selectedGithubRepoIssueIds].filter((id) =>
+        importableIdSet.has(id)
+      )
       const result = await window.api.integrations.importGithubRepositoryIssues({
         projectId: project.id,
         connectionId,
@@ -836,10 +884,7 @@ export function IntegrationsTab({
       setGithubRepoImportMessage(formatGithubImportMessage(result))
       if (result.imported > 0) {
         ;(window as any).__slayzone_refreshData?.()
-        await Promise.all([
-          handleLoadGithubRepositoryIssues(),
-          collectSyncRows()
-        ])
+        await Promise.all([handleLoadGithubRepositoryIssues(), collectSyncRows()])
       }
     } catch (error) {
       setGithubRepoImportMessage(error instanceof Error ? error.message : String(error))
@@ -848,26 +893,27 @@ export function IntegrationsTab({
     }
   }
 
-  const syncSetupProvider: IntegrationProvider | null = selectedIntegrationEntry === 'linear'
-    ? 'linear'
-    : selectedIntegrationEntry === 'github_projects'
-      ? 'github'
-      : selectedIntegrationEntry === 'jira'
-        ? 'jira'
-        : null
+  const syncSetupProvider: IntegrationProvider | null =
+    selectedIntegrationEntry === 'linear'
+      ? 'linear'
+      : selectedIntegrationEntry === 'github_projects'
+        ? 'github'
+        : selectedIntegrationEntry === 'jira'
+          ? 'jira'
+          : null
 
   const collectSyncRows = useCallback(async (): Promise<TaskSyncRow[]> => {
     const provider = syncSetupProvider
     if (!provider) return []
 
     const tasks = await window.api.db.getTasksByProject(project.id)
-    const taskIds = tasks.map(t => t.id)
+    const taskIds = tasks.map((t) => t.id)
 
     // Single batch call: returns link + status for all tasks
     const batchItems = await window.api.integrations.getBatchTaskSyncStatus(taskIds, provider)
-    const itemByTaskId = new Map(batchItems.map(item => [item.taskId, item]))
+    const itemByTaskId = new Map(batchItems.map((item) => [item.taskId, item]))
 
-    const rows: TaskSyncRow[] = taskIds.map(taskId => {
+    const rows: TaskSyncRow[] = taskIds.map((taskId) => {
       const item = itemByTaskId.get(taskId)
       if (!item || !item.link) return { taskId, link: null, status: null }
       return { taskId, link: item.link, status: item.status }
@@ -885,7 +931,9 @@ export function IntegrationsTab({
       const rows = await collectSyncRows()
       const linked = rows.filter((r) => r.link).length
       const unlinked = rows.filter((r) => !r.link).length
-      setSyncMessage(`Checked ${linked} linked${unlinked > 0 ? ` + ${unlinked} unlinked` : ''} tasks`)
+      setSyncMessage(
+        `Checked ${linked} linked${unlinked > 0 ? ` + ${unlinked} unlinked` : ''} tasks`
+      )
     } catch (error) {
       setSyncMessage(error instanceof Error ? error.message : String(error))
     } finally {
@@ -975,7 +1023,9 @@ export function IntegrationsTab({
       if (pulled > 0) {
         ;(window as any).__slayzone_refreshData?.()
       }
-      setSyncMessage(`Pull complete: ${pulled} pulled, ${skipped} skipped${errors > 0 ? `, ${errors} errors` : ''}`)
+      setSyncMessage(
+        `Pull complete: ${pulled} pulled, ${skipped} skipped${errors > 0 ? `, ${errors} errors` : ''}`
+      )
       await collectSyncRows()
     } catch (error) {
       setSyncMessage(error instanceof Error ? error.message : String(error))
@@ -1000,12 +1050,18 @@ export function IntegrationsTab({
 
   const linearMappingSource = mapping
   const githubMappingSource = githubMapping
-  const isGithubContinuousView = selectedIntegrationEntry === 'github_projects' && selectedIntegrationMode === 'continuous'
-  const isGithubImportView = selectedIntegrationEntry === 'github_issues' && selectedIntegrationMode === 'import'
-  const isLinearContinuousView = selectedIntegrationEntry === 'linear' && selectedIntegrationMode === 'continuous'
-  const isLinearImportView = selectedIntegrationEntry === 'linear' && selectedIntegrationMode === 'import'
-  const isJiraContinuousView = selectedIntegrationEntry === 'jira' && selectedIntegrationMode === 'continuous'
-  const isJiraImportView = selectedIntegrationEntry === 'jira' && selectedIntegrationMode === 'import'
+  const isGithubContinuousView =
+    selectedIntegrationEntry === 'github_projects' && selectedIntegrationMode === 'continuous'
+  const isGithubImportView =
+    selectedIntegrationEntry === 'github_issues' && selectedIntegrationMode === 'import'
+  const isLinearContinuousView =
+    selectedIntegrationEntry === 'linear' && selectedIntegrationMode === 'continuous'
+  const isLinearImportView =
+    selectedIntegrationEntry === 'linear' && selectedIntegrationMode === 'import'
+  const isJiraContinuousView =
+    selectedIntegrationEntry === 'jira' && selectedIntegrationMode === 'continuous'
+  const isJiraImportView =
+    selectedIntegrationEntry === 'jira' && selectedIntegrationMode === 'import'
   const activeSyncProvider: IntegrationProvider | null = linearMappingSource
     ? 'linear'
     : githubMappingSource
@@ -1015,7 +1071,8 @@ export function IntegrationsTab({
   const linearSyncEnabled = Boolean(linearMappingSource)
   const githubConnected = Boolean(githubProjectConnectionId)
   const linearConnected = Boolean(linearProjectConnectionId)
-  const syncCurrentMapping = syncSetupProvider === 'linear' ? linearMappingSource : githubMappingSource
+  const syncCurrentMapping =
+    syncSetupProvider === 'linear' ? linearMappingSource : githubMappingSource
   const syncStep1Complete = Boolean(syncCurrentMapping)
   const syncStep2Complete = Boolean(syncCurrentMapping?.status_setup_complete)
   const syncAllStepsComplete = syncStep1Complete && syncStep2Complete
@@ -1036,7 +1093,9 @@ export function IntegrationsTab({
     if (!syncCurrentMapping) return null
     if (syncSetupProvider === 'linear') {
       if (!linearOrgUrlKey) return null
-      const teamKey = linearSyncTeams.find((t) => t.id === syncCurrentMapping.external_team_id)?.key ?? syncCurrentMapping.external_team_key
+      const teamKey =
+        linearSyncTeams.find((t) => t.id === syncCurrentMapping.external_team_id)?.key ??
+        syncCurrentMapping.external_team_key
       return `https://linear.app/${linearOrgUrlKey}/team/${teamKey}`
     }
     const proj = githubSyncProjects.find((p) => p.id === syncCurrentMapping.external_project_id)
@@ -1044,30 +1103,37 @@ export function IntegrationsTab({
   })()
 
   const syncExternalUrlLoading = Boolean(
-    syncCurrentMapping && !syncExternalUrl &&
-    (syncSetupProvider === 'linear' ? loadingLinearSyncTeams : loadingGithubSyncProjects)
+    syncCurrentMapping &&
+      !syncExternalUrl &&
+      (syncSetupProvider === 'linear' ? loadingLinearSyncTeams : loadingGithubSyncProjects)
   )
 
   const githubProjectsDisabled = activeSyncProvider === 'linear'
   const linearDisabled = activeSyncProvider === 'github'
-  const githubRepositoryConnectionId = githubProjectConnectionId || githubMappingSource?.connection_id || ''
+  const githubRepositoryConnectionId =
+    githubProjectConnectionId || githubMappingSource?.connection_id || ''
   const linearIssueConnectionId = linearProjectConnectionId
   const linearIssueTeamId = linearImportTeamId
   const canLoadIssues = Boolean(linearIssueConnectionId && linearIssueTeamId)
   const canImportIssues = Boolean(linearIssueConnectionId && linearIssueTeamId)
   const sortedLinearIssueOptions = sortByMode(issueOptions, linearImportSort)
   const importableIssues = sortedLinearIssueOptions.filter((i) => !i.linkedTaskId)
-  const allVisibleIssuesSelected = importableIssues.length > 0 && selectedIssueIds.size === importableIssues.length
+  const allVisibleIssuesSelected =
+    importableIssues.length > 0 && selectedIssueIds.size === importableIssues.length
   const canLoadGithubRepoIssues = Boolean(githubRepositoryConnectionId && githubRepositoryFullName)
   const githubRepoIssueQueryNormalized = githubRepoIssueQuery.trim().toLowerCase()
   const githubRepoSortedIssues = sortByMode(githubRepoIssueOptions, githubImportSort)
   const githubRepoFilteredIssues = githubRepoIssueQueryNormalized
     ? githubRepoSortedIssues.filter((issue) =>
-        `${issue.repository.fullName}#${issue.number} ${issue.title}`.toLowerCase().includes(githubRepoIssueQueryNormalized)
+        `${issue.repository.fullName}#${issue.number} ${issue.title}`
+          .toLowerCase()
+          .includes(githubRepoIssueQueryNormalized)
       )
     : githubRepoSortedIssues
   const githubRepoImportableIssues = githubRepoSortedIssues.filter((issue) => !issue.linkedTaskId)
-  const githubRepoVisibleImportableIssues = githubRepoFilteredIssues.filter((issue) => !issue.linkedTaskId)
+  const githubRepoVisibleImportableIssues = githubRepoFilteredIssues.filter(
+    (issue) => !issue.linkedTaskId
+  )
   const githubRepoLinkedInProjectCount = githubRepoSortedIssues.filter(
     (issue) => issue.linkedTaskId && issue.linkedProjectId === project.id
   ).length
@@ -1080,8 +1146,10 @@ export function IntegrationsTab({
   ).length
   const canImportGithubRepoIssues = Boolean(
     githubRepositoryConnectionId &&
-    githubRepositoryFullName &&
-    (githubRepoSortedIssues.length === 0 || githubRepoImportableIssues.length > 0 || selectedGithubRepoImportableCount > 0)
+      githubRepositoryFullName &&
+      (githubRepoSortedIssues.length === 0 ||
+        githubRepoImportableIssues.length > 0 ||
+        selectedGithubRepoImportableCount > 0)
   )
   const allVisibleGithubRepoIssuesSelected =
     githubRepoVisibleImportableIssues.length > 0 &&
@@ -1159,30 +1227,34 @@ export function IntegrationsTab({
         }
       ]
     },
-    ...(jiraEnabled ? [{
-      provider: 'jira' as const,
-      title: 'Jira',
-      items: [
-        {
-          key: 'jira-continuous-sync',
-          entry: 'jira' as IntegrationSetupEntry,
-          mode: 'continuous' as const,
-          label: 'Continuous sync',
-          description: 'Sync with a Jira Cloud project.',
-          disabled: switchingProvider,
-          testId: 'project-integration-provider-jira'
-        },
-        {
-          key: 'jira-one-time-import',
-          entry: 'jira' as IntegrationSetupEntry,
-          mode: 'import' as const,
-          label: 'One-time import',
-          description: 'Import Jira issues once.',
-          disabled: switchingProvider,
-          testId: 'project-integration-provider-jira-import'
-        }
-      ]
-    }] : [])
+    ...(jiraEnabled
+      ? [
+          {
+            provider: 'jira' as const,
+            title: 'Jira',
+            items: [
+              {
+                key: 'jira-continuous-sync',
+                entry: 'jira' as IntegrationSetupEntry,
+                mode: 'continuous' as const,
+                label: 'Continuous sync',
+                description: 'Sync with a Jira Cloud project.',
+                disabled: switchingProvider,
+                testId: 'project-integration-provider-jira'
+              },
+              {
+                key: 'jira-one-time-import',
+                entry: 'jira' as IntegrationSetupEntry,
+                mode: 'import' as const,
+                label: 'One-time import',
+                description: 'Import Jira issues once.',
+                disabled: switchingProvider,
+                testId: 'project-integration-provider-jira-import'
+              }
+            ]
+          }
+        ]
+      : [])
   ]
   const selectedIntegrationViewMeta = (() => {
     if (isGithubContinuousView) {
@@ -1234,16 +1306,24 @@ export function IntegrationsTab({
         description="Choose one integration path, then configure its project-specific connection and mapping."
       />
       <div className="rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2">
-        <p className="text-xs text-amber-400">Integrations are in beta. Use at your own risk. We recommend starting with one-way sync before enabling two-way sync.</p>
+        <p className="text-xs text-amber-400">
+          Integrations are in beta. Use at your own risk. We recommend starting with one-way sync
+          before enabling two-way sync.
+        </p>
       </div>
 
       {selectedIntegrationEntry === null ? (
         <div className="space-y-3">
           <div className="space-y-6">
             {integrationCategoryItems.map((category) => {
-              const providerConnection = category.provider === 'github'
-                ? githubConnections.find((connection) => connection.id === githubProjectConnectionId) ?? null
-                : connections.find((connection) => connection.id === linearProjectConnectionId) ?? null
+              const providerConnection =
+                category.provider === 'github'
+                  ? (githubConnections.find(
+                      (connection) => connection.id === githubProjectConnectionId
+                    ) ?? null)
+                  : (connections.find(
+                      (connection) => connection.id === linearProjectConnectionId
+                    ) ?? null)
               const providerConnected = Boolean(providerConnection)
 
               return (
@@ -1270,7 +1350,9 @@ export function IntegrationsTab({
                             size="sm"
                             variant="outline"
                             data-testid={`project-${category.provider}-category-connection`}
-                            onClick={() => setConnectionModalState({ provider: category.provider, mode: 'edit' })}
+                            onClick={() =>
+                              setConnectionModalState({ provider: category.provider, mode: 'edit' })
+                            }
                             disabled={disconnectingProjectConnectionProvider === category.provider}
                           >
                             Edit connection
@@ -1280,10 +1362,14 @@ export function IntegrationsTab({
                             size="sm"
                             variant="outline"
                             data-testid={`project-${category.provider}-category-disconnect`}
-                            onClick={() => void handleDisconnectProjectConnection(category.provider)}
+                            onClick={() =>
+                              void handleDisconnectProjectConnection(category.provider)
+                            }
                             disabled={disconnectingProjectConnectionProvider === category.provider}
                           >
-                            {disconnectingProjectConnectionProvider === category.provider ? 'Disconnecting\u2026' : 'Disconnect'}
+                            {disconnectingProjectConnectionProvider === category.provider
+                              ? 'Disconnecting\u2026'
+                              : 'Disconnect'}
                           </Button>
                         </>
                       ) : (
@@ -1292,7 +1378,12 @@ export function IntegrationsTab({
                           size="sm"
                           variant="outline"
                           data-testid={`project-${category.provider}-category-connection`}
-                          onClick={() => setConnectionModalState({ provider: category.provider, mode: 'connect' })}
+                          onClick={() =>
+                            setConnectionModalState({
+                              provider: category.provider,
+                              mode: 'connect'
+                            })
+                          }
                         >
                           Connect
                         </Button>
@@ -1301,15 +1392,23 @@ export function IntegrationsTab({
                   </div>
                   <div className="space-y-1.5">
                     {category.items.map((item) => {
-                      const isContinuousActive = item.mode === 'continuous' && activeSyncProvider === category.provider
-                      const disabledByOtherProvider = item.mode === 'continuous' && Boolean(activeSyncProvider) && activeSyncProvider !== category.provider
-                      const connectionReady = category.provider === 'github' ? githubConnected : linearConnected
+                      const isContinuousActive =
+                        item.mode === 'continuous' && activeSyncProvider === category.provider
+                      const disabledByOtherProvider =
+                        item.mode === 'continuous' &&
+                        Boolean(activeSyncProvider) &&
+                        activeSyncProvider !== category.provider
+                      const connectionReady =
+                        category.provider === 'github' ? githubConnected : linearConnected
                       const disabledByMissingConnection = !connectionReady
                       const isItemDisabled = item.disabled || disabledByMissingConnection
 
                       let stateLabel = ''
                       if (disabledByOtherProvider) {
-                        stateLabel = activeSyncProvider === 'github' ? 'Disabled by GitHub' : 'Disabled by Linear'
+                        stateLabel =
+                          activeSyncProvider === 'github'
+                            ? 'Disabled by GitHub'
+                            : 'Disabled by Linear'
                       } else if (isContinuousActive) {
                         stateLabel = 'Active'
                       } else if (disabledByMissingConnection) {
@@ -1325,7 +1424,8 @@ export function IntegrationsTab({
                           : connectionReady
                             ? 'bg-emerald-500/15 text-emerald-300'
                             : 'bg-muted/70 text-muted-foreground'
-                      const hideConnectedPillForImport = item.mode === 'import' && stateLabel === 'Connected'
+                      const hideConnectedPillForImport =
+                        item.mode === 'import' && stateLabel === 'Connected'
                       const showStatePill = Boolean(stateLabel) && !hideConnectedPillForImport
 
                       return (
@@ -1334,7 +1434,9 @@ export function IntegrationsTab({
                           type="button"
                           title={item.description}
                           data-testid={item.testId}
-                          onClick={() => handleSelectIntegrationEntry(item.entry, { mode: item.mode })}
+                          onClick={() =>
+                            handleSelectIntegrationEntry(item.entry, { mode: item.mode })
+                          }
                           disabled={isItemDisabled}
                           className={cn(
                             'flex w-full items-center gap-3 rounded-md border p-3 text-left transition-colors hover:bg-muted/50',
@@ -1345,7 +1447,12 @@ export function IntegrationsTab({
                             <div className="flex items-center gap-2">
                               <p className="text-sm font-medium">{item.label}</p>
                               {showStatePill ? (
-                                <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-medium', stateClass)}>
+                                <span
+                                  className={cn(
+                                    'rounded px-1.5 py-0.5 text-[10px] font-medium',
+                                    stateClass
+                                  )}
+                                >
                                   {stateLabel}
                                 </span>
                               ) : null}
@@ -1403,14 +1510,18 @@ export function IntegrationsTab({
           {(isGithubContinuousView || isLinearContinuousView) && syncSetupProvider ? (
             <div className="space-y-3">
               {/* Not connected */}
-              {(syncSetupProvider === 'github' && !githubConnected) || (syncSetupProvider === 'linear' && !linearConnected) ? (
+              {(syncSetupProvider === 'github' && !githubConnected) ||
+              (syncSetupProvider === 'linear' && !linearConnected) ? (
                 <Card className="gap-4 py-4">
                   <CardHeader className="px-4">
-                    <CardTitle className="text-base">Connect {syncSetupProvider === 'github' ? 'GitHub' : 'Linear'}</CardTitle>
+                    <CardTitle className="text-base">
+                      Connect {syncSetupProvider === 'github' ? 'GitHub' : 'Linear'}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3 px-4">
                     <p className="text-sm text-muted-foreground">
-                      Connect {syncSetupProvider === 'github' ? 'GitHub' : 'Linear'} from the category header to configure sync.
+                      Connect {syncSetupProvider === 'github' ? 'GitHub' : 'Linear'} from the
+                      category header to configure sync.
                     </p>
                   </CardContent>
                 </Card>
@@ -1418,7 +1529,8 @@ export function IntegrationsTab({
                 <>
                   {/* Step 1: Setup */}
                   <Card className="gap-0 py-0 overflow-hidden">
-                    {(syncAllStepsComplete && syncStepEditing !== 1) || (syncStep1Complete && syncStep > 1 && syncStepEditing !== 1) ? (
+                    {(syncAllStepsComplete && syncStepEditing !== 1) ||
+                    (syncStep1Complete && syncStep > 1 && syncStepEditing !== 1) ? (
                       <button
                         type="button"
                         className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/30 transition-colors"
@@ -1437,10 +1549,14 @@ export function IntegrationsTab({
                       <>
                         <div className="flex items-center justify-between px-4 pt-3 pb-4">
                           <div className="flex items-center gap-2.5">
-                            <div className={cn(
-                              'flex size-5 items-center justify-center rounded-full text-[11px] font-bold',
-                              (syncStep === 1 || syncStepEditing === 1) ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
-                            )}>
+                            <div
+                              className={cn(
+                                'flex size-5 items-center justify-center rounded-full text-[11px] font-bold',
+                                syncStep === 1 || syncStepEditing === 1
+                                  ? 'bg-foreground text-background'
+                                  : 'bg-muted text-muted-foreground'
+                              )}
+                            >
                               1
                             </div>
                             <span className="text-sm font-medium">Setup</span>
@@ -1448,7 +1564,14 @@ export function IntegrationsTab({
                           <div className="flex items-center gap-1.5">
                             {syncStepEditing === 1 ? (
                               <>
-                                <Button size="sm" variant="outline" className="h-7" onClick={handleSyncStepCancelEdit}>Cancel</Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7"
+                                  onClick={handleSyncStepCancelEdit}
+                                >
+                                  Cancel
+                                </Button>
                                 <Button
                                   size="sm"
                                   className="h-7"
@@ -1460,8 +1583,13 @@ export function IntegrationsTab({
                                   onClick={() => void handleSyncStepSaveSetupEdit()}
                                 >
                                   {savingSyncProvider ? (
-                                    <><Loader2 className="mr-1 size-3 animate-spin" />Saving&hellip;</>
-                                  ) : 'Save'}
+                                    <>
+                                      <Loader2 className="mr-1 size-3 animate-spin" />
+                                      Saving&hellip;
+                                    </>
+                                  ) : (
+                                    'Save'
+                                  )}
                                 </Button>
                               </>
                             ) : (
@@ -1477,8 +1605,13 @@ export function IntegrationsTab({
                                 onClick={() => void handleSyncStepSetupContinue()}
                               >
                                 {savingSyncProvider || loadingSyncStatuses ? (
-                                  <><Loader2 className="mr-1 size-3 animate-spin" />{loadingSyncStatuses ? 'Loading\u2026' : 'Saving\u2026'}</>
-                                ) : 'Continue \u2192'}
+                                  <>
+                                    <Loader2 className="mr-1 size-3 animate-spin" />
+                                    {loadingSyncStatuses ? 'Loading\u2026' : 'Saving\u2026'}
+                                  </>
+                                ) : (
+                                  'Continue \u2192'
+                                )}
                               </Button>
                             )}
                           </div>
@@ -1487,40 +1620,65 @@ export function IntegrationsTab({
                           {syncSetupProvider === 'github' ? (
                             <>
                               <div className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-3">
-                                <Label htmlFor="github-sync-project" className="text-sm">GitHub Project</Label>
+                                <Label htmlFor="github-sync-project" className="text-sm">
+                                  GitHub Project
+                                </Label>
                                 <Select
                                   value={githubSyncProjectId || '__none__'}
-                                  onValueChange={(value) => setGithubSyncProjectId(value === '__none__' ? '' : value)}
+                                  onValueChange={(value) =>
+                                    setGithubSyncProjectId(value === '__none__' ? '' : value)
+                                  }
                                   disabled={!githubProjectConnectionId || loadingGithubSyncProjects}
                                 >
                                   <SelectTrigger id="github-sync-project" className="w-full">
-                                    <SelectValue placeholder={loadingGithubSyncProjects ? 'Loading projects\u2026' : 'Choose GitHub Project'} />
+                                    <SelectValue
+                                      placeholder={
+                                        loadingGithubSyncProjects
+                                          ? 'Loading projects\u2026'
+                                          : 'Choose GitHub Project'
+                                      }
+                                    />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {githubSyncProjects.length === 0 ? (
-                                      <SelectItem value="__none__" disabled>No GitHub Projects found</SelectItem>
+                                      <SelectItem value="__none__" disabled>
+                                        No GitHub Projects found
+                                      </SelectItem>
                                     ) : null}
                                     {githubSyncProjects.map((projectOption) => (
                                       <SelectItem key={projectOption.id} value={projectOption.id}>
-                                        {projectOption.owner.login}#{projectOption.number} - {projectOption.title}
+                                        {projectOption.owner.login}#{projectOption.number} -{' '}
+                                        {projectOption.title}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-3">
-                                <Label htmlFor="github-sync-repo" className="text-sm">Repository</Label>
+                                <Label htmlFor="github-sync-repo" className="text-sm">
+                                  Repository
+                                </Label>
                                 <Select
                                   value={githubSyncRepoFullName || '__none__'}
-                                  onValueChange={(value) => setGithubSyncRepoFullName(value === '__none__' ? '' : value)}
+                                  onValueChange={(value) =>
+                                    setGithubSyncRepoFullName(value === '__none__' ? '' : value)
+                                  }
                                   disabled={!githubProjectConnectionId || loadingGithubRepositories}
                                 >
                                   <SelectTrigger id="github-sync-repo" className="w-full">
-                                    <SelectValue placeholder={loadingGithubRepositories ? 'Loading repositories\u2026' : 'Choose repository'} />
+                                    <SelectValue
+                                      placeholder={
+                                        loadingGithubRepositories
+                                          ? 'Loading repositories\u2026'
+                                          : 'Choose repository'
+                                      }
+                                    />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {githubRepositories.length === 0 ? (
-                                      <SelectItem value="__none__" disabled>No repositories found</SelectItem>
+                                      <SelectItem value="__none__" disabled>
+                                        No repositories found
+                                      </SelectItem>
                                     ) : null}
                                     {githubRepositories.map((repo) => (
                                       <SelectItem key={repo.fullName} value={repo.fullName}>
@@ -1531,8 +1689,15 @@ export function IntegrationsTab({
                                 </Select>
                               </div>
                               <div className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-3">
-                                <Label htmlFor="github-sync-mode" className="text-sm">Sync mode</Label>
-                                <Select value={githubSyncMode} onValueChange={(value) => setGithubSyncMode(value as IntegrationSyncMode)}>
+                                <Label htmlFor="github-sync-mode" className="text-sm">
+                                  Sync mode
+                                </Label>
+                                <Select
+                                  value={githubSyncMode}
+                                  onValueChange={(value) =>
+                                    setGithubSyncMode(value as IntegrationSyncMode)
+                                  }
+                                >
                                   <SelectTrigger id="github-sync-mode" className="w-full">
                                     <SelectValue />
                                   </SelectTrigger>
@@ -1546,18 +1711,30 @@ export function IntegrationsTab({
                           ) : (
                             <>
                               <div className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-3">
-                                <Label htmlFor="linear-sync-team" className="text-sm">Team</Label>
+                                <Label htmlFor="linear-sync-team" className="text-sm">
+                                  Team
+                                </Label>
                                 <Select
                                   value={linearSyncTeamId || '__none__'}
-                                  onValueChange={(value) => setLinearSyncTeamId(value === '__none__' ? '' : value)}
+                                  onValueChange={(value) =>
+                                    setLinearSyncTeamId(value === '__none__' ? '' : value)
+                                  }
                                   disabled={!linearProjectConnectionId || loadingLinearSyncTeams}
                                 >
                                   <SelectTrigger id="linear-sync-team" className="w-full">
-                                    <SelectValue placeholder={loadingLinearSyncTeams ? 'Loading teams\u2026' : 'Choose team'} />
+                                    <SelectValue
+                                      placeholder={
+                                        loadingLinearSyncTeams
+                                          ? 'Loading teams\u2026'
+                                          : 'Choose team'
+                                      }
+                                    />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {linearSyncTeams.length === 0 ? (
-                                      <SelectItem value="__none__" disabled>No teams found</SelectItem>
+                                      <SelectItem value="__none__" disabled>
+                                        No teams found
+                                      </SelectItem>
                                     ) : null}
                                     {linearSyncTeams.map((team) => (
                                       <SelectItem key={team.id} value={team.id}>
@@ -1568,14 +1745,28 @@ export function IntegrationsTab({
                                 </Select>
                               </div>
                               <div className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-3">
-                                <Label htmlFor="linear-sync-project" className="text-sm">Project (optional)</Label>
+                                <Label htmlFor="linear-sync-project" className="text-sm">
+                                  Project (optional)
+                                </Label>
                                 <Select
                                   value={linearSyncProjectId || '__none__'}
-                                  onValueChange={(value) => setLinearSyncProjectId(value === '__none__' ? '' : value)}
-                                  disabled={!linearProjectConnectionId || !linearSyncTeamId || loadingLinearSyncProjects}
+                                  onValueChange={(value) =>
+                                    setLinearSyncProjectId(value === '__none__' ? '' : value)
+                                  }
+                                  disabled={
+                                    !linearProjectConnectionId ||
+                                    !linearSyncTeamId ||
+                                    loadingLinearSyncProjects
+                                  }
                                 >
                                   <SelectTrigger id="linear-sync-project" className="w-full">
-                                    <SelectValue placeholder={loadingLinearSyncProjects ? 'Loading projects\u2026' : 'All team issues'} />
+                                    <SelectValue
+                                      placeholder={
+                                        loadingLinearSyncProjects
+                                          ? 'Loading projects\u2026'
+                                          : 'All team issues'
+                                      }
+                                    />
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="__none__">All team issues</SelectItem>
@@ -1588,8 +1779,15 @@ export function IntegrationsTab({
                                 </Select>
                               </div>
                               <div className="grid grid-cols-[180px_minmax(0,1fr)] items-center gap-3">
-                                <Label htmlFor="linear-sync-mode" className="text-sm">Sync mode</Label>
-                                <Select value={linearSyncMode} onValueChange={(value) => setLinearSyncMode(value as IntegrationSyncMode)}>
+                                <Label htmlFor="linear-sync-mode" className="text-sm">
+                                  Sync mode
+                                </Label>
+                                <Select
+                                  value={linearSyncMode}
+                                  onValueChange={(value) =>
+                                    setLinearSyncMode(value as IntegrationSyncMode)
+                                  }
+                                >
                                   <SelectTrigger id="linear-sync-mode" className="w-full">
                                     <SelectValue />
                                   </SelectTrigger>
@@ -1608,13 +1806,17 @@ export function IntegrationsTab({
                                     <TooltipTrigger asChild>
                                       <Info className="size-3.5 text-muted-foreground" />
                                     </TooltipTrigger>
-                                    <TooltipContent>Only discover issues assigned to the API key owner</TooltipContent>
+                                    <TooltipContent>
+                                      Only discover issues assigned to the API key owner
+                                    </TooltipContent>
                                   </Tooltip>
                                 </div>
                                 <Checkbox
                                   id="linear-sync-assigned"
                                   checked={linearSyncAssignedToMe}
-                                  onCheckedChange={(checked) => setLinearSyncAssignedToMe(checked === true)}
+                                  onCheckedChange={(checked) =>
+                                    setLinearSyncAssignedToMe(checked === true)
+                                  }
                                 />
                               </div>
                             </>
@@ -1633,7 +1835,10 @@ export function IntegrationsTab({
                       <button
                         type="button"
                         className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/30 transition-colors"
-                        onClick={() => { setSyncStep(2); setSyncStepEditing(2) }}
+                        onClick={() => {
+                          setSyncStep(2)
+                          setSyncStepEditing(2)
+                        }}
                       >
                         <div className="flex items-center gap-2.5">
                           <div className="flex size-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
@@ -1646,14 +1851,18 @@ export function IntegrationsTab({
                         </div>
                         <Pencil className="size-3.5 text-muted-foreground" />
                       </button>
-                    ) : (syncStep >= 2 || syncStepEditing === 2) ? (
+                    ) : syncStep >= 2 || syncStepEditing === 2 ? (
                       <>
                         <div className="flex items-center justify-between px-4 pt-3 pb-4">
                           <div className="flex items-center gap-2.5">
-                            <div className={cn(
-                              'flex size-5 items-center justify-center rounded-full text-[11px] font-bold',
-                              (syncStep === 2 || syncStepEditing === 2) ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
-                            )}>
+                            <div
+                              className={cn(
+                                'flex size-5 items-center justify-center rounded-full text-[11px] font-bold',
+                                syncStep === 2 || syncStepEditing === 2
+                                  ? 'bg-foreground text-background'
+                                  : 'bg-muted text-muted-foreground'
+                              )}
+                            >
                               2
                             </div>
                             <span className="text-sm font-medium">Statuses</span>
@@ -1666,14 +1875,22 @@ export function IntegrationsTab({
                             onClick={() => void handleSyncStepResyncStatuses()}
                           >
                             {loadingSyncStatuses ? (
-                              <><Loader2 className="mr-1 size-3 animate-spin" />Checking&hellip;</>
-                            ) : 'Resync'}
+                              <>
+                                <Loader2 className="mr-1 size-3 animate-spin" />
+                                Checking&hellip;
+                              </>
+                            ) : (
+                              'Resync'
+                            )}
                           </Button>
                         </div>
                         <CardContent className="px-4 pb-4">
                           <div className="flex flex-wrap gap-1.5">
                             {resolveColumns(project.columns_config).map((col) => (
-                              <span key={col.id} className="rounded bg-muted/60 px-2 py-0.5 text-xs text-foreground/80">
+                              <span
+                                key={col.id}
+                                className="rounded bg-muted/60 px-2 py-0.5 text-xs text-foreground/80"
+                              >
                                 {col.label}
                               </span>
                             ))}
@@ -1696,7 +1913,10 @@ export function IntegrationsTab({
                       <button
                         type="button"
                         className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/30 transition-colors"
-                        onClick={() => { setSyncStep(3); setSyncStepEditing(3) }}
+                        onClick={() => {
+                          setSyncStep(3)
+                          setSyncStepEditing(3)
+                        }}
                       >
                         <div className="flex items-center gap-2.5">
                           <div className="flex size-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
@@ -1713,10 +1933,14 @@ export function IntegrationsTab({
                       <>
                         <div className="flex items-center justify-between px-4 pt-3 pb-4">
                           <div className="flex items-center gap-2.5">
-                            <div className={cn(
-                              'flex size-5 items-center justify-center rounded-full text-[11px] font-bold',
-                              syncStep === 3 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
-                            )}>
+                            <div
+                              className={cn(
+                                'flex size-5 items-center justify-center rounded-full text-[11px] font-bold',
+                                syncStep === 3
+                                  ? 'bg-foreground text-background'
+                                  : 'bg-muted text-muted-foreground'
+                              )}
+                            >
                               3
                             </div>
                             <span className="text-sm font-medium">Tasks</span>
@@ -1731,8 +1955,13 @@ export function IntegrationsTab({
                               onClick={() => void handleCheckDiffs()}
                             >
                               {checkingSync ? (
-                                <><Loader2 className="mr-1 size-3 animate-spin" />Checking&hellip;</>
-                              ) : 'Check diffs'}
+                                <>
+                                  <Loader2 className="mr-1 size-3 animate-spin" />
+                                  Checking&hellip;
+                                </>
+                              ) : (
+                                'Check diffs'
+                              )}
                             </Button>
                             <Button
                               size="sm"
@@ -1742,8 +1971,13 @@ export function IntegrationsTab({
                               onClick={() => void handlePushLocalAhead()}
                             >
                               {pushingSync ? (
-                                <><Loader2 className="mr-1 size-3 animate-spin" />Pushing&hellip;</>
-                              ) : 'Push \u2191'}
+                                <>
+                                  <Loader2 className="mr-1 size-3 animate-spin" />
+                                  Pushing&hellip;
+                                </>
+                              ) : (
+                                'Push \u2191'
+                              )}
                             </Button>
                             <Button
                               variant="outline"
@@ -1754,31 +1988,48 @@ export function IntegrationsTab({
                               onClick={() => void handlePullRemoteAhead()}
                             >
                               {pullingSync ? (
-                                <><Loader2 className="mr-1 size-3 animate-spin" />Pulling&hellip;</>
-                              ) : 'Pull \u2193'}
+                                <>
+                                  <Loader2 className="mr-1 size-3 animate-spin" />
+                                  Pulling&hellip;
+                                </>
+                              ) : (
+                                'Pull \u2193'
+                              )}
                             </Button>
                           </div>
                         </div>
                         <CardContent className="space-y-2 px-4 pb-4">
                           <div className="grid grid-cols-5 gap-2">
                             <div className="rounded-md border border-border/50 bg-muted/40 px-3 py-2 text-center">
-                              <p className="text-xs text-muted-foreground">In sync: {taskSyncSummary.in_sync}</p>
+                              <p className="text-xs text-muted-foreground">
+                                In sync: {taskSyncSummary.in_sync}
+                              </p>
                             </div>
                             <div className="rounded-md border border-border/50 bg-muted/40 px-3 py-2 text-center">
-                              <p className="text-xs text-muted-foreground">Local ahead: {taskSyncSummary.local_ahead}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Local ahead: {taskSyncSummary.local_ahead}
+                              </p>
                             </div>
                             <div className="rounded-md border border-border/50 bg-muted/40 px-3 py-2 text-center">
-                              <p className="text-xs text-muted-foreground">Remote ahead: {taskSyncSummary.remote_ahead}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Remote ahead: {taskSyncSummary.remote_ahead}
+                              </p>
                             </div>
                             <div className="rounded-md border border-border/50 bg-muted/40 px-3 py-2 text-center">
-                              <p className="text-xs text-muted-foreground">Conflicts: {taskSyncSummary.conflict}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Conflicts: {taskSyncSummary.conflict}
+                              </p>
                             </div>
                             <div className="rounded-md border border-border/50 bg-muted/40 px-3 py-2 text-center">
-                              <p className="text-xs text-muted-foreground">Unlinked: {taskSyncSummary.unlinked}</p>
+                              <p className="text-xs text-muted-foreground">
+                                Unlinked: {taskSyncSummary.unlinked}
+                              </p>
                             </div>
                           </div>
 
-                          {syncMessage ? <p className="text-xs text-muted-foreground">{syncMessage}</p> : null}
+                          {syncMessage ? (
+                            <p className="text-xs text-muted-foreground">{syncMessage}</p>
+                          ) : null}
                         </CardContent>
                       </>
                     ) : (
@@ -1825,17 +2076,25 @@ export function IntegrationsTab({
                       </Label>
                       <Select
                         value={githubRepositoryFullName || '__none__'}
-                        onValueChange={(value) => setGithubRepositoryFullName(value === '__none__' ? '' : value)}
+                        onValueChange={(value) =>
+                          setGithubRepositoryFullName(value === '__none__' ? '' : value)
+                        }
                         disabled={!githubRepositoryConnectionId || loadingGithubRepositories}
                       >
                         <SelectTrigger id="github-repository" className="w-full max-w-md">
                           <SelectValue
-                            placeholder={loadingGithubRepositories ? 'Loading repositories\u2026' : 'Choose repository'}
+                            placeholder={
+                              loadingGithubRepositories
+                                ? 'Loading repositories\u2026'
+                                : 'Choose repository'
+                            }
                           />
                         </SelectTrigger>
                         <SelectContent>
                           {githubRepositories.length === 0 ? (
-                            <SelectItem value="__none__" disabled>No repositories found</SelectItem>
+                            <SelectItem value="__none__" disabled>
+                              No repositories found
+                            </SelectItem>
                           ) : null}
                           {githubRepositories.map((repository) => (
                             <SelectItem key={repository.id} value={repository.fullName}>
@@ -1858,8 +2117,12 @@ export function IntegrationsTab({
                         {githubRepoSortedIssues.length > 0 ? (
                           <p>
                             {githubRepoImportableIssues.length} importable
-                            {githubRepoLinkedInProjectCount > 0 ? ` \u2022 ${githubRepoLinkedInProjectCount} linked here` : ''}
-                            {githubRepoLinkedElsewhereCount > 0 ? ` \u2022 ${githubRepoLinkedElsewhereCount} linked elsewhere` : ''}
+                            {githubRepoLinkedInProjectCount > 0
+                              ? ` \u2022 ${githubRepoLinkedInProjectCount} linked here`
+                              : ''}
+                            {githubRepoLinkedElsewhereCount > 0
+                              ? ` \u2022 ${githubRepoLinkedElsewhereCount} linked elsewhere`
+                              : ''}
                           </p>
                         ) : null}
                       </div>
@@ -1871,7 +2134,11 @@ export function IntegrationsTab({
                           disabled={!canLoadGithubRepoIssues || loadingGithubRepoIssues}
                           onClick={handleLoadGithubRepositoryIssues}
                         >
-                          {loadingGithubRepoIssues ? 'Loading\u2026' : githubRepoSortedIssues.length > 0 ? 'Refresh issues' : 'Load issues'}
+                          {loadingGithubRepoIssues
+                            ? 'Loading\u2026'
+                            : githubRepoSortedIssues.length > 0
+                              ? 'Refresh issues'
+                              : 'Load issues'}
                         </Button>
                         {githubRepoVisibleImportableIssues.length > 0 ? (
                           <Button
@@ -1897,7 +2164,9 @@ export function IntegrationsTab({
                               })
                             }}
                           >
-                            {allVisibleGithubRepoIssuesSelected ? 'Clear visible' : 'Select visible'}
+                            {allVisibleGithubRepoIssuesSelected
+                              ? 'Clear visible'
+                              : 'Select visible'}
                           </Button>
                         ) : null}
                       </div>
@@ -1941,7 +2210,10 @@ export function IntegrationsTab({
                         <div className="max-h-44 space-y-1 overflow-y-auto">
                           {githubRepoFilteredIssues.map((issue) =>
                             issue.linkedTaskId ? (
-                              <div key={issue.id} className="flex items-start gap-2 rounded px-1 py-0.5 text-xs opacity-60">
+                              <div
+                                key={issue.id}
+                                className="flex items-start gap-2 rounded px-1 py-0.5 text-xs opacity-60"
+                              >
                                 {issue.linkedProjectId === project.id ? (
                                   <span className="mt-0.5 shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                                     Linked
@@ -1952,7 +2224,9 @@ export function IntegrationsTab({
                                   </span>
                                 )}
                                 <span className="min-w-0">
-                                  <span className="font-medium">{issue.repository.fullName}#{issue.number}</span>
+                                  <span className="font-medium">
+                                    {issue.repository.fullName}#{issue.number}
+                                  </span>
                                   {' - '}
                                   <span className="text-muted-foreground">{issue.title}</span>
                                   {issue.linkedProjectId && issue.linkedProjectId !== project.id ? (
@@ -1965,13 +2239,20 @@ export function IntegrationsTab({
                                 </span>
                               </div>
                             ) : (
-                              <label key={issue.id} className="flex cursor-pointer items-start gap-2 rounded px-1 py-0.5 text-xs hover:bg-muted/50">
+                              <label
+                                key={issue.id}
+                                className="flex cursor-pointer items-start gap-2 rounded px-1 py-0.5 text-xs hover:bg-muted/50"
+                              >
                                 <Checkbox
                                   checked={selectedGithubRepoIssueIds.has(issue.id)}
-                                  onCheckedChange={(checked) => toggleGithubRepoIssue(issue.id, checked === true)}
+                                  onCheckedChange={(checked) =>
+                                    toggleGithubRepoIssue(issue.id, checked === true)
+                                  }
                                 />
                                 <span className="min-w-0">
-                                  <span className="font-medium">{issue.repository.fullName}#{issue.number}</span>
+                                  <span className="font-medium">
+                                    {issue.repository.fullName}#{issue.number}
+                                  </span>
                                   {' - '}
                                   <span className="text-muted-foreground">{issue.title}</span>
                                 </span>
@@ -2025,7 +2306,9 @@ export function IntegrationsTab({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setConnectionModalState({ provider: 'github', mode: 'connect' })}
+                        onClick={() =>
+                          setConnectionModalState({ provider: 'github', mode: 'connect' })
+                        }
                       >
                         Open connection settings
                       </Button>
@@ -2050,15 +2333,23 @@ export function IntegrationsTab({
                       </Label>
                       <Select
                         value={linearImportTeamId || '__none__'}
-                        onValueChange={(value) => setLinearImportTeamId(value === '__none__' ? '' : value)}
+                        onValueChange={(value) =>
+                          setLinearImportTeamId(value === '__none__' ? '' : value)
+                        }
                         disabled={!linearProjectConnectionId || loadingLinearImportTeams}
                       >
                         <SelectTrigger id="linear-import-team" className="w-full max-w-md">
-                          <SelectValue placeholder={loadingLinearImportTeams ? 'Loading teams\u2026' : 'Choose team'} />
+                          <SelectValue
+                            placeholder={
+                              loadingLinearImportTeams ? 'Loading teams\u2026' : 'Choose team'
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           {linearImportTeams.length === 0 ? (
-                            <SelectItem value="__none__" disabled>No teams found</SelectItem>
+                            <SelectItem value="__none__" disabled>
+                              No teams found
+                            </SelectItem>
                           ) : null}
                           {linearImportTeams.map((team) => (
                             <SelectItem key={team.id} value={team.id}>
@@ -2075,11 +2366,23 @@ export function IntegrationsTab({
                       </Label>
                       <Select
                         value={linearImportProjectId || '__none__'}
-                        onValueChange={(value) => setLinearImportProjectId(value === '__none__' ? '' : value)}
-                        disabled={!linearProjectConnectionId || !linearImportTeamId || loadingLinearImportProjects}
+                        onValueChange={(value) =>
+                          setLinearImportProjectId(value === '__none__' ? '' : value)
+                        }
+                        disabled={
+                          !linearProjectConnectionId ||
+                          !linearImportTeamId ||
+                          loadingLinearImportProjects
+                        }
                       >
                         <SelectTrigger id="linear-import-project" className="w-full max-w-md">
-                          <SelectValue placeholder={loadingLinearImportProjects ? 'Loading projects\u2026' : 'All team issues'} />
+                          <SelectValue
+                            placeholder={
+                              loadingLinearImportProjects
+                                ? 'Loading projects\u2026'
+                                : 'All team issues'
+                            }
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__none__">All team issues</SelectItem>
@@ -2125,7 +2428,9 @@ export function IntegrationsTab({
                           <TooltipTrigger asChild>
                             <Info className="size-3.5 text-muted-foreground" />
                           </TooltipTrigger>
-                          <TooltipContent>Only show issues assigned to the API key owner</TooltipContent>
+                          <TooltipContent>
+                            Only show issues assigned to the API key owner
+                          </TooltipContent>
                         </Tooltip>
                       </div>
                       <Checkbox
@@ -2175,7 +2480,10 @@ export function IntegrationsTab({
                         <div className="max-h-44 space-y-1 overflow-y-auto">
                           {sortedLinearIssueOptions.map((issue) =>
                             issue.linkedTaskId ? (
-                              <div key={issue.id} className="flex items-start gap-2 rounded px-1 py-0.5 text-xs opacity-60">
+                              <div
+                                key={issue.id}
+                                className="flex items-start gap-2 rounded px-1 py-0.5 text-xs opacity-60"
+                              >
                                 <span className="mt-0.5 shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
                                   Linked
                                 </span>
@@ -2186,10 +2494,15 @@ export function IntegrationsTab({
                                 </span>
                               </div>
                             ) : (
-                              <label key={issue.id} className="flex cursor-pointer items-start gap-2 rounded px-1 py-0.5 text-xs hover:bg-muted/50">
+                              <label
+                                key={issue.id}
+                                className="flex cursor-pointer items-start gap-2 rounded px-1 py-0.5 text-xs hover:bg-muted/50"
+                              >
                                 <Checkbox
                                   checked={selectedIssueIds.has(issue.id)}
-                                  onCheckedChange={(checked) => toggleIssue(issue.id, checked === true)}
+                                  onCheckedChange={(checked) =>
+                                    toggleIssue(issue.id, checked === true)
+                                  }
                                 />
                                 <span className="min-w-0">
                                   <span className="font-medium">{issue.identifier}</span>
@@ -2209,7 +2522,9 @@ export function IntegrationsTab({
 
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-xs text-muted-foreground">
-                        {selectedIssueIds.size > 0 ? `${selectedIssueIds.size} selected` : 'No specific issues selected'}
+                        {selectedIssueIds.size > 0
+                          ? `${selectedIssueIds.size} selected`
+                          : 'No specific issues selected'}
                       </p>
                       <Button
                         size="sm"
@@ -2239,7 +2554,9 @@ export function IntegrationsTab({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setConnectionModalState({ provider: 'linear', mode: 'connect' })}
+                        onClick={() =>
+                          setConnectionModalState({ provider: 'linear', mode: 'connect' })
+                        }
                       >
                         Open connection settings
                       </Button>
@@ -2263,7 +2580,11 @@ export function IntegrationsTab({
           projectId={project.id}
           provider={connectionModalState.provider}
           mode={connectionModalState.mode}
-          connectionId={connectionModalState.provider === 'github' ? githubProjectConnectionId : linearProjectConnectionId}
+          connectionId={
+            connectionModalState.provider === 'github'
+              ? githubProjectConnectionId
+              : linearProjectConnectionId
+          }
           onConnectionsChanged={reloadIntegrationState}
         />
       ) : null}

@@ -9,7 +9,7 @@ export function registerBrowserUrlRoute(app: Express, _deps: RestApiDeps): void 
       (req.query.panel as 'visible' | 'hidden') ?? 'hidden',
       res,
       undefined,
-      req.query.tabId as string | undefined,
+      req.query.tabId as string | undefined
     )
     if (!result) return
     res.json({ url: result.wc.getURL() })

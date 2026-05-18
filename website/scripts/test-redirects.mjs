@@ -34,7 +34,7 @@ const cases = [
   { url: '/superset.html', expect: 301, location: '/comparison/superset' },
 
   // 404
-  { url: '/definitely-not-a-real-page', expect: 404 },
+  { url: '/definitely-not-a-real-page', expect: 404 }
 ]
 
 const results = []
@@ -52,7 +52,14 @@ for (const tc of cases) {
   }
   const locOk = tc.location === undefined || normalize(location) === tc.location
   const ok = status === tc.expect && locOk
-  results.push({ ok, url: tc.url, status, expect: tc.expect, location, expectLocation: tc.location ?? '' })
+  results.push({
+    ok,
+    url: tc.url,
+    status,
+    expect: tc.expect,
+    location,
+    expectLocation: tc.location ?? ''
+  })
 }
 
 function normalize(loc) {
@@ -72,7 +79,9 @@ for (const r of results) {
   const mark = r.ok ? '✓' : '✗'
   const loc = r.location ? normalize(r.location) : '—'
   const exp = r.expectLocation || (r.expect === 200 ? '200' : `${r.expect}`)
-  console.log(pad(mark, 4) + pad(r.url, 38) + pad(`${r.status} (want ${r.expect})`, 12) + pad(loc, 36) + exp)
+  console.log(
+    pad(mark, 4) + pad(r.url, 38) + pad(`${r.status} (want ${r.expect})`, 12) + pad(loc, 36) + exp
+  )
 }
 
 const failed = results.filter((r) => !r.ok)

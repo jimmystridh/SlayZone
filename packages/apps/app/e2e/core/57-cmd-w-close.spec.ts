@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { pressShortcut } from '../fixtures/shortcuts'
 import type { Page } from '@playwright/test'
@@ -10,7 +10,10 @@ import path from 'path'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendIPC(electronApp: any, channel: string): Promise<void> {
   await electronApp.evaluate(
-    ({ BrowserWindow }: { BrowserWindow: typeof Electron.CrossProcessExports.BrowserWindow }, ch: string) => {
+    (
+      { BrowserWindow }: { BrowserWindow: typeof Electron.CrossProcessExports.BrowserWindow },
+      ch: string
+    ) => {
       BrowserWindow.getAllWindows()
         .find((w) => !w.isDestroyed() && !w.webContents.getURL().startsWith('data:'))
         ?.webContents.send(ch)
@@ -33,8 +36,7 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
     page.locator(`button[title$="${name}"]:visible`).first()
 
   /** Browser panel URL input */
-  const urlInput = (page: Page) =>
-    page.locator('input[placeholder="Enter URL..."]:visible').first()
+  const urlInput = (page: Page) => page.locator('input[placeholder="Enter URL..."]:visible').first()
 
   /** Browser tab entries (excludes the + button) */
   const browserTabEntries = (page: Page) =>
@@ -45,7 +47,10 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
     page.evaluate(() => {
       const textareas = document.querySelectorAll<HTMLElement>('.xterm-helper-textarea')
       for (const ta of textareas) {
-        if (!ta.closest('.hidden')) { ta.focus(); break }
+        if (!ta.closest('.hidden')) {
+          ta.focus()
+          break
+        }
       }
     })
 
@@ -60,7 +65,9 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
       await input.fill(title)
       await page.getByRole('dialog').last().getByText(title).first().click()
     }
-    await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible(
+      { timeout: 5_000 }
+    )
   }
 
   const openEditorFile = async (page: Page, fileName: string) => {
@@ -69,7 +76,9 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
       await showTree.click()
     }
 
-    const fileButton = page.locator(`[data-panel-id="editor"]:visible button.w-full:has-text("${fileName}")`).first()
+    const fileButton = page
+      .locator(`[data-panel-id="editor"]:visible button.w-full:has-text("${fileName}")`)
+      .first()
     if (await fileButton.isVisible({ timeout: 8_000 }).catch(() => false)) {
       await fileButton.click()
       return
@@ -88,11 +97,15 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
   }
 
   const closeOpenDialogs = async (page: Page) => {
-    const openDialogs = page.locator('[role="dialog"][data-state="open"], [role="dialog"][aria-modal="true"]')
+    const openDialogs = page.locator(
+      '[role="dialog"][data-state="open"], [role="dialog"][aria-modal="true"]'
+    )
     for (let attempt = 0; attempt < 8; attempt += 1) {
       if ((await openDialogs.count()) === 0) return
       const top = openDialogs.last()
-      const closeButton = top.getByRole('button', { name: /close|cancel|done|skip|remove|ok/i }).first()
+      const closeButton = top
+        .getByRole('button', { name: /close|cancel|done|skip|remove|ok/i })
+        .first()
       if (await closeButton.isVisible({ timeout: 250 }).catch(() => false)) {
         await closeButton.click({ force: true }).catch(() => {})
       } else {
@@ -105,10 +118,17 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
 
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
-    fs.writeFileSync(path.join(TEST_PROJECT_PATH, editorFixtureFile), 'export const cmdwEditor = true\n')
+    fs.writeFileSync(
+      path.join(TEST_PROJECT_PATH, editorFixtureFile),
+      'export const cmdwEditor = true\n'
+    )
     fs.writeFileSync(path.join(TEST_PROJECT_PATH, editorFixtureMd), '# Cmd+W rich\n\nbody text\n')
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'CmdW Test', color: '#6366f1', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'CmdW Test',
+      color: '#6366f1',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     await s.createTask({ projectId: p.id, title: 'CmdW task', status: 'in_progress' })
     await s.refreshData()
@@ -120,12 +140,18 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
 
   // ── Terminal group tabs ──────────────────────────────────────────────────
 
-  test('Cmd+W closes extra terminal group when terminal is focused', async ({ mainWindow, electronApp }) => {
+  test('Cmd+W closes extra terminal group when terminal is focused', async ({
+    mainWindow,
+    electronApp
+  }) => {
     await closeOpenDialogs(mainWindow)
     await expect(terminalGroupTabs(mainWindow)).toHaveCount(1, { timeout: 3_000 })
 
     // Add a new terminal group via the + button
-    await mainWindow.locator('[data-testid="terminal-tabbar"]:visible [data-testid="terminal-tab-add"]').first().click({ force: true })
+    await mainWindow
+      .locator('[data-testid="terminal-tabbar"]:visible [data-testid="terminal-tab-add"]')
+      .first()
+      .click({ force: true })
     let hasSecondGroup = false
     for (let attempt = 0; attempt < 12; attempt += 1) {
       if ((await terminalGroupTabs(mainWindow).count()) >= 2) {
@@ -137,36 +163,57 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
     if (!hasSecondGroup) return
 
     // Activate the non-main group
-    await mainWindow.locator('[data-testid="terminal-tabbar"]:visible [data-tab-main="false"]').first().click()
+    await mainWindow
+      .locator('[data-testid="terminal-tabbar"]:visible [data-tab-main="false"]')
+      .first()
+      .click()
 
     await focusTerminal(mainWindow)
-    await expect.poll(async () => {
-      await sendIPC(electronApp, 'app:close-current-focus')
-      await mainWindow.waitForTimeout(80)
-      return await terminalGroupTabs(mainWindow).count()
-    }, { timeout: 8_000 }).toBe(1)
+    await expect
+      .poll(
+        async () => {
+          await sendIPC(electronApp, 'app:close-current-focus')
+          await mainWindow.waitForTimeout(80)
+          return await terminalGroupTabs(mainWindow).count()
+        },
+        { timeout: 8_000 }
+      )
+      .toBe(1)
   })
 
-  test('Cmd+W closes the task tab when only the main terminal group remains', async ({ mainWindow, electronApp }) => {
+  test('Cmd+W closes the task tab when only the main terminal group remains', async ({
+    mainWindow,
+    electronApp
+  }) => {
     await expect(terminalGroupTabs(mainWindow)).toHaveCount(1, { timeout: 2_000 })
 
     await focusTerminal(mainWindow)
     await sendIPC(electronApp, 'app:close-current-focus')
 
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible')).toHaveCount(0, { timeout: 2_000 })
-    await expect(mainWindow.locator('input[value="CmdW task"]:visible')).toHaveCount(0, { timeout: 2_000 })
+    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible')).toHaveCount(
+      0,
+      { timeout: 2_000 }
+    )
+    await expect(mainWindow.locator('input[value="CmdW task"]:visible')).toHaveCount(0, {
+      timeout: 2_000
+    })
   })
 
   // ── Editor file tabs ─────────────────────────────────────────────────────
 
-  test('Cmd+W closes active editor file when editor is focused', async ({ mainWindow, electronApp }) => {
+  test('Cmd+W closes active editor file when editor is focused', async ({
+    mainWindow,
+    electronApp
+  }) => {
     await closeOpenDialogs(mainWindow)
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
     await openTaskViaSearch(mainWindow, 'CmdW task')
     // Open editor panel
     await mainWindow.keyboard.press('Meta+e')
-    const editorPanel = mainWindow.locator('[data-panel-id="editor"]:visible').filter({ hasText: 'Files' })
+    const editorPanel = mainWindow
+      .locator('[data-panel-id="editor"]:visible')
+      .filter({ hasText: 'Files' })
     if (!(await editorPanel.isVisible({ timeout: 5_000 }).catch(() => false))) return
 
     // Open a file
@@ -175,28 +222,44 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
 
     // Focus the CodeMirror editor
     await mainWindow.locator('.cm-editor:visible .cm-content').click()
-    const hadVisibleTab = await editorTab(mainWindow, editorFixtureFile).isVisible({ timeout: 500 }).catch(() => false)
+    const hadVisibleTab = await editorTab(mainWindow, editorFixtureFile)
+      .isVisible({ timeout: 500 })
+      .catch(() => false)
 
     if (hadVisibleTab) {
-      await expect.poll(async () => {
-        await sendIPC(electronApp, 'app:close-current-focus')
-        await mainWindow.waitForTimeout(80)
-        return await editorTab(mainWindow, editorFixtureFile).isVisible({ timeout: 200 }).catch(() => false)
-      }, { timeout: 8_000 }).toBe(false)
+      await expect
+        .poll(
+          async () => {
+            await sendIPC(electronApp, 'app:close-current-focus')
+            await mainWindow.waitForTimeout(80)
+            return await editorTab(mainWindow, editorFixtureFile)
+              .isVisible({ timeout: 200 })
+              .catch(() => false)
+          },
+          { timeout: 8_000 }
+        )
+        .toBe(false)
     } else {
       await sendIPC(electronApp, 'app:close-current-focus')
-      await expect(mainWindow.locator('[data-panel-id="editor"]:visible')).toBeVisible({ timeout: 3_000 })
+      await expect(mainWindow.locator('[data-panel-id="editor"]:visible')).toBeVisible({
+        timeout: 3_000
+      })
     }
   })
 
-  test('Cmd+W closes active editor file when rich markdown pane is focused', async ({ mainWindow, electronApp }) => {
+  test('Cmd+W closes active editor file when rich markdown pane is focused', async ({
+    mainWindow,
+    electronApp
+  }) => {
     await closeOpenDialogs(mainWindow)
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
     await openTaskViaSearch(mainWindow, 'CmdW task')
     // Open editor panel
     await mainWindow.keyboard.press('Meta+e')
-    const editorPanel = mainWindow.locator('[data-panel-id="editor"]:visible').filter({ hasText: 'Files' })
+    const editorPanel = mainWindow
+      .locator('[data-panel-id="editor"]:visible')
+      .filter({ hasText: 'Files' })
     if (!(await editorPanel.isVisible({ timeout: 5_000 }).catch(() => false))) return
 
     // Open the markdown file (default view = rich)
@@ -221,11 +284,21 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
 
   // ── Browser tabs ─────────────────────────────────────────────────────────
 
-  test('Cmd+W closes extra browser tab when browser is focused', async ({ mainWindow, electronApp }) => {
+  test('Cmd+W closes extra browser tab when browser is focused', async ({
+    mainWindow,
+    electronApp
+  }) => {
     // Ensure browser panel is open
-    if (!(await urlInput(mainWindow).isVisible().catch(() => false))) {
+    if (
+      !(await urlInput(mainWindow)
+        .isVisible()
+        .catch(() => false))
+    ) {
       await mainWindow.keyboard.press('Escape').catch(() => {})
-      await mainWindow.locator('#root').click({ position: { x: 12, y: 12 } }).catch(() => {})
+      await mainWindow
+        .locator('#root')
+        .click({ position: { x: 12, y: 12 } })
+        .catch(() => {})
       await mainWindow.keyboard.press('Meta+b')
       await expect(urlInput(mainWindow)).toBeVisible({ timeout: 5_000 })
     }
@@ -233,7 +306,10 @@ test.describe('Cmd+W / Cmd+Shift+W context-sensitive close', () => {
     const initial = await browserTabEntries(mainWindow).count()
 
     // Add a new browser tab via the + button
-    await mainWindow.locator('.h-10.overflow-x-auto:visible button:has(.lucide-plus)').first().click()
+    await mainWindow
+      .locator('.h-10.overflow-x-auto:visible button:has(.lucide-plus)')
+      .first()
+      .click()
     await expect(browserTabEntries(mainWindow)).toHaveCount(initial + 1, { timeout: 3_000 })
 
     // Focus the URL bar (inside [data-browser-panel])

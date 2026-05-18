@@ -1,6 +1,22 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Info } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Switch, Tooltip, TooltipTrigger, TooltipContent, unifiedThemes, getThemeVariant } from '@slayzone/ui'
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  Switch,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  unifiedThemes,
+  getThemeVariant
+} from '@slayzone/ui'
 import { useTheme } from '../ThemeContext'
 import { useTabStore } from '../useTabStore'
 import { SettingsTabIntro } from './SettingsTabIntro'
@@ -29,8 +45,10 @@ function ThemeSelect({ value, onChange }: { value: string; onChange: (id: string
           <SelectValue />
         </SelectTrigger>
         <SelectContent position="popper" side="bottom" className="max-h-none">
-          {unifiedThemes.map(t => (
-            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+          {unifiedThemes.map((t) => (
+            <SelectItem key={t.id} value={t.id}>
+              {t.name}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -42,13 +60,20 @@ function ThemeSelect({ value, onChange }: { value: string; onChange: (id: string
 export function AppearanceSettingsTab() {
   const projectScopedTabs = useTabStore((s) => s.projectScopedTabs)
   const {
-    preference, setPreference,
-    themeId, setThemeId,
-    splitThemes, setSplitThemes,
-    themeIdDark, setThemeIdDark,
-    themeIdLight, setThemeIdLight,
-    terminalOverrideThemeId, setTerminalOverrideThemeId,
-    editorOverrideThemeId, setEditorOverrideThemeId,
+    preference,
+    setPreference,
+    themeId,
+    setThemeId,
+    splitThemes,
+    setSplitThemes,
+    themeIdDark,
+    setThemeIdDark,
+    themeIdLight,
+    setThemeIdLight,
+    terminalOverrideThemeId,
+    setTerminalOverrideThemeId,
+    editorOverrideThemeId,
+    setEditorOverrideThemeId
   } = useTheme()
 
   const [projectColorTints, setProjectColorTints] = useState(true)
@@ -65,24 +90,36 @@ export function AppearanceSettingsTab() {
   const [chatWidth, setChatWidth] = useState<'narrow' | 'wide'>('narrow')
 
   useEffect(() => {
-    window.api.settings.get('project_color_tints_enabled').then(val => setProjectColorTints(val !== '0'))
-    window.api.settings.get('show_context_manager').then(val => setShowContextManager(val !== '0'))
-    window.api.settings.get('terminal_font_size').then(val => setTerminalFontSize(val ?? '13'))
-    window.api.settings.get('editor_font_size').then(val => setEditorFontSize(val ?? '13'))
-    window.api.settings.get('reduce_motion').then(val => setReduceMotion(val === '1'))
-    window.api.settings.get('notes_font_family').then(val => setNotesFontFamily(val === 'mono' ? 'mono' : 'sans'))
+    window.api.settings
+      .get('project_color_tints_enabled')
+      .then((val) => setProjectColorTints(val !== '0'))
+    window.api.settings
+      .get('show_context_manager')
+      .then((val) => setShowContextManager(val !== '0'))
+    window.api.settings.get('terminal_font_size').then((val) => setTerminalFontSize(val ?? '13'))
+    window.api.settings.get('editor_font_size').then((val) => setEditorFontSize(val ?? '13'))
+    window.api.settings.get('reduce_motion').then((val) => setReduceMotion(val === '1'))
+    window.api.settings
+      .get('notes_font_family')
+      .then((val) => setNotesFontFamily(val === 'mono' ? 'mono' : 'sans'))
     Promise.all([
       window.api.settings.get('notes_readability'),
-      window.api.settings.get('notes_line_spacing'),
+      window.api.settings.get('notes_line_spacing')
     ]).then(([readability, legacy]) => {
       const value = readability || legacy
       setNotesReadability(value === 'compact' ? 'compact' : 'normal')
     })
-    window.api.settings.get('notes_width').then(val => setNotesWidth(val === 'wide' ? 'wide' : 'narrow'))
-    window.api.settings.get('notes_checked_highlight').then(val => setNotesCheckedHighlight(val === '1'))
-    window.api.settings.get('notes_show_toolbar').then(val => setNotesShowToolbar(val === '1'))
-    window.api.settings.get('notes_spellcheck').then(val => setNotesSpellcheck(val !== '0'))
-    window.api.settings.get('chat_width').then(val => setChatWidth(val === 'wide' ? 'wide' : 'narrow'))
+    window.api.settings
+      .get('notes_width')
+      .then((val) => setNotesWidth(val === 'wide' ? 'wide' : 'narrow'))
+    window.api.settings
+      .get('notes_checked_highlight')
+      .then((val) => setNotesCheckedHighlight(val === '1'))
+    window.api.settings.get('notes_show_toolbar').then((val) => setNotesShowToolbar(val === '1'))
+    window.api.settings.get('notes_spellcheck').then((val) => setNotesSpellcheck(val !== '0'))
+    window.api.settings
+      .get('chat_width')
+      .then((val) => setChatWidth(val === 'wide' ? 'wide' : 'narrow'))
   }, [])
 
   return (
@@ -99,8 +136,13 @@ export function AppearanceSettingsTab() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Choose between dark, light, or system-matched color scheme">Mode</SettingLabel>
-            <Select value={preference} onValueChange={(v) => setPreference(v as 'light' | 'dark' | 'system')}>
+            <SettingLabel tip="Choose between dark, light, or system-matched color scheme">
+              Mode
+            </SettingLabel>
+            <Select
+              value={preference}
+              onValueChange={(v) => setPreference(v as 'light' | 'dark' | 'system')}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -113,12 +155,16 @@ export function AppearanceSettingsTab() {
           </div>
           {!splitThemes && (
             <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-              <SettingLabel tip="Color theme for the entire app — terminal, editor, and chrome">Color theme</SettingLabel>
+              <SettingLabel tip="Color theme for the entire app — terminal, editor, and chrome">
+                Color theme
+              </SettingLabel>
               <ThemeSelect value={themeId} onChange={setThemeId} />
             </div>
           )}
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Choose different themes for dark and light mode">Separate dark/light themes</SettingLabel>
+            <SettingLabel tip="Choose different themes for dark and light mode">
+              Separate dark/light themes
+            </SettingLabel>
             <Switch checked={splitThemes} onCheckedChange={setSplitThemes} />
           </div>
           {splitThemes && (
@@ -144,20 +190,33 @@ export function AppearanceSettingsTab() {
         <CardContent className="space-y-3">
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
             <SettingLabel tip="Text size in terminal panels">Font size</SettingLabel>
-            <Select value={terminalFontSize} onValueChange={(v) => { setTerminalFontSize(v); window.api.settings.set('terminal_font_size', v) }}>
+            <Select
+              value={terminalFontSize}
+              onValueChange={(v) => {
+                setTerminalFontSize(v)
+                window.api.settings.set('terminal_font_size', v)
+              }}
+            >
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" side="bottom" className="max-h-none">
                 {[10, 11, 12, 13, 14, 15, 16, 18, 20].map((s) => (
-                  <SelectItem key={s} value={String(s)}>{s}px</SelectItem>
+                  <SelectItem key={s} value={String(s)}>
+                    {s}px
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Color theme for terminal panels — defaults to the application theme">Terminal theme</SettingLabel>
-            <OverrideThemeSelect value={terminalOverrideThemeId} onChange={setTerminalOverrideThemeId} />
+            <SettingLabel tip="Color theme for terminal panels — defaults to the application theme">
+              Terminal theme
+            </SettingLabel>
+            <OverrideThemeSelect
+              value={terminalOverrideThemeId}
+              onChange={setTerminalOverrideThemeId}
+            />
           </div>
         </CardContent>
       </Card>
@@ -170,24 +229,43 @@ export function AppearanceSettingsTab() {
         <CardContent className="space-y-3">
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
             <SettingLabel tip="Text size in the code and notes editor">Font size</SettingLabel>
-            <Select value={editorFontSize} onValueChange={(v) => { setEditorFontSize(v); window.api.settings.set('editor_font_size', v) }}>
+            <Select
+              value={editorFontSize}
+              onValueChange={(v) => {
+                setEditorFontSize(v)
+                window.api.settings.set('editor_font_size', v)
+              }}
+            >
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" side="bottom" className="max-h-none">
                 {[10, 11, 12, 13, 14, 15, 16, 18, 20].map((s) => (
-                  <SelectItem key={s} value={String(s)}>{s}px</SelectItem>
+                  <SelectItem key={s} value={String(s)}>
+                    {s}px
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Color theme for code and notes editors — defaults to the application theme">Editor theme</SettingLabel>
-            <OverrideThemeSelect value={editorOverrideThemeId} onChange={setEditorOverrideThemeId} />
+            <SettingLabel tip="Color theme for code and notes editors — defaults to the application theme">
+              Editor theme
+            </SettingLabel>
+            <OverrideThemeSelect
+              value={editorOverrideThemeId}
+              onChange={setEditorOverrideThemeId}
+            />
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
             <SettingLabel tip="Typeface used in the notes editor">Font family</SettingLabel>
-            <Select value={notesFontFamily} onValueChange={(v) => { setNotesFontFamily(v as 'sans' | 'mono'); window.api.settings.set('notes_font_family', v) }}>
+            <Select
+              value={notesFontFamily}
+              onValueChange={(v) => {
+                setNotesFontFamily(v as 'sans' | 'mono')
+                window.api.settings.set('notes_font_family', v)
+              }}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -198,8 +276,16 @@ export function AppearanceSettingsTab() {
             </Select>
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Vertical density of rendered markdown — text size, line height, and vertical padding">Readability</SettingLabel>
-            <Select value={notesReadability} onValueChange={(v) => { setNotesReadability(v as 'compact' | 'normal'); window.api.settings.set('notes_readability', v) }}>
+            <SettingLabel tip="Vertical density of rendered markdown — text size, line height, and vertical padding">
+              Readability
+            </SettingLabel>
+            <Select
+              value={notesReadability}
+              onValueChange={(v) => {
+                setNotesReadability(v as 'compact' | 'normal')
+                window.api.settings.set('notes_readability', v)
+              }}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -210,8 +296,16 @@ export function AppearanceSettingsTab() {
             </Select>
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Horizontal width of rendered markdown — column max-width and horizontal padding">Width</SettingLabel>
-            <Select value={notesWidth} onValueChange={(v) => { setNotesWidth(v as 'narrow' | 'wide'); window.api.settings.set('notes_width', v) }}>
+            <SettingLabel tip="Horizontal width of rendered markdown — column max-width and horizontal padding">
+              Width
+            </SettingLabel>
+            <Select
+              value={notesWidth}
+              onValueChange={(v) => {
+                setNotesWidth(v as 'narrow' | 'wide')
+                window.api.settings.set('notes_width', v)
+              }}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -222,7 +316,9 @@ export function AppearanceSettingsTab() {
             </Select>
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Visually highlight completed checklist items in notes">Highlight checked items</SettingLabel>
+            <SettingLabel tip="Visually highlight completed checklist items in notes">
+              Highlight checked items
+            </SettingLabel>
             <Switch
               checked={notesCheckedHighlight}
               onCheckedChange={(checked) => {
@@ -232,7 +328,9 @@ export function AppearanceSettingsTab() {
             />
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Display a WYSIWYG formatting toolbar above the notes editor">Show formatting toolbar</SettingLabel>
+            <SettingLabel tip="Display a WYSIWYG formatting toolbar above the notes editor">
+              Show formatting toolbar
+            </SettingLabel>
             <Switch
               checked={notesShowToolbar}
               onCheckedChange={(checked) => {
@@ -242,7 +340,9 @@ export function AppearanceSettingsTab() {
             />
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Enable browser spellcheck in the notes editor">Spellcheck</SettingLabel>
+            <SettingLabel tip="Enable browser spellcheck in the notes editor">
+              Spellcheck
+            </SettingLabel>
             <Switch
               checked={notesSpellcheck}
               onCheckedChange={(checked) => {
@@ -261,8 +361,16 @@ export function AppearanceSettingsTab() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Horizontal width of agent chat — message column and composer max-width">Width</SettingLabel>
-            <Select value={chatWidth} onValueChange={(v) => { setChatWidth(v as 'narrow' | 'wide'); window.api.settings.set('chat_width', v) }}>
+            <SettingLabel tip="Horizontal width of agent chat — message column and composer max-width">
+              Width
+            </SettingLabel>
+            <Select
+              value={chatWidth}
+              onValueChange={(v) => {
+                setChatWidth(v as 'narrow' | 'wide')
+                window.api.settings.set('chat_width', v)
+              }}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -282,7 +390,9 @@ export function AppearanceSettingsTab() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Tint the UI with each project's assigned color">Project color tints</SettingLabel>
+            <SettingLabel tip="Tint the UI with each project's assigned color">
+              Project color tints
+            </SettingLabel>
             <Switch
               checked={projectColorTints}
               onCheckedChange={(checked) => {
@@ -302,14 +412,18 @@ export function AppearanceSettingsTab() {
             />
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Only show tabs from the active project in the tab bar">Project-scoped tabs</SettingLabel>
+            <SettingLabel tip="Only show tabs from the active project in the tab bar">
+              Project-scoped tabs
+            </SettingLabel>
             <Switch
               checked={projectScopedTabs}
               onCheckedChange={(checked) => useTabStore.getState().setProjectScopedTabs(checked)}
             />
           </div>
           <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
-            <SettingLabel tip="Show the Context Manager button in the tab bar">Context Manager</SettingLabel>
+            <SettingLabel tip="Show the Context Manager button in the tab bar">
+              Context Manager
+            </SettingLabel>
             <Switch
               checked={showContextManager}
               onCheckedChange={(checked) => {
@@ -324,7 +438,13 @@ export function AppearanceSettingsTab() {
   )
 }
 
-function OverrideThemeSelect({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+function OverrideThemeSelect({
+  value,
+  onChange
+}: {
+  value: string
+  onChange: (id: string) => void
+}) {
   return (
     <div className="flex items-center gap-2">
       <Select value={value || '_app'} onValueChange={(v) => onChange(v === '_app' ? '' : v)}>
@@ -333,8 +453,10 @@ function OverrideThemeSelect({ value, onChange }: { value: string; onChange: (id
         </SelectTrigger>
         <SelectContent position="popper" side="bottom" className="max-h-none">
           <SelectItem value="_app">Inherit</SelectItem>
-          {unifiedThemes.map(t => (
-            <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+          {unifiedThemes.map((t) => (
+            <SelectItem key={t.id} value={t.id}>
+              {t.name}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>

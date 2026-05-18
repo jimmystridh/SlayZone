@@ -43,7 +43,7 @@ async function scanDir(root: string, source: CommandSource): Promise<CommandInfo
 export async function listCommands(cwd: string): Promise<CommandInfo[]> {
   const [user, project] = await Promise.all([
     scanDir(path.join(os.homedir(), '.claude', 'commands'), 'user'),
-    scanDir(path.join(cwd, '.claude', 'commands'), 'project'),
+    scanDir(path.join(cwd, '.claude', 'commands'), 'project')
   ])
   const byName = new Map<string, CommandInfo>()
   for (const c of user) byName.set(c.name, c)

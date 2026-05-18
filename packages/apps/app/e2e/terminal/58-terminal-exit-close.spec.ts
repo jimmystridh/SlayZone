@@ -1,4 +1,4 @@
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import {
   getMainSessionId,
@@ -6,7 +6,7 @@ import {
   openTaskTerminal,
   runCommand,
   waitForNoPtySession,
-  waitForPtySession,
+  waitForPtySession
 } from '../fixtures/terminal'
 
 test.describe('Terminal exit closes tab', () => {
@@ -16,13 +16,20 @@ test.describe('Terminal exit closes tab', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Exit Close', color: '#16a34a', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Exit Close',
+      color: '#16a34a',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
     const t = await s.createTask({ projectId: p.id, title: 'Close on exit', status: 'in_progress' })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await mainWindow.evaluate(() => window.api.pty.setShellOverride('/bin/sh'))
     await s.refreshData()
   })
@@ -37,7 +44,10 @@ test.describe('Terminal exit closes tab', () => {
     const mainSessionId = getMainSessionId(taskId)
     await waitForPtySession(mainWindow, mainSessionId, 20_000)
 
-    await mainWindow.locator('[data-testid="terminal-tabbar"]:visible [data-testid="terminal-tab-add"]').first().click()
+    await mainWindow
+      .locator('[data-testid="terminal-tabbar"]:visible [data-testid="terminal-tab-add"]')
+      .first()
+      .click()
 
     await expect
       .poll(async () => {
@@ -48,7 +58,9 @@ test.describe('Terminal exit closes tab', () => {
       .not.toBeNull()
 
     const tabsAfterCreate = await mainWindow.evaluate((id) => window.api.tabs.list(id), taskId)
-    const nonMainTabId = tabsAfterCreate.find((tab: { id: string; isMain: boolean }) => !tab.isMain)!.id as string
+    const nonMainTabId = tabsAfterCreate.find(
+      (tab: { id: string; isMain: boolean }) => !tab.isMain
+    )!.id as string
 
     const nonMainSessionId = getTabSessionId(taskId, nonMainTabId)
     await waitForPtySession(mainWindow, nonMainSessionId, 20_000)

@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { pressShortcut } from '../fixtures/shortcuts'
 import fs from 'fs'
@@ -36,7 +36,11 @@ test.describe('File editor', () => {
     fs.writeFileSync(path.join(TEST_PROJECT_PATH, 'dist', 'bundle.js'), '')
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'FEditor Test', color: '#10b981', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'FEditor Test',
+      color: '#10b981',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'Editor test task', status: 'todo' })
     await s.refreshData()
@@ -46,7 +50,9 @@ test.describe('File editor', () => {
     await clickProject(mainWindow, projectAbbrev)
     await expect(mainWindow.getByText('Editor test task').first()).toBeVisible({ timeout: 5_000 })
     await mainWindow.getByText('Editor test task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
 
     // Toggle editor panel on via Cmd+E
     await mainWindow.keyboard.press('Meta+e')
@@ -57,7 +63,9 @@ test.describe('File editor', () => {
 
   test('editor panel is visible with file tree', async ({ mainWindow }) => {
     // Editor button in PanelToggle should have active class (bg-surface-3)
-    const btn = mainWindow.locator('.bg-surface-2.rounded-lg:visible').locator('button:has-text("Editor")')
+    const btn = mainWindow
+      .locator('.bg-surface-2.rounded-lg:visible')
+      .locator('button:has-text("Editor")')
     await expect(btn).toHaveClass(/bg-surface-3/)
     await expect(editorPanel(mainWindow).getByText('Files')).toBeVisible()
   })
@@ -156,7 +164,9 @@ test.describe('File editor', () => {
     await tab.locator('.lucide-x').click()
 
     // AlertDialog should appear
-    await expect(mainWindow.getByRole('heading', { name: 'Unsaved changes' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('heading', { name: 'Unsaved changes' })).toBeVisible({
+      timeout: 3_000
+    })
     await expect(mainWindow.getByText('hello.ts has unsaved changes')).toBeVisible()
 
     // Cancel — should keep the tab open
@@ -189,10 +199,11 @@ test.describe('File editor', () => {
     fs.writeFileSync(path.join(TEST_PROJECT_PATH, 'hello.ts'), 'export const hello = "changed"\n')
 
     // Wait for watcher to detect + debounce + reload
-    await expect.poll(
-      async () => await mainWindow.locator('.cm-editor:visible .cm-content').textContent(),
-      { timeout: 5_000 }
-    ).toContain('changed')
+    await expect
+      .poll(async () => await mainWindow.locator('.cm-editor:visible .cm-content').textContent(), {
+        timeout: 5_000
+      })
+      .toContain('changed')
 
     // Restore original
     fs.writeFileSync(path.join(TEST_PROJECT_PATH, 'hello.ts'), 'export const hello = "world"\n')
@@ -205,10 +216,15 @@ test.describe('File editor', () => {
     await mainWindow.keyboard.type('// dirty edit')
 
     // Modify file on disk externally
-    fs.writeFileSync(path.join(TEST_PROJECT_PATH, 'hello.ts'), 'export const hello = "disk change"\n')
+    fs.writeFileSync(
+      path.join(TEST_PROJECT_PATH, 'hello.ts'),
+      'export const hello = "disk change"\n'
+    )
 
     // Should show "changed" label on the tab (not auto-reload because dirty)
-    await expect(editorTab(mainWindow, 'hello.ts').getByText('changed')).toBeVisible({ timeout: 5_000 })
+    await expect(editorTab(mainWindow, 'hello.ts').getByText('changed')).toBeVisible({
+      timeout: 5_000
+    })
 
     // Discard the tab to clean up
     const tab = editorTab(mainWindow, 'hello.ts')
@@ -235,7 +251,9 @@ test.describe('File editor', () => {
   // to surface results (filter buttons only render once `isSearching` is true).
   const openSearchAndQuery = async (mainWindow: import('@playwright/test').Page, query: string) => {
     await pressShortcut(mainWindow, 'search')
-    const input = mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
+    const input = mainWindow.getByPlaceholder(
+      'Search files, folders, commands, projects, and tasks...'
+    )
     await expect(input).toBeVisible({ timeout: 3_000 })
     await input.fill(query)
     return input
@@ -411,11 +429,15 @@ test.describe('File editor', () => {
 
   /** The inline create input */
   const createInput = (page: import('@playwright/test').Page, type: 'file' | 'folder' = 'file') =>
-    editorPanel(page).locator(`input[placeholder="${type === 'file' ? 'filename' : 'folder name'}"]`)
+    editorPanel(page).locator(
+      `input[placeholder="${type === 'file' ? 'filename' : 'folder name'}"]`
+    )
 
   test('new file input stays visible after context menu trigger', async ({ mainWindow }) => {
     await treeFile(mainWindow, 'src').click({ button: 'right' })
-    await expect(mainWindow.getByRole('menuitem', { name: 'New file' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'New file' })).toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByRole('menuitem', { name: 'New file' }).click()
 
     const input = createInput(mainWindow)
@@ -498,10 +520,11 @@ test.describe('File editor', () => {
     // Click elsewhere to blur
     await treeFile(mainWindow, 'hello.ts').click()
 
-    await expect.poll(
-      () => fs.existsSync(path.join(TEST_PROJECT_PATH, 'src', 'blur-created.ts')),
-      { timeout: 5_000 }
-    ).toBe(true)
+    await expect
+      .poll(() => fs.existsSync(path.join(TEST_PROJECT_PATH, 'src', 'blur-created.ts')), {
+        timeout: 5_000
+      })
+      .toBe(true)
 
     fs.unlinkSync(path.join(TEST_PROJECT_PATH, 'src', 'blur-created.ts'))
   })
@@ -518,24 +541,25 @@ test.describe('File editor', () => {
     // Dispatch DnD events manually — synthetic DragEvent has null dataTransfer,
     // but the tree DnD logic uses refs (set by dragstart) not dataTransfer.
     await mainWindow.evaluate(async () => {
-      const allButtons = Array.from(document.querySelectorAll('button.w-full'))
-        .filter(b => b.offsetParent !== null)
-      const srcBtn = allButtons.find(b => b.textContent?.includes('dragme.txt'))
-      const tgtBtn = allButtons.find(b => b.textContent?.includes('target-folder'))
+      const allButtons = Array.from(document.querySelectorAll('button.w-full')).filter(
+        (b) => b.offsetParent !== null
+      )
+      const srcBtn = allButtons.find((b) => b.textContent?.includes('dragme.txt'))
+      const tgtBtn = allButtons.find((b) => b.textContent?.includes('target-folder'))
       if (!srcBtn || !tgtBtn) throw new Error('buttons not found')
 
       // Drop target is the wrapper div (parent of ContextMenu > button)
       const tgtWrapper = tgtBtn.parentElement!
 
       srcBtn.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true }))
-      await new Promise(r => setTimeout(r, 50))
+      await new Promise((r) => setTimeout(r, 50))
 
       tgtWrapper.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true }))
       tgtWrapper.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }))
-      await new Promise(r => setTimeout(r, 50))
+      await new Promise((r) => setTimeout(r, 50))
 
       tgtWrapper.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true }))
-      await new Promise(r => setTimeout(r, 1500))
+      await new Promise((r) => setTimeout(r, 1500))
 
       srcBtn.dispatchEvent(new DragEvent('dragend', { bubbles: true, cancelable: true }))
     })

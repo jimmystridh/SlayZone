@@ -7,7 +7,7 @@ import { registerAgentHookRoute } from './agent-hook'
 // without touching Electron BrowserWindow APIs.
 const broadcastSpy = vi.fn()
 vi.mock('../broadcast-to-windows', () => ({
-  broadcastToWindows: (...args: unknown[]) => broadcastSpy(...args),
+  broadcastToWindows: (...args: unknown[]) => broadcastSpy(...args)
 }))
 
 // Mock the terminal-domain entrypoints — pulling in pty-manager would require
@@ -19,13 +19,13 @@ vi.mock('@slayzone/terminal/main', () => ({
   findSessionByTaskIdAndMode: (taskId: string, mode: string) => findSessionSpy(taskId, mode),
   transitionStateFromHook: (sessionId: string, state: string, event: string) =>
     transitionSpy(sessionId, state, event),
-  markSessionActiveFromHook: (sessionId: string) => markActiveSpy(sessionId),
+  markSessionActiveFromHook: (sessionId: string) => markActiveSpy(sessionId)
 }))
 
 // Diagnostics call from the handler must not blow up under vitest's lack of
 // Electron app — stub it out.
 vi.mock('@slayzone/diagnostics/main', () => ({
-  recordDiagnosticEvent: () => {},
+  recordDiagnosticEvent: () => {}
 }))
 
 interface ServerHandle {
@@ -42,7 +42,10 @@ function startServer(): Promise<ServerHandle> {
       const port = typeof addr === 'object' && addr ? addr.port : 0
       resolve({
         port,
-        close: () => new Promise<void>((r) => { server.close(() => r()) }),
+        close: () =>
+          new Promise<void>((r) => {
+            server.close(() => r())
+          })
       })
     })
   })
@@ -52,12 +55,23 @@ function postJson(port: number, body: unknown): Promise<{ status: number; body: 
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify(body)
     const req = http.request(
-      { host: '127.0.0.1', port, method: 'POST', path: '/api/agent-hook', headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } },
+      {
+        host: '127.0.0.1',
+        port,
+        method: 'POST',
+        path: '/api/agent-hook',
+        headers: {
+          'content-type': 'application/json',
+          'content-length': Buffer.byteLength(payload)
+        }
+      },
       (res) => {
         const chunks: Buffer[] = []
         res.on('data', (c) => chunks.push(c as Buffer))
-        res.on('end', () => resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString('utf8') }))
-      },
+        res.on('end', () =>
+          resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString('utf8') })
+        )
+      }
     )
     req.on('error', reject)
     req.write(payload)
@@ -83,7 +97,7 @@ describe('POST /api/agent-hook', () => {
         agentId: 'claude-code',
         hookEvent: 'UserPromptSubmit',
         sessionId: 'sess-1',
-        taskId: 'task-1',
+        taskId: 'task-1'
       })
       expect(res.status).toBe(200)
       expect(broadcastSpy).toHaveBeenCalledTimes(1)
@@ -94,7 +108,7 @@ describe('POST /api/agent-hook', () => {
         hookEvent: 'UserPromptSubmit',
         type: 'agent-start',
         sessionId: 'sess-1',
-        taskId: 'task-1',
+        taskId: 'task-1'
       })
       expect(typeof event.timestamp).toBe('number')
     } finally {
@@ -138,7 +152,11 @@ describe('POST /api/agent-hook', () => {
     findSessionSpy.mockReturnValue('task-1')
     const srv = await startServer()
     try {
-      await postJson(srv.port, { agentId: 'claude-code', hookEvent: 'UserPromptSubmit', taskId: 'task-1' })
+      await postJson(srv.port, {
+        agentId: 'claude-code',
+        hookEvent: 'UserPromptSubmit',
+        taskId: 'task-1'
+      })
       expect(findSessionSpy).toHaveBeenCalledWith('task-1', 'claude-code')
       expect(transitionSpy).toHaveBeenCalledWith('task-1', 'running', 'UserPromptSubmit')
     } finally {
@@ -161,7 +179,11 @@ describe('POST /api/agent-hook', () => {
     findSessionSpy.mockReturnValue('task-3')
     const srv = await startServer()
     try {
-      await postJson(srv.port, { agentId: 'claude-code', hookEvent: 'Notification', taskId: 'task-3' })
+      await postJson(srv.port, {
+        agentId: 'claude-code',
+        hookEvent: 'Notification',
+        taskId: 'task-3'
+      })
       expect(transitionSpy).toHaveBeenCalledWith('task-3', 'idle', 'Notification')
     } finally {
       await srv.close()
@@ -172,7 +194,11 @@ describe('POST /api/agent-hook', () => {
     findSessionSpy.mockReturnValue('task-4')
     const srv = await startServer()
     try {
-      await postJson(srv.port, { agentId: 'claude-code', hookEvent: 'SessionStart', taskId: 'task-4' })
+      await postJson(srv.port, {
+        agentId: 'claude-code',
+        hookEvent: 'SessionStart',
+        taskId: 'task-4'
+      })
       expect(broadcastSpy).toHaveBeenCalledTimes(1)
       expect(transitionSpy).not.toHaveBeenCalled()
       expect(markActiveSpy).toHaveBeenCalledWith('task-4')
@@ -185,7 +211,11 @@ describe('POST /api/agent-hook', () => {
     findSessionSpy.mockReturnValue('task-pre')
     const srv = await startServer()
     try {
-      await postJson(srv.port, { agentId: 'claude-code', hookEvent: 'PreToolUse', taskId: 'task-pre' })
+      await postJson(srv.port, {
+        agentId: 'claude-code',
+        hookEvent: 'PreToolUse',
+        taskId: 'task-pre'
+      })
       expect(transitionSpy).toHaveBeenCalledWith('task-pre', 'running', 'PreToolUse')
     } finally {
       await srv.close()
@@ -202,7 +232,7 @@ describe('POST /api/agent-hook', () => {
         agentId: 'claude-code',
         hookEvent: 'PreToolUse',
         taskId: 'task-aq',
-        raw: { tool_name: 'AskUserQuestion' },
+        raw: { tool_name: 'AskUserQuestion' }
       })
       expect(transitionSpy).toHaveBeenCalledWith('task-aq', 'idle', 'PreToolUse')
     } finally {
@@ -218,7 +248,7 @@ describe('POST /api/agent-hook', () => {
         agentId: 'claude-code',
         hookEvent: 'PreToolUse',
         taskId: 'task-epm',
-        raw: { tool_name: 'ExitPlanMode' },
+        raw: { tool_name: 'ExitPlanMode' }
       })
       expect(transitionSpy).toHaveBeenCalledWith('task-epm', 'idle', 'PreToolUse')
     } finally {
@@ -234,7 +264,7 @@ describe('POST /api/agent-hook', () => {
         agentId: 'claude-code',
         hookEvent: 'PreToolUse',
         taskId: 'task-bash',
-        raw: { tool_name: 'Bash' },
+        raw: { tool_name: 'Bash' }
       })
       expect(transitionSpy).toHaveBeenCalledWith('task-bash', 'running', 'PreToolUse')
     } finally {
@@ -250,7 +280,11 @@ describe('POST /api/agent-hook', () => {
     findSessionSpy.mockReturnValue('task-post')
     const srv = await startServer()
     try {
-      await postJson(srv.port, { agentId: 'claude-code', hookEvent: 'PostToolUse', taskId: 'task-post' })
+      await postJson(srv.port, {
+        agentId: 'claude-code',
+        hookEvent: 'PostToolUse',
+        taskId: 'task-post'
+      })
       expect(broadcastSpy).toHaveBeenCalledTimes(1)
       expect(transitionSpy).not.toHaveBeenCalled()
       expect(markActiveSpy).toHaveBeenCalledWith('task-post')
@@ -263,7 +297,11 @@ describe('POST /api/agent-hook', () => {
     findSessionSpy.mockReturnValue('task-sub')
     const srv = await startServer()
     try {
-      await postJson(srv.port, { agentId: 'claude-code', hookEvent: 'SubagentStop', taskId: 'task-sub' })
+      await postJson(srv.port, {
+        agentId: 'claude-code',
+        hookEvent: 'SubagentStop',
+        taskId: 'task-sub'
+      })
       expect(transitionSpy).not.toHaveBeenCalled()
       expect(markActiveSpy).toHaveBeenCalledWith('task-sub')
     } finally {
@@ -275,7 +313,11 @@ describe('POST /api/agent-hook', () => {
     findSessionSpy.mockReturnValue('task-pc')
     const srv = await startServer()
     try {
-      await postJson(srv.port, { agentId: 'claude-code', hookEvent: 'PreCompact', taskId: 'task-pc' })
+      await postJson(srv.port, {
+        agentId: 'claude-code',
+        hookEvent: 'PreCompact',
+        taskId: 'task-pc'
+      })
       expect(transitionSpy).not.toHaveBeenCalled()
       expect(markActiveSpy).toHaveBeenCalledWith('task-pc')
     } finally {
@@ -287,7 +329,11 @@ describe('POST /api/agent-hook', () => {
     findSessionSpy.mockReturnValue('task-stop-clock')
     const srv = await startServer()
     try {
-      await postJson(srv.port, { agentId: 'claude-code', hookEvent: 'Stop', taskId: 'task-stop-clock' })
+      await postJson(srv.port, {
+        agentId: 'claude-code',
+        hookEvent: 'Stop',
+        taskId: 'task-stop-clock'
+      })
       expect(transitionSpy).toHaveBeenCalledWith('task-stop-clock', 'idle', 'Stop')
       expect(markActiveSpy).not.toHaveBeenCalled()
     } finally {
@@ -299,7 +345,11 @@ describe('POST /api/agent-hook', () => {
     findSessionSpy.mockReturnValue('task-se')
     const srv = await startServer()
     try {
-      await postJson(srv.port, { agentId: 'claude-code', hookEvent: 'SessionEnd', taskId: 'task-se' })
+      await postJson(srv.port, {
+        agentId: 'claude-code',
+        hookEvent: 'SessionEnd',
+        taskId: 'task-se'
+      })
       expect(transitionSpy).toHaveBeenCalledWith('task-se', 'idle', 'SessionEnd')
     } finally {
       await srv.close()

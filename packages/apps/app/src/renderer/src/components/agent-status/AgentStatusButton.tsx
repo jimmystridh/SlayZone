@@ -9,7 +9,13 @@ interface AgentStatusButtonProps {
   size?: 'sm' | 'lg'
 }
 
-export function AgentStatusButton({ active, count, onClick, shortcutHint, size = 'sm' }: AgentStatusButtonProps) {
+export function AgentStatusButton({
+  active,
+  count,
+  onClick,
+  shortcutHint,
+  size = 'sm'
+}: AgentStatusButtonProps) {
   const btnSize = size === 'lg' ? 'size-10 rounded-lg' : 'h-7 w-7'
   const iconSize = size === 'lg' ? 'size-5' : 'size-4'
   return (
@@ -34,7 +40,10 @@ export function AgentStatusButton({ active, count, onClick, shortcutHint, size =
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs">
-        {withShortcut(active ? 'Hide agent status panel' : 'Show agent status panel', shortcutHint ?? null)}
+        {withShortcut(
+          active ? 'Hide agent status panel' : 'Show agent status panel',
+          shortcutHint ?? null
+        )}
       </TooltipContent>
     </Tooltip>
   )

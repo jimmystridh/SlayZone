@@ -8,14 +8,14 @@ export default defineConfig({
   publicDir: './public',
   integrations: [
     sitemap({
-      filter: (page) => !page.includes('/features/demo/'),
-    }),
+      filter: (page) => !page.includes('/features/demo/')
+    })
   ],
   image: {
-    remotePatterns: [],
+    remotePatterns: []
   },
   trailingSlash: 'never',
   build: {
-    format: 'file',
-  },
+    format: 'file'
+  }
 })

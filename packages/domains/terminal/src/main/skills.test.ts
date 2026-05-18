@@ -21,7 +21,9 @@ function test(name: string, fn: () => void) {
 
 function assertEqual<T>(actual: T, expected: T, label?: string): void {
   if (actual !== expected) {
-    throw new Error(`${label ?? 'values'}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+    throw new Error(
+      `${label ?? 'values'}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+    )
   }
 }
 
@@ -57,7 +59,7 @@ test('parses `|` block scalar for description', () => {
     '  Cuts token usage ~75%.',
     '---',
     '',
-    'body',
+    'body'
   ].join('\n')
   const fm = parseFrontmatter(src)
   assertEqual(fm.name, 'caveman')

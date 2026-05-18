@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@slayzone/ui'
 import { Plus, Zap } from 'lucide-react'
-import type { Automation, CreateAutomationInput, UpdateAutomationInput } from '@slayzone/automations/shared'
+import type {
+  Automation,
+  CreateAutomationInput,
+  UpdateAutomationInput
+} from '@slayzone/automations/shared'
 import type { Tag } from '@slayzone/tags/shared'
 import { AutomationCard } from './AutomationCard'
 import { AutomationDialog } from './AutomationDialog'
@@ -19,7 +23,9 @@ export function AutomationsPanel({ projectId }: AutomationsPanelProps) {
   const loadData = useCallback(() => {
     if (!projectId) return
     window.api.automations.getByProject(projectId).then(setAutomations)
-    window.api.tags.getTags().then((all) => setTags(all.filter((t: Tag) => t.project_id === projectId)))
+    window.api.tags
+      .getTags()
+      .then((all) => setTags(all.filter((t: Tag) => t.project_id === projectId)))
   }, [projectId])
 
   useEffect(() => {
@@ -56,7 +62,7 @@ export function AutomationsPanel({ projectId }: AutomationsPanelProps) {
       description: automation.description ?? undefined,
       trigger_config: automation.trigger_config,
       conditions: automation.conditions,
-      actions: automation.actions,
+      actions: automation.actions
     })
     loadData()
   }
@@ -102,7 +108,7 @@ export function AutomationsPanel({ projectId }: AutomationsPanelProps) {
             </Button>
           </div>
         ) : (
-          automations.map(a => (
+          automations.map((a) => (
             <AutomationCard
               key={a.id}
               automation={a}
@@ -122,7 +128,7 @@ export function AutomationsPanel({ projectId }: AutomationsPanelProps) {
         onOpenChange={setDialogOpen}
         automation={editing}
         projectId={projectId}
-        tags={tags.map(t => ({ id: t.id, name: t.name }))}
+        tags={tags.map((t) => ({ id: t.id, name: t.name }))}
         onSave={handleSave}
       />
     </div>

@@ -12,7 +12,13 @@ interface LibraryItemPickerProps {
   onClose: () => void
 }
 
-export function LibraryItemPicker({ projectId, projectPath, existingLinks, onLoaded, onClose }: LibraryItemPickerProps) {
+export function LibraryItemPicker({
+  projectId,
+  projectPath,
+  existingLinks,
+  onLoaded,
+  onClose
+}: LibraryItemPickerProps) {
   const [items, setItems] = useState<AiConfigItem[]>([])
   const [enabledProviders, setEnabledProviders] = useState<CliProvider[]>([])
   const [loading, setLoading] = useState(false)
@@ -65,9 +71,7 @@ export function LibraryItemPicker({ projectId, projectPath, existingLinks, onLoa
                 onClick={() => handleSelect(item)}
                 className={cn(
                   'flex w-full items-start gap-3 border-b border-border/40 last:border-0 px-5 py-3 text-left transition-colors',
-                  linked
-                    ? 'cursor-not-allowed opacity-40'
-                    : 'hover:bg-muted/40'
+                  linked ? 'cursor-not-allowed opacity-40' : 'hover:bg-muted/40'
                 )}
               >
                 <Sparkles className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
@@ -88,7 +92,9 @@ export function LibraryItemPicker({ projectId, projectPath, existingLinks, onLoa
           {items.length === 0 && (
             <div className="px-5 py-8 text-center">
               <p className="text-sm text-muted-foreground">No library skills available</p>
-              <p className="mt-1 text-xs text-muted-foreground/60">Create one in the Library section first</p>
+              <p className="mt-1 text-xs text-muted-foreground/60">
+                Create one in the Library section first
+              </p>
             </div>
           )}
         </div>

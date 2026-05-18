@@ -69,15 +69,9 @@ export interface ProviderAdapter {
     ctx?: ExternalKeyContext
   ): Promise<NormalizedIssue | null>
 
-  getIssuesBatch(
-    credential: string,
-    refs: IssueRef[]
-  ): Promise<Map<string, NormalizedIssue>>
+  getIssuesBatch(credential: string, refs: IssueRef[]): Promise<Map<string, NormalizedIssue>>
 
-  createIssue(
-    credential: string,
-    params: CreateIssueParams
-  ): Promise<NormalizedIssue>
+  createIssue(credential: string, params: CreateIssueParams): Promise<NormalizedIssue>
 
   updateIssue(
     credential: string,

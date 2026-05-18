@@ -22,7 +22,10 @@ export interface PtyProgressDotProps extends Omit<TerminalProgressDotProps, 'sta
   sessionId: string
 }
 
-export function PtyProgressDot({ sessionId, ...rest }: PtyProgressDotProps): React.JSX.Element | null {
+export function PtyProgressDot({
+  sessionId,
+  ...rest
+}: PtyProgressDotProps): React.JSX.Element | null {
   const state = useTerminalState(sessionId)
   return <TerminalProgressDot state={state} {...rest} />
 }

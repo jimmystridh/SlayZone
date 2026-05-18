@@ -12,12 +12,37 @@ import { DEV_SERVER_URL_PATTERN, extractOscTitle } from '@slayzone/terminal/shar
 import type { TerminalState, PtyInfo, BufferSinceResult } from '@slayzone/terminal/shared'
 import { getDiagnosticsConfig, recordDiagnosticEvent } from '@slayzone/diagnostics/main'
 import { RingBuffer, type BufferChunk } from './ring-buffer'
-import { getAdapter, type TerminalMode, type TerminalAdapter, type SpawnConfig, type ActivityState, type ErrorInfo, type ExecutionContext } from './adapters'
+import {
+  getAdapter,
+  type TerminalMode,
+  type TerminalAdapter,
+  type SpawnConfig,
+  type ActivityState,
+  type ErrorInfo,
+  type ExecutionContext
+} from './adapters'
 import { interpolateTemplate } from './adapters/template-interpolation'
 import { parseShellArgs } from './adapters/flag-parser'
-import { StateMachine, activityToTerminalState, shouldRefreshIdleClock, shouldFlipToIdle, shouldFlipToRunningOnInput, recordWorkingDetection } from './state-machine'
-import { quoteForShell, buildExecCommand, resolveUserShell, getShellStartupArgs, wrapShellWithUlimit } from './shell-env'
-import { shouldShellFallback, shouldNotifySessionNotFound, buildRecoveryMessage } from './pty-exit-strategy'
+import {
+  StateMachine,
+  activityToTerminalState,
+  shouldRefreshIdleClock,
+  shouldFlipToIdle,
+  shouldFlipToRunningOnInput,
+  recordWorkingDetection
+} from './state-machine'
+import {
+  quoteForShell,
+  buildExecCommand,
+  resolveUserShell,
+  getShellStartupArgs,
+  wrapShellWithUlimit
+} from './shell-env'
+import {
+  shouldShellFallback,
+  shouldNotifySessionNotFound,
+  buildRecoveryMessage
+} from './pty-exit-strategy'
 import { computeSyncQueryResponse, type TerminalTheme } from './sync-query-response'
 import { filterBufferData } from './filter-buffer-data'
 import { buildMcpEnv } from './mcp-env'
@@ -118,13 +143,18 @@ export type { PtyInfo }
 const sessions = new Map<string, PtySession>()
 const sessionChangeListeners = new Set<() => void>()
 const dataListeners = new Map<string, Set<(data: string) => void>>()
-const stateChangeListeners = new Map<string, Set<(newState: TerminalState, oldState: TerminalState) => void>>()
+const stateChangeListeners = new Map<
+  string,
+  Set<(newState: TerminalState, oldState: TerminalState) => void>
+>()
 
 /** Subscribe to live PTY output. Returns unsubscribe function. */
 export function subscribeToPtyData(sessionId: string, cb: (data: string) => void): () => void {
   if (!dataListeners.has(sessionId)) dataListeners.set(sessionId, new Set())
   dataListeners.get(sessionId)!.add(cb)
-  return () => { dataListeners.get(sessionId)?.delete(cb) }
+  return () => {
+    dataListeners.get(sessionId)?.delete(cb)
+  }
 }
 
 /** Register a callback for session create/destroy events. Returns unsubscribe function. */
@@ -134,18 +164,29 @@ export function onSessionChange(cb: () => void): () => void {
 }
 
 /** Subscribe to state changes for a specific session. Returns unsubscribe function. */
-export function subscribeToStateChange(sessionId: string, cb: (newState: TerminalState, oldState: TerminalState) => void): () => void {
+export function subscribeToStateChange(
+  sessionId: string,
+  cb: (newState: TerminalState, oldState: TerminalState) => void
+): () => void {
   if (!stateChangeListeners.has(sessionId)) stateChangeListeners.set(sessionId, new Set())
   stateChangeListeners.get(sessionId)!.add(cb)
-  return () => { stateChangeListeners.get(sessionId)?.delete(cb) }
+  return () => {
+    stateChangeListeners.get(sessionId)?.delete(cb)
+  }
 }
 
-const globalStateChangeListeners = new Set<(sessionId: string, newState: TerminalState, oldState: TerminalState) => void>()
+const globalStateChangeListeners = new Set<
+  (sessionId: string, newState: TerminalState, oldState: TerminalState) => void
+>()
 
 /** Subscribe to state changes for ALL sessions. Returns unsubscribe function. */
-export function onGlobalStateChange(cb: (sessionId: string, newState: TerminalState, oldState: TerminalState) => void): () => void {
+export function onGlobalStateChange(
+  cb: (sessionId: string, newState: TerminalState, oldState: TerminalState) => void
+): () => void {
   globalStateChangeListeners.add(cb)
-  return () => { globalStateChangeListeners.delete(cb) }
+  return () => {
+    globalStateChangeListeners.delete(cb)
+  }
 }
 
 /**
@@ -153,7 +194,11 @@ export function onGlobalStateChange(cb: (sessionId: string, newState: TerminalSt
  * (e.g. chat-transport sessions). Lets task-automation and other main-side
  * subscribers react to chat activity through the same channel as PTY.
  */
-export function notifyGlobalStateListeners(sessionId: string, newState: TerminalState, oldState: TerminalState): void {
+export function notifyGlobalStateListeners(
+  sessionId: string,
+  newState: TerminalState,
+  oldState: TerminalState
+): void {
   for (const cb of globalStateChangeListeners) cb(sessionId, newState, oldState)
 }
 
@@ -171,12 +216,16 @@ export function onPtyInputSubmit(
   cb: (sessionId: string, taskId: string, line: string) => void
 ): () => void {
   inputSubmitListeners.add(cb)
-  return () => { inputSubmitListeners.delete(cb) }
+  return () => {
+    inputSubmitListeners.delete(cb)
+  }
 }
 
 function emitInputSubmit(sessionId: string, taskId: string, line: string): void {
   for (const cb of inputSubmitListeners) {
-    try { cb(sessionId, taskId, line) } catch (err) {
+    try {
+      cb(sessionId, taskId, line)
+    } catch (err) {
       console.error('[pty-manager] inputSubmit listener threw:', err)
     }
   }
@@ -227,7 +276,9 @@ let idleCheckerInterval: NodeJS.Timeout | null = null
 // revive flow can decide between resuming and starting a fresh AI conversation.
 let onHostKillHandler: ((taskId: string, mode: TerminalMode) => void) | null = null
 
-export function setOnHostKillHandler(handler: ((taskId: string, mode: TerminalMode) => void) | null): void {
+export function setOnHostKillHandler(
+  handler: ((taskId: string, mode: TerminalMode) => void) | null
+): void {
   onHostKillHandler = handler
 }
 
@@ -237,7 +288,11 @@ function taskIdFromSessionId(sessionId: string): string {
 
 // Theme colors used to respond to OSC 10/11/12 color queries synchronously.
 // Set by the renderer via pty:set-theme IPC whenever the theme changes.
-let currentTerminalTheme: TerminalTheme = { foreground: '#ffffff', background: '#000000', cursor: '#ffffff' }
+let currentTerminalTheme: TerminalTheme = {
+  foreground: '#ffffff',
+  background: '#000000',
+  cursor: '#ffffff'
+}
 
 export function setTerminalTheme(theme: TerminalTheme): void {
   currentTerminalTheme = theme
@@ -250,7 +305,10 @@ export function setTerminalTheme(theme: TerminalTheme): void {
 // on and show up as garbage bytes in stdin.
 function interceptSyncQueries(session: PtySession, data: string): string {
   const input = session.syncQueryPending + data
-  const { response, forwarded, pendingPartial } = computeSyncQueryResponse(input, currentTerminalTheme)
+  const { response, forwarded, pendingPartial } = computeSyncQueryResponse(
+    input,
+    currentTerminalTheme
+  )
   session.syncQueryPending = pendingPartial
 
   if (response) {
@@ -272,7 +330,12 @@ function stripAnsiForSessionParse(data: string): string {
 }
 
 // Emit state change via IPC
-function emitStateChange(session: PtySession, sessionId: string, newState: TerminalState, oldState: TerminalState): void {
+function emitStateChange(
+  session: PtySession,
+  sessionId: string,
+  newState: TerminalState,
+  oldState: TerminalState
+): void {
   const trigger = session.pendingTransitionTrigger
   session.pendingTransitionTrigger = undefined
   recordDiagnosticEvent({
@@ -293,7 +356,9 @@ function emitStateChange(session: PtySession, sessionId: string, newState: Termi
   if (session.win && !session.win.isDestroyed()) {
     try {
       session.win.webContents.send('pty:state-change', sessionId, newState, oldState)
-    } catch { /* Window destroyed */ }
+    } catch {
+      /* Window destroyed */
+    }
   }
 
   // Notify REST API subscribers
@@ -429,9 +494,10 @@ export function testExecutionContext(
     }
 
     const cmd = context.type === 'docker' ? 'docker' : 'ssh'
-    const args = context.type === 'docker'
-      ? ['exec', '--', context.container, 'echo', 'ok']
-      : ['-o', 'ConnectTimeout=5', '--', context.target, 'echo', 'ok']
+    const args =
+      context.type === 'docker'
+        ? ['exec', '--', context.container, 'echo', 'ok']
+        : ['-o', 'ConnectTimeout=5', '--', context.target, 'echo', 'ok']
 
     execFile(cmd, args, { timeout: 10_000 }, (err) => {
       if (err) {
@@ -452,7 +518,9 @@ function emitTitle(session: PtySession, title: string): void {
   if (!session.win.isDestroyed()) {
     try {
       session.win.webContents.send('pty:title-change', session.sessionId, title)
-    } catch { /* Window destroyed */ }
+    } catch {
+      /* Window destroyed */
+    }
   }
 }
 
@@ -461,7 +529,10 @@ function startTitlePolling(session: PtySession, target: pty.IPty): void {
   stopTitlePolling(session)
   session.titlePollInterval = setInterval(() => {
     const s = sessions.get(session.sessionId)
-    if (!s || s.pty !== target) { stopTitlePolling(session); return }
+    if (!s || s.pty !== target) {
+      stopTitlePolling(session)
+      return
+    }
     const raw = s.pty.process
     if (raw) emitTitle(s, raw)
   }, TITLE_POLL_MS)
@@ -494,13 +565,32 @@ export interface CreatePtyOptions {
   rows?: number
 }
 
-export async function createPty(opts: CreatePtyOptions): Promise<{ success: boolean; error?: string }> {
-  const { win: originalWin, sessionId, cwd, conversationId, existingConversationId, mode, initialPrompt, providerArgs, executionContext, type, initialCommand, resumeCommand, defaultFlags, patternWorking, patternError } = opts
+export async function createPty(
+  opts: CreatePtyOptions
+): Promise<{ success: boolean; error?: string }> {
+  const {
+    win: originalWin,
+    sessionId,
+    cwd,
+    conversationId,
+    existingConversationId,
+    mode,
+    initialPrompt,
+    providerArgs,
+    executionContext,
+    type,
+    initialCommand,
+    resumeCommand,
+    defaultFlags,
+    patternWorking,
+    patternError
+  } = opts
   // Dynamic window lookup: allows redirectSessionWindow() to reroute events at runtime.
   const getWin = (): BrowserWindow => sessions.get(sessionId)?.win ?? originalWin
   const taskId = taskIdFromSessionId(sessionId)
   const createStartedAt = Date.now()
-  let spawnAttempt: { shell: string; shellArgs: string[]; hasPostSpawnCommand: boolean } | null = null
+  let spawnAttempt: { shell: string; shellArgs: string[]; hasPostSpawnCommand: boolean } | null =
+    null
   recordDiagnosticEvent({
     level: 'info',
     source: 'pty',
@@ -544,7 +634,7 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
     const effectiveConversationId = existingConversationId || conversationId
 
     // Pick template: resume if resuming and resume_command exists, otherwise initial
-    const template = (resuming && resumeCommand) ? resumeCommand : (initialCommand || undefined)
+    const template = resuming && resumeCommand ? resumeCommand : initialCommand || undefined
 
     // Build spawn config via template interpolation
     const shell = resolveUserShell()
@@ -554,7 +644,8 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
       const binary = interpolateTemplate({
         template,
         conversationId: effectiveConversationId || undefined,
-        flags: (providerArgs && providerArgs.length > 0) ? providerArgs : parseShellArgs(defaultFlags),
+        flags:
+          providerArgs && providerArgs.length > 0 ? providerArgs : parseShellArgs(defaultFlags),
         initialPrompt: initialPrompt || undefined
       })
       const allArgs = [...binary.args]
@@ -624,7 +715,7 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
     // `brew shellenv` aborts with "current working directory must be readable
     // to $USER to run brew", which in turn breaks PATH for every CLI launched
     // through the shell (droid, etc.). Fall back to homedir in either case.
-    let effectiveCwd = transport ? transport.cwd : (cwd || homedir())
+    let effectiveCwd = transport ? transport.cwd : cwd || homedir()
     if (!transport && effectiveCwd) {
       const fallback = homedir()
       if (!existsSync(effectiveCwd)) {
@@ -659,12 +750,14 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
       cols: opts.cols ?? 80,
       rows: opts.rows ?? 24,
       cwd: effectiveCwd,
-      env: transport ? transport.env : {
-        ...baseEnv,
-        ...spawnConfig.env,
-        ...mcpEnv,
-        ...codexEnv
-      } as Record<string, string>
+      env: transport
+        ? transport.env
+        : ({
+            ...baseEnv,
+            ...spawnConfig.env,
+            ...mcpEnv,
+            ...codexEnv
+          } as Record<string, string>)
     }
 
     const spawnFile = transport ? transport.file : spawnConfig.shell
@@ -678,7 +771,8 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
       initialArgs.push('-c', spawnConfig.postSpawnCommand!)
     }
 
-    const canRetryInteractiveOnly = !transport && initialArgs.includes('-i') && initialArgs.includes('-l')
+    const canRetryInteractiveOnly =
+      !transport && initialArgs.includes('-i') && initialArgs.includes('-l')
     let usedArgs = [...initialArgs]
     let usedFallback = false
     let usedShellFallback = false
@@ -741,7 +835,7 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
       detectedDevUrls: new Set(),
       syncQueryPending: '',
       lastEmittedTitle: '',
-      codexSessionLogPath,
+      codexSessionLogPath
     })
     // Record this tab as warm — survives across app shutdown so next boot
     // auto-restarts. Cleared in finalizeSessionExit on natural/user exit.
@@ -814,7 +908,11 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
         })
       }
       if (exitSession) stopTitlePolling(exitSession)
-      if (exitSession) exitSession.pendingTransitionTrigger = { source: 'pty-exit', preview: `exitCode=${exitCode}` }
+      if (exitSession)
+        exitSession.pendingTransitionTrigger = {
+          source: 'pty-exit',
+          preview: `exitCode=${exitCode}`
+        }
       transitionState(sessionId, 'dead')
       recordDiagnosticEvent({
         level: 'info',
@@ -856,7 +954,9 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
       if (!exitWin.isDestroyed()) {
         try {
           exitWin.webContents.send('pty:title-change', sessionId, '')
-        } catch { /* Window destroyed */ }
+        } catch {
+          /* Window destroyed */
+        }
         try {
           exitWin.webContents.send('pty:exit', sessionId, exitCode)
         } catch {
@@ -945,7 +1045,9 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
             payload: {
               shellSpawnMs,
               firstOutputMs: firstOutputTs - createStartedAt,
-              firstOutputAfterCommandMs: commandDispatchedTs ? firstOutputTs - commandDispatchedTs : null,
+              firstOutputAfterCommandMs: commandDispatchedTs
+                ? firstOutputTs - commandDispatchedTs
+                : null,
               usedFallback,
               shell: spawnConfig.shell,
               shellArgs: usedArgs
@@ -961,7 +1063,10 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
             const timer = setInterval(async () => {
               attempts++
               const sess = sessions.get(sessionId)
-              if (!sess || sess.pty !== target) { clearInterval(timer); return }
+              if (!sess || sess.pty !== target) {
+                clearInterval(timer)
+                return
+              }
 
               try {
                 const detected = await adapter.detectSessionFromDisk!(createStartedAt, cwd)
@@ -1031,161 +1136,167 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
         // Use adapter for activity detection
         const detectedActivity = session.adapter.detectActivity(data, session.activity)
 
-      // Idle clock policy lives in `shouldRefreshIdleClock`. TUI adapters
-      // (default) refresh only on detected activity so cursor blinks /
-      // status redraws don't pin the clock open; output-driven adapters
-      // (`transitionOnInput === false`, e.g. plain shell) refresh on every chunk.
-      if (shouldRefreshIdleClock(session.adapter, detectedActivity)) {
-        session.lastOutputTime = Date.now()
-      }
-
-      if (detectedActivity) {
-        session.activity = detectedActivity
-        // Clear error state on valid activity (recovery from error)
-        if (session.error && detectedActivity !== 'unknown') {
-          session.error = null
+        // Idle clock policy lives in `shouldRefreshIdleClock`. TUI adapters
+        // (default) refresh only on detected activity so cursor blinks /
+        // status redraws don't pin the clock open; output-driven adapters
+        // (`transitionOnInput === false`, e.g. plain shell) refresh on every chunk.
+        if (shouldRefreshIdleClock(session.adapter, detectedActivity)) {
+          session.lastOutputTime = Date.now()
         }
-        // Map activity to TerminalState for backward compatibility
-        const newState = activityToTerminalState(detectedActivity)
-        if (newState) {
-          const preview = stripAnsiForSessionParse(data).slice(0, 200).replace(/\s+/g, ' ').trim()
-          if (newState === 'running' && session.state !== 'running') {
-            // See `recordWorkingDetection` in state-machine.ts for the why.
-            const gate = recordWorkingDetection(session.workingDetections, Date.now())
-            session.workingDetections = gate.history
-            if (gate.shouldPromote) {
-              session.workingDetections = []
-              session.pendingTransitionTrigger = { source: 'detect-activity:working', preview }
+
+        if (detectedActivity) {
+          session.activity = detectedActivity
+          // Clear error state on valid activity (recovery from error)
+          if (session.error && detectedActivity !== 'unknown') {
+            session.error = null
+          }
+          // Map activity to TerminalState for backward compatibility
+          const newState = activityToTerminalState(detectedActivity)
+          if (newState) {
+            const preview = stripAnsiForSessionParse(data).slice(0, 200).replace(/\s+/g, ' ').trim()
+            if (newState === 'running' && session.state !== 'running') {
+              // See `recordWorkingDetection` in state-machine.ts for the why.
+              const gate = recordWorkingDetection(session.workingDetections, Date.now())
+              session.workingDetections = gate.history
+              if (gate.shouldPromote) {
+                session.workingDetections = []
+                session.pendingTransitionTrigger = { source: 'detect-activity:working', preview }
+                transitionState(sessionId, newState)
+              }
+            } else {
+              session.pendingTransitionTrigger = {
+                source: `detect-activity:${detectedActivity}`,
+                preview
+              }
               transitionState(sessionId, newState)
             }
-          } else {
-            session.pendingTransitionTrigger = { source: `detect-activity:${detectedActivity}`, preview }
-            transitionState(sessionId, newState)
           }
         }
-      }
 
-      // Use adapter for error detection
-      const detectedError = session.adapter.detectError(data)
-      if (detectedError) {
-        session.error = detectedError
-        session.checkingForSessionError = false
-        session.pendingTransitionTrigger = {
-          source: `detect-error:${detectedError.code}`,
-          preview: detectedError.message?.slice(0, 200)
-        }
-        transitionState(sessionId, 'error')
-        recordDiagnosticEvent({
-          level: 'error',
-          source: 'pty',
-          event: 'pty.adapter_error',
-          sessionId,
-          taskId: taskIdFromSessionId(sessionId),
-          message: detectedError.message,
-          payload: {
-            code: detectedError.code,
-            rawLength: data.length
+        // Use adapter for error detection
+        const detectedError = session.adapter.detectError(data)
+        if (detectedError) {
+          session.error = detectedError
+          session.checkingForSessionError = false
+          session.pendingTransitionTrigger = {
+            source: `detect-error:${detectedError.code}`,
+            preview: detectedError.message?.slice(0, 200)
           }
-        })
-        if (!win.isDestroyed() && detectedError.code === 'SESSION_NOT_FOUND') {
+          transitionState(sessionId, 'error')
+          recordDiagnosticEvent({
+            level: 'error',
+            source: 'pty',
+            event: 'pty.adapter_error',
+            sessionId,
+            taskId: taskIdFromSessionId(sessionId),
+            message: detectedError.message,
+            payload: {
+              code: detectedError.code,
+              rawLength: data.length
+            }
+          })
+          if (!win.isDestroyed() && detectedError.code === 'SESSION_NOT_FOUND') {
+            try {
+              win.webContents.send('pty:session-not-found', sessionId)
+            } catch {
+              // Window destroyed, ignore
+            }
+          }
+        }
+
+        // Check for prompts
+        const prompt = session.adapter.detectPrompt(data)
+        if (prompt && !win.isDestroyed()) {
           try {
-            win.webContents.send('pty:session-not-found', sessionId)
+            win.webContents.send('pty:prompt', sessionId, prompt)
           } catch {
             // Window destroyed, ignore
           }
         }
-      }
 
-      // Check for prompts
-      const prompt = session.adapter.detectPrompt(data)
-      if (prompt && !win.isDestroyed()) {
-        try {
-          win.webContents.send('pty:prompt', sessionId, prompt)
-        } catch {
-          // Window destroyed, ignore
+        // OSC title handling: AI modes (claude-code, codex, etc.) set meaningful OSC titles.
+        // Plain terminals ignore OSC (shell prompts emit noisy paths like "user@host:~/dir").
+        // pty.process polling is handled separately by startTitlePolling().
+        if (session.mode !== 'terminal') {
+          const oscTitle = extractOscTitle(data)
+          if (oscTitle) emitTitle(session, oscTitle)
         }
-      }
 
-      // OSC title handling: AI modes (claude-code, codex, etc.) set meaningful OSC titles.
-      // Plain terminals ignore OSC (shell prompts emit noisy paths like "user@host:~/dir").
-      // pty.process polling is handled separately by startTitlePolling().
-      if (session.mode !== 'terminal') {
-        const oscTitle = extractOscTitle(data)
-        if (oscTitle) emitTitle(session, oscTitle)
-      }
-
-      if (!win.isDestroyed()) {
-        try {
-          // cleanData already filtered above (buffer append)
-          win.webContents.send('pty:data', sessionId, cleanData, currentSeq)
-        } catch {
-          // Window destroyed between check and send, ignore
+        if (!win.isDestroyed()) {
+          try {
+            // cleanData already filtered above (buffer append)
+            win.webContents.send('pty:data', sessionId, cleanData, currentSeq)
+          } catch {
+            // Window destroyed between check and send, ignore
+          }
         }
-      }
 
-      // Detect dev server URLs (localhost/127.0.0.1/0.0.0.0 with port)
-      DEV_SERVER_URL_PATTERN.lastIndex = 0
-      const urlMatches = data.match(DEV_SERVER_URL_PATTERN)
-      if (urlMatches && !win.isDestroyed()) {
-        for (const url of urlMatches) {
-          const normalized = url.replace('0.0.0.0', 'localhost')
-          if (!session.detectedDevUrls.has(normalized)) {
-            session.detectedDevUrls.add(normalized)
-            try {
-              win.webContents.send('pty:dev-server-detected', sessionId, normalized)
-            } catch {
-              // Window destroyed, ignore
+        // Detect dev server URLs (localhost/127.0.0.1/0.0.0.0 with port)
+        DEV_SERVER_URL_PATTERN.lastIndex = 0
+        const urlMatches = data.match(DEV_SERVER_URL_PATTERN)
+        if (urlMatches && !win.isDestroyed()) {
+          for (const url of urlMatches) {
+            const normalized = url.replace('0.0.0.0', 'localhost')
+            if (!session.detectedDevUrls.has(normalized)) {
+              session.detectedDevUrls.add(normalized)
+              try {
+                win.webContents.send('pty:dev-server-detected', sessionId, normalized)
+              } catch {
+                // Window destroyed, ignore
+              }
             }
           }
         }
-      }
 
-      // Parse conversation ID from /status output
-      if (session.watchingForSessionId) {
-        session.statusOutputBuffer += data
-        let detectedConversationId: string | null = null
-        if (session.adapter.detectConversationId) {
-          detectedConversationId = session.adapter.detectConversationId(session.statusOutputBuffer)
-        } else {
-          const normalizedStatusOutput = stripAnsiForSessionParse(session.statusOutputBuffer)
-          const labeledSessionMatch = normalizedStatusOutput.match(
-            /\bsession(?:\s*id)?:\s+([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/im
-          )
-          const uuidMatch = labeledSessionMatch ?? normalizedStatusOutput.match(
-            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
-          )
-          if (uuidMatch) {
-            detectedConversationId = uuidMatch[1] ?? uuidMatch[0]
-          }
-        }
-
-        if (detectedConversationId) {
-
-          recordDiagnosticEvent({
-            level: 'info',
-            source: 'pty',
-            event: 'pty.conversation_detected',
-            sessionId,
-            taskId: taskIdFromSessionId(sessionId),
-            payload: {
-              conversationId: detectedConversationId
-            }
-          })
-          if (!win.isDestroyed()) {
-            try {
-              win.webContents.send('pty:session-detected', sessionId, detectedConversationId)
-            } catch {
-              // Window destroyed, ignore
+        // Parse conversation ID from /status output
+        if (session.watchingForSessionId) {
+          session.statusOutputBuffer += data
+          let detectedConversationId: string | null = null
+          if (session.adapter.detectConversationId) {
+            detectedConversationId = session.adapter.detectConversationId(
+              session.statusOutputBuffer
+            )
+          } else {
+            const normalizedStatusOutput = stripAnsiForSessionParse(session.statusOutputBuffer)
+            const labeledSessionMatch = normalizedStatusOutput.match(
+              /\bsession(?:\s*id)?:\s+([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b/im
+            )
+            const uuidMatch =
+              labeledSessionMatch ??
+              normalizedStatusOutput.match(
+                /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+              )
+            if (uuidMatch) {
+              detectedConversationId = uuidMatch[1] ?? uuidMatch[0]
             }
           }
-          session.watchingForSessionId = false
-          session.statusOutputBuffer = ''
-          if (session.statusWatchTimeout) {
-            clearTimeout(session.statusWatchTimeout)
-            session.statusWatchTimeout = undefined
+
+          if (detectedConversationId) {
+            recordDiagnosticEvent({
+              level: 'info',
+              source: 'pty',
+              event: 'pty.conversation_detected',
+              sessionId,
+              taskId: taskIdFromSessionId(sessionId),
+              payload: {
+                conversationId: detectedConversationId
+              }
+            })
+            if (!win.isDestroyed()) {
+              try {
+                win.webContents.send('pty:session-detected', sessionId, detectedConversationId)
+              } catch {
+                // Window destroyed, ignore
+              }
+            }
+            session.watchingForSessionId = false
+            session.statusOutputBuffer = ''
+            if (session.statusWatchTimeout) {
+              clearTimeout(session.statusWatchTimeout)
+              session.statusWatchTimeout = undefined
+            }
           }
         }
-      }
 
         const config = getDiagnosticsConfig()
         recordDiagnosticEvent({
@@ -1208,7 +1319,11 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
         const session = sessions.get(sessionId)
         if (!session || session.pty !== target) return
 
-        const canAsyncFallback = canRetryInteractiveOnly && !usedFallback && firstOutputTs === null && (Date.now() - createStartedAt) <= FAST_EXIT_FALLBACK_WINDOW_MS
+        const canAsyncFallback =
+          canRetryInteractiveOnly &&
+          !usedFallback &&
+          firstOutputTs === null &&
+          Date.now() - createStartedAt <= FAST_EXIT_FALLBACK_WINDOW_MS
         if (canAsyncFallback) {
           const fallbackArgs = initialArgs.filter((arg) => arg !== '-l')
           try {
@@ -1253,7 +1368,13 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
         }
 
         // #6: Notify renderer on stale resume (any provider, not just text-match)
-        const exitCtx = { exitCode, terminalMode, hasPostSpawnCommand: !!spawnConfig.postSpawnCommand, resuming, usedShellFallback }
+        const exitCtx = {
+          exitCode,
+          terminalMode,
+          hasPostSpawnCommand: !!spawnConfig.postSpawnCommand,
+          resuming,
+          usedShellFallback
+        }
         if (shouldNotifySessionNotFound(exitCtx) && !win.isDestroyed()) {
           recordDiagnosticEvent({
             level: 'warn',
@@ -1264,7 +1385,10 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
             payload: {
               exitCode,
               mode: terminalMode,
-              reason: firstOutputTs === null ? 'resume_nonzero_exit_no_output' : 'resume_nonzero_exit_with_output'
+              reason:
+                firstOutputTs === null
+                  ? 'resume_nonzero_exit_no_output'
+                  : 'resume_nonzero_exit_with_output'
             }
           })
           try {
@@ -1290,7 +1414,12 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
             session.buffer.append(infoLine)
             if (!win.isDestroyed()) {
               try {
-                win.webContents.send('pty:data', sessionId, infoLine, session.buffer.getCurrentSeq())
+                win.webContents.send(
+                  'pty:data',
+                  sessionId,
+                  infoLine,
+                  session.buffer.getCurrentSeq()
+                )
               } catch {
                 // Window destroyed, ignore
               }
@@ -1399,10 +1528,12 @@ export async function createPty(opts: CreatePtyOptions): Promise<{ success: bool
         cwd: cwd ?? null
       }
     })
-    return { success: false, error: `${err.message} (shell=${spawnAttempt?.shell ?? '?'}, cwd=${cwd || '?'})` }
+    return {
+      success: false,
+      error: `${err.message} (shell=${spawnAttempt?.shell ?? '?'}, cwd=${cwd || '?'})`
+    }
   }
 }
-
 
 /**
  * Submit a user-typed prompt to the PTY. Routes through the adapter's
@@ -1435,7 +1566,9 @@ export function writePty(sessionId: string, data: string): boolean {
       emitInputSubmit(sessionId, session.taskId, submittedLine)
       markSessionUserInput(sessionId)
     }
-    if (shouldFlipToRunningOnInput(session.adapter, session.state, session.inputBuffer.trim().length)) {
+    if (
+      shouldFlipToRunningOnInput(session.adapter, session.state, session.inputBuffer.trim().length)
+    ) {
       session.activity = 'working'
       session.lastOutputTime = Date.now() // reset idle timer from input submission
       session.pendingTransitionTrigger = {
@@ -1567,7 +1700,11 @@ export function findSessionByTaskIdAndMode(taskId: string, mode: TerminalMode): 
  *  signals from regex / silence-timer paths. Also refreshes `lastOutputTime`
  *  — any hook firing is proof the agent is alive, so the silence-timer
  *  fail-safe should re-arm. No-op if session is gone. */
-export function transitionStateFromHook(sessionId: string, newState: TerminalState, hookEvent: string): boolean {
+export function transitionStateFromHook(
+  sessionId: string,
+  newState: TerminalState,
+  hookEvent: string
+): boolean {
   const session = sessions.get(sessionId)
   if (!session) return false
   session.lastOutputTime = Date.now()
@@ -1691,10 +1828,7 @@ export function broadcastRespawnRequest(taskId: string): void {
  *  ack send and retry interval firing) without affecting concurrent calls.
  *  Ack payload: 'ok' | 'already-alive' | 'error'. */
 let nextEnsureAliveReqId = 1
-const pendingEnsureAliveAcks = new Map<
-  number,
-  (result: 'ok' | 'already-alive' | 'error') => void
->()
+const pendingEnsureAliveAcks = new Map<number, (result: 'ok' | 'already-alive' | 'error') => void>()
 
 ipcMain.on(
   'pty:ensure-alive:ack',
@@ -1727,11 +1861,12 @@ export function requestEnsureAlive(
   // BrowserWindow. The cached singleton lags startup-order: CLI calls before
   // `ready-to-show` fires would otherwise see 'no-window' even with a window
   // present. Splash window uses a `data:` URL — exclude it.
-  const liveWindow = (mainWindow && !mainWindow.isDestroyed())
-    ? mainWindow
-    : BrowserWindow.getAllWindows().find(
-        (w) => !w.isDestroyed() && !w.webContents.getURL().startsWith('data:')
-      ) ?? null
+  const liveWindow =
+    mainWindow && !mainWindow.isDestroyed()
+      ? mainWindow
+      : (BrowserWindow.getAllWindows().find(
+          (w) => !w.isDestroyed() && !w.webContents.getURL().startsWith('data:')
+        ) ?? null)
   if (!liveWindow) return Promise.resolve('no-window')
   // Note: callers should pre-check liveness (the main sessionId convention
   // lives in the renderer, e.g. `${taskId}:${taskId}` — see TaskDetailPage's

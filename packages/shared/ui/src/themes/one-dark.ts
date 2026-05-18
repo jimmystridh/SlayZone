@@ -41,7 +41,7 @@ export const oneDark: UnifiedThemeDefinition = {
       surface2: '#2c313c',
       surface3: '#343a45',
       modal: '#21252b',
-      modalBorder: 'rgba(171, 178, 191, 0.25)',
+      modalBorder: 'rgba(171, 178, 191, 0.25)'
     },
     terminal: {
       background: '#282c34',
@@ -65,7 +65,7 @@ export const oneDark: UnifiedThemeDefinition = {
       brightBlue: '#61afef',
       brightMagenta: '#c678dd',
       brightCyan: '#56b6c2',
-      brightWhite: '#ffffff',
+      brightWhite: '#ffffff'
     },
     editor: {
       background: '#282c34',
@@ -85,7 +85,7 @@ export const oneDark: UnifiedThemeDefinition = {
       variable: '#abb2bf',
       property: '#e06c75',
       link: '#61afef',
-      heading: '#abb2bf',
-    },
-  },
+      heading: '#abb2bf'
+    }
+  }
 }

@@ -35,7 +35,9 @@ await describe('taskEvents bus', () => {
 
   test('off removes listener; no further calls', () => {
     let count = 0
-    const listener = () => { count++ }
+    const listener = () => {
+      count++
+    }
     taskEvents.on('task:updated', listener)
     taskEvents.emit('task:updated', { taskId: 't', projectId: 'p' })
     taskEvents.off('task:updated', listener)
@@ -45,7 +47,9 @@ await describe('taskEvents bus', () => {
 
   test('listener for unrelated event does not trigger', () => {
     let count = 0
-    const listener = () => { count++ }
+    const listener = () => {
+      count++
+    }
     taskEvents.on('task:created', listener)
     taskEvents.emit('task:archived', { taskId: 't', projectId: 'p' })
     taskEvents.emit('task:deleted', { taskId: 't', projectId: 'p' })
@@ -55,7 +59,9 @@ await describe('taskEvents bus', () => {
 
   test('payload pass-through for task:updated.oldStatus', () => {
     let captured: TaskEventMap['task:updated'] | undefined
-    const listener = (p: TaskEventMap['task:updated']) => { captured = p }
+    const listener = (p: TaskEventMap['task:updated']) => {
+      captured = p
+    }
     taskEvents.on('task:updated', listener)
     taskEvents.emit('task:updated', { taskId: 't', projectId: 'p', oldStatus: 'todo' })
     taskEvents.off('task:updated', listener)
@@ -64,7 +70,9 @@ await describe('taskEvents bus', () => {
 
   test('payload pass-through for task:tag-changed.tagId (nullable)', () => {
     const captured: TaskEventMap['task:tag-changed'][] = []
-    const listener = (p: TaskEventMap['task:tag-changed']) => { captured.push(p) }
+    const listener = (p: TaskEventMap['task:tag-changed']) => {
+      captured.push(p)
+    }
     taskEvents.on('task:tag-changed', listener)
     taskEvents.emit('task:tag-changed', { taskId: 't', projectId: 'p', tagId: 'tag1' })
     taskEvents.emit('task:tag-changed', { taskId: 't', projectId: 'p', tagId: null })

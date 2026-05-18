@@ -11,7 +11,7 @@ const baseCtx: Context = {
 const fire = (state: State, event: Event, ctx: Partial<Context> = {}) =>
   reduce(state, event, { ...baseCtx, ...ctx })
 
-const actionKinds = (actions: { kind: string }[]) => actions.map(a => a.kind)
+const actionKinds = (actions: { kind: string }[]) => actions.map((a) => a.kind)
 
 describe('reduce — happy path', () => {
   it('attached + app-resign → detached(auto), runs detach actions', () => {
@@ -32,7 +32,10 @@ describe('reduce — happy path', () => {
   })
 
   it('detached(auto) + main-focus → attached, runs reattach actions', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'main-focus' })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'main-focus' }
+    )
     expect(r.state).toEqual({ kind: 'attached' })
     expect(actionKinds(r.actions)).toEqual([
       'unregister-floating-shortcut',
@@ -54,19 +57,28 @@ describe('reduce — manual detach', () => {
   })
 
   it('detached(manual) + main-focus → STAYS detached(manual)', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'manual' }, { kind: 'main-focus' })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'manual' },
+      { kind: 'main-focus' }
+    )
     expect(r.state).toEqual({ kind: 'detached', sessionId: 'session-1', mode: 'manual' })
     expect(r.actions).toEqual([])
   })
 
   it('detached(auto) + user-detach → upgrades to manual', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'user-detach' })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'user-detach' }
+    )
     expect(r.state).toEqual({ kind: 'detached', sessionId: 'session-1', mode: 'manual' })
     expect(actionKinds(r.actions)).toEqual(['broadcast-state', 'log-diagnostic'])
   })
 
   it('detached(manual) + user-detach → no-op (already manual)', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'manual' }, { kind: 'user-detach' })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'manual' },
+      { kind: 'user-detach' }
+    )
     expect(r.state).toEqual({ kind: 'detached', sessionId: 'session-1', mode: 'manual' })
     expect(r.actions).toEqual([])
   })
@@ -83,13 +95,19 @@ describe('reduce — manual detach', () => {
   })
 
   it('detached(auto) + user-reattach → attached', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'user-reattach' })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'user-reattach' }
+    )
     expect(r.state).toEqual({ kind: 'attached' })
     expect(actionKinds(r.actions)).toContain('redirect-session-to-main')
   })
 
   it('detached(manual) + user-reattach → attached', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'manual' }, { kind: 'user-reattach' })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'manual' },
+      { kind: 'user-reattach' }
+    )
     expect(r.state).toEqual({ kind: 'attached' })
     expect(actionKinds(r.actions)).toContain('redirect-session-to-main')
   })
@@ -126,13 +144,19 @@ describe('reduce — guards', () => {
   })
 
   it('floating-focus → no-op (just stays detached)', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'floating-focus' })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'floating-focus' }
+    )
     expect(r.state).toEqual({ kind: 'detached', sessionId: 'session-1', mode: 'auto' })
     expect(r.actions).toEqual([])
   })
 
   it('floating-blur → no-op (info event only)', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'floating-blur' })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'floating-blur' }
+    )
     expect(r.state).toEqual({ kind: 'detached', sessionId: 'session-1', mode: 'auto' })
     expect(r.actions).toEqual([])
   })
@@ -146,13 +170,18 @@ describe('reduce — user toggle', () => {
   })
 
   it('disable while detached → disabled, reattaches session first', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'user-set-enabled', enabled: false })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'user-set-enabled', enabled: false }
+    )
     expect(r.state).toEqual({ kind: 'disabled' })
     const kinds = actionKinds(r.actions)
     expect(kinds).toContain('redirect-session-to-main')
     expect(kinds).toContain('destroy-floating-window')
     // redirect must come before destroy
-    expect(kinds.indexOf('redirect-session-to-main')).toBeLessThan(kinds.indexOf('destroy-floating-window'))
+    expect(kinds.indexOf('redirect-session-to-main')).toBeLessThan(
+      kinds.indexOf('destroy-floating-window')
+    )
   })
 
   it('enable while disabled → attached', () => {
@@ -173,18 +202,38 @@ describe('reduce — user toggle', () => {
   })
 
   it('toggle-collapse while detached + collapsed → expand + resizable', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'user-toggle-collapse' }, { collapsed: true })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'user-toggle-collapse' },
+      { collapsed: true }
+    )
     expect(r.state).toEqual({ kind: 'detached', sessionId: 'session-1', mode: 'auto' })
-    const setCollapsed = r.actions.find(a => a.kind === 'set-collapsed') as { kind: 'set-collapsed'; collapsed: boolean }
-    const setResizable = r.actions.find(a => a.kind === 'set-resizable') as { kind: 'set-resizable'; resizable: boolean }
+    const setCollapsed = r.actions.find((a) => a.kind === 'set-collapsed') as {
+      kind: 'set-collapsed'
+      collapsed: boolean
+    }
+    const setResizable = r.actions.find((a) => a.kind === 'set-resizable') as {
+      kind: 'set-resizable'
+      resizable: boolean
+    }
     expect(setCollapsed.collapsed).toBe(false)
     expect(setResizable.resizable).toBe(true)
   })
 
   it('toggle-collapse while detached + expanded → collapse + non-resizable', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'user-toggle-collapse' }, { collapsed: false })
-    const setCollapsed = r.actions.find(a => a.kind === 'set-collapsed') as { kind: 'set-collapsed'; collapsed: boolean }
-    const setResizable = r.actions.find(a => a.kind === 'set-resizable') as { kind: 'set-resizable'; resizable: boolean }
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'user-toggle-collapse' },
+      { collapsed: false }
+    )
+    const setCollapsed = r.actions.find((a) => a.kind === 'set-collapsed') as {
+      kind: 'set-collapsed'
+      collapsed: boolean
+    }
+    const setResizable = r.actions.find((a) => a.kind === 'set-resizable') as {
+      kind: 'set-resizable'
+      resizable: boolean
+    }
     expect(setCollapsed.collapsed).toBe(true)
     expect(setResizable.resizable).toBe(false)
   })
@@ -208,7 +257,10 @@ describe('reduce — context changes', () => {
   })
 
   it('panel closes while detached → tears down', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'panel-open-changed', isOpen: false })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'panel-open-changed', isOpen: false }
+    )
     expect(r.state).toEqual({ kind: 'attached' })
     expect(actionKinds(r.actions)).toContain('destroy-floating-window')
   })
@@ -216,7 +268,10 @@ describe('reduce — context changes', () => {
 
 describe('reduce — external floating window close', () => {
   it('floating-window-closed while detached → reattach without destroy', () => {
-    const r = fire({ kind: 'detached', sessionId: 'session-1', mode: 'auto' }, { kind: 'floating-window-closed' })
+    const r = fire(
+      { kind: 'detached', sessionId: 'session-1', mode: 'auto' },
+      { kind: 'floating-window-closed' }
+    )
     expect(r.state).toEqual({ kind: 'attached' })
     const kinds = actionKinds(r.actions)
     expect(kinds).toContain('redirect-session-to-main')

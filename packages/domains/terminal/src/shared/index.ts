@@ -8,7 +8,7 @@ export {
   mapEventType,
   type AgentId,
   type AgentLifecycleEvent,
-  type AgentLifecycleEventType,
+  type AgentLifecycleEventType
 } from './agent-event-handler'
 export * from './chat-mode'
 export * from './chat-model'

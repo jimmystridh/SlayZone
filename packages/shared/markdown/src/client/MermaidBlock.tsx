@@ -14,7 +14,7 @@ function useThemeVariant(): 'dark' | 'light' {
       return () => obs.disconnect()
     },
     () => (document.documentElement.classList.contains('dark') ? 'dark' : 'light'),
-    () => 'dark',
+    () => 'dark'
   )
 }
 
@@ -113,7 +113,15 @@ export function MermaidBlock({ code, fill = false }: MermaidBlockProps) {
   }
 
   if (!svg) {
-    return <div className={fill ? 'flex-1 bg-muted/30 animate-pulse' : 'my-2 h-12 rounded-md bg-muted/30 animate-pulse'} />
+    return (
+      <div
+        className={
+          fill
+            ? 'flex-1 bg-muted/30 animate-pulse'
+            : 'my-2 h-12 rounded-md bg-muted/30 animate-pulse'
+        }
+      />
+    )
   }
 
   if (fill) {

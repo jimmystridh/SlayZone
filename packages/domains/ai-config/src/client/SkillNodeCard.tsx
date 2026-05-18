@@ -6,14 +6,14 @@ import type { AiConfigItem, AiConfigScope, SkillValidationStatus, SyncHealth } f
 import { useContextManagerStore } from './useContextManagerStore'
 
 const CHAR_WIDTH = 8.4 // monospace text-sm approx
-const PADDING = 24     // px-3 * 2
+const PADDING = 24 // px-3 * 2
 const MIN_WIDTH = 140
 const MAX_WIDTH = 320
 
 // Approximate widths of the bottom badge-row pills at text-[9px]
-const SCOPE_PILL_WIDTH = 46      // "Project" is the longest scope label
+const SCOPE_PILL_WIDTH = 46 // "Project" is the longest scope label
 const LINE_COUNT_PILL_WIDTH = 34 // up to ~5 digits + L
-const STALE_PILL_WIDTH = 52      // icon + "Stale"
+const STALE_PILL_WIDTH = 52 // icon + "Stale"
 const PILL_GAP = 4
 
 export interface SkillNodeWidthOpts {
@@ -42,7 +42,8 @@ export interface SkillNodeData {
 }
 
 export const SkillNodeCard = memo(function SkillNodeCard({ data }: NodeProps) {
-  const { item, scope, validationStatus, description, selected, width, syncHealth } = data as SkillNodeData
+  const { item, scope, validationStatus, description, selected, width, syncHealth } =
+    data as SkillNodeData
   const showLineCount = useContextManagerStore((s) => s.showLineCount)
   const isStale = syncHealth === 'stale'
 
@@ -58,15 +59,21 @@ export const SkillNodeCard = memo(function SkillNodeCard({ data }: NodeProps) {
             : 'hover:shadow-md'
       )}
     >
-      <Handle type="target" position={Position.Top} className="!w-2 !h-2 !bg-transparent !border-none !opacity-0" />
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="!w-2 !h-2 !bg-transparent !border-none !opacity-0"
+      />
 
       <div className="flex items-start gap-1.5">
         <p className="truncate font-mono text-sm font-medium leading-tight">{item.slug}</p>
         {validationStatus && validationStatus !== 'valid' && (
-          <AlertTriangle className={cn(
-            'shrink-0 size-3.5',
-            validationStatus === 'invalid' ? 'text-destructive' : 'text-amber-500'
-          )} />
+          <AlertTriangle
+            className={cn(
+              'shrink-0 size-3.5',
+              validationStatus === 'invalid' ? 'text-destructive' : 'text-amber-500'
+            )}
+          />
         )}
       </div>
 
@@ -77,12 +84,14 @@ export const SkillNodeCard = memo(function SkillNodeCard({ data }: NodeProps) {
       )}
 
       <div className="mt-1.5 flex items-center gap-1 whitespace-nowrap">
-        <span className={cn(
-          'rounded-full px-1.5 py-0.5 text-[9px] font-medium leading-none',
-          scope === 'library'
-            ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-        )}>
+        <span
+          className={cn(
+            'rounded-full px-1.5 py-0.5 text-[9px] font-medium leading-none',
+            scope === 'library'
+              ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+          )}
+        >
           {scope === 'library' ? 'Library' : 'Project'}
         </span>
         {showLineCount && (
@@ -101,7 +110,11 @@ export const SkillNodeCard = memo(function SkillNodeCard({ data }: NodeProps) {
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="!w-2 !h-2 !bg-transparent !border-none !opacity-0" />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="!w-2 !h-2 !bg-transparent !border-none !opacity-0"
+      />
     </div>
   )
 })

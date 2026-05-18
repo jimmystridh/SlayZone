@@ -16,22 +16,20 @@ const PROCESSES: { scope: string; items: Process[] }[] = [
     scope: 'Global',
     items: [
       { name: 'Dev Server', command: 'pnpm dev', status: 'running' },
-      { name: 'Convex Dev', command: 'pnpx convex dev', status: 'idle' },
-    ],
+      { name: 'Convex Dev', command: 'pnpx convex dev', status: 'idle' }
+    ]
   },
   {
     scope: 'Set up auth',
     items: [
       { name: 'Type Check', command: 'pnpm typecheck --watch', status: 'running' },
-      { name: 'Test Runner', command: 'pnpm test:unit --watch', status: 'running' },
-    ],
+      { name: 'Test Runner', command: 'pnpm test:unit --watch', status: 'running' }
+    ]
   },
   {
     scope: 'Build kanban',
-    items: [
-      { name: 'Storybook', command: 'pnpm storybook', status: 'idle' },
-    ],
-  },
+    items: [{ name: 'Storybook', command: 'pnpm storybook', status: 'idle' }]
+  }
 ]
 
 function ProcessRow({ process, delay }: { process: Process; delay: number }): React.JSX.Element {
@@ -46,11 +44,13 @@ function ProcessRow({ process, delay }: { process: Process; delay: number }): Re
         <p className="text-[14px] font-semibold truncate">{process.name}</p>
         <p className="text-[12px] text-muted-foreground/50 font-mono truncate">{process.command}</p>
       </div>
-      <div className={`h-6 px-2 rounded flex items-center gap-1.5 text-[11px] font-medium shrink-0 ${
-        process.status === 'running'
-          ? 'bg-green-500/10 text-green-500'
-          : 'bg-muted text-muted-foreground/50'
-      }`}>
+      <div
+        className={`h-6 px-2 rounded flex items-center gap-1.5 text-[11px] font-medium shrink-0 ${
+          process.status === 'running'
+            ? 'bg-green-500/10 text-green-500'
+            : 'bg-muted text-muted-foreground/50'
+        }`}
+      >
         {process.status === 'running' && (
           <motion.span
             className="w-1.5 h-1.5 rounded-full bg-green-500"
@@ -88,7 +88,9 @@ function ProcessesPanel(): React.JSX.Element {
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         {PROCESSES.map((group) => (
           <div key={group.scope}>
-            <span className="text-[11px] font-semibold text-muted-foreground/40 uppercase tracking-wider px-1">{group.scope}</span>
+            <span className="text-[11px] font-semibold text-muted-foreground/40 uppercase tracking-wider px-1">
+              {group.scope}
+            </span>
             <div className="flex flex-col gap-2 mt-1.5">
               {group.items.map((p) => {
                 const d = 0.1 + idx * 0.06
@@ -112,16 +114,17 @@ export function SceneProcesses(): React.JSX.Element {
   }, [])
 
   return (
-    <SceneShell
-      tabs={[
-        { label: 'Set up auth', active: true, dot: true },
-      ]}
-    >
-      <TaskHeader title="Set up authentication" panels={panelButtons('Terminal', ...(showProcesses ? ['Processes'] as const : []))} />
+    <SceneShell tabs={[{ label: 'Set up auth', active: true, dot: true }]}>
+      <TaskHeader
+        title="Set up authentication"
+        panels={panelButtons('Terminal', ...(showProcesses ? (['Processes'] as const) : []))}
+      />
 
       <div className="flex-1 flex gap-4 p-4 min-h-0 overflow-hidden">
         {/* Terminal — full width initially, shrinks when processes opens */}
-        <div className={`${showProcesses ? 'w-2/5' : 'flex-1'} shrink-0 rounded-xl border overflow-hidden flex flex-col bg-neutral-950 transition-all duration-300`}>
+        <div
+          className={`${showProcesses ? 'w-2/5' : 'flex-1'} shrink-0 rounded-xl border overflow-hidden flex flex-col bg-neutral-950 transition-all duration-300`}
+        >
           <div className="h-12 shrink-0 border-b border-white/10 flex items-center px-4">
             <div className="flex items-center gap-2 h-8 px-3 rounded bg-primary/20">
               <div className="w-3 h-3 rounded-full bg-primary" />
@@ -132,14 +135,14 @@ export function SceneProcesses(): React.JSX.Element {
         </div>
 
         {/* Processes panel — appears after click */}
-        <AnimatePresence>
-          {showProcesses && <ProcessesPanel />}
-        </AnimatePresence>
+        <AnimatePresence>{showProcesses && <ProcessesPanel />}</AnimatePresence>
       </div>
-      <AnimatedCursor waypoints={[
-        { x: '50%', y: '50%', delay: 0.5, click: false },
-        { x: '85%', y: '10%', delay: 1.8 },
-      ]} />
+      <AnimatedCursor
+        waypoints={[
+          { x: '50%', y: '50%', delay: 0.5, click: false },
+          { x: '85%', y: '10%', delay: 1.8 }
+        ]}
+      />
     </SceneShell>
   )
 }

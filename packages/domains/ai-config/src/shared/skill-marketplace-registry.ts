@@ -715,5 +715,5 @@ Once you have enough context to understand what the task is about, update its ti
 - Update again if the scope shifts significantly during the conversation
 - Use: \`slay tasks update --permanent --title "<emoji> <title>"\`
 `
-  },
+  }
 ]

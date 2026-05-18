@@ -44,7 +44,9 @@ const START_OPTIONS: Array<{
 
 export function CreateProjectDialog({ open, onOpenChange, onCreated }: CreateProjectDialogProps) {
   const [name, setName] = useState('')
-  const [color, setColor] = useState(() => DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)])
+  const [color, setColor] = useState(
+    () => DEFAULT_COLORS[Math.floor(Math.random() * DEFAULT_COLORS.length)]
+  )
   const [path, setPath] = useState('')
   const [startMode, setStartMode] = useState<ProjectStartMode>('scratch')
   const [loading, setLoading] = useState(false)
@@ -113,7 +115,12 @@ export function CreateProjectDialog({ open, onOpenChange, onCreated }: CreatePro
                 placeholder="/path/to/repo"
                 className="flex-1"
               />
-              <IconButton type="button" variant="outline" aria-label="Browse folder" onClick={handleBrowse}>
+              <IconButton
+                type="button"
+                variant="outline"
+                aria-label="Browse folder"
+                onClick={handleBrowse}
+              >
                 <FolderOpen className="h-4 w-4" />
               </IconButton>
             </div>

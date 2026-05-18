@@ -14,7 +14,9 @@ interface UseBrowserViewLifecycleOpts {
   desktopHandoffPolicy?: DesktopHandoffPolicy | null
 }
 
-export function useBrowserViewLifecycle(opts: UseBrowserViewLifecycleOpts): { viewId: string | null } {
+export function useBrowserViewLifecycle(opts: UseBrowserViewLifecycleOpts): {
+  viewId: string | null
+} {
   const { tabId, taskId, url, partition, kind, desktopHandoffPolicy } = opts
   const [viewId, setViewId] = useState<string | null>(null)
   const mountedRef = useRef(true)
@@ -38,13 +40,15 @@ export function useBrowserViewLifecycle(opts: UseBrowserViewLifecycleOpts): { vi
           url: url || 'about:blank',
           bounds: { x: 0, y: 0, width: 1, height: 1 },
           kind,
-          desktopHandoffPolicy,
+          desktopHandoffPolicy
         })
 
         if (!id) {
           // Manager returned null (window not ready) — retry
           console.warn('[useBrowserViewLifecycle] createView returned null, retrying in 500ms')
-          retryTimer = setTimeout(() => { if (mountedRef.current) void tryCreate() }, 500)
+          retryTimer = setTimeout(() => {
+            if (mountedRef.current) void tryCreate()
+          }, 500)
           return
         }
 
@@ -58,7 +62,9 @@ export function useBrowserViewLifecycle(opts: UseBrowserViewLifecycleOpts): { vi
       } catch (err) {
         console.error('[useBrowserViewLifecycle] createView failed:', err)
         // Retry on failure (e.g., main process not ready)
-        retryTimer = setTimeout(() => { if (mountedRef.current) void tryCreate() }, 500)
+        retryTimer = setTimeout(() => {
+          if (mountedRef.current) void tryCreate()
+        }, 500)
       }
     }
 

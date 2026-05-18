@@ -18,7 +18,10 @@ interface UseKanbanSelectionOpts {
   resetKey?: string | null
 }
 
-export function useKanbanSelection({ columns, resetKey }: UseKanbanSelectionOpts): KanbanSelectionAPI {
+export function useKanbanSelection({
+  columns,
+  resetKey
+}: UseKanbanSelectionOpts): KanbanSelectionAPI {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [anchorId, setAnchorId] = useState<string | null>(null)
 
@@ -81,6 +84,6 @@ export function useKanbanSelection({ columns, resetKey }: UseKanbanSelectionOpts
     replace,
     clear,
     selectAll,
-    size: selectedIds.size,
+    size: selectedIds.size
   }
 }

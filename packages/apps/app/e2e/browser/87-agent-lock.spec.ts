@@ -9,7 +9,7 @@ import {
   ensureBrowserPanelVisible,
   openTaskViaSearch,
   getViewsForTask,
-  testInvoke,
+  testInvoke
 } from '../fixtures/browser-view'
 import { spawnSync } from 'child_process'
 import path from 'path'
@@ -23,11 +23,18 @@ const SLAY_JS = path.resolve(__dirname, '..', '..', '..', 'cli', 'dist', 'slay.j
 function writeFixture(name: string, body: string): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'slay-agent-lock-'))
   const file = path.join(dir, `${name}.html`)
-  fs.writeFileSync(file, `<!doctype html><html><body><h1>${body}</h1><button id="b">click me</button></body></html>`)
+  fs.writeFileSync(
+    file,
+    `<!doctype html><html><body><h1>${body}</h1><button id="b">click me</button></body></html>`
+  )
   return `file://${file}`
 }
 
-interface CliResult { status: number | null; stdout: string; stderr: string }
+interface CliResult {
+  status: number | null
+  stdout: string
+  stderr: string
+}
 
 test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () => {
   let taskId = ''
@@ -52,13 +59,19 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
     expect(mcpPort).toBeTruthy()
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Agent Lock', color: '#f59e0b', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Agent Lock',
+      color: '#f59e0b',
+      path: TEST_PROJECT_PATH
+    })
     const t = await s.createTask({ projectId: p.id, title: 'Agent lock task', status: 'todo' })
     taskId = t.id
     await s.refreshData()
     await openTaskViaSearch(mainWindow, 'Agent lock task')
     await ensureBrowserPanelVisible(mainWindow)
-    await expect.poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 }).toBe(1)
+    await expect
+      .poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 })
+      .toBe(1)
   })
 
   function runCli(...args: string[]): CliResult {
@@ -67,9 +80,9 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
         ...process.env,
         SLAYZONE_DB_PATH: dbPath,
         SLAYZONE_MCP_PORT: String(mcpPort),
-        SLAYZONE_TASK_ID: taskId,
+        SLAYZONE_TASK_ID: taskId
       },
-      encoding: 'utf8',
+      encoding: 'utf8'
     })
     return { status: r.status, stdout: r.stdout, stderr: r.stderr }
   }
@@ -78,7 +91,9 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
     // No agentTouched yet → toggle must not be in the DOM.
     // Toggle is always rendered but wrapped in .invisible until agentTouched.
     // Assert it's not visible (semantically absent for the user).
-    await expect(mainWindow.locator('[data-testid="browser-agent-lock-toggle"]:visible')).toHaveCount(0)
+    await expect(
+      mainWindow.locator('[data-testid="browser-agent-lock-toggle"]:visible')
+    ).toHaveCount(0)
   })
 
   // BrowserPanel renders two elements with data-testid="browser-agent-lock-
@@ -86,23 +101,33 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
   // bar (data-locked="false"). Disambiguate via the banner wrapper or the
   // data-locked attribute.
   const bannerToggle = (page: import('@playwright/test').Page) =>
-    page.locator('[data-testid="browser-agent-lock-banner"] [data-testid="browser-agent-lock-toggle"]')
+    page.locator(
+      '[data-testid="browser-agent-lock-banner"] [data-testid="browser-agent-lock-toggle"]'
+    )
   const urlBarToggle = (page: import('@playwright/test').Page) =>
     page.locator('[data-testid="browser-agent-lock-toggle"][data-locked="false"]:visible')
 
-  test('navigate via CLI trips agentTouched, surfaces toggle, and auto-locks the tab', async ({ electronApp, mainWindow }) => {
+  test('navigate via CLI trips agentTouched, surfaces toggle, and auto-locks the tab', async ({
+    electronApp,
+    mainWindow
+  }) => {
     const URL_A = writeFixture('a', 'page-a')
     const r = runCli('tasks', 'browser', 'navigate', URL_A)
     expect(r.status, r.stderr).toBe(0)
 
     // Probe DB: agentTouched should flip, then auto-lock should write locked.
-    const dbTab = () => electronApp.evaluate((_, tid) => {
-      type DB = { prepare: (sql: string) => { get: (id: string) => { browser_tabs: string | null } | undefined } }
-      const db = (globalThis as Record<string, unknown>).__db as DB
-      const row = db.prepare('SELECT browser_tabs FROM tasks WHERE id = ?').get(tid)
-      const state = row?.browser_tabs ? JSON.parse(row.browser_tabs) : null
-      return state?.tabs?.[0] ?? null
-    }, taskId)
+    const dbTab = () =>
+      electronApp.evaluate((_, tid) => {
+        type DB = {
+          prepare: (sql: string) => {
+            get: (id: string) => { browser_tabs: string | null } | undefined
+          }
+        }
+        const db = (globalThis as Record<string, unknown>).__db as DB
+        const row = db.prepare('SELECT browser_tabs FROM tasks WHERE id = ?').get(tid)
+        const state = row?.browser_tabs ? JSON.parse(row.browser_tabs) : null
+        return state?.tabs?.[0] ?? null
+      }, taskId)
     await expect.poll(dbTab, { timeout: 10_000 }).toMatchObject({ agentTouched: true })
     // The auto-lock effect in BrowserPanel.tsx watches prev=false→curr=true.
     // If panel mounted with the tab already touched (no prev=false snapshot),
@@ -112,15 +137,20 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
     // DB confirms locked=true; banner depends on TaskDetailPage propagating
     // tabs prop with locked. Force a refresh in case tasks:changed coalesced.
     await mainWindow.evaluate(() => {
-      void (window as { __slayzone_refreshData?: () => Promise<void> | void }).__slayzone_refreshData?.()
+      void (
+        window as { __slayzone_refreshData?: () => Promise<void> | void }
+      ).__slayzone_refreshData?.()
     })
     await expect(bannerToggle(mainWindow)).toBeVisible({ timeout: 10_000 })
 
     // Main-process state reflects locked.
     const views = await getViewsForTask(mainWindow, taskId)
     expect(views).toHaveLength(1)
-    await expect.poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean,
-      { timeout: 5_000 }).toBe(true)
+    await expect
+      .poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean, {
+        timeout: 5_000
+      })
+      .toBe(true)
   })
 
   test('clicking the toggle unlocks; clicking again re-locks', async ({ mainWindow }) => {
@@ -130,12 +160,16 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
     await bannerToggle(mainWindow).click()
     await expect(bannerToggle(mainWindow)).toHaveCount(0, { timeout: 3_000 })
     await expect(urlBarToggle(mainWindow)).toBeVisible({ timeout: 3_000 })
-    await expect.poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean).toBe(false)
+    await expect
+      .poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean)
+      .toBe(false)
 
     // Unlocked → click URL-bar toggle → locked.
     await urlBarToggle(mainWindow).click()
     await expect(bannerToggle(mainWindow)).toBeVisible({ timeout: 3_000 })
-    await expect.poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean).toBe(true)
+    await expect
+      .poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean)
+      .toBe(true)
   })
 
   // QUARANTINED 2026-05-16: locked state set, navigate succeeds, but CLI
@@ -146,18 +180,30 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
     const views = await getViewsForTask(mainWindow, taskId)
     // Explicitly ensure locked state (prior tests may have left it unlocked).
     await testInvoke(mainWindow, 'browser:set-locked', views[0], true)
-    await mainWindow.evaluate((d) => window.api.db.setBrowserTabLocked(d.taskId, d.tabId, true),
-      { taskId, tabId: views[0] }).catch(() => {})
-    await expect.poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean,
-      { timeout: 3_000 }).toBe(true)
+    await mainWindow
+      .evaluate((d) => window.api.db.setBrowserTabLocked(d.taskId, d.tabId, true), {
+        taskId,
+        tabId: views[0]
+      })
+      .catch(() => {})
+    await expect
+      .poll(async () => (await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean, {
+        timeout: 3_000
+      })
+      .toBe(true)
 
     const URL_B = writeFixture('b', 'page-b')
     const r = runCli('tasks', 'browser', 'navigate', URL_B)
     expect(r.status, r.stderr).toBe(0)
 
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', views[0])) as string
-    }, { timeout: 10_000 }).toContain('b.html')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', views[0])) as string
+        },
+        { timeout: 10_000 }
+      )
+      .toContain('b.html')
 
     // Lock state must survive the agent op — no toggle, no churn.
     expect((await testInvoke(mainWindow, 'browser:is-locked', views[0])) as boolean).toBe(true)
@@ -177,7 +223,11 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
     // Use the test-only __db global instead of dynamically importing
     // better-sqlite3 (dynamic imports aren't allowed inside evaluate).
     const stored = await electronApp.evaluate((_, tid) => {
-      type DB = { prepare: (sql: string) => { get: (id: string) => { browser_tabs: string | null } | undefined } }
+      type DB = {
+        prepare: (sql: string) => {
+          get: (id: string) => { browser_tabs: string | null } | undefined
+        }
+      }
       const db = (globalThis as Record<string, unknown>).__db as DB | undefined
       if (!db) throw new Error('__db not exposed by main')
       const row = db.prepare('SELECT browser_tabs FROM tasks WHERE id = ?').get(tid)
@@ -185,7 +235,9 @@ test.describe('Agent lock (per-tab, sticky agentTouched + ephemeral lock)', () =
     }, taskId)
 
     expect(stored).toBeTruthy()
-    const parsed = JSON.parse(stored as string) as { tabs: { id: string; agentTouched?: boolean }[] }
-    expect(parsed.tabs.some(t => t.agentTouched === true)).toBe(true)
+    const parsed = JSON.parse(stored as string) as {
+      tabs: { id: string; agentTouched?: boolean }[]
+    }
+    expect(parsed.tabs.some((t) => t.agentTouched === true)).toBe(true)
   })
 })

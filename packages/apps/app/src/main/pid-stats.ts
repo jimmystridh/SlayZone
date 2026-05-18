@@ -1,8 +1,8 @@
 import { execFile } from 'child_process'
 
 export interface PidStats {
-  cpu: number   // % of one core
-  rss: number   // kilobytes
+  cpu: number // % of one core
+  rss: number // kilobytes
 }
 
 /** Resolve actual child PIDs (shell wrappers → real commands). Falls back to input PIDs if no children found. */
@@ -13,7 +13,11 @@ function resolveChildPids(shellPids: number[], cb: (pidMap: Map<number, number[]
       for (const pid of shellPids) map.set(pid, [pid])
       return cb(map)
     }
-    const childPids = stdout.trim().split('\n').map(s => s.trim()).filter(Boolean)
+    const childPids = stdout
+      .trim()
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
     execFile('ps', ['-o', 'pid=,ppid=', '-p', childPids.join(',')], (err2, stdout2) => {
       if (err2) {
         for (const pid of shellPids) map.set(pid, [pid])
@@ -64,12 +68,18 @@ export function createStatsPoller(
   let timer: ReturnType<typeof setInterval> | null = null
 
   function stop(): void {
-    if (timer) { clearInterval(timer); timer = null }
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
   }
 
   function tick(): void {
     const pidMap = getPids()
-    if (pidMap.size === 0) { stop(); return }
+    if (pidMap.size === 0) {
+      stop()
+      return
+    }
     const shellPids = Array.from(pidMap.values())
     resolveChildPids(shellPids, (childMap) => {
       const allPids = Array.from(new Set(Array.from(childMap.values()).flat()))
@@ -78,10 +88,14 @@ export function createStatsPoller(
         const result: Record<string, PidStats> = {}
         for (const [id, shellPid] of pidMap) {
           const children = childMap.get(shellPid) ?? [shellPid]
-          let cpu = 0, rss = 0
+          let cpu = 0,
+            rss = 0
           for (const cpid of children) {
             const s = pidStats.get(cpid)
-            if (s) { cpu += s.cpu; rss += s.rss }
+            if (s) {
+              cpu += s.cpu
+              rss += s.rss
+            }
           }
           result[id] = { cpu, rss }
         }

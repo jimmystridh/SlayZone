@@ -1,8 +1,22 @@
-import { test, expect, seed, goHome, clickProject, resetApp, TEST_PROJECT_PATH } from '../fixtures/electron'
 import {
-  testInvoke, urlInput, tabEntries, newTabBtn,
-  focusForAppShortcut, ensureBrowserPanelVisible, ensureBrowserPanelHidden,
-  openTaskViaSearch, getActiveViewId,
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  resetApp,
+  TEST_PROJECT_PATH
+} from '../fixtures/electron'
+import {
+  testInvoke,
+  urlInput,
+  tabEntries,
+  newTabBtn,
+  focusForAppShortcut,
+  ensureBrowserPanelVisible,
+  ensureBrowserPanelHidden,
+  openTaskViaSearch,
+  getActiveViewId
 } from '../fixtures/browser-view'
 import { getTestUrl } from '../fixtures/test-server'
 
@@ -29,8 +43,16 @@ test.describe('Browser panel', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Browser Test', color: '#0ea5e9', path: TEST_PROJECT_PATH })
-    const otherProject = await s.createProject({ name: 'Other Project', color: '#22c55e', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Browser Test',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
+    const otherProject = await s.createProject({
+      name: 'Other Project',
+      color: '#22c55e',
+      path: TEST_PROJECT_PATH
+    })
     const t = await s.createTask({ projectId: p.id, title: 'Browser task', status: 'todo' })
     taskId = t.id
     taskProjectName = p.name
@@ -70,28 +92,40 @@ test.describe('Browser panel', () => {
     const viewId = await getActiveViewId(mainWindow, taskId)
 
     await testInvoke(mainWindow, 'browser:close-devtools', viewId)
-    await expect.poll(() => testInvoke(mainWindow, 'browser:is-devtools-open', viewId), { timeout: 5_000 }).toBe(false)
+    await expect
+      .poll(() => testInvoke(mainWindow, 'browser:is-devtools-open', viewId), { timeout: 5_000 })
+      .toBe(false)
 
     await testInvoke(mainWindow, 'browser:open-devtools', viewId, 'bottom')
-    await expect.poll(() => testInvoke(mainWindow, 'browser:is-devtools-open', viewId), { timeout: 5_000 }).toBe(true)
+    await expect
+      .poll(() => testInvoke(mainWindow, 'browser:is-devtools-open', viewId), { timeout: 5_000 })
+      .toBe(true)
 
     await testInvoke(mainWindow, 'browser:close-devtools', viewId)
-    await expect.poll(() => testInvoke(mainWindow, 'browser:is-devtools-open', viewId), { timeout: 5_000 }).toBe(false)
+    await expect
+      .poll(() => testInvoke(mainWindow, 'browser:is-devtools-open', viewId), { timeout: 5_000 })
+      .toBe(false)
   })
 
-  test('browser link task intent opens a prefilled draft for the source task project', async ({ mainWindow }) => {
+  test('browser link task intent opens a prefilled draft for the source task project', async ({
+    mainWindow
+  }) => {
     await ensureBrowserPanelVisible(mainWindow)
     const viewId = await getActiveViewId(mainWindow, taskId)
 
     await testInvoke(mainWindow, 'browser:test-dispatch-create-task-from-link', viewId, {
       url: 'https://example.com/docs',
-      linkText: ' Example   docs ',
+      linkText: ' Example   docs '
     })
 
     const dialog = mainWindow.getByRole('dialog').last()
-    await expect(dialog.getByRole('heading', { name: 'Create Task' })).toBeVisible({ timeout: 5_000 })
+    await expect(dialog.getByRole('heading', { name: 'Create Task' })).toBeVisible({
+      timeout: 5_000
+    })
     await expect(dialog.locator('input[name="title"]')).toHaveValue('Link: Example docs')
-    await expect(dialog.locator('textarea[name="description"]')).toHaveValue('https://example.com/docs')
+    await expect(dialog.locator('textarea[name="description"]')).toHaveValue(
+      'https://example.com/docs'
+    )
     await expect(dialog.locator('form').getByRole('combobox').last()).toContainText(taskProjectName)
 
     await dialog.getByRole('button', { name: 'Cancel' }).click()
@@ -108,16 +142,20 @@ test.describe('Browser panel', () => {
       viewId,
       {
         linkURL: 'https://example.com/context-menu',
-        linkText: 'Context menu docs',
+        linkText: 'Context menu docs'
       },
       'create-task-from-link'
     )
     expect(handled).toBe(true)
 
     const dialog = mainWindow.getByRole('dialog').last()
-    await expect(dialog.getByRole('heading', { name: 'Create Task' })).toBeVisible({ timeout: 5_000 })
+    await expect(dialog.getByRole('heading', { name: 'Create Task' })).toBeVisible({
+      timeout: 5_000
+    })
     await expect(dialog.locator('input[name="title"]')).toHaveValue('Link: Context menu docs')
-    await expect(dialog.locator('textarea[name="description"]')).toHaveValue('https://example.com/context-menu')
+    await expect(dialog.locator('textarea[name="description"]')).toHaveValue(
+      'https://example.com/context-menu'
+    )
     await expect(dialog.locator('form').getByRole('combobox').last()).toContainText(taskProjectName)
 
     await dialog.getByRole('button', { name: 'Cancel' }).click()
@@ -135,7 +173,7 @@ test.describe('Browser panel', () => {
       viewId,
       {
         linkURL: 'https://example.com/context-tab',
-        linkText: 'Context tab docs',
+        linkText: 'Context tab docs'
       },
       'open-link-in-new-tab'
     )
@@ -154,16 +192,21 @@ test.describe('Browser panel', () => {
       buildFullPageLinkDataUrl(' Example   docs ', 'https://example.com/docs')
     )
 
-    await expect.poll(async () => {
-      return await testInvoke(
-        mainWindow,
-        'browser:execute-js',
-        viewId,
-        'document.readyState === "complete" && !!document.getElementById("task-link")'
-      ) as boolean
-    }, { timeout: 10_000 }).toBe(true)
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(
+            mainWindow,
+            'browser:execute-js',
+            viewId,
+            'document.readyState === "complete" && !!document.getElementById("task-link")'
+          )) as boolean
+        },
+        { timeout: 10_000 }
+      )
+      .toBe(true)
 
-    const clickPoint = await testInvoke(
+    const clickPoint = (await testInvoke(
       mainWindow,
       'browser:execute-js',
       viewId,
@@ -176,7 +219,7 @@ test.describe('Browser panel', () => {
           y: Math.floor(rect.top + rect.height / 2),
         }
       })()`
-    ) as { x: number; y: number } | null
+    )) as { x: number; y: number } | null
     expect(clickPoint).toBeTruthy()
     if (!clickPoint) throw new Error('Link click point should be available')
 
@@ -189,12 +232,18 @@ test.describe('Browser panel', () => {
       ['alt', 'shift']
     )
     expect(dispatched).toBe(true)
-    await expect.poll(async () => await tabEntries(mainWindow).count(), { timeout: 3_000 }).toBe(tabCountBefore)
+    await expect
+      .poll(async () => await tabEntries(mainWindow).count(), { timeout: 3_000 })
+      .toBe(tabCountBefore)
 
     const dialog = mainWindow.getByRole('dialog').last()
-    await expect(dialog.getByRole('heading', { name: 'Create Task' })).toBeVisible({ timeout: 10_000 })
+    await expect(dialog.getByRole('heading', { name: 'Create Task' })).toBeVisible({
+      timeout: 10_000
+    })
     await expect(dialog.locator('input[name="title"]')).toHaveValue('Link: Example docs')
-    await expect(dialog.locator('textarea[name="description"]')).toHaveValue('https://example.com/docs')
+    await expect(dialog.locator('textarea[name="description"]')).toHaveValue(
+      'https://example.com/docs'
+    )
     await expect(dialog.locator('form').getByRole('combobox').last()).toContainText(taskProjectName)
     await expect(tabEntries(mainWindow)).toHaveCount(tabCountBefore)
 
@@ -235,7 +284,10 @@ test.describe('Browser panel', () => {
 
     // Clean up
     const count = await tabEntries(mainWindow).count()
-    await tabEntries(mainWindow).nth(count - 1).locator('.lucide-x').click({ force: true })
+    await tabEntries(mainWindow)
+      .nth(count - 1)
+      .locator('.lucide-x')
+      .click({ force: true })
     await expect(tabEntries(mainWindow)).toHaveCount(count - 1)
   })
 
@@ -291,7 +343,7 @@ test.describe('Browser panel', () => {
     await expect(btn).toBeEnabled({ timeout: 10000 })
 
     // Ensure capture is off (app handles Cmd+T)
-    if (await btn.evaluate(el => el.className.includes('text-green'))) {
+    if (await btn.evaluate((el) => el.className.includes('text-green'))) {
       await btn.click()
     }
 

@@ -1,4 +1,4 @@
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { openTaskTerminal, waitForPtySession, getMainSessionId } from '../fixtures/terminal'
 
@@ -10,7 +10,11 @@ test.describe('Terminal tab keyboard isolation', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Isolation Tabs', color: '#8b5cf6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Isolation Tabs',
+      color: '#8b5cf6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
     const a = await s.createTask({ projectId: p.id, title: 'IsoTask Alpha', status: 'todo' })
@@ -18,8 +22,14 @@ test.describe('Terminal tab keyboard isolation', () => {
     taskIdA = a.id
     taskIdB = b.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskIdA)
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskIdB)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskIdA
+    )
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskIdB
+    )
     await s.refreshData()
   })
 
@@ -35,7 +45,10 @@ test.describe('Terminal tab keyboard isolation', () => {
     // Original test pressed a "new tab" hotkey that was later remapped.
     // Exercise the API the hotkey calls so the isolation invariant is
     // verified independently of the keybinding du jour.
-    await mainWindow.evaluate((id) => window.api.tabs.create({ taskId: id, label: 'second' }), taskIdB)
+    await mainWindow.evaluate(
+      (id) => window.api.tabs.create({ taskId: id, label: 'second' }),
+      taskIdB
+    )
 
     await expect
       .poll(async () => {

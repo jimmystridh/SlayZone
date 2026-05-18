@@ -2,7 +2,12 @@
  * Tags handler contract tests
  * Run with: npx tsx packages/domains/tags/src/main/handlers.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerTagHandlers } from './handlers.js'
 import type { Tag } from '@slayzone/tags/shared'
 
@@ -13,9 +18,15 @@ registerTagHandlers(h.ipcMain as never, h.db)
 const projectId = crypto.randomUUID()
 const projectId2 = crypto.randomUUID()
 h.db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(projectId, 'P1', '#000')
-h.db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(projectId2, 'P2', '#111')
+h.db
+  .prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)')
+  .run(projectId2, 'P2', '#111')
 const taskId = crypto.randomUUID()
-h.db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)').run(taskId, projectId, 'T1', 'inbox', 3, 0)
+h.db
+  .prepare(
+    'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+  )
+  .run(taskId, projectId, 'T1', 'inbox', 3, 0)
 
 describe('db:tags:create', () => {
   test('creates tag with defaults', () => {
@@ -28,7 +39,12 @@ describe('db:tags:create', () => {
   })
 
   test('creates tag with custom color', () => {
-    const tag = h.invoke('db:tags:create', { name: 'feat', color: '#ff0000', textColor: '#ffffff', projectId }) as Tag
+    const tag = h.invoke('db:tags:create', {
+      name: 'feat',
+      color: '#ff0000',
+      textColor: '#ffffff',
+      projectId
+    }) as Tag
     expect(tag.color).toBe('#ff0000')
     expect(tag.sort_order).toBe(1)
   })
@@ -40,7 +56,12 @@ describe('db:tags:create', () => {
   })
 
   test('auto-increments sort_order per project', () => {
-    const tag = h.invoke('db:tags:create', { name: 'chore', color: '#22c55e', textColor: '#ffffff', projectId }) as Tag
+    const tag = h.invoke('db:tags:create', {
+      name: 'chore',
+      color: '#22c55e',
+      textColor: '#ffffff',
+      projectId
+    }) as Tag
     expect(tag.sort_order).toBe(2)
   })
 
@@ -55,7 +76,12 @@ describe('db:tags:create', () => {
   })
 
   test('same color across different projects allowed', () => {
-    const tag = h.invoke('db:tags:create', { name: 'green', color: '#22c55e', textColor: '#ffffff', projectId: projectId2 }) as Tag
+    const tag = h.invoke('db:tags:create', {
+      name: 'green',
+      color: '#22c55e',
+      textColor: '#ffffff',
+      projectId: projectId2
+    }) as Tag
     expect(tag.color).toBe('#22c55e')
     expect(tag.project_id).toBe(projectId2)
   })

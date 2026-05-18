@@ -34,60 +34,81 @@ interface BrowserTabPlaceholderProps {
   onOverlayChange?: (hidden: boolean) => void
 }
 
-export const BrowserTabPlaceholder = forwardRef<BrowserTabPlaceholderHandle, BrowserTabPlaceholderProps>(
-  function BrowserTabPlaceholder({ tabId, taskId, url, partition, visible, hidden, isResizing, locked, className, onStateChange, onOverlayChange }, ref) {
-    const { viewId, state, actions, placeholderRef, hiddenByOverlay } = useBrowserView({
-      tabId,
-      taskId,
-      url,
-      partition,
-      visible,
-      hidden,
-      isResizing,
-    })
+export const BrowserTabPlaceholder = forwardRef<
+  BrowserTabPlaceholderHandle,
+  BrowserTabPlaceholderProps
+>(function BrowserTabPlaceholder(
+  {
+    tabId,
+    taskId,
+    url,
+    partition,
+    visible,
+    hidden,
+    isResizing,
+    locked,
+    className,
+    onStateChange,
+    onOverlayChange
+  },
+  ref
+) {
+  const { viewId, state, actions, placeholderRef, hiddenByOverlay } = useBrowserView({
+    tabId,
+    taskId,
+    url,
+    partition,
+    visible,
+    hidden,
+    isResizing
+  })
 
-    useImperativeHandle(ref, () => ({ viewId, state, actions, hiddenByOverlay }), [viewId, state, actions, hiddenByOverlay])
+  useImperativeHandle(ref, () => ({ viewId, state, actions, hiddenByOverlay }), [
+    viewId,
+    state,
+    actions,
+    hiddenByOverlay
+  ])
 
-    useEffect(() => {
-      if (visible) onStateChange?.(state)
-    }, [visible, state, onStateChange])
+  useEffect(() => {
+    if (visible) onStateChange?.(state)
+  }, [visible, state, onStateChange])
 
-    useEffect(() => {
-      if (visible) onOverlayChange?.(hiddenByOverlay)
-    }, [visible, hiddenByOverlay, onOverlayChange])
+  useEffect(() => {
+    if (visible) onOverlayChange?.(hiddenByOverlay)
+  }, [visible, hiddenByOverlay, onOverlayChange])
 
-    // Register this tab's webContents with the main-process registry so the CLI
-    // can target it. Each tab registers independently; activeness is tracked
-    // separately by BrowserPanel via setActiveBrowserTab.
-    useEffect(() => {
-      if (!taskId || !viewId) return
-      let cancelled = false
-      void (async () => {
-        const wcId = await window.api.browser.getWebContentsId(viewId)
-        if (cancelled || wcId == null) return
-        await window.api.webview.registerBrowserTab(taskId, tabId, wcId)
-      })()
-      return () => {
-        cancelled = true
-        void window.api.webview.unregisterBrowserTab(taskId, tabId)
-      }
-    }, [taskId, tabId, viewId])
+  // Register this tab's webContents with the main-process registry so the CLI
+  // can target it. Each tab registers independently; activeness is tracked
+  // separately by BrowserPanel via setActiveBrowserTab.
+  useEffect(() => {
+    if (!taskId || !viewId) return
+    let cancelled = false
+    void (async () => {
+      const wcId = await window.api.browser.getWebContentsId(viewId)
+      if (cancelled || wcId == null) return
+      await window.api.webview.registerBrowserTab(taskId, tabId, wcId)
+    })()
+    return () => {
+      cancelled = true
+      void window.api.webview.unregisterBrowserTab(taskId, tabId)
+    }
+  }, [taskId, tabId, viewId])
 
-    // Sync agent-lock state to the main process. Owns its own viewId, so this
-    // runs as soon as the WCV is registered — no race with parent state.
-    useEffect(() => {
-      if (!viewId) return
-      void window.api.browser.setLocked(viewId, !!locked)
-    }, [viewId, locked])
+  // Sync agent-lock state to the main process. Owns its own viewId, so this
+  // runs as soon as the WCV is registered — no race with parent state.
+  useEffect(() => {
+    if (!viewId) return
+    void window.api.browser.setLocked(viewId, !!locked)
+  }, [viewId, locked])
 
-    return (
-      <div
-        ref={placeholderRef}
-        data-browser-panel
-        data-view-id={viewId || undefined}
-        data-tab-id={tabId}
-        className={className}
-      />
-    )
-  }
-)
+  return (
+    <div
+      ref={placeholderRef}
+      data-browser-panel
+      data-view-id={viewId || undefined}
+      data-tab-id={tabId}
+      className={className}
+    />
+  )
+})

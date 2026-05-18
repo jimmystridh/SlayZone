@@ -20,7 +20,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!res.ok) {
     const body = await res.text().catch(() => '')
     let msg = `HTTP ${res.status}`
-    try { msg = (JSON.parse(body) as { error?: string }).error ?? msg } catch { if (body) msg = body }
+    try {
+      msg = (JSON.parse(body) as { error?: string }).error ?? msg
+    } catch {
+      if (body) msg = body
+    }
     console.error(msg)
     process.exit(1)
   }
@@ -35,7 +39,7 @@ export function apiPost<T>(path: string, body: Record<string, unknown>): Promise
   return request<T>(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body)
   })
 }
 
@@ -43,7 +47,7 @@ export function apiPatch<T>(path: string, body: Record<string, unknown>): Promis
   return request<T>(path, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body)
   })
 }
 

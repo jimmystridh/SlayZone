@@ -6,7 +6,9 @@ import { TaskMetadataSidebar } from './TaskMetadataSidebar'
 
 vi.mock('@slayzone/ui', () => {
   const Passthrough = ({ children }: any) => <>{children}</>
-  const Button = ({ children, variant: _variant, size: _size, ...props }: any) => <button {...props}>{children}</button>
+  const Button = ({ children, variant: _variant, size: _size, ...props }: any) => (
+    <button {...props}>{children}</button>
+  )
   const Input = (props: any) => <input {...props} />
 
   const SplitButton = ({ children, onClick, menu }: any) => (
@@ -15,7 +17,9 @@ vi.mock('@slayzone/ui', () => {
       {menu(() => {})}
     </div>
   )
-  const SplitButtonItem = ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>
+  const SplitButtonItem = ({ children, onClick }: any) => (
+    <button onClick={onClick}>{children}</button>
+  )
   const Textarea = (props: any) => <textarea {...props} />
 
   return {
@@ -45,7 +49,10 @@ vi.mock('@slayzone/ui', () => {
     buildStatusOptions: () => [],
     taskStatusOptions: [],
     cn: (...args: Array<string | false | null | undefined>) => args.filter(Boolean).join(' '),
-    getColumnStatusStyle: (status: string | undefined, columns?: Array<{ id: string; label: string }>) => {
+    getColumnStatusStyle: (
+      status: string | undefined,
+      columns?: Array<{ id: string; label: string }>
+    ) => {
       if (!status) return null
       const column = columns?.find((item) => item.id === status)
       const label = column?.label ?? status
@@ -54,7 +61,9 @@ vi.mock('@slayzone/ui', () => {
         text: '',
         label,
         iconClass: `icon-${label}`,
-        icon: ({ className, ...props }: any) => <svg data-testid={`status-icon-${label}`} className={className} {...props} />
+        icon: ({ className, ...props }: any) => (
+          <svg data-testid={`status-icon-${label}`} className={className} {...props} />
+        )
       }
     },
     PriorityIcon: () => null,
@@ -160,10 +169,30 @@ const projects = [
   }
 ] as any[]
 
-const blockerTask = makeTask({ id: 'blocker-1', title: 'Fix API', status: 'doing', project_id: 'project-1' })
-const extraBlockerTask = makeTask({ id: 'blocker-2', title: 'Refactor auth', status: 'triage', project_id: 'project-2' })
-const availableTask = makeTask({ id: 'candidate-1', title: 'Ship docs', status: 'waiting', project_id: 'project-2' })
-const doneTask = makeTask({ id: 'candidate-2', title: 'Already done', status: 'done', project_id: 'project-1' })
+const blockerTask = makeTask({
+  id: 'blocker-1',
+  title: 'Fix API',
+  status: 'doing',
+  project_id: 'project-1'
+})
+const extraBlockerTask = makeTask({
+  id: 'blocker-2',
+  title: 'Refactor auth',
+  status: 'triage',
+  project_id: 'project-2'
+})
+const availableTask = makeTask({
+  id: 'candidate-1',
+  title: 'Ship docs',
+  status: 'waiting',
+  project_id: 'project-2'
+})
+const doneTask = makeTask({
+  id: 'candidate-2',
+  title: 'Already done',
+  status: 'done',
+  project_id: 'project-1'
+})
 
 function renderSidebar(taskOverrides?: Record<string, unknown>) {
   return render(
@@ -275,7 +304,11 @@ describe('TaskMetadataSidebar', () => {
     await screen.findByText('Fix API')
     fireEvent.click(screen.getByRole('button', { name: 'Unblock' }))
     await waitFor(() => {
-      expect(window.api.db.updateTask).toHaveBeenCalledWith({ id: 'task-1', isBlocked: false, blockedComment: null })
+      expect(window.api.db.updateTask).toHaveBeenCalledWith({
+        id: 'task-1',
+        isBlocked: false,
+        blockedComment: null
+      })
     })
   })
 

@@ -6,7 +6,23 @@ import { mermaidCodeOverride } from './mermaidCodeOverride'
 
 const baseComponents = { code: mermaidCodeOverride }
 
-const blockTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'pre', 'table', 'hr', 'img'] as const
+const blockTags = [
+  'p',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'ul',
+  'ol',
+  'li',
+  'blockquote',
+  'pre',
+  'table',
+  'hr',
+  'img'
+] as const
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function withSourceLine(tag: string): (props: any) => ReactElement {
@@ -17,10 +33,18 @@ function withSourceLine(tag: string): (props: any) => ReactElement {
   return Component
 }
 
-const sourceLineComponents = Object.fromEntries(blockTags.map(t => [t, withSourceLine(t)]))
+const sourceLineComponents = Object.fromEntries(blockTags.map((t) => [t, withSourceLine(t)]))
 
-export function Markdown({ children, attachSourceLines }: { children: string; attachSourceLines?: boolean }) {
-  const components = attachSourceLines ? { ...sourceLineComponents, ...baseComponents } : baseComponents
+export function Markdown({
+  children,
+  attachSourceLines
+}: {
+  children: string
+  attachSourceLines?: boolean
+}) {
+  const components = attachSourceLines
+    ? { ...sourceLineComponents, ...baseComponents }
+    : baseComponents
   return (
     <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={components}>
       {children}

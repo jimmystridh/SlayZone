@@ -10,7 +10,7 @@ import {
   shouldFlipToRunningOnInput,
   recordWorkingDetection,
   WORKING_DETECTION_WINDOW_MS,
-  WORKING_DETECTION_THRESHOLD,
+  WORKING_DETECTION_THRESHOLD
 } from './state-machine'
 import type { TerminalState } from '@slayzone/terminal/shared'
 import type { ActivityState } from './adapters/types'
@@ -33,7 +33,8 @@ function test(name: string, fn: () => void) {
 function expect<T>(actual: T) {
   return {
     toBe(expected: T) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     },
     toEqual(expected: T) {
       if (JSON.stringify(actual) !== JSON.stringify(expected))
@@ -61,7 +62,7 @@ function useFakeTimers() {
   }
   // @ts-expect-error — replacing global clearTimeout with fake
   globalThis.clearTimeout = (id: number) => {
-    pendingTimers = pendingTimers.filter(t => t.id !== id)
+    pendingTimers = pendingTimers.filter((t) => t.id !== id)
   }
 }
 
@@ -69,11 +70,11 @@ function advanceTimersByTime(ms: number) {
   const target = now + ms
   while (true) {
     const next = pendingTimers
-      .filter(t => t.scheduledAt + t.delay <= target)
-      .sort((a, b) => (a.scheduledAt + a.delay) - (b.scheduledAt + b.delay))[0]
+      .filter((t) => t.scheduledAt + t.delay <= target)
+      .sort((a, b) => a.scheduledAt + a.delay - (b.scheduledAt + b.delay))[0]
     if (!next) break
     now = next.scheduledAt + next.delay
-    pendingTimers = pendingTimers.filter(t => t.id !== next.id)
+    pendingTimers = pendingTimers.filter((t) => t.id !== next.id)
     next.fn()
   }
   now = target

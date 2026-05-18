@@ -28,17 +28,28 @@ export function useChatSearch(displayedTimeline: TimelineItem[]) {
       const item = displayedTimeline[i]
       let hay = ''
       switch (item.kind) {
-        case 'user-text': hay = item.text; break
-        case 'text': hay = item.text; break
-        case 'thinking': hay = item.text; break
-        case 'result': hay = item.text ?? ''; break
-        case 'stderr': hay = item.text; break
+        case 'user-text':
+          hay = item.text
+          break
+        case 'text':
+          hay = item.text
+          break
+        case 'thinking':
+          hay = item.text
+          break
+        case 'result':
+          hay = item.text ?? ''
+          break
+        case 'stderr':
+          hay = item.text
+          break
         case 'tool': {
           const inv = item.invocation
           hay = `${inv.name} ${typeof inv.input === 'string' ? inv.input : JSON.stringify(inv.input)}`
           break
         }
-        default: hay = ''
+        default:
+          hay = ''
       }
       if (!hay) continue
       const cmp = caseSensitive ? hay : hay.toLowerCase()
@@ -55,7 +66,10 @@ export function useChatSearch(displayedTimeline: TimelineItem[]) {
     return map
   }, [query, caseSensitive, displayedTimeline])
 
-  const matchedIndices = useMemo(() => Array.from(itemMatches.keys()).sort((a, b) => a - b), [itemMatches])
+  const matchedIndices = useMemo(
+    () => Array.from(itemMatches.keys()).sort((a, b) => a - b),
+    [itemMatches]
+  )
 
   // Clamp activeIdx when match set shrinks.
   useEffect(() => {
@@ -73,11 +87,13 @@ export function useChatSearch(displayedTimeline: TimelineItem[]) {
   }, [])
 
   const next = useCallback(() => {
-    setActiveIdx((i) => matchedIndices.length === 0 ? 0 : (i + 1) % matchedIndices.length)
+    setActiveIdx((i) => (matchedIndices.length === 0 ? 0 : (i + 1) % matchedIndices.length))
   }, [matchedIndices.length])
 
   const prev = useCallback(() => {
-    setActiveIdx((i) => matchedIndices.length === 0 ? 0 : (i - 1 + matchedIndices.length) % matchedIndices.length)
+    setActiveIdx((i) =>
+      matchedIndices.length === 0 ? 0 : (i - 1 + matchedIndices.length) % matchedIndices.length
+    )
   }, [matchedIndices.length])
 
   const requestOpen = useCallback(() => {
@@ -85,9 +101,8 @@ export function useChatSearch(displayedTimeline: TimelineItem[]) {
     setFocusToken((t) => t + 1)
   }, [])
 
-  const activeItemIdx = matchedIndices.length > 0
-    ? matchedIndices[Math.min(activeIdx, matchedIndices.length - 1)]
-    : -1
+  const activeItemIdx =
+    matchedIndices.length > 0 ? matchedIndices[Math.min(activeIdx, matchedIndices.length - 1)] : -1
 
   return {
     open,
@@ -104,6 +119,6 @@ export function useChatSearch(displayedTimeline: TimelineItem[]) {
     prev,
     close,
     requestOpen,
-    focusToken,
+    focusToken
   }
 }

@@ -11,7 +11,9 @@ export function usePtyStatus(): Set<string> {
 
   const refresh = useCallback(async () => {
     const list = await window.api.pty.list()
-    const active = new Set(list.filter((p) => isAliveTerminalState(p.state)).map((p) => p.sessionId))
+    const active = new Set(
+      list.filter((p) => isAliveTerminalState(p.state)).map((p) => p.sessionId)
+    )
     const hash = [...active].sort().join('|')
     if (hash !== lastHashRef.current) {
       lastHashRef.current = hash

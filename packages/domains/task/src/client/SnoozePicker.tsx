@@ -3,8 +3,14 @@ import { format, setHours, setMinutes, addHours, addDays, nextMonday, isAfter } 
 import type { LucideIcon } from 'lucide-react'
 import { AlarmClock, Clock, Clock3, Sun, Moon, Calendar as CalendarIcon } from 'lucide-react'
 import {
-  Calendar, Button, Label,
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription
+  Calendar,
+  Button,
+  Label,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
 } from '@slayzone/ui'
 
 export interface SnoozePreset {
@@ -55,7 +61,11 @@ interface CustomSnoozeDialogProps {
   onSnooze: (until: string) => void
 }
 
-export function CustomSnoozeDialog({ open, onOpenChange, onSnooze }: CustomSnoozeDialogProps): React.JSX.Element {
+export function CustomSnoozeDialog({
+  open,
+  onOpenChange,
+  onSnooze
+}: CustomSnoozeDialogProps): React.JSX.Element {
   const [date, setDate] = useState<Date | undefined>()
   const [time, setTime] = useState('09:00')
 
@@ -112,8 +122,12 @@ export function CustomSnoozeDialog({ open, onOpenChange, onSnooze }: CustomSnooz
 
         {/* Footer */}
         <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button size="sm" onClick={handleConfirm} disabled={!date}>Snooze</Button>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button size="sm" onClick={handleConfirm} disabled={!date}>
+            Snooze
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -154,7 +168,9 @@ export function SnoozePicker({ onSnooze, onClose }: SnoozePickerProps): React.JS
             >
               <Icon className="size-3.5" />
               <span className="flex-1 text-left">{preset.label}</span>
-              <span className="text-xs text-muted-foreground">{format(preset.getDate(), 'EEE, MMM d · h:mm a')}</span>
+              <span className="text-xs text-muted-foreground">
+                {format(preset.getDate(), 'EEE, MMM d · h:mm a')}
+              </span>
             </button>
           )
         })}
@@ -166,7 +182,11 @@ export function SnoozePicker({ onSnooze, onClose }: SnoozePickerProps): React.JS
           Custom...
         </button>
       </div>
-      <CustomSnoozeDialog open={customOpen} onOpenChange={setCustomOpen} onSnooze={handleCustomSnooze} />
+      <CustomSnoozeDialog
+        open={customOpen}
+        onOpenChange={setCustomOpen}
+        onSnooze={handleCustomSnooze}
+      />
     </>
   )
 }

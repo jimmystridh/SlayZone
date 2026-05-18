@@ -17,11 +17,17 @@ interface ArtifactFindBarProps {
 }
 
 export function ArtifactFindBar({
-  query, onQueryChange, onClose,
-  matchCount, activeIndex, onActiveIndexChange,
-  matchCase, onMatchCaseChange,
-  useRegex, onUseRegexChange,
-  focusToken,
+  query,
+  onQueryChange,
+  onClose,
+  matchCount,
+  activeIndex,
+  onActiveIndexChange,
+  matchCase,
+  onMatchCaseChange,
+  useRegex,
+  onUseRegexChange,
+  focusToken
 }: ArtifactFindBarProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -32,22 +38,35 @@ export function ArtifactFindBar({
 
   const goNext = useCallback(() => {
     if (matchCount === 0) return
-    onActiveIndexChange(i => (i + 1) % matchCount)
+    onActiveIndexChange((i) => (i + 1) % matchCount)
   }, [matchCount, onActiveIndexChange])
 
   const goPrev = useCallback(() => {
     if (matchCount === 0) return
-    onActiveIndexChange(i => (i - 1 + matchCount) % matchCount)
+    onActiveIndexChange((i) => (i - 1 + matchCount) % matchCount)
   }, [matchCount, onActiveIndexChange])
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') { e.preventDefault(); onClose() }
-    if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); goPrev() }
-    else if (e.key === 'Enter') { e.preventDefault(); goNext() }
-  }, [onClose, goNext, goPrev])
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+      if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault()
+        goPrev()
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        goNext()
+      }
+    },
+    [onClose, goNext, goPrev]
+  )
 
   const display = query.trim()
-    ? (matchCount > 0 ? `${Math.min(activeIndex, matchCount - 1) + 1}/${matchCount}` : '0/0')
+    ? matchCount > 0
+      ? `${Math.min(activeIndex, matchCount - 1) + 1}/${matchCount}`
+      : '0/0'
     : ''
 
   return (

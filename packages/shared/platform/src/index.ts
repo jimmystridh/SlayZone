@@ -1,7 +1,31 @@
-export { getStateDir, getSlayzoneHomeDir, getClaudeSettingsPath, getGeminiSettingsPath, getOpencodePluginPath } from './dirs'
+export {
+  getStateDir,
+  getSlayzoneHomeDir,
+  getClaudeSettingsPath,
+  getGeminiSettingsPath,
+  getOpencodePluginPath
+} from './dirs'
 export { ensureDataRoot, getTrpcPort, getServerPort, getServerHost } from './paths'
 export { writeFileIfChanged } from './fs-utils'
-export { migrateXdgIfNeeded, migrateCliBinIfNeeded, type MigrationResult, type CliMigrationResult } from './migrations'
-export { installCli, installCliSync, checkCliInstalled, getCliBinTarget, getManualInstallHint, type CliInstallResult } from './cli-install'
+export {
+  migrateXdgIfNeeded,
+  migrateCliBinIfNeeded,
+  type MigrationResult,
+  type CliMigrationResult
+} from './migrations'
+export {
+  installCli,
+  installCliSync,
+  checkCliInstalled,
+  getCliBinTarget,
+  getManualInstallHint,
+  type CliInstallResult
+} from './cli-install'
 export { DB_PRAGMAS } from './db'
-export { withResultDedup, isIpcUnchangedSentinel, IPC_UNCHANGED_SENTINEL, type IpcUnchangedSentinel, type SenderLifecycle } from './ipc-dedup'
+export {
+  withResultDedup,
+  isIpcUnchangedSentinel,
+  IPC_UNCHANGED_SENTINEL,
+  type IpcUnchangedSentinel,
+  type SenderLifecycle
+} from './ipc-dedup'

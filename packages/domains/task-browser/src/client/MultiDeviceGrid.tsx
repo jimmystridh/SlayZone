@@ -1,6 +1,14 @@
 import React, { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { cn, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@slayzone/ui'
+import {
+  cn,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@slayzone/ui'
 import type { DeviceSlot, DeviceEmulation, GridLayout, MultiDeviceConfig } from '../shared'
 import { presetsForSlot } from './device-presets'
 import { DeviceWebview, type DeviceLayout } from './DeviceWebview'
@@ -28,11 +36,23 @@ interface DeviceColumnProps {
   onPresetChange?: (preset: DeviceEmulation) => void
 }
 
-function DeviceColumn({ slot, preset, url, isResizing, reloadTrigger, forceReloadTrigger, flex, onPresetChange }: DeviceColumnProps) {
+function DeviceColumn({
+  slot,
+  preset,
+  url,
+  isResizing,
+  reloadTrigger,
+  forceReloadTrigger,
+  flex,
+  onPresetChange
+}: DeviceColumnProps) {
   const [layout, setLayout] = useState<DeviceLayout | null>(null)
   const [customW, setCustomW] = useState(String(preset.width))
   const [customH, setCustomH] = useState(String(preset.height))
-  useEffect(() => { setCustomW(String(preset.width)); setCustomH(String(preset.height)) }, [preset.width, preset.height])
+  useEffect(() => {
+    setCustomW(String(preset.width))
+    setCustomH(String(preset.height))
+  }, [preset.width, preset.height])
   const presets = presetsForSlot(slot)
 
   const applyCustom = () => {
@@ -45,11 +65,7 @@ function DeviceColumn({ slot, preset, url, isResizing, reloadTrigger, forceReloa
   const labelTop = layout ? layout.topOffset + layout.scaledHeight + 12 : 0
 
   return (
-    <div
-      id={`column-${slot}`}
-      className="relative flex flex-col min-w-0 min-h-0"
-      style={{ flex }}
-    >
+    <div id={`column-${slot}`} className="relative flex flex-col min-w-0 min-h-0" style={{ flex }}>
       <DeviceWebview
         url={url}
         preset={preset}
@@ -67,7 +83,9 @@ function DeviceColumn({ slot, preset, url, isResizing, reloadTrigger, forceReloa
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="pointer-events-auto flex items-center gap-1 text-xs font-medium text-foreground hover:text-muted-foreground transition-colors">
-                <span>{preset.name} — {preset.width}&times;{preset.height}</span>
+                <span>
+                  {preset.name} — {preset.width}&times;{preset.height}
+                </span>
                 <ChevronDown className="size-3" />
               </button>
             </DropdownMenuTrigger>
@@ -82,15 +100,22 @@ function DeviceColumn({ slot, preset, url, isResizing, reloadTrigger, forceReloa
                 ).map(([cat, items], gi) => (
                   <div key={cat}>
                     {gi > 0 && <DropdownMenuSeparator />}
-                    <DropdownMenuLabel className="text-[10px] text-muted-foreground px-2 py-1">{cat}</DropdownMenuLabel>
-                    {items.map(p => (
+                    <DropdownMenuLabel className="text-[10px] text-muted-foreground px-2 py-1">
+                      {cat}
+                    </DropdownMenuLabel>
+                    {items.map((p) => (
                       <DropdownMenuItem
                         key={p.name}
                         onClick={() => onPresetChange?.(p)}
-                        className={cn('flex justify-between', preset.name === p.name && 'text-blue-500 font-medium')}
+                        className={cn(
+                          'flex justify-between',
+                          preset.name === p.name && 'text-blue-500 font-medium'
+                        )}
                       >
                         <span>{p.name}</span>
-                        <span className="text-xs text-muted-foreground">{p.width}&times;{p.height}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {p.width}&times;{p.height}
+                        </span>
                       </DropdownMenuItem>
                     ))}
                   </div>
@@ -101,8 +126,11 @@ function DeviceColumn({ slot, preset, url, isResizing, reloadTrigger, forceReloa
                 <input
                   type="number"
                   value={customW}
-                  onChange={e => setCustomW(e.target.value)}
-                  onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') applyCustom() }}
+                  onChange={(e) => setCustomW(e.target.value)}
+                  onKeyDown={(e) => {
+                    e.stopPropagation()
+                    if (e.key === 'Enter') applyCustom()
+                  }}
                   placeholder="W"
                   className="w-16 h-6 px-1.5 text-xs bg-surface-2 border border-border rounded text-foreground focus:outline-none focus:border-ring"
                 />
@@ -110,8 +138,11 @@ function DeviceColumn({ slot, preset, url, isResizing, reloadTrigger, forceReloa
                 <input
                   type="number"
                   value={customH}
-                  onChange={e => setCustomH(e.target.value)}
-                  onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') applyCustom() }}
+                  onChange={(e) => setCustomH(e.target.value)}
+                  onKeyDown={(e) => {
+                    e.stopPropagation()
+                    if (e.key === 'Enter') applyCustom()
+                  }}
                   placeholder="H"
                   className="w-16 h-6 px-1.5 text-xs bg-surface-2 border border-border rounded text-foreground focus:outline-none focus:border-ring"
                 />
@@ -130,14 +161,24 @@ function DeviceColumn({ slot, preset, url, isResizing, reloadTrigger, forceReloa
   )
 }
 
-export function MultiDeviceGrid({ config, layout, url, isResizing, reloadTrigger, forceReloadTrigger, onPresetChange }: MultiDeviceGridProps) {
-  const enabledSlots = useMemo(() => SLOTS.filter(s => config[s].enabled), [config])
+export function MultiDeviceGrid({
+  config,
+  layout,
+  url,
+  isResizing,
+  reloadTrigger,
+  forceReloadTrigger,
+  onPresetChange
+}: MultiDeviceGridProps) {
+  const enabledSlots = useMemo(() => SLOTS.filter((s) => config[s].enabled), [config])
   const containerRef = useRef<HTMLDivElement>(null)
   const [dragging, setDragging] = useState(false)
 
   const [flexOverrides, setFlexOverrides] = useState<Record<string, number>>({})
   const slotsKey = enabledSlots.join(',')
-  useEffect(() => { setFlexOverrides({}) }, [slotsKey])
+  useEffect(() => {
+    setFlexOverrides({})
+  }, [slotsKey])
 
   const getFlexValue = (slot: DeviceSlot) => {
     if (layout === 'vertical') return 1
@@ -146,52 +187,63 @@ export function MultiDeviceGrid({ config, layout, url, isResizing, reloadTrigger
   }
 
   const cleanupDragRef = useRef<(() => void) | null>(null)
-  useEffect(() => () => { cleanupDragRef.current?.() }, [])
+  useEffect(
+    () => () => {
+      cleanupDragRef.current?.()
+    },
+    []
+  )
 
-  const handleDragStart = useCallback((e: React.MouseEvent, leftSlot: DeviceSlot, rightSlot: DeviceSlot) => {
-    e.preventDefault()
-    const container = containerRef.current
-    if (!container) return
+  const handleDragStart = useCallback(
+    (e: React.MouseEvent, leftSlot: DeviceSlot, rightSlot: DeviceSlot) => {
+      e.preventDefault()
+      const container = containerRef.current
+      if (!container) return
 
-    const isHorizontal = layout === 'horizontal'
-    const containerSize = isHorizontal ? container.offsetWidth : container.offsetHeight
+      const isHorizontal = layout === 'horizontal'
+      const containerSize = isHorizontal ? container.offsetWidth : container.offsetHeight
 
-    const currentFlex: Record<string, number> = {}
-    for (const s of enabledSlots) {
-      currentFlex[s] = getFlexValue(s)
-    }
-    const totalFlex = Object.values(currentFlex).reduce((a, b) => a + b, 0)
+      const currentFlex: Record<string, number> = {}
+      for (const s of enabledSlots) {
+        currentFlex[s] = getFlexValue(s)
+      }
+      const totalFlex = Object.values(currentFlex).reduce((a, b) => a + b, 0)
 
-    const startPos = isHorizontal ? e.clientX : e.clientY
-    const leftStartFlex = currentFlex[leftSlot]
-    const rightStartFlex = currentFlex[rightSlot]
+      const startPos = isHorizontal ? e.clientX : e.clientY
+      const leftStartFlex = currentFlex[leftSlot]
+      const rightStartFlex = currentFlex[rightSlot]
 
-    setDragging(true)
+      setDragging(true)
 
-    const handleMouseMove = (ev: MouseEvent) => {
-      const delta = (isHorizontal ? ev.clientX : ev.clientY) - startPos
-      const flexPerPx = totalFlex / containerSize
-      const flexDelta = delta * flexPerPx
+      const handleMouseMove = (ev: MouseEvent) => {
+        const delta = (isHorizontal ? ev.clientX : ev.clientY) - startPos
+        const flexPerPx = totalFlex / containerSize
+        const flexDelta = delta * flexPerPx
 
-      const minFlex = totalFlex * 0.1
-      const newLeft = Math.max(minFlex, Math.min(leftStartFlex + rightStartFlex - minFlex, leftStartFlex + flexDelta))
-      const newRight = leftStartFlex + rightStartFlex - newLeft
+        const minFlex = totalFlex * 0.1
+        const newLeft = Math.max(
+          minFlex,
+          Math.min(leftStartFlex + rightStartFlex - minFlex, leftStartFlex + flexDelta)
+        )
+        const newRight = leftStartFlex + rightStartFlex - newLeft
 
-      setFlexOverrides(prev => ({ ...prev, [leftSlot]: newLeft, [rightSlot]: newRight }))
-    }
+        setFlexOverrides((prev) => ({ ...prev, [leftSlot]: newLeft, [rightSlot]: newRight }))
+      }
 
-    const cleanup = () => {
-      setDragging(false)
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
-      cleanupDragRef.current = null
-    }
-    const handleMouseUp = cleanup
+      const cleanup = () => {
+        setDragging(false)
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+        cleanupDragRef.current = null
+      }
+      const handleMouseUp = cleanup
 
-    cleanupDragRef.current = cleanup
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
-  }, [layout, enabledSlots, flexOverrides, config]) // eslint-disable-line react-hooks/exhaustive-deps
+      cleanupDragRef.current = cleanup
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    },
+    [layout, enabledSlots, flexOverrides, config]
+  ) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (enabledSlots.length === 0) {
     return (
@@ -219,11 +271,14 @@ export function MultiDeviceGrid({ config, layout, url, isResizing, reloadTrigger
               }`}
               onMouseDown={(e) => handleDragStart(e, enabledSlots[i - 1], slot)}
             >
-              <div id={`resize-pill-${i}`} className={`absolute rounded-full opacity-0 group-hover:opacity-100 group-active:opacity-100 bg-primary/30 group-active:bg-primary/50 transition-opacity ${
-                isHorizontal
-                  ? 'w-1 h-8 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
-                  : 'h-1 w-8 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'
-              }`} />
+              <div
+                id={`resize-pill-${i}`}
+                className={`absolute rounded-full opacity-0 group-hover:opacity-100 group-active:opacity-100 bg-primary/30 group-active:bg-primary/50 transition-opacity ${
+                  isHorizontal
+                    ? 'w-1 h-8 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                    : 'h-1 w-8 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2'
+                }`}
+              />
             </div>
           )}
           <DeviceColumn
@@ -241,4 +296,3 @@ export function MultiDeviceGrid({ config, layout, url, isResizing, reloadTrigger
     </div>
   )
 }
-

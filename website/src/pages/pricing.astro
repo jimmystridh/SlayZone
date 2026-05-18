@@ -13,30 +13,30 @@ const includedFeatures = [
   'MCP server + slay CLI for agent and shell automation',
   'Local-first SQLite — no cloud account, no telemetry account',
   'macOS, Windows, and Linux builds',
-  'Full source code (GPL-3.0) — fork it, audit it, ship it',
+  'Full source code (GPL-3.0) — fork it, audit it, ship it'
 ]
 
 const pricingFaq = [
   {
     q: 'Will SlayZone ever introduce a paid tier?',
-    a: 'No. SlayZone is fully free and open source under GPL-3.0. There is no Pro, no Premium, no Team plan, no usage caps, no feature gating. The entire app is the free version.',
+    a: 'No. SlayZone is fully free and open source under GPL-3.0. There is no Pro, no Premium, no Team plan, no usage caps, no feature gating. The entire app is the free version.'
   },
   {
     q: 'Do I need to create an account?',
-    a: 'No account required. SlayZone runs entirely on your machine. Your tasks, terminals, and git worktrees live in a local SQLite database. Nothing is uploaded.',
+    a: 'No account required. SlayZone runs entirely on your machine. Your tasks, terminals, and git worktrees live in a local SQLite database. Nothing is uploaded.'
   },
   {
     q: 'How is this sustainable without revenue?',
-    a: 'SlayZone is built in the open as a focused, single-purpose tool. The work that would go into billing, plan tiers, license checks, and account management is spent on shipping features instead.',
+    a: 'SlayZone is built in the open as a focused, single-purpose tool. The work that would go into billing, plan tiers, license checks, and account management is spent on shipping features instead.'
   },
   {
     q: 'Can I use SlayZone commercially?',
-    a: 'Yes. GPL-3.0 permits commercial use. Use it inside your company, on client work, or as part of a paid product — the license terms apply to the SlayZone source itself, not to the code you write inside SlayZone.',
+    a: 'Yes. GPL-3.0 permits commercial use. Use it inside your company, on client work, or as part of a paid product — the license terms apply to the SlayZone source itself, not to the code you write inside SlayZone.'
   },
   {
     q: 'Do I pay for the AI agents?',
-    a: 'SlayZone itself is free. The AI agent CLIs you run inside it (Claude Code, Codex, Gemini, etc.) are billed by their respective providers. SlayZone takes no cut and never sees your API keys — they stay in your shell environment.',
-  },
+    a: 'SlayZone itself is free. The AI agent CLIs you run inside it (Claude Code, Codex, Gemini, etc.) are billed by their respective providers. SlayZone takes no cut and never sees your API keys — they stay in your shell environment.'
+  }
 ]
 
 const pricingFaqSchema = {
@@ -45,8 +45,8 @@ const pricingFaqSchema = {
   mainEntity: pricingFaq.map((item) => ({
     '@type': 'Question',
     name: item.q,
-    acceptedAnswer: { '@type': 'Answer', text: item.a },
-  })),
+    acceptedAnswer: { '@type': 'Answer', text: item.a }
+  }))
 }
 const pricingFaqSchemaJson = JSON.stringify(pricingFaqSchema).replace(/</g, '\\u003c')
 ---

@@ -28,7 +28,17 @@ import {
 import type { Task, TaskStatus } from '@slayzone/task/shared'
 import type { Project, ColumnConfig } from '@slayzone/projects/shared'
 import type { Tag } from '@slayzone/tags/shared'
-import { AlarmClock, X, CircleDot, Signal, Tag as TagIcon, FolderInput, Archive, Trash2, ShieldAlert } from 'lucide-react'
+import {
+  AlarmClock,
+  X,
+  CircleDot,
+  Signal,
+  Tag as TagIcon,
+  FolderInput,
+  Archive,
+  Trash2,
+  ShieldAlert
+} from 'lucide-react'
 import { format } from 'date-fns'
 import { getSnoozePresets } from '@slayzone/task/client'
 
@@ -86,7 +96,9 @@ export function BulkTaskContextMenu({
   const allBlocked = useMemo(() => tasks.length > 0 && tasks.every((t) => t.is_blocked), [tasks])
   const noneBlocked = useMemo(() => tasks.every((t) => !t.is_blocked), [tasks])
   const isSnoozedAll = useMemo(
-    () => tasks.length > 0 && tasks.every((t) => t.snoozed_until && new Date(t.snoozed_until) > new Date()),
+    () =>
+      tasks.length > 0 &&
+      tasks.every((t) => t.snoozed_until && new Date(t.snoozed_until) > new Date()),
     [tasks]
   )
 
@@ -136,7 +148,11 @@ export function BulkTaskContextMenu({
       const current = taskTagsMap.get(id) ?? []
       const hasIt = current.includes(tagId)
       if (checked && !hasIt) onTaskTagsChange(id, [...current, tagId])
-      else if (!checked && hasIt) onTaskTagsChange(id, current.filter((t) => t !== tagId))
+      else if (!checked && hasIt)
+        onTaskTagsChange(
+          id,
+          current.filter((t) => t !== tagId)
+        )
     }
   }
 
@@ -168,7 +184,9 @@ export function BulkTaskContextMenu({
             <ContextMenuSubTrigger>
               <CircleDot className="mr-2 size-3.5" />
               <span className="flex-1">Status</span>
-              {commonStatus === MIXED && <span className="text-muted-foreground text-xs mr-1.5">—</span>}
+              {commonStatus === MIXED && (
+                <span className="text-muted-foreground text-xs mr-1.5">—</span>
+              )}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuRadioGroup
@@ -194,7 +212,9 @@ export function BulkTaskContextMenu({
             <ContextMenuSubTrigger>
               <Signal className="mr-2 size-3.5" />
               <span className="flex-1">Priority</span>
-              {commonPriority === MIXED && <span className="text-muted-foreground text-xs mr-1.5">—</span>}
+              {commonPriority === MIXED && (
+                <span className="text-muted-foreground text-xs mr-1.5">—</span>
+              )}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuRadioGroup
@@ -236,7 +256,9 @@ export function BulkTaskContextMenu({
                         {tag.name}
                       </span>
                       {count > 0 && !all && (
-                        <span className="ml-auto text-[10px] text-muted-foreground">{count}/{taskIds.length}</span>
+                        <span className="ml-auto text-[10px] text-muted-foreground">
+                          {count}/{taskIds.length}
+                        </span>
                       )}
                     </ContextMenuCheckboxItem>
                   )
@@ -274,7 +296,9 @@ export function BulkTaskContextMenu({
                   <ContextMenuItem key={preset.label} onSelect={() => handleSnooze(date)}>
                     <Icon className="mr-2 size-3.5" />
                     <span className="flex-1">{preset.label}</span>
-                    <span className="ml-4 text-xs text-muted-foreground">{format(date, 'EEE, MMM d')}</span>
+                    <span className="ml-4 text-xs text-muted-foreground">
+                      {format(date, 'EEE, MMM d')}
+                    </span>
                   </ContextMenuItem>
                 )
               })}
@@ -288,7 +312,9 @@ export function BulkTaskContextMenu({
             <ContextMenuSubTrigger>
               <FolderInput className="mr-2 size-3.5" />
               <span className="flex-1">Move to</span>
-              {commonProject === MIXED && <span className="text-muted-foreground text-xs mr-1.5">—</span>}
+              {commonProject === MIXED && (
+                <span className="text-muted-foreground text-xs mr-1.5">—</span>
+              )}
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuRadioGroup
@@ -312,12 +338,14 @@ export function BulkTaskContextMenu({
 
           {onBulkArchive && (
             <ContextMenuItem onSelect={() => setArchiveOpen(true)}>
-              <Archive className="size-3.5" />Archive {taskIds.length} tasks
+              <Archive className="size-3.5" />
+              Archive {taskIds.length} tasks
             </ContextMenuItem>
           )}
           {onBulkDelete && (
             <ContextMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
-              <Trash2 className="size-3.5" />Delete {taskIds.length} tasks
+              <Trash2 className="size-3.5" />
+              Delete {taskIds.length} tasks
             </ContextMenuItem>
           )}
         </ContextMenuContent>

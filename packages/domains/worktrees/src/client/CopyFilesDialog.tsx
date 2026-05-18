@@ -1,9 +1,18 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Loader2, Folder, File, ChevronRight } from 'lucide-react'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-  Button, Checkbox,
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  Button,
+  Checkbox,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@slayzone/ui'
 import { cn } from '@slayzone/ui'
 import type { IgnoredFileNode, WorktreeCopyPreset } from '../shared/types'
@@ -13,12 +22,10 @@ import {
   filterTreeByGlobs,
   computeStates,
   findChain,
-  removeSubtree,
+  removeSubtree
 } from './CopyFilesDialog.utils'
 
-export type CopyChoice =
-  | { mode: 'none' }
-  | { mode: 'custom'; paths: string[] }
+export type CopyChoice = { mode: 'none' } | { mode: 'custom'; paths: string[] }
 
 interface CopyFilesDialogProps {
   open: boolean
@@ -36,7 +43,13 @@ function formatBytes(bytes: number): string {
 }
 
 function NodeRow({
-  node, depth, states, selectedCounts, expanded, onToggle, onToggleExpand,
+  node,
+  depth,
+  states,
+  selectedCounts,
+  expanded,
+  onToggle,
+  onToggleExpand
 }: {
   node: IgnoredFileNode
   depth: number
@@ -65,7 +78,12 @@ function NodeRow({
             onClick={() => onToggleExpand(node.path)}
             className="flex items-center gap-1.5 flex-1 min-w-0 text-left"
           >
-            <ChevronRight className={cn('h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform', isExpanded && 'rotate-90')} />
+            <ChevronRight
+              className={cn(
+                'h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform',
+                isExpanded && 'rotate-90'
+              )}
+            />
             <Folder className="h-3.5 w-3.5 text-blue-400 shrink-0" />
             <span className="text-sm font-mono flex-1 truncate">{node.name}/</span>
             <span className="text-xs text-muted-foreground shrink-0">
@@ -81,23 +99,27 @@ function NodeRow({
             <File className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <span className="text-sm font-mono flex-1 truncate">{node.name}</span>
             {node.size > 0 && (
-              <span className="text-xs text-muted-foreground shrink-0">{formatBytes(node.size)}</span>
+              <span className="text-xs text-muted-foreground shrink-0">
+                {formatBytes(node.size)}
+              </span>
             )}
           </span>
         )}
       </div>
-      {node.isDirectory && isExpanded && node.children.map(child => (
-        <NodeRow
-          key={child.path}
-          node={child}
-          depth={depth + 1}
-          states={states}
-          selectedCounts={selectedCounts}
-          expanded={expanded}
-          onToggle={onToggle}
-          onToggleExpand={onToggleExpand}
-        />
-      ))}
+      {node.isDirectory &&
+        isExpanded &&
+        node.children.map((child) => (
+          <NodeRow
+            key={child.path}
+            node={child}
+            depth={depth + 1}
+            states={states}
+            selectedCounts={selectedCounts}
+            expanded={expanded}
+            onToggle={onToggle}
+            onToggleExpand={onToggleExpand}
+          />
+        ))}
     </>
   )
 }
@@ -117,31 +139,37 @@ export function CopyFilesDialog({ open, onOpenChange, repoPath, onConfirm }: Cop
     setTree([])
     setTreeLoaded(false)
 
-    window.api.settings.get('worktree_copy_presets').then((raw) => {
-      const parsed = raw ? JSON.parse(raw) as WorktreeCopyPreset[] : null
-      const list = parsed && parsed.length > 0 ? parsed : DEFAULT_COPY_PRESETS
-      setPresets(list)
-      setSelectedPresetId(list[0].id)
-    }).catch(() => {
-      setPresets(DEFAULT_COPY_PRESETS)
-      setSelectedPresetId(DEFAULT_COPY_PRESETS[0].id)
-    })
+    window.api.settings
+      .get('worktree_copy_presets')
+      .then((raw) => {
+        const parsed = raw ? (JSON.parse(raw) as WorktreeCopyPreset[]) : null
+        const list = parsed && parsed.length > 0 ? parsed : DEFAULT_COPY_PRESETS
+        setPresets(list)
+        setSelectedPresetId(list[0].id)
+      })
+      .catch(() => {
+        setPresets(DEFAULT_COPY_PRESETS)
+        setSelectedPresetId(DEFAULT_COPY_PRESETS[0].id)
+      })
 
     setLoading(true)
-    window.api.git.getIgnoredFileTree(repoPath).then(nodes => {
-      setTree(nodes)
-      setTreeLoaded(true)
-      setLoading(false)
-    }).catch(() => {
-      setTree([])
-      setTreeLoaded(true)
-      setLoading(false)
-    })
+    window.api.git
+      .getIgnoredFileTree(repoPath)
+      .then((nodes) => {
+        setTree(nodes)
+        setTreeLoaded(true)
+        setLoading(false)
+      })
+      .catch(() => {
+        setTree([])
+        setTreeLoaded(true)
+        setLoading(false)
+      })
   }, [open, repoPath])
 
   useEffect(() => {
     if (!treeLoaded || presets.length === 0) return
-    const preset = presets.find(p => p.id === selectedPresetId)
+    const preset = presets.find((p) => p.id === selectedPresetId)
     if (!preset) return
     setSelected(filterTreeByGlobs(tree, preset.pathGlobs))
   }, [selectedPresetId, treeLoaded, tree, presets])
@@ -151,56 +179,63 @@ export function CopyFilesDialog({ open, onOpenChange, repoPath, onConfirm }: Cop
     [tree, selected]
   )
 
-  const toggle = useCallback((path: string) => {
-    const state = states.get(path) ?? 'unchecked'
-    setSelected(prev => {
-      const chain = findChain(tree, path)
-      if (!chain) return prev
-      const leaf = chain[chain.length - 1]
-      const next = new Set(prev)
+  const toggle = useCallback(
+    (path: string) => {
+      const state = states.get(path) ?? 'unchecked'
+      setSelected((prev) => {
+        const chain = findChain(tree, path)
+        if (!chain) return prev
+        const leaf = chain[chain.length - 1]
+        const next = new Set(prev)
 
-      if (state === 'checked') {
-        // Uncheck — if an ancestor holds the selection, expand it along the chain
-        // so that siblings along the way stay selected but the target's subtree doesn't.
-        let ancestorIdx = -1
-        for (let i = 0; i < chain.length; i++) {
-          if (next.has(chain[i].path)) { ancestorIdx = i; break }
-        }
-        if (ancestorIdx >= 0 && ancestorIdx < chain.length - 1) {
-          next.delete(chain[ancestorIdx].path)
-          for (let i = ancestorIdx; i < chain.length - 1; i++) {
-            const cur = chain[i]
-            const nextInPath = chain[i + 1]
-            for (const child of cur.children) {
-              if (child.path !== nextInPath.path) next.add(child.path)
+        if (state === 'checked') {
+          // Uncheck — if an ancestor holds the selection, expand it along the chain
+          // so that siblings along the way stay selected but the target's subtree doesn't.
+          let ancestorIdx = -1
+          for (let i = 0; i < chain.length; i++) {
+            if (next.has(chain[i].path)) {
+              ancestorIdx = i
+              break
             }
           }
+          if (ancestorIdx >= 0 && ancestorIdx < chain.length - 1) {
+            next.delete(chain[ancestorIdx].path)
+            for (let i = ancestorIdx; i < chain.length - 1; i++) {
+              const cur = chain[i]
+              const nextInPath = chain[i + 1]
+              for (const child of cur.children) {
+                if (child.path !== nextInPath.path) next.add(child.path)
+              }
+            }
+          }
+          removeSubtree(leaf, next)
+        } else {
+          // Check (from unchecked or indeterminate)
+          removeSubtree(leaf, next)
+          next.add(leaf.path)
         }
-        removeSubtree(leaf, next)
-      } else {
-        // Check (from unchecked or indeterminate)
-        removeSubtree(leaf, next)
-        next.add(leaf.path)
-      }
 
-      return next
-    })
-    setSelectedPresetId('custom')
-  }, [tree, states])
+        return next
+      })
+      setSelectedPresetId('custom')
+    },
+    [tree, states]
+  )
 
-  const allTopSelected = tree.length > 0 && tree.every(n => (states.get(n.path) ?? 'unchecked') === 'checked')
+  const allTopSelected =
+    tree.length > 0 && tree.every((n) => (states.get(n.path) ?? 'unchecked') === 'checked')
 
   const toggleAll = () => {
     if (allTopSelected) {
       setSelected(new Set())
     } else {
-      setSelected(new Set(tree.map(n => n.path)))
+      setSelected(new Set(tree.map((n) => n.path)))
     }
     setSelectedPresetId('custom')
   }
 
   const toggleExpand = useCallback((path: string) => {
-    setExpanded(prev => {
+    setExpanded((prev) => {
       const next = new Set(prev)
       if (next.has(path)) next.delete(path)
       else next.add(path)
@@ -238,12 +273,12 @@ export function CopyFilesDialog({ open, onOpenChange, repoPath, onConfirm }: Cop
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {presets.map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                {presets.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
                 ))}
-                {selectedPresetId === 'custom' && (
-                  <SelectItem value="custom">Custom</SelectItem>
-                )}
+                {selectedPresetId === 'custom' && <SelectItem value="custom">Custom</SelectItem>}
               </SelectContent>
             </Select>
           </div>
@@ -254,19 +289,25 @@ export function CopyFilesDialog({ open, onOpenChange, repoPath, onConfirm }: Cop
               <span className="text-xs text-muted-foreground">Scanning ignored files…</span>
             </div>
           ) : tree.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No ignored files found.</p>
+            <p className="text-sm text-muted-foreground py-4 text-center">
+              No ignored files found.
+            </p>
           ) : (
             <div className="flex flex-col gap-2 min-h-0 flex-1">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">
                   {selectedFileCount} file{selectedFileCount !== 1 ? 's' : ''} selected
                 </span>
-                <button type="button" onClick={toggleAll} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <button
+                  type="button"
+                  onClick={toggleAll}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
                   {allTopSelected ? 'Deselect all' : 'Select all'}
                 </button>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border py-1 max-h-[40vh]">
-                {tree.map(node => (
+                {tree.map((node) => (
                   <NodeRow
                     key={node.path}
                     node={node}
@@ -284,7 +325,9 @@ export function CopyFilesDialog({ open, onOpenChange, repoPath, onConfirm }: Cop
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" size="sm" onClick={handleSkip}>Skip</Button>
+          <Button variant="outline" size="sm" onClick={handleSkip}>
+            Skip
+          </Button>
           <Button size="sm" onClick={handleConfirm} disabled={selectedFileCount === 0}>
             Copy {selectedFileCount} file{selectedFileCount !== 1 ? 's' : ''}
           </Button>

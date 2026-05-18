@@ -1,12 +1,46 @@
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { Plus, Minus, Undo2, ChevronRight, GitMerge, CheckCircle2, FileDiff, UnfoldVertical, FoldVertical } from 'lucide-react'
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
+import {
+  Plus,
+  Minus,
+  Undo2,
+  ChevronRight,
+  GitMerge,
+  CheckCircle2,
+  FileDiff,
+  UnfoldVertical,
+  FoldVertical
+} from 'lucide-react'
 import { useVirtualizer, defaultRangeExtractor, type Range } from '@tanstack/react-virtual'
 import {
-  Button, FileTree, buildFileTree, flattenFileTree, fileTreeIndent, cn, buttonVariants,
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  Button,
+  FileTree,
+  buildFileTree,
+  flattenFileTree,
+  fileTreeIndent,
+  cn,
+  buttonVariants,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
   PulseGrid,
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
 } from '@slayzone/ui'
 import { useAppearance } from '@slayzone/settings/client'
 import type { Task, MergeState } from '@slayzone/task/shared'
@@ -180,7 +214,11 @@ const FileListItem = memo(function FileListItem({
         }}
         title={entry.source === 'unstaged' ? 'Stage file' : 'Unstage file'}
       >
-        {entry.source === 'unstaged' ? <Plus className="size-3.5" /> : <Minus className="size-3.5" />}
+        {entry.source === 'unstaged' ? (
+          <Plus className="size-3.5" />
+        ) : (
+          <Minus className="size-3.5" />
+        )}
       </button>
     </div>
   )
@@ -190,20 +228,36 @@ export interface GitDiffPanelHandle {
   refresh: () => void
 }
 
-export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(function GitDiffPanel({
-  task,
-  projectPath,
-  visible,
-  pollIntervalMs = 5000,
-  mergeState,
-  onCommitAndContinueMerge,
-  onAbortMerge
-}, ref) {
+export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(function GitDiffPanel(
+  {
+    task,
+    projectPath,
+    visible,
+    pollIntervalMs = 5000,
+    mergeState,
+    onCommitAndContinueMerge,
+    onAbortMerge
+  },
+  ref
+) {
   const isMergeMode = mergeState === 'uncommitted'
-  const { diffContextLines, diffIgnoreWhitespace, diffContinuousFlow, diffTreeCollapsed, diffSideBySide, diffWrap } = useAppearance()
-  const targetPath = useMemo(() => task?.worktree_path ?? projectPath, [task?.worktree_path, projectPath])
+  const {
+    diffContextLines,
+    diffIgnoreWhitespace,
+    diffContinuousFlow,
+    diffTreeCollapsed,
+    diffSideBySide,
+    diffWrap
+  } = useAppearance()
+  const targetPath = useMemo(
+    () => task?.worktree_path ?? projectPath,
+    [task?.worktree_path, projectPath]
+  )
   const [commitError, setCommitError] = useState<string | null>(null)
-  const [selectedFile, setSelectedFile] = useState<{ path: string; source: 'unstaged' | 'staged' } | null>(null)
+  const [selectedFile, setSelectedFile] = useState<{
+    path: string
+    source: 'unstaged' | 'staged'
+  } | null>(null)
   const [fileListWidth, setFileListWidth] = useState(320)
   const [untrackedDiffs, setUntrackedDiffs] = useState<Map<string, FileDiffType>>(new Map())
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
@@ -228,14 +282,19 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
   const didMountSaveRef = useRef(false)
   useEffect(() => {
     if (!task?.id) return
-    if (!didMountSaveRef.current) { didMountSaveRef.current = true; return }
+    if (!didMountSaveRef.current) {
+      didMountSaveRef.current = true
+      return
+    }
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     const taskId = task.id
     const arr = [...collapsedFiles]
     saveTimerRef.current = setTimeout(() => {
       void window.api.db.updateTask({ id: taskId, diffCollapsedFiles: arr })
     }, 400)
-    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
   }, [collapsedFiles, task?.id])
   const [selectedTurnId, setSelectedTurnId] = useState<string | 'all'>('all')
   // Bumped after each working-tree snapshot fetch (effect below) so the turn
@@ -244,7 +303,7 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
   const [turnsRefreshKey, setTurnsRefreshKey] = useState(0)
   const turns = useAgentTurns(targetPath, turnsRefreshKey)
   const selectedTurn: AgentTurnRange | null = useMemo(
-    () => (selectedTurnId === 'all' ? null : turns.find((t) => t.id === selectedTurnId) ?? null),
+    () => (selectedTurnId === 'all' ? null : (turns.find((t) => t.id === selectedTurnId) ?? null)),
     [selectedTurnId, turns]
   )
   // If the selected turn was filtered out (its files are no longer in working
@@ -277,13 +336,18 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
   // refcounted timer, in-store snapshotsEqual short-circuit. contextLines is
   // part of the store key so toggling the display setting triggers a re-fetch
   // at the new context depth (skipping client-side collapse).
-  const { snapshot, loading, error: fetchError, refresh } = useGitDiffSnapshot(targetPath, {
+  const {
+    snapshot,
+    loading,
+    error: fetchError,
+    refresh
+  } = useGitDiffSnapshot(targetPath, {
     visible,
     ignoreWhitespace: diffIgnoreWhitespace,
     fromSha,
     toSha,
     contextLines: diffContextLines,
-    pollIntervalMs,
+    pollIntervalMs
   })
   const error = commitError ?? fetchError
 
@@ -298,7 +362,15 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
 
   const refreshRef = useRef(refresh)
   refreshRef.current = refresh
-  useImperativeHandle(ref, () => ({ refresh: () => { refreshRef.current() } }), [])
+  useImperativeHandle(
+    ref,
+    () => ({
+      refresh: () => {
+        refreshRef.current()
+      }
+    }),
+    []
+  )
 
   // parseUnifiedDiff is backed by a global LRU keyed by the raw patch string,
   // so identical patches across panels + re-renders return the same array
@@ -310,29 +382,53 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
   const unstagedEntries: FileEntry[] = useMemo(() => {
     if (!snapshot) return []
     return [
-      ...snapshot.unstagedFiles.map((f) => ({ path: f, status: deriveStatus(f, unstagedFileDiffs) as FileEntry['status'], source: 'unstaged' as const })),
-      ...snapshot.untrackedFiles.map((f) => ({ path: f, status: '?' as const, source: 'unstaged' as const }))
+      ...snapshot.unstagedFiles.map((f) => ({
+        path: f,
+        status: deriveStatus(f, unstagedFileDiffs) as FileEntry['status'],
+        source: 'unstaged' as const
+      })),
+      ...snapshot.untrackedFiles.map((f) => ({
+        path: f,
+        status: '?' as const,
+        source: 'unstaged' as const
+      }))
     ]
   }, [snapshot, unstagedFileDiffs])
 
   const stagedEntries: FileEntry[] = useMemo(() => {
     if (!snapshot) return []
-    return snapshot.stagedFiles.map((f) => ({ path: f, status: deriveStatus(f, stagedFileDiffs) as FileEntry['status'], source: 'staged' as const }))
+    return snapshot.stagedFiles.map((f) => ({
+      path: f,
+      status: deriveStatus(f, stagedFileDiffs) as FileEntry['status'],
+      source: 'staged' as const
+    }))
   }, [snapshot, stagedFileDiffs])
 
   // Flat list for selection logic
-  const flatEntries = useMemo(() => [...stagedEntries, ...unstagedEntries], [stagedEntries, unstagedEntries])
+  const flatEntries = useMemo(
+    () => [...stagedEntries, ...unstagedEntries],
+    [stagedEntries, unstagedEntries]
+  )
 
   // Build trees for keyboard nav flattening (respecting collapsed folders)
-  const stagedTree = useMemo(() => buildFileTree(stagedEntries, getEntryPath, { compress: true }), [stagedEntries])
-  const unstagedTree = useMemo(() => buildFileTree(unstagedEntries, getEntryPath, { compress: true }), [unstagedEntries])
+  const stagedTree = useMemo(
+    () => buildFileTree(stagedEntries, getEntryPath, { compress: true }),
+    [stagedEntries]
+  )
+  const unstagedTree = useMemo(
+    () => buildFileTree(unstagedEntries, getEntryPath, { compress: true }),
+    [unstagedEntries]
+  )
 
   // Invert expanded → collapsed for flattenFileTree
   const collapsedFolders = useMemo(() => {
     const allPaths = new Set<string>()
     function walk(nodes: typeof stagedTree) {
       for (const n of nodes) {
-        if (n.type === 'folder') { allPaths.add(n.path); walk(n.children) }
+        if (n.type === 'folder') {
+          allPaths.add(n.path)
+          walk(n.children)
+        }
       }
     }
     walk(stagedTree)
@@ -367,7 +463,10 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
     const allPaths = new Set<string>()
     function walk(nodes: typeof stagedTree) {
       for (const n of nodes) {
-        if (n.type === 'folder') { allPaths.add(n.path); walk(n.children) }
+        if (n.type === 'folder') {
+          allPaths.add(n.path)
+          walk(n.children)
+        }
       }
     }
     walk(stagedTree)
@@ -391,14 +490,21 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
     return map
   }, [unstagedFileDiffs, stagedFileDiffs])
 
-  const getDiffForEntry = useCallback((entry: FileEntry): FileDiffType | undefined => {
-    const key = entry.source === 'staged' ? `s:${entry.path}` : `u:${entry.path}`
-    return allDiffsMap.get(key) ?? (entry.status === '?' ? untrackedDiffs.get(entry.path) : undefined)
-  }, [allDiffsMap, untrackedDiffs])
+  const getDiffForEntry = useCallback(
+    (entry: FileEntry): FileDiffType | undefined => {
+      const key = entry.source === 'staged' ? `s:${entry.path}` : `u:${entry.path}`
+      return (
+        allDiffsMap.get(key) ?? (entry.status === '?' ? untrackedDiffs.get(entry.path) : undefined)
+      )
+    },
+    [allDiffsMap, untrackedDiffs]
+  )
 
   const normalDiff = useMemo(() => {
     if (!selectedFile) return null
-    const entry = flatEntries.find((f) => f.path === selectedFile.path && f.source === selectedFile.source)
+    const entry = flatEntries.find(
+      (f) => f.path === selectedFile.path && f.source === selectedFile.source
+    )
     if (!entry) return null
     return getDiffForEntry(entry) ?? null
   }, [selectedFile, flatEntries, getDiffForEntry])
@@ -427,20 +533,26 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
 
     const added = curr.filter((f) => !prevSet.has(f))
     for (const filePath of added) {
-      window.api.git.getUntrackedFileDiff(targetPath, filePath).then((patch) => {
-        const parsed = parseUnifiedDiff(patch)
-        if (parsed.length > 0) {
-          setUntrackedDiffs((old) => new Map(old).set(filePath, parsed[0]))
-        }
-      }).catch(() => {
-        // ignore — file may be binary or inaccessible
-      })
+      window.api.git
+        .getUntrackedFileDiff(targetPath, filePath)
+        .then((patch) => {
+          const parsed = parseUnifiedDiff(patch)
+          if (parsed.length > 0) {
+            setUntrackedDiffs((old) => new Map(old).set(filePath, parsed[0]))
+          }
+        })
+        .catch(() => {
+          // ignore — file may be binary or inaccessible
+        })
     }
   }, [snapshot, targetPath])
 
   // Clear selection when file no longer exists
   useEffect(() => {
-    if (selectedFile && !flatEntries.some((f) => f.path === selectedFile.path && f.source === selectedFile.source)) {
+    if (
+      selectedFile &&
+      !flatEntries.some((f) => f.path === selectedFile.path && f.source === selectedFile.source)
+    ) {
       setSelectedFile(null)
     }
   }, [flatEntries, selectedFile])
@@ -465,8 +577,10 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
 
   // Continuous-flow entries (only files with diffs — matches what we render)
   const flowEntries = useMemo(
-    () => flatEntries.map((entry) => ({ entry, diff: getDiffForEntry(entry) }))
-      .filter((x): x is { entry: FileEntry; diff: FileDiffType } => !!x.diff),
+    () =>
+      flatEntries
+        .map((entry) => ({ entry, diff: getDiffForEntry(entry) }))
+        .filter((x): x is { entry: FileEntry; diff: FileDiffType } => !!x.diff),
     [flatEntries, getDiffForEntry]
   )
 
@@ -498,7 +612,7 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
       rows.push({ kind: 'header', fileKey, fileIdx, entry, diff })
       const userToggled = userToggledFilesRef.current.has(fileKey)
       const explicitlyCollapsed = collapsedFiles.has(fileKey)
-      const autoCollapsed = !userToggled && (diff.additions + diff.deletions) > HUGE_FILE_THRESHOLD
+      const autoCollapsed = !userToggled && diff.additions + diff.deletions > HUGE_FILE_THRESHOLD
       const collapsed = explicitlyCollapsed || autoCollapsed
       if (!collapsed) {
         rows.push({ kind: 'body', fileKey, fileIdx, entry, diff })
@@ -553,14 +667,14 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
     getScrollElement: () => flowScrollRef.current,
     // Header rows are short (~40px); bodies are measured. Estimate splits the
     // difference — overscan + measureElement converge quickly.
-    estimateSize: (index) => flowRows[index]?.kind === 'header' ? 40 : 320,
+    estimateSize: (index) => (flowRows[index]?.kind === 'header' ? 40 : 320),
     overscan: 2,
     getItemKey: (index) => {
       const r = flowRows[index]
       if (!r) return index
       return `${r.kind}:${r.fileKey}`
     },
-    rangeExtractor: rangeExtractorSticky,
+    rangeExtractor: rangeExtractorSticky
   })
 
   // Scroll to selected file only when the user picks one — not on every poll
@@ -576,57 +690,69 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
     rowVirtualizer.scrollToIndex(idx, { align: 'start' })
   }, [selectedFile, diffContinuousFlow, rowVirtualizer])
 
-  const handleBulkAction = useCallback(async (action: 'stageAll' | 'unstageAll') => {
-    if (!targetPath) return
-    try {
-      if (action === 'stageAll') {
-        await window.api.git.stageAll(targetPath)
-      } else {
-        await window.api.git.unstageAll(targetPath)
+  const handleBulkAction = useCallback(
+    async (action: 'stageAll' | 'unstageAll') => {
+      if (!targetPath) return
+      try {
+        if (action === 'stageAll') {
+          await window.api.git.stageAll(targetPath)
+        } else {
+          await window.api.git.unstageAll(targetPath)
+        }
+        await refreshRef.current()
+      } catch {
+        // silently fail — next poll will correct state
       }
-      await refreshRef.current()
-    } catch {
-      // silently fail — next poll will correct state
-    }
-  }, [targetPath])
+    },
+    [targetPath]
+  )
 
-  const handleStageAction = useCallback(async (filePath: string, source: 'unstaged' | 'staged') => {
-    if (!targetPath) return
-    try {
-      if (source === 'unstaged') {
-        await window.api.git.stageFile(targetPath, filePath)
-      } else {
-        await window.api.git.unstageFile(targetPath, filePath)
+  const handleStageAction = useCallback(
+    async (filePath: string, source: 'unstaged' | 'staged') => {
+      if (!targetPath) return
+      try {
+        if (source === 'unstaged') {
+          await window.api.git.stageFile(targetPath, filePath)
+        } else {
+          await window.api.git.unstageFile(targetPath, filePath)
+        }
+        await refreshRef.current()
+      } catch {
+        // silently fail — next poll will correct state
       }
-      await refreshRef.current()
-    } catch {
-      // silently fail — next poll will correct state
-    }
-  }, [targetPath])
+    },
+    [targetPath]
+  )
 
-  const handleDiscardFile = useCallback(async (filePath: string, untracked?: boolean) => {
-    if (!targetPath) return
-    try {
-      await window.api.git.discardFile(targetPath, filePath, untracked)
-      await refreshRef.current()
-    } catch {
-      // silently fail — next poll will correct state
-    }
-  }, [targetPath])
-
-  const handleStageFolderAction = useCallback(async (folderPath: string, source: 'unstaged' | 'staged') => {
-    if (!targetPath) return
-    try {
-      if (source === 'unstaged') {
-        await window.api.git.stageFile(targetPath, folderPath)
-      } else {
-        await window.api.git.unstageFile(targetPath, folderPath)
+  const handleDiscardFile = useCallback(
+    async (filePath: string, untracked?: boolean) => {
+      if (!targetPath) return
+      try {
+        await window.api.git.discardFile(targetPath, filePath, untracked)
+        await refreshRef.current()
+      } catch {
+        // silently fail — next poll will correct state
       }
-      await refreshRef.current()
-    } catch {
-      // silently fail — next poll will correct state
-    }
-  }, [targetPath])
+    },
+    [targetPath]
+  )
+
+  const handleStageFolderAction = useCallback(
+    async (folderPath: string, source: 'unstaged' | 'staged') => {
+      if (!targetPath) return
+      try {
+        if (source === 'unstaged') {
+          await window.api.git.stageFile(targetPath, folderPath)
+        } else {
+          await window.api.git.unstageFile(targetPath, folderPath)
+        }
+        await refreshRef.current()
+      } catch {
+        // silently fail — next poll will correct state
+      }
+    },
+    [targetPath]
+  )
 
   const handleCommit = useCallback(async () => {
     if (!targetPath || !commitMessage.trim() || stagedEntries.length === 0) return
@@ -650,32 +776,37 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
     setFileListWidth((w) => Math.max(50, w + delta))
   }, [])
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
-    e.preventDefault()
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+      e.preventDefault()
 
-    const currentIdx = selectedFile
-      ? visibleFlatEntries.findIndex((f) => f.path === selectedFile.path && f.source === selectedFile.source)
-      : -1
+      const currentIdx = selectedFile
+        ? visibleFlatEntries.findIndex(
+            (f) => f.path === selectedFile.path && f.source === selectedFile.source
+          )
+        : -1
 
-    let nextIdx: number
-    if (e.key === 'ArrowDown') {
-      nextIdx = currentIdx < visibleFlatEntries.length - 1 ? currentIdx + 1 : 0
-    } else {
-      nextIdx = currentIdx > 0 ? currentIdx - 1 : visibleFlatEntries.length - 1
-    }
+      let nextIdx: number
+      if (e.key === 'ArrowDown') {
+        nextIdx = currentIdx < visibleFlatEntries.length - 1 ? currentIdx + 1 : 0
+      } else {
+        nextIdx = currentIdx > 0 ? currentIdx - 1 : visibleFlatEntries.length - 1
+      }
 
-    const next = visibleFlatEntries[nextIdx]
-    if (next) {
-      setSelectedFile({ path: next.path, source: next.source })
-    }
-  }, [selectedFile, visibleFlatEntries])
-
-  const hasAnyChanges = !!snapshot && (
-    snapshot.files.length > 0 ||
-    snapshot.unstagedPatch.trim().length > 0 ||
-    snapshot.stagedPatch.trim().length > 0
+      const next = visibleFlatEntries[nextIdx]
+      if (next) {
+        setSelectedFile({ path: next.path, source: next.source })
+      }
+    },
+    [selectedFile, visibleFlatEntries]
   )
+
+  const hasAnyChanges =
+    !!snapshot &&
+    (snapshot.files.length > 0 ||
+      snapshot.unstagedPatch.trim().length > 0 ||
+      snapshot.stagedPatch.trim().length > 0)
 
   useEffect(() => {
     if (!hasAnyChanges || didInitSplitRef.current) return
@@ -688,66 +819,89 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
   const isSelected = (entry: FileEntry) =>
     selectedFile?.path === entry.path && selectedFile?.source === entry.source
 
-  const renderFileItem = useCallback((entry: FileEntry, { name, depth }: { name: string; depth: number }) => {
-    const diff = getDiffForEntry(entry)
-    const selected = isSelected(entry)
-    const canDiscard = entry.source === 'unstaged'
-    return (
-      <FileListItem
-        entry={entry}
-        displayName={name}
-        selected={selected}
-        additions={diff?.additions}
-        deletions={diff?.deletions}
-        onClick={() => handleSelectFile(entry.path, entry.source)}
-        onAction={() => handleStageAction(entry.path, entry.source)}
-        onDiscard={canDiscard ? () => setConfirmAction({
-          title: 'Discard Changes',
-          description: `Discard all changes to "${entry.path}"? This cannot be undone.`,
-          actionLabel: 'Discard',
-          destructive: true,
-          onConfirm: () => handleDiscardFile(entry.path, entry.status === '?')
-        }) : undefined}
-        itemRef={selected ? selectedItemRef : undefined}
-        depth={depth}
-      />
-    )
-  }, [getDiffForEntry, selectedFile, handleSelectFile, handleStageAction, handleDiscardFile])
+  const renderFileItem = useCallback(
+    (entry: FileEntry, { name, depth }: { name: string; depth: number }) => {
+      const diff = getDiffForEntry(entry)
+      const selected = isSelected(entry)
+      const canDiscard = entry.source === 'unstaged'
+      return (
+        <FileListItem
+          entry={entry}
+          displayName={name}
+          selected={selected}
+          additions={diff?.additions}
+          deletions={diff?.deletions}
+          onClick={() => handleSelectFile(entry.path, entry.source)}
+          onAction={() => handleStageAction(entry.path, entry.source)}
+          onDiscard={
+            canDiscard
+              ? () =>
+                  setConfirmAction({
+                    title: 'Discard Changes',
+                    description: `Discard all changes to "${entry.path}"? This cannot be undone.`,
+                    actionLabel: 'Discard',
+                    destructive: true,
+                    onConfirm: () => handleDiscardFile(entry.path, entry.status === '?')
+                  })
+              : undefined
+          }
+          itemRef={selected ? selectedItemRef : undefined}
+          depth={depth}
+        />
+      )
+    },
+    [getDiffForEntry, selectedFile, handleSelectFile, handleStageAction, handleDiscardFile]
+  )
 
-  const stagedFolderActions = useCallback((folder: { name: string; path: string }) => (
-    <span
-      className="shrink-0 opacity-0 group-hover/folder:opacity-100 hover:text-foreground text-muted-foreground transition-opacity p-0.5 rounded hover:bg-accent"
-      onClick={(e) => { e.stopPropagation(); handleStageFolderAction(folder.path, 'staged') }}
-      title="Unstage folder"
-    >
-      <Minus className="size-3.5" />
-    </span>
-  ), [handleStageFolderAction])
-
-  const unstagedFolderActions = useCallback((folder: { name: string; path: string }) => (
-    <>
-      <span
-        className="shrink-0 opacity-0 group-hover/folder:opacity-100 hover:text-destructive text-muted-foreground transition-opacity p-0.5 rounded hover:bg-accent"
-        onClick={(e) => { e.stopPropagation(); setConfirmAction({
-          title: 'Discard Folder Changes',
-          description: `Discard all changes in "${folder.name}"? This cannot be undone.`,
-          actionLabel: 'Discard',
-          destructive: true,
-          onConfirm: () => handleDiscardFile(folder.path)
-        }) }}
-        title="Discard folder changes"
-      >
-        <Undo2 className="size-3.5" />
-      </span>
+  const stagedFolderActions = useCallback(
+    (folder: { name: string; path: string }) => (
       <span
         className="shrink-0 opacity-0 group-hover/folder:opacity-100 hover:text-foreground text-muted-foreground transition-opacity p-0.5 rounded hover:bg-accent"
-        onClick={(e) => { e.stopPropagation(); handleStageFolderAction(folder.path, 'unstaged') }}
-        title="Stage folder"
+        onClick={(e) => {
+          e.stopPropagation()
+          handleStageFolderAction(folder.path, 'staged')
+        }}
+        title="Unstage folder"
       >
-        <Plus className="size-3.5" />
+        <Minus className="size-3.5" />
       </span>
-    </>
-  ), [handleStageFolderAction, handleDiscardFile])
+    ),
+    [handleStageFolderAction]
+  )
+
+  const unstagedFolderActions = useCallback(
+    (folder: { name: string; path: string }) => (
+      <>
+        <span
+          className="shrink-0 opacity-0 group-hover/folder:opacity-100 hover:text-destructive text-muted-foreground transition-opacity p-0.5 rounded hover:bg-accent"
+          onClick={(e) => {
+            e.stopPropagation()
+            setConfirmAction({
+              title: 'Discard Folder Changes',
+              description: `Discard all changes in "${folder.name}"? This cannot be undone.`,
+              actionLabel: 'Discard',
+              destructive: true,
+              onConfirm: () => handleDiscardFile(folder.path)
+            })
+          }}
+          title="Discard folder changes"
+        >
+          <Undo2 className="size-3.5" />
+        </span>
+        <span
+          className="shrink-0 opacity-0 group-hover/folder:opacity-100 hover:text-foreground text-muted-foreground transition-opacity p-0.5 rounded hover:bg-accent"
+          onClick={(e) => {
+            e.stopPropagation()
+            handleStageFolderAction(folder.path, 'unstaged')
+          }}
+          title="Stage folder"
+        >
+          <Plus className="size-3.5" />
+        </span>
+      </>
+    ),
+    [handleStageFolderAction, handleDiscardFile]
+  )
 
   const commitInputBlock = (
     <div className="shrink-0 p-2 border-t space-y-1.5">
@@ -778,9 +932,13 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
           disabled={committing}
           onClick={async () => {
             setCommitting(true)
-            try { await onCommitAndContinueMerge() }
-            catch (err) { setCommitError(err instanceof Error ? err.message : String(err)) }
-            finally { setCommitting(false) }
+            try {
+              await onCommitAndContinueMerge()
+            } catch (err) {
+              setCommitError(err instanceof Error ? err.message : String(err))
+            } finally {
+              setCommitting(false)
+            }
           }}
         >
           {committing ? 'Committing...' : 'Commit & Continue Merge'}
@@ -793,7 +951,9 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
           disabled={!commitMessage.trim() || stagedEntries.length === 0 || committing}
           onClick={handleCommit}
         >
-          {committing ? 'Committing...' : `Commit${stagedEntries.length > 0 ? ` (${stagedEntries.length} staged)` : ''}`}
+          {committing
+            ? 'Committing...'
+            : `Commit${stagedEntries.length > 0 ? ` (${stagedEntries.length} staged)` : ''}`}
         </Button>
       )}
     </div>
@@ -806,17 +966,26 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
         <div className="shrink-0 px-4 py-2 bg-purple-500/10 border-b flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <GitMerge className="h-3.5 w-3.5 text-purple-400" />
-            <span className="text-xs font-medium text-purple-300">Stage and commit your changes to continue the merge</span>
+            <span className="text-xs font-medium text-purple-300">
+              Stage and commit your changes to continue the merge
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             {onAbortMerge && (
-              <Button variant="outline" size="sm" className="h-6 text-xs" onClick={() => setConfirmAction({
-                title: 'Abort Merge',
-                description: 'Abort the current merge? All merge progress will be lost.',
-                actionLabel: 'Abort',
-                destructive: true,
-                onConfirm: onAbortMerge
-              })}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 text-xs"
+                onClick={() =>
+                  setConfirmAction({
+                    title: 'Abort Merge',
+                    description: 'Abort the current merge? All merge progress will be lost.',
+                    actionLabel: 'Abort',
+                    destructive: true,
+                    onConfirm: onAbortMerge
+                  })
+                }
+              >
                 Cancel
               </Button>
             )}
@@ -831,86 +1000,93 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
           "All turns" button is always meaningful when continuous-flow is on. */}
       {targetPath && diffContinuousFlow && (
         <TooltipProvider delayDuration={300}>
-        <div className="shrink-0 h-9 flex items-center px-2 bg-muted/30 border-b">
-          <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-          <button
-            onClick={() => setSelectedTurnId('all')}
-            className={cn(
-              'shrink-0 inline-flex items-center justify-center px-3 h-6 rounded-full text-[11px] leading-none font-medium border transition-colors',
-              selectedTurnId === 'all'
-                ? 'bg-muted text-foreground border-foreground/30'
-                : 'bg-background hover:bg-muted text-muted-foreground border-border'
-            )}
-          >
-            All turns
-          </button>
-          {[...turns].reverse().map((t, idx) => {
-            // Newest = highest number. With turns sorted oldest→newest,
-            // reversed iteration starts at newest (idx 0) → n = length - idx.
-            const n = turns.length - idx
-            const active = selectedTurnId === t.id
-            const promptClean = t.prompt_preview ? cleanPromptForDisplay(t.prompt_preview) : ''
-            const hasTip = !!(t.task_title || promptClean)
-            return (
-              <Tooltip key={t.id}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setSelectedTurnId(t.id)}
-                    className={cn(
-                      'shrink-0 inline-flex items-center justify-center px-3 h-6 rounded-full text-[11px] leading-none font-medium border transition-colors',
-                      active
-                        ? 'bg-muted text-foreground border-foreground/30'
-                        : 'bg-background hover:bg-muted text-muted-foreground border-border'
-                    )}
-                  >
-                    Turn {n}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" className="max-w-xs">
-                  {hasTip ? (
-                    <>
-                      {t.task_title && <p className="text-sm font-semibold">{t.task_title}</p>}
-                      {promptClean && (
-                        <p className={cn('text-xs italic line-clamp-4 break-words', t.task_title && 'mt-1')}>
-                          {promptClean}
-                        </p>
+          <div className="shrink-0 h-9 flex items-center px-2 bg-muted/30 border-b">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+              <button
+                onClick={() => setSelectedTurnId('all')}
+                className={cn(
+                  'shrink-0 inline-flex items-center justify-center px-3 h-6 rounded-full text-[11px] leading-none font-medium border transition-colors',
+                  selectedTurnId === 'all'
+                    ? 'bg-muted text-foreground border-foreground/30'
+                    : 'bg-background hover:bg-muted text-muted-foreground border-border'
+                )}
+              >
+                All turns
+              </button>
+              {[...turns].reverse().map((t, idx) => {
+                // Newest = highest number. With turns sorted oldest→newest,
+                // reversed iteration starts at newest (idx 0) → n = length - idx.
+                const n = turns.length - idx
+                const active = selectedTurnId === t.id
+                const promptClean = t.prompt_preview ? cleanPromptForDisplay(t.prompt_preview) : ''
+                const hasTip = !!(t.task_title || promptClean)
+                return (
+                  <Tooltip key={t.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setSelectedTurnId(t.id)}
+                        className={cn(
+                          'shrink-0 inline-flex items-center justify-center px-3 h-6 rounded-full text-[11px] leading-none font-medium border transition-colors',
+                          active
+                            ? 'bg-muted text-foreground border-foreground/30'
+                            : 'bg-background hover:bg-muted text-muted-foreground border-border'
+                        )}
+                      >
+                        Turn {n}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" align="start" className="max-w-xs">
+                      {hasTip ? (
+                        <>
+                          {t.task_title && <p className="text-sm font-semibold">{t.task_title}</p>}
+                          {promptClean && (
+                            <p
+                              className={cn(
+                                'text-xs italic line-clamp-4 break-words',
+                                t.task_title && 'mt-1'
+                              )}
+                            >
+                              {promptClean}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm font-semibold">Turn {n}</p>
                       )}
-                    </>
-                  ) : (
-                    <p className="text-sm font-semibold">Turn {n}</p>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            )
-          })}
-          </div>
-          {flatEntries.length > 0 && (
-            <div className="shrink-0 flex items-center gap-0.5 pl-8">
-              <button
-                onClick={() => {
-                  // Mark every current file as user-toggled so auto-collapse
-                  // of huge files stays overridden after Expand all.
-                  for (const e of flatEntries) userToggledFilesRef.current.add(`${e.source}:${e.path}`)
-                  setCollapsedFiles(new Set())
-                }}
-                title="Expand all files"
-                className="size-6 inline-flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <UnfoldVertical className="size-3.5" />
-              </button>
-              <button
-                onClick={() => {
-                  for (const e of flatEntries) userToggledFilesRef.current.add(`${e.source}:${e.path}`)
-                  setCollapsedFiles(new Set(flatEntries.map((e) => `${e.source}:${e.path}`)))
-                }}
-                title="Collapse all files"
-                className="size-6 inline-flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <FoldVertical className="size-3.5" />
-              </button>
+                    </TooltipContent>
+                  </Tooltip>
+                )
+              })}
             </div>
-          )}
-        </div>
+            {flatEntries.length > 0 && (
+              <div className="shrink-0 flex items-center gap-0.5 pl-8">
+                <button
+                  onClick={() => {
+                    // Mark every current file as user-toggled so auto-collapse
+                    // of huge files stays overridden after Expand all.
+                    for (const e of flatEntries)
+                      userToggledFilesRef.current.add(`${e.source}:${e.path}`)
+                    setCollapsedFiles(new Set())
+                  }}
+                  title="Expand all files"
+                  className="size-6 inline-flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <UnfoldVertical className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => {
+                    for (const e of flatEntries)
+                      userToggledFilesRef.current.add(`${e.source}:${e.path}`)
+                    setCollapsedFiles(new Set(flatEntries.map((e) => `${e.source}:${e.path}`)))
+                  }}
+                  title="Collapse all files"
+                  className="size-6 inline-flex items-center justify-center rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <FoldVertical className="size-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
         </TooltipProvider>
       )}
 
@@ -952,96 +1128,112 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
         <div ref={splitContainerRef} className="flex-1 min-h-0 flex">
           {/* Left: file lists + commit */}
           {!diffTreeCollapsed && (
-          <div
-            className="shrink-0 flex flex-col min-h-0 border-r"
-            style={{ width: fileListWidth }}
-          >
             <div
-              ref={fileListRef}
-              className="flex-1 min-h-0 overflow-y-auto outline-none"
-              tabIndex={0}
-              onKeyDown={handleKeyDown}
+              className="shrink-0 flex flex-col min-h-0 border-r"
+              style={{ width: fileListWidth }}
             >
-            {/* Staged section */}
-            {stagedEntries.length > 0 && (
-              <div>
-                <div
-                  className="h-[30px] px-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide bg-muted border-b sticky top-0 z-10 flex items-center justify-between cursor-pointer select-none"
-                  onClick={() => setStagedCollapsed((v) => !v)}
-                >
-                  <span className="flex items-center gap-1">
-                    <ChevronRight className={cn('size-3 transition-transform', !stagedCollapsed && 'rotate-90')} />
-                    Staged ({stagedEntries.length})
-                  </span>
-                  <button
-                    className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-accent"
-                    onClick={(e) => { e.stopPropagation(); setConfirmAction({
-                      title: 'Unstage All',
-                      description: `Unstage all ${stagedEntries.length} files?`,
-                      actionLabel: 'Unstage All',
-                      onConfirm: () => handleBulkAction('unstageAll')
-                    }) }}
-                    title="Unstage all"
-                  >
-                    <Minus className="size-3.5" />
-                  </button>
-                </div>
-                {!stagedCollapsed && (
-                  <FileTree
-                    items={stagedEntries}
-                    getPath={getEntryPath}
-                    compress
-                    expandedFolders={expandedFolders}
-                    onToggleFolder={toggleFolder}
-                    renderFile={renderFileItem}
-                    folderActions={stagedFolderActions}
-                  />
+              <div
+                ref={fileListRef}
+                className="flex-1 min-h-0 overflow-y-auto outline-none"
+                tabIndex={0}
+                onKeyDown={handleKeyDown}
+              >
+                {/* Staged section */}
+                {stagedEntries.length > 0 && (
+                  <div>
+                    <div
+                      className="h-[30px] px-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide bg-muted border-b sticky top-0 z-10 flex items-center justify-between cursor-pointer select-none"
+                      onClick={() => setStagedCollapsed((v) => !v)}
+                    >
+                      <span className="flex items-center gap-1">
+                        <ChevronRight
+                          className={cn(
+                            'size-3 transition-transform',
+                            !stagedCollapsed && 'rotate-90'
+                          )}
+                        />
+                        Staged ({stagedEntries.length})
+                      </span>
+                      <button
+                        className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-accent"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setConfirmAction({
+                            title: 'Unstage All',
+                            description: `Unstage all ${stagedEntries.length} files?`,
+                            actionLabel: 'Unstage All',
+                            onConfirm: () => handleBulkAction('unstageAll')
+                          })
+                        }}
+                        title="Unstage all"
+                      >
+                        <Minus className="size-3.5" />
+                      </button>
+                    </div>
+                    {!stagedCollapsed && (
+                      <FileTree
+                        items={stagedEntries}
+                        getPath={getEntryPath}
+                        compress
+                        expandedFolders={expandedFolders}
+                        onToggleFolder={toggleFolder}
+                        renderFile={renderFileItem}
+                        folderActions={stagedFolderActions}
+                      />
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
 
-            {/* Unstaged section */}
-            {unstagedEntries.length > 0 && (
-              <div>
-                <div
-                  className="h-[30px] px-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide bg-muted border-b sticky top-0 z-10 flex items-center justify-between cursor-pointer select-none"
-                  onClick={() => setUnstagedCollapsed((v) => !v)}
-                >
-                  <span className="flex items-center gap-1">
-                    <ChevronRight className={cn('size-3 transition-transform', !unstagedCollapsed && 'rotate-90')} />
-                    Unstaged ({unstagedEntries.length})
-                  </span>
-                  <button
-                    className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-accent"
-                    onClick={(e) => { e.stopPropagation(); setConfirmAction({
-                      title: 'Stage All',
-                      description: `Stage all ${unstagedEntries.length} files?`,
-                      actionLabel: 'Stage All',
-                      onConfirm: () => handleBulkAction('stageAll')
-                    }) }}
-                    title="Stage all"
-                  >
-                    <Plus className="size-3.5" />
-                  </button>
-                </div>
-                {!unstagedCollapsed && (
-                  <FileTree
-                    items={unstagedEntries}
-                    getPath={getEntryPath}
-                    compress
-                    expandedFolders={expandedFolders}
-                    onToggleFolder={toggleFolder}
-                    renderFile={renderFileItem}
-                    folderActions={unstagedFolderActions}
-                  />
+                {/* Unstaged section */}
+                {unstagedEntries.length > 0 && (
+                  <div>
+                    <div
+                      className="h-[30px] px-3 text-[11px] font-medium text-muted-foreground uppercase tracking-wide bg-muted border-b sticky top-0 z-10 flex items-center justify-between cursor-pointer select-none"
+                      onClick={() => setUnstagedCollapsed((v) => !v)}
+                    >
+                      <span className="flex items-center gap-1">
+                        <ChevronRight
+                          className={cn(
+                            'size-3 transition-transform',
+                            !unstagedCollapsed && 'rotate-90'
+                          )}
+                        />
+                        Unstaged ({unstagedEntries.length})
+                      </span>
+                      <button
+                        className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded hover:bg-accent"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setConfirmAction({
+                            title: 'Stage All',
+                            description: `Stage all ${unstagedEntries.length} files?`,
+                            actionLabel: 'Stage All',
+                            onConfirm: () => handleBulkAction('stageAll')
+                          })
+                        }}
+                        title="Stage all"
+                      >
+                        <Plus className="size-3.5" />
+                      </button>
+                    </div>
+                    {!unstagedCollapsed && (
+                      <FileTree
+                        items={unstagedEntries}
+                        getPath={getEntryPath}
+                        compress
+                        expandedFolders={expandedFolders}
+                        onToggleFolder={toggleFolder}
+                        renderFile={renderFileItem}
+                        folderActions={unstagedFolderActions}
+                      />
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+
+              {/* Commit input — pinned to bottom of sidebar */}
+              {commitInputBlock}
             </div>
-
-            {/* Commit input — pinned to bottom of sidebar */}
-            {commitInputBlock}
-          </div>
           )}
 
           {/* Resize handle */}
@@ -1061,14 +1253,21 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
                     ref={flowScrollRef}
                     className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 pb-2"
                   >
-                    <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
+                    <div
+                      style={{
+                        height: rowVirtualizer.getTotalSize(),
+                        position: 'relative',
+                        width: '100%'
+                      }}
+                    >
                       {rowVirtualizer.getVirtualItems().map((v) => {
                         const row = flowRows[v.index]
                         if (!row) return null
                         const { entry, diff, fileKey } = row
                         const userToggled = userToggledFilesRef.current.has(fileKey)
                         const explicitlyCollapsed = collapsedFiles.has(fileKey)
-                        const autoCollapsed = !userToggled && (diff.additions + diff.deletions) > HUGE_FILE_THRESHOLD
+                        const autoCollapsed =
+                          !userToggled && diff.additions + diff.deletions > HUGE_FILE_THRESHOLD
                         const collapsed = explicitlyCollapsed || autoCollapsed
                         const isActiveSticky = v.index === activeStickyIndexRef.current
                         const isHeader = row.kind === 'header'
@@ -1077,21 +1276,22 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
                         // (no transform) so it pins at top: 0 of the scroll parent
                         // while its body scrolls. All other rows use the standard
                         // `position: absolute` + translateY placement.
-                        const style: React.CSSProperties = isHeader && isActiveSticky
-                          ? {
-                              position: 'sticky',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              zIndex: 20,
-                            }
-                          : {
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              transform: `translateY(${v.start}px)`,
-                            }
+                        const style: React.CSSProperties =
+                          isHeader && isActiveSticky
+                            ? {
+                                position: 'sticky',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                zIndex: 20
+                              }
+                            : {
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                transform: `translateY(${v.start}px)`
+                              }
 
                         if (isHeader) {
                           return (
@@ -1113,17 +1313,33 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
                                     const next = new Set(prev)
                                     // If currently collapsed (explicitly or auto), expand → remove from set.
                                     // Otherwise collapse → add to set.
-                                    if (collapsed) next.delete(fileKey); else next.add(fileKey)
+                                    if (collapsed) next.delete(fileKey)
+                                    else next.add(fileKey)
                                     return next
                                   })
                                 }}
                               >
-                                <ChevronRight className={cn('size-3 shrink-0 transition-transform text-muted-foreground', !collapsed && 'rotate-90')} />
-                                <span className={cn('font-bold', STATUS_COLORS[entry.status])}>{entry.status}</span>
+                                <ChevronRight
+                                  className={cn(
+                                    'size-3 shrink-0 transition-transform text-muted-foreground',
+                                    !collapsed && 'rotate-90'
+                                  )}
+                                />
+                                <span className={cn('font-bold', STATUS_COLORS[entry.status])}>
+                                  {entry.status}
+                                </span>
                                 <span className="truncate">{entry.path}</span>
                                 <span className="ml-auto text-[10px] text-muted-foreground tabular-nums space-x-1">
-                                  {diff.additions > 0 && <span className="text-green-600 dark:text-green-400">+{diff.additions}</span>}
-                                  {diff.deletions > 0 && <span className="text-red-600 dark:text-red-400">-{diff.deletions}</span>}
+                                  {diff.additions > 0 && (
+                                    <span className="text-green-600 dark:text-green-400">
+                                      +{diff.additions}
+                                    </span>
+                                  )}
+                                  {diff.deletions > 0 && (
+                                    <span className="text-red-600 dark:text-red-400">
+                                      -{diff.deletions}
+                                    </span>
+                                  )}
                                 </span>
                               </div>
                             </div>
@@ -1139,7 +1355,12 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
                             style={{ ...style, paddingBottom: 8 }}
                           >
                             <div className="overflow-hidden rounded-b-lg border-x border-b border-border bg-card shadow-sm">
-                              <DiffView diff={diff} sideBySide={diffSideBySide} wrap={diffWrap} contextLines={diffContextLines} />
+                              <DiffView
+                                diff={diff}
+                                sideBySide={diffSideBySide}
+                                wrap={diffWrap}
+                                contextLines={diffContextLines}
+                              />
                             </div>
                           </div>
                         )
@@ -1156,7 +1377,9 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
                       <FileDiff className="size-10 opacity-30" />
                       <div className="text-center">
                         <p className="text-base font-medium text-foreground/60">No file selected</p>
-                        <p className="text-sm mt-0.5 opacity-60">Pick a file from the list to view its diff</p>
+                        <p className="text-sm mt-0.5 opacity-60">
+                          Pick a file from the list to view its diff
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1164,7 +1387,9 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
                 {selectedFile && !selectedDiff && (
                   <div className="flex-1 flex items-center justify-center p-6">
                     <p className="text-xs text-muted-foreground">
-                      {flatEntries.find((f) => f.path === selectedFile.path && f.source === selectedFile.source)?.status === '?'
+                      {flatEntries.find(
+                        (f) => f.path === selectedFile.path && f.source === selectedFile.source
+                      )?.status === '?'
                         ? 'Loading...'
                         : 'No diff content'}
                     </p>
@@ -1172,7 +1397,12 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
                 )}
                 {selectedFile && selectedDiff && (
                   <div className="flex-1 min-h-0 overflow-auto">
-                    <DiffView diff={selectedDiff} sideBySide={diffSideBySide} wrap={diffWrap} contextLines={diffContextLines} />
+                    <DiffView
+                      diff={selectedDiff}
+                      sideBySide={diffSideBySide}
+                      wrap={diffWrap}
+                      contextLines={diffContextLines}
+                    />
                   </div>
                 )}
               </>
@@ -1182,7 +1412,12 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
       )}
 
       {/* Confirmation dialog for destructive actions */}
-      <AlertDialog open={!!confirmAction} onOpenChange={(open) => { if (!open) setConfirmAction(null) }}>
+      <AlertDialog
+        open={!!confirmAction}
+        onOpenChange={(open) => {
+          if (!open) setConfirmAction(null)
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{confirmActionRef.current?.title}</AlertDialogTitle>
@@ -1191,7 +1426,11 @@ export const GitDiffPanel = forwardRef<GitDiffPanelHandle, GitDiffPanelProps>(fu
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className={confirmActionRef.current?.destructive ? buttonVariants({ variant: 'destructive' }) : undefined}
+              className={
+                confirmActionRef.current?.destructive
+                  ? buttonVariants({ variant: 'destructive' })
+                  : undefined
+              }
               onClick={() => confirmActionRef.current?.onConfirm()}
             >
               {confirmActionRef.current?.actionLabel}

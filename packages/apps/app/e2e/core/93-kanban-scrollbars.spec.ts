@@ -7,7 +7,11 @@ test.describe('Kanban scrollbars', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Kanban Scroll', color: '#0ea5e9', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Kanban Scroll',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
     for (let i = 1; i <= 24; i++) {
@@ -17,7 +21,9 @@ test.describe('Kanban scrollbars', () => {
     await s.refreshData()
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
-    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({
+      timeout: 5_000
+    })
   })
 
   test.afterAll(async ({ electronApp }) => {
@@ -28,21 +34,32 @@ test.describe('Kanban scrollbars', () => {
     })
   })
 
-  test('board shows usable horizontal overflow only when columns exceed width', async ({ mainWindow, electronApp }) => {
+  test('board shows usable horizontal overflow only when columns exceed width', async ({
+    mainWindow,
+    electronApp
+  }) => {
     await electronApp.evaluate(({ BrowserWindow }) => {
       const win = BrowserWindow.getAllWindows()[0]
       win.setSize(900, 800)
     })
-    await expect.poll(async () => {
-      return await electronApp.evaluate(({ BrowserWindow }) => {
-        const win = BrowserWindow.getAllWindows()[0]
-        return win.getSize()
-      })
-    }, { timeout: 2000 }).toEqual([900, 800])
+    await expect
+      .poll(
+        async () => {
+          return await electronApp.evaluate(({ BrowserWindow }) => {
+            const win = BrowserWindow.getAllWindows()[0]
+            return win.getSize()
+          })
+        },
+        { timeout: 2000 }
+      )
+      .toEqual([900, 800])
 
-    const boardScroller = mainWindow.locator('div.overflow-x-auto').filter({
-      has: mainWindow.locator('h3').getByText('Inbox', { exact: true })
-    }).first()
+    const boardScroller = mainWindow
+      .locator('div.overflow-x-auto')
+      .filter({
+        has: mainWindow.locator('h3').getByText('Inbox', { exact: true })
+      })
+      .first()
 
     const state = await boardScroller.evaluate((el) => {
       const node = el as HTMLDivElement
@@ -65,21 +82,32 @@ test.describe('Kanban scrollbars', () => {
     expect(state.scrollLeftAfter).toBeGreaterThan(state.scrollLeftBefore)
   })
 
-  test('column shows usable vertical overflow only when cards exceed height', async ({ mainWindow, electronApp }) => {
+  test('column shows usable vertical overflow only when cards exceed height', async ({
+    mainWindow,
+    electronApp
+  }) => {
     await electronApp.evaluate(({ BrowserWindow }) => {
       const win = BrowserWindow.getAllWindows()[0]
       win.setSize(900, 650)
     })
-    await expect.poll(async () => {
-      return await electronApp.evaluate(({ BrowserWindow }) => {
-        const win = BrowserWindow.getAllWindows()[0]
-        return win.getSize()
-      })
-    }, { timeout: 2000 }).toEqual([900, 650])
+    await expect
+      .poll(
+        async () => {
+          return await electronApp.evaluate(({ BrowserWindow }) => {
+            const win = BrowserWindow.getAllWindows()[0]
+            return win.getSize()
+          })
+        },
+        { timeout: 2000 }
+      )
+      .toEqual([900, 650])
 
-    const inboxColumn = mainWindow.locator('[data-testid="kanban-column"]').filter({
-      has: mainWindow.locator('h3').getByText('Inbox', { exact: true })
-    }).first()
+    const inboxColumn = mainWindow
+      .locator('[data-testid="kanban-column"]')
+      .filter({
+        has: mainWindow.locator('h3').getByText('Inbox', { exact: true })
+      })
+      .first()
     const inboxScroller = inboxColumn.locator('div.overflow-y-auto').first()
 
     const state = await inboxScroller.evaluate((el) => {

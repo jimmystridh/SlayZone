@@ -107,6 +107,6 @@ export const SlayzoneNotifyPlugin = async ({ $, client }) => {
     },
     'permission.ask': async (_permission, output) => {
       if (output.status === 'ask') await notify('PermissionRequest')
-    },
+    }
   }
 }

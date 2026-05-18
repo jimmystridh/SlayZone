@@ -17,7 +17,17 @@ interface MarkdownSplitViewProps {
   viewHandleRef?: MutableRefObject<EditorView | null>
 }
 
-export function MarkdownSplitView({ filePath, content, onChange, onSave, version, goToPosition, onGoToPositionApplied, minimap, viewHandleRef }: MarkdownSplitViewProps) {
+export function MarkdownSplitView({
+  filePath,
+  content,
+  onChange,
+  onSave,
+  version,
+  goToPosition,
+  onGoToPositionApplied,
+  minimap,
+  viewHandleRef
+}: MarkdownSplitViewProps) {
   const { editorThemeId, contentVariant } = useTheme()
   const colors = getThemeEditorColors(editorThemeId, contentVariant)
   const { notesReadability, notesWidth } = useAppearance()
@@ -45,7 +55,7 @@ export function MarkdownSplitView({ filePath, content, onChange, onSave, version
     '--mk-code-fg': colors.keyword,
     '--mk-code-bg': colors.selection,
     '--mk-quote-border': colors.comment,
-    '--mk-hr-color': colors.comment,
+    '--mk-hr-color': colors.comment
   } as CSSProperties
 
   return (
@@ -71,7 +81,12 @@ export function MarkdownSplitView({ filePath, content, onChange, onSave, version
           setPreviewClickPos({ line: Number.isFinite(line) ? line : 1, col: 0 })
         }}
       >
-        <div className="mk-doc" data-readability={notesReadability} data-width={notesWidth} style={themeStyle}>
+        <div
+          className="mk-doc"
+          data-readability={notesReadability}
+          data-width={notesWidth}
+          style={themeStyle}
+        >
           <div className="mk-doc-scroll">
             <div className="mk-doc-body">
               <Markdown attachSourceLines>{previewContent}</Markdown>

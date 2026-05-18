@@ -20,7 +20,8 @@ function test(name: string, fn: () => void) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     }
   }
 }
@@ -48,7 +49,9 @@ test('detects question line as question prompt', () => {
 console.log('\nCopilotAdapter.detectError\n')
 
 test('detects stale session as SESSION_NOT_FOUND', () => {
-  const result = adapter.detectError('ERROR: No saved session found with ID 019c7a76-280a-7dc0-8af6-affe6cf174b2')
+  const result = adapter.detectError(
+    'ERROR: No saved session found with ID 019c7a76-280a-7dc0-8af6-affe6cf174b2'
+  )
   expect(result?.code).toBe('SESSION_NOT_FOUND')
 })
 

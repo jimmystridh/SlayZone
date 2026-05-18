@@ -17,10 +17,11 @@ test.describe('Provider config edge cases', () => {
 
   test('set conversationId via providerConfig syncs to legacy column', async ({ mainWindow }) => {
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: { codex: { conversationId: 'via-config-abc' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { codex: { conversationId: 'via-config-abc' } }
+        }),
       { id: taskId }
     )
     const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
@@ -32,18 +33,20 @@ test.describe('Provider config edge cases', () => {
   test('deep merge: updating conversationId preserves existing flags', async ({ mainWindow }) => {
     // Set flags first
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: { codex: { flags: '--keep-this-flag' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { codex: { flags: '--keep-this-flag' } }
+        }),
       { id: taskId }
     )
     // Now update only conversationId
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: { codex: { conversationId: 'merge-test-id' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { codex: { conversationId: 'merge-test-id' } }
+        }),
       { id: taskId }
     )
     const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
@@ -54,18 +57,20 @@ test.describe('Provider config edge cases', () => {
   test('deep merge: updating flags preserves existing conversationId', async ({ mainWindow }) => {
     // Set conversationId first
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: { gemini: { conversationId: 'gemini-persist' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { gemini: { conversationId: 'gemini-persist' } }
+        }),
       { id: taskId }
     )
     // Now update only flags
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: { gemini: { flags: '--new-flag' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { gemini: { flags: '--new-flag' } }
+        }),
       { id: taskId }
     )
     const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
@@ -76,10 +81,11 @@ test.describe('Provider config edge cases', () => {
   test('provider_config JSON matches legacy columns after update', async ({ mainWindow }) => {
     const cid = 'sync-check-id-123'
     await mainWindow.evaluate(
-      ({ id, cid }) => window.api.db.updateTask({
-        id,
-        providerConfig: { 'claude-code': { conversationId: cid } },
-      }),
+      ({ id, cid }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { 'claude-code': { conversationId: cid } }
+        }),
       { id: taskId, cid }
     )
     const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
@@ -95,10 +101,11 @@ test.describe('Provider config edge cases', () => {
     )
     // Set conversationId on it
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: { 'claude-code': { conversationId: 'first-ever-id' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { 'claude-code': { conversationId: 'first-ever-id' } }
+        }),
       { id: fresh!.id }
     )
     const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), fresh!.id)
@@ -107,10 +114,11 @@ test.describe('Provider config edge cases', () => {
 
   test('qwen conversationId roundtrip (no legacy column)', async ({ mainWindow }) => {
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: { 'qwen-code': { conversationId: 'qwen-session-xyz' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { 'qwen-code': { conversationId: 'qwen-session-xyz' } }
+        }),
       { id: taskId }
     )
     const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
@@ -119,10 +127,11 @@ test.describe('Provider config edge cases', () => {
 
   test('copilot conversationId roundtrip (no legacy column)', async ({ mainWindow }) => {
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: { copilot: { conversationId: 'copilot-session-abc' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { copilot: { conversationId: 'copilot-session-abc' } }
+        }),
       { id: taskId }
     )
     const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
@@ -132,20 +141,22 @@ test.describe('Provider config edge cases', () => {
   test('subtask does not inherit parent conversationId', async ({ mainWindow }) => {
     // Set conversationId on parent
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: { 'claude-code': { conversationId: 'parent-session' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: { 'claude-code': { conversationId: 'parent-session' } }
+        }),
       { id: taskId }
     )
 
     // Create subtask
     const subtask = await mainWindow.evaluate(
-      ({ pid, parentId }) => window.api.db.createTask({
-        projectId: pid,
-        title: 'Child task',
-        parentId,
-      }),
+      ({ pid, parentId }) =>
+        window.api.db.createTask({
+          projectId: pid,
+          title: 'Child task',
+          parentId
+        }),
       { pid: projectId, parentId: taskId }
     )
 

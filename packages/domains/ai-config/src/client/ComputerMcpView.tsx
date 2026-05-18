@@ -21,29 +21,37 @@ export function ComputerMcpView() {
     }
   }, [])
 
-  useEffect(() => { void loadConfigs() }, [loadConfigs])
-
-  const handleAddServer = useCallback(async (provider: CliProvider) => {
-    if (!newServerKey.trim() || !newServerCommand.trim()) return
-    await window.api.aiConfig.writeComputerMcpServer({
-      provider,
-      serverKey: newServerKey.trim(),
-      config: {
-        command: newServerCommand.trim(),
-        args: newServerArgs.trim() ? newServerArgs.split(/\s+/) : [],
-      },
-    })
-    setAddingTo(null)
-    setNewServerKey('')
-    setNewServerCommand('')
-    setNewServerArgs('')
-    void loadConfigs()
-  }, [newServerKey, newServerCommand, newServerArgs, loadConfigs])
-
-  const handleRemoveServer = useCallback(async (provider: CliProvider, serverKey: string) => {
-    await window.api.aiConfig.removeComputerMcpServer({ provider, serverKey })
+  useEffect(() => {
     void loadConfigs()
   }, [loadConfigs])
+
+  const handleAddServer = useCallback(
+    async (provider: CliProvider) => {
+      if (!newServerKey.trim() || !newServerCommand.trim()) return
+      await window.api.aiConfig.writeComputerMcpServer({
+        provider,
+        serverKey: newServerKey.trim(),
+        config: {
+          command: newServerCommand.trim(),
+          args: newServerArgs.trim() ? newServerArgs.split(/\s+/) : []
+        }
+      })
+      setAddingTo(null)
+      setNewServerKey('')
+      setNewServerCommand('')
+      setNewServerArgs('')
+      void loadConfigs()
+    },
+    [newServerKey, newServerCommand, newServerArgs, loadConfigs]
+  )
+
+  const handleRemoveServer = useCallback(
+    async (provider: CliProvider, serverKey: string) => {
+      await window.api.aiConfig.removeComputerMcpServer({ provider, serverKey })
+      void loadConfigs()
+    },
+    [loadConfigs]
+  )
 
   if (loading) {
     return <p className="text-xs text-muted-foreground">Loading computer MCP configs...</p>
@@ -54,7 +62,8 @@ export function ComputerMcpView() {
       <div>
         <h3 className="text-sm font-semibold">Computer MCP Servers</h3>
         <p className="text-xs text-muted-foreground">
-          MCP servers configured in your home directory. These apply to every project on this computer.
+          MCP servers configured in your home directory. These apply to every project on this
+          computer.
         </p>
       </div>
 
@@ -82,7 +91,7 @@ export function ComputerMcpView() {
                   size="sm"
                   variant="ghost"
                   className="ml-auto h-6 text-xs"
-                  onClick={() => setAddingTo(isAdding ? null : config.provider as CliProvider)}
+                  onClick={() => setAddingTo(isAdding ? null : (config.provider as CliProvider))}
                 >
                   <Plus className="size-3 mr-1" />
                   Add
@@ -137,10 +146,19 @@ export function ComputerMcpView() {
                   className="h-7 text-xs"
                 />
                 <div className="flex gap-2">
-                  <Button size="sm" className="h-7 text-xs" onClick={() => handleAddServer(config.provider as CliProvider)}>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => handleAddServer(config.provider as CliProvider)}
+                  >
                     Add Server
                   </Button>
-                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setAddingTo(null)}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs"
+                    onClick={() => setAddingTo(null)}
+                  >
                     Cancel
                   </Button>
                 </div>

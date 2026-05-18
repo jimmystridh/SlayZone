@@ -13,13 +13,14 @@ test.describe('Worktree/project change clears conversation IDs', () => {
   /** Seed conversationIds and flags for claude-code + codex on the test task */
   const seedConversationState = async (mainWindow: import('@playwright/test').Page, id: string) => {
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        providerConfig: {
-          'claude-code': { conversationId: 'claude-conv-aaa', flags: '--claude-flag' },
-          codex: { conversationId: 'codex-conv-bbb', flags: '--codex-flag' },
-        },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          providerConfig: {
+            'claude-code': { conversationId: 'claude-conv-aaa', flags: '--claude-flag' },
+            codex: { conversationId: 'codex-conv-bbb', flags: '--codex-flag' }
+          }
+        }),
       { id }
     )
   }
@@ -28,7 +29,11 @@ test.describe('Worktree/project change clears conversation IDs', () => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
     const p = await s.createProject({ name: 'WtClear', color: '#10b981', path: TEST_PROJECT_PATH })
-    const p2 = await s.createProject({ name: 'WtClear2', color: '#f59e0b', path: TEST_PROJECT_PATH })
+    const p2 = await s.createProject({
+      name: 'WtClear2',
+      color: '#f59e0b',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     project2Id = p2.id
     const t = await s.createTask({ projectId: p.id, title: 'Wt clearing task', status: 'todo' })
@@ -72,10 +77,10 @@ test.describe('Worktree/project change clears conversation IDs', () => {
   test('changing projectId clears conversationIds, preserves flags', async ({ mainWindow }) => {
     await seedConversationState(mainWindow, taskId)
 
-    await mainWindow.evaluate(
-      ({ id, pid }) => window.api.db.updateTask({ id, projectId: pid }),
-      { id: taskId, pid: project2Id }
-    )
+    await mainWindow.evaluate(({ id, pid }) => window.api.db.updateTask({ id, projectId: pid }), {
+      id: taskId,
+      pid: project2Id
+    })
 
     const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
     expect(task?.provider_config?.['claude-code']?.conversationId ?? null).toBeNull()
@@ -84,22 +89,25 @@ test.describe('Worktree/project change clears conversation IDs', () => {
     expect(task?.provider_config?.codex?.flags).toBe('--codex-flag')
 
     // Move back for subsequent tests
-    await mainWindow.evaluate(
-      ({ id, pid }) => window.api.db.updateTask({ id, projectId: pid }),
-      { id: taskId, pid: projectId }
-    )
+    await mainWindow.evaluate(({ id, pid }) => window.api.db.updateTask({ id, projectId: pid }), {
+      id: taskId,
+      pid: projectId
+    })
   })
 
-  test('changing worktree with explicit providerConfig skips auto-clear', async ({ mainWindow }) => {
+  test('changing worktree with explicit providerConfig skips auto-clear', async ({
+    mainWindow
+  }) => {
     await seedConversationState(mainWindow, taskId)
 
     // Change worktree AND provide explicit providerConfig — auto-clear should NOT trigger
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateTask({
-        id,
-        worktreePath: '/tmp/another-worktree',
-        providerConfig: { 'claude-code': { conversationId: 'explicit-keep' } },
-      }),
+      ({ id }) =>
+        window.api.db.updateTask({
+          id,
+          worktreePath: '/tmp/another-worktree',
+          providerConfig: { 'claude-code': { conversationId: 'explicit-keep' } }
+        }),
       { id: taskId }
     )
 

@@ -28,18 +28,25 @@ export function createSlayDbAdapter(db: Database.Database): SlayDb {
     run(sql: string, params: SqlParams = {}) {
       db.prepare(sql).run(adaptParams(params))
     },
-    close() { /* no-op: harness manages lifecycle */ },
+    close() {
+      /* no-op: harness manages lifecycle */
+    }
   }
 }
 
 class ExitError extends Error {
-  constructor(public code: number) { super(`process.exit(${code})`) }
+  constructor(public code: number) {
+    super(`process.exit(${code})`)
+  }
 }
 
 export function withExitCapture(fn: () => void): { exitCode: number | null } {
   const original = process.exit
   let exitCode: number | null = null
-  process.exit = ((code: number) => { exitCode = code; throw new ExitError(code) }) as never
+  process.exit = ((code: number) => {
+    exitCode = code
+    throw new ExitError(code)
+  }) as never
   try {
     fn()
     return { exitCode }
@@ -51,10 +58,15 @@ export function withExitCapture(fn: () => void): { exitCode: number | null } {
   }
 }
 
-export async function withExitCaptureAsync(fn: () => Promise<void>): Promise<{ exitCode: number | null }> {
+export async function withExitCaptureAsync(
+  fn: () => Promise<void>
+): Promise<{ exitCode: number | null }> {
   const original = process.exit
   let exitCode: number | null = null
-  process.exit = ((code: number) => { exitCode = code; throw new ExitError(code) }) as never
+  process.exit = ((code: number) => {
+    exitCode = code
+    throw new ExitError(code)
+  }) as never
   try {
     await fn()
     return { exitCode }
@@ -82,7 +94,9 @@ export function captureOutput(fn: () => void): { stdout: string[]; stderr: strin
   return { stdout, stderr }
 }
 
-export async function captureOutputAsync(fn: () => Promise<void>): Promise<{ stdout: string[]; stderr: string[] }> {
+export async function captureOutputAsync(
+  fn: () => Promise<void>
+): Promise<{ stdout: string[]; stderr: string[] }> {
   const stdout: string[] = []
   const stderr: string[] = []
   const origLog = console.log
@@ -99,7 +113,11 @@ export async function captureOutputAsync(fn: () => Promise<void>): Promise<{ std
 }
 
 /** Capture both output and exit in one call */
-export function captureAll(fn: () => void): { stdout: string[]; stderr: string[]; exitCode: number | null } {
+export function captureAll(fn: () => void): {
+  stdout: string[]
+  stderr: string[]
+  exitCode: number | null
+} {
   const stdout: string[] = []
   const stderr: string[] = []
   const origLog = console.log
@@ -108,7 +126,10 @@ export function captureAll(fn: () => void): { stdout: string[]; stderr: string[]
   let exitCode: number | null = null
   console.log = (...args: unknown[]) => stdout.push(args.map(String).join(' '))
   console.error = (...args: unknown[]) => stderr.push(args.map(String).join(' '))
-  process.exit = ((code: number) => { exitCode = code; throw new ExitError(code) }) as never
+  process.exit = ((code: number) => {
+    exitCode = code
+    throw new ExitError(code)
+  }) as never
   try {
     fn()
   } catch (e) {
@@ -121,7 +142,9 @@ export function captureAll(fn: () => void): { stdout: string[]; stderr: string[]
   return { stdout, stderr, exitCode }
 }
 
-export async function captureAllAsync(fn: () => Promise<void>): Promise<{ stdout: string[]; stderr: string[]; exitCode: number | null }> {
+export async function captureAllAsync(
+  fn: () => Promise<void>
+): Promise<{ stdout: string[]; stderr: string[]; exitCode: number | null }> {
   const stdout: string[] = []
   const stderr: string[] = []
   const origLog = console.log
@@ -130,7 +153,10 @@ export async function captureAllAsync(fn: () => Promise<void>): Promise<{ stdout
   let exitCode: number | null = null
   console.log = (...args: unknown[]) => stdout.push(args.map(String).join(' '))
   console.error = (...args: unknown[]) => stderr.push(args.map(String).join(' '))
-  process.exit = ((code: number) => { exitCode = code; throw new ExitError(code) }) as never
+  process.exit = ((code: number) => {
+    exitCode = code
+    throw new ExitError(code)
+  }) as never
   try {
     await fn()
   } catch (e) {

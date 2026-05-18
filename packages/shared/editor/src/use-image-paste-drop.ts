@@ -46,20 +46,23 @@ export function useImagePasteDrop<T>(opts: UseImagePasteDropOpts<T>): UseImagePa
     []
   )
 
-  const handleFiles = useCallback(async (files: File[]): Promise<boolean> => {
-    if (files.length === 0) return false
-    setIsUploading(true)
-    try {
-      const results = await onUpload(files)
-      onInsert(results)
-      return true
-    } catch (err) {
-      onError?.(err)
-      return false
-    } finally {
-      setIsUploading(false)
-    }
-  }, [onUpload, onInsert, onError])
+  const handleFiles = useCallback(
+    async (files: File[]): Promise<boolean> => {
+      if (files.length === 0) return false
+      setIsUploading(true)
+      try {
+        const results = await onUpload(files)
+        onInsert(results)
+        return true
+      } catch (err) {
+        onError?.(err)
+        return false
+      } finally {
+        setIsUploading(false)
+      }
+    },
+    [onUpload, onInsert, onError]
+  )
 
   const onDragEnter = useCallback(() => {
     dragDepth.current += 1
@@ -76,5 +79,13 @@ export function useImagePasteDrop<T>(opts: UseImagePasteDropOpts<T>): UseImagePa
     setIsDragging(false)
   }, [])
 
-  return { extractImageFiles, handleFiles, isUploading, isDragging, onDragEnter, onDragLeave, resetDrag }
+  return {
+    extractImageFiles,
+    handleFiles,
+    isUploading,
+    isDragging,
+    onDragEnter,
+    onDragLeave,
+    resetDrag
+  }
 }

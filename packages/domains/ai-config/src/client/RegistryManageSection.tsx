@@ -10,7 +10,13 @@ interface RegistryManageSectionProps {
   refreshingId: string | null
 }
 
-export function RegistryManageSection({ registries, onToggle, onRemove, onRefresh, refreshingId }: RegistryManageSectionProps) {
+export function RegistryManageSection({
+  registries,
+  onToggle,
+  onRemove,
+  onRefresh,
+  refreshingId
+}: RegistryManageSectionProps) {
   if (registries.length === 0) {
     return <p className="text-xs text-muted-foreground">No registries configured.</p>
   }
@@ -31,11 +37,11 @@ export function RegistryManageSection({ registries, onToggle, onRemove, onRefres
             </div>
             <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60">
               {reg.github_owner && (
-                <span>{reg.github_owner}/{reg.github_repo}</span>
+                <span>
+                  {reg.github_owner}/{reg.github_repo}
+                </span>
               )}
-              {reg.entry_count != null && (
-                <span>{reg.entry_count} skills</span>
-              )}
+              {reg.entry_count != null && <span>{reg.entry_count} skills</span>}
               {reg.last_synced_at && (
                 <span>Synced {new Date(reg.last_synced_at).toLocaleDateString()}</span>
               )}

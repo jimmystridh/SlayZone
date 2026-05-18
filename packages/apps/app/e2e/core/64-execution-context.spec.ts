@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, projectBlob, openProjectSettings, resetApp} from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  projectBlob,
+  openProjectSettings,
+  resetApp
+} from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 test.describe('Project execution context settings', () => {
@@ -9,7 +17,11 @@ test.describe('Project execution context settings', () => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
     // Use a unique abbreviation to avoid collisions with earlier suites (e.g. "EX Project").
-    const project = await s.createProject({ name: 'QX Exec Ctx', color: '#7c3aed', path: TEST_PROJECT_PATH })
+    const project = await s.createProject({
+      name: 'QX Exec Ctx',
+      color: '#7c3aed',
+      path: TEST_PROJECT_PATH
+    })
     projectId = project.id
     projectAbbrev = project.name.slice(0, 2).toUpperCase()
     await s.refreshData()
@@ -25,7 +37,11 @@ test.describe('Project execution context settings', () => {
 
     const execContext = dialog.locator('#exec-context')
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      await dialog.getByTestId('settings-tab-environment').first().click().catch(() => {})
+      await dialog
+        .getByTestId('settings-tab-environment')
+        .first()
+        .click()
+        .catch(() => {})
       if (await execContext.isVisible({ timeout: 1_500 }).catch(() => false)) return
       await mainWindow.waitForTimeout(120)
     }
@@ -93,8 +109,9 @@ test.describe('Project execution context settings', () => {
     await mainWindow.locator('#exec-shell').fill('/bin/zsh')
 
     await mainWindow.getByRole('button', { name: 'Save' }).click()
-    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' }))
-      .not.toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' })).not.toBeVisible({
+      timeout: 3_000
+    })
 
     // Verify DB
     const projects = await seed(mainWindow).getProjects()
@@ -131,8 +148,9 @@ test.describe('Project execution context settings', () => {
     await mainWindow.locator('#exec-workdir-ssh').fill('/home/user/project')
 
     await mainWindow.getByRole('button', { name: 'Save' }).click()
-    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' }))
-      .not.toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' })).not.toBeVisible({
+      timeout: 3_000
+    })
 
     const projects = await seed(mainWindow).getProjects()
     const project = projects.find((p: { id: string }) => p.id === projectId) as {
@@ -153,8 +171,9 @@ test.describe('Project execution context settings', () => {
     await selectExecutionContext(mainWindow, 'This machine')
 
     await mainWindow.getByRole('button', { name: 'Save' }).click()
-    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' }))
-      .not.toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('heading', { name: 'Project Settings' })).not.toBeVisible({
+      timeout: 3_000
+    })
 
     const projects = await seed(mainWindow).getProjects()
     const project = projects.find((p: { id: string }) => p.id === projectId) as {
@@ -174,7 +193,9 @@ test.describe('Project execution context settings', () => {
     await mainWindow.getByRole('button', { name: 'Test connection' }).click()
 
     // Should show error (docker not found or container not running)
-    const dockerSection = mainWindow.locator('#exec-container').locator('xpath=ancestor::div[contains(@class,"space-y-3")][1]')
+    const dockerSection = mainWindow
+      .locator('#exec-container')
+      .locator('xpath=ancestor::div[contains(@class,"space-y-3")][1]')
     const errorResult = dockerSection.locator('span.text-red-500').first()
     await expect(errorResult).toBeVisible({ timeout: 15_000 })
     await expect(errorResult).not.toHaveText(/^Connected$/)
@@ -195,7 +216,9 @@ test.describe('Project execution context settings', () => {
       })
     )
     expect(result.success).toBe(false)
-    expect(result.error ?? '').toMatch(/timed out|refused|resolve|failed|unknown|enoent|spawn|not found/i)
+    expect(result.error ?? '').toMatch(
+      /timed out|refused|resolve|failed|unknown|enoent|spawn|not found/i
+    )
   })
 
   // ---------------------------------------------------------------------------
@@ -205,10 +228,11 @@ test.describe('Project execution context settings', () => {
     await mainWindow.keyboard.press('Escape').catch(() => {})
     // Seed directly via API
     await mainWindow.evaluate(
-      ({ id }) => window.api.db.updateProject({
-        id,
-        executionContext: { type: 'docker', container: 'seeded-container', workdir: '/app' }
-      }),
+      ({ id }) =>
+        window.api.db.updateProject({
+          id,
+          executionContext: { type: 'docker', container: 'seeded-container', workdir: '/app' }
+        }),
       { id: projectId }
     )
     await seed(mainWindow).refreshData()

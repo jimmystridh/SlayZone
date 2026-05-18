@@ -8,7 +8,14 @@ export interface HomePanelState {
 }
 
 const DEFAULTS: HomePanelState = {
-  visibility: { kanban: true, git: false, editor: false, processes: false, tests: false, automations: false },
+  visibility: {
+    kanban: true,
+    git: false,
+    editor: false,
+    processes: false,
+    tests: false,
+    automations: false
+  },
   gitTab: 'general'
 }
 
@@ -50,7 +57,11 @@ export function useHomePanelState(
     setState(DEFAULTS)
     window.api.settings.get(getKey(projectId)).then((value) => {
       if (value) {
-        try { setState(parse(value)) } catch { /* use defaults */ }
+        try {
+          setState(parse(value))
+        } catch {
+          /* use defaults */
+        }
       }
     })
   }, [projectId])
@@ -67,17 +78,20 @@ export function useHomePanelState(
     return () => window.removeEventListener('beforeunload', handler)
   }, [flushSave])
 
-  const update = useCallback((updater: (prev: HomePanelState) => HomePanelState) => {
-    const next = updater(stateRef.current)
-    stateRef.current = next
-    setState(next)
-    pendingRef.current = next
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      pendingRef.current = null
-      window.api.settings.set(getKey(projectId), JSON.stringify(next))
-    }, 500)
-  }, [projectId])
+  const update = useCallback(
+    (updater: (prev: HomePanelState) => HomePanelState) => {
+      const next = updater(stateRef.current)
+      stateRef.current = next
+      setState(next)
+      pendingRef.current = next
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+      debounceRef.current = setTimeout(() => {
+        pendingRef.current = null
+        window.api.settings.set(getKey(projectId), JSON.stringify(next))
+      }, 500)
+    },
+    [projectId]
+  )
 
   return [state, update]
 }

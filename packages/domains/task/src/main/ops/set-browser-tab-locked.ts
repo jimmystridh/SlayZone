@@ -1,8 +1,15 @@
 import type { Database } from 'better-sqlite3'
 import type { OpDeps } from './shared.js'
 
-interface StoredTab { id: string; locked?: boolean; [k: string]: unknown }
-interface StoredState { tabs?: StoredTab[]; activeTabId?: string | null }
+interface StoredTab {
+  id: string
+  locked?: boolean
+  [k: string]: unknown
+}
+interface StoredState {
+  tabs?: StoredTab[]
+  activeTabId?: string | null
+}
 
 /**
  * Dedicated write path for `browser_tabs[].locked`. Generic updateTask strips
@@ -14,7 +21,7 @@ export function setBrowserTabLockedOp(
   taskId: string,
   tabId: string,
   locked: boolean,
-  deps: OpDeps,
+  deps: OpDeps
 ): boolean {
   const row = db.prepare('SELECT browser_tabs FROM tasks WHERE id = ?').get(taskId) as
     | { browser_tabs: string | null }
@@ -22,11 +29,15 @@ export function setBrowserTabLockedOp(
   if (!row?.browser_tabs) return false
 
   let state: StoredState
-  try { state = JSON.parse(row.browser_tabs) as StoredState } catch { return false }
+  try {
+    state = JSON.parse(row.browser_tabs) as StoredState
+  } catch {
+    return false
+  }
   const tabs = state.tabs
   if (!Array.isArray(tabs)) return false
 
-  const tab = tabs.find(t => t?.id === tabId)
+  const tab = tabs.find((t) => t?.id === tabId)
   if (!tab) return false
   if (!!tab.locked === locked) return true
 

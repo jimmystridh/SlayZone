@@ -19,8 +19,10 @@ function cloneColumns(columns: ColumnConfig[]): ColumnConfig[] {
 
 export function sortColumns(columns: ColumnConfig[]): ColumnConfig[] {
   return [...columns].sort((a, b) => {
-    const aCategoryOrder = CATEGORY_ORDER.get(a.category as WorkflowCategory) ?? Number.MAX_SAFE_INTEGER
-    const bCategoryOrder = CATEGORY_ORDER.get(b.category as WorkflowCategory) ?? Number.MAX_SAFE_INTEGER
+    const aCategoryOrder =
+      CATEGORY_ORDER.get(a.category as WorkflowCategory) ?? Number.MAX_SAFE_INTEGER
+    const bCategoryOrder =
+      CATEGORY_ORDER.get(b.category as WorkflowCategory) ?? Number.MAX_SAFE_INTEGER
     if (aCategoryOrder !== bCategoryOrder) return aCategoryOrder - bCategoryOrder
     if (a.position !== b.position) return a.position - b.position
     return String(a.id ?? '').localeCompare(String(b.id ?? ''))
@@ -101,7 +103,10 @@ export function resolveColumns(config: ColumnConfig[] | null | undefined): Colum
   }
 }
 
-export function getColumnById(statusId: string, columns: ColumnConfig[] | null | undefined): ColumnConfig | null {
+export function getColumnById(
+  statusId: string,
+  columns: ColumnConfig[] | null | undefined
+): ColumnConfig | null {
   return resolveColumns(columns).find((column) => column.id === statusId) ?? null
 }
 
@@ -131,13 +136,19 @@ export function isTerminalCategory(category: WorkflowCategory): boolean {
   return TERMINAL_CATEGORIES.includes(category)
 }
 
-export function isTerminalStatus(statusId: string, columns: ColumnConfig[] | null | undefined): boolean {
+export function isTerminalStatus(
+  statusId: string,
+  columns: ColumnConfig[] | null | undefined
+): boolean {
   const column = getColumnById(statusId, columns)
   if (column) return isTerminalCategory(column.category)
   return statusId === 'done'
 }
 
-export function isCompletedStatus(statusId: string, columns: ColumnConfig[] | null | undefined): boolean {
+export function isCompletedStatus(
+  statusId: string,
+  columns: ColumnConfig[] | null | undefined
+): boolean {
   const column = getColumnById(statusId, columns)
   if (column) return isCompletedCategory(column.category)
   return statusId === 'done'
@@ -160,11 +171,17 @@ export function getDoneStatus(columns: ColumnConfig[] | null | undefined): strin
   return getFirstCompletedStatus(columns) ?? 'done'
 }
 
-export function isKnownStatus(statusId: string, columns: ColumnConfig[] | null | undefined): boolean {
+export function isKnownStatus(
+  statusId: string,
+  columns: ColumnConfig[] | null | undefined
+): boolean {
   return resolveColumns(columns).some((column) => column.id === statusId)
 }
 
-export function normalizeStatusOrDefault(statusId: string, columns: ColumnConfig[] | null | undefined): string {
+export function normalizeStatusOrDefault(
+  statusId: string,
+  columns: ColumnConfig[] | null | undefined
+): string {
   return isKnownStatus(statusId, columns) ? statusId : getDefaultStatus(columns)
 }
 

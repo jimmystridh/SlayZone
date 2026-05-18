@@ -24,14 +24,16 @@ export function FloatingGlobalAgentPanel() {
 
   useEffect(() => {
     window.api.floatingGlobalAgentPanel.getSession().then((data) => {
-      if (data) setSession({ sessionId: data.sessionId, cwd: data.cwd, mode: data.mode as TerminalMode })
+      if (data)
+        setSession({ sessionId: data.sessionId, cwd: data.cwd, mode: data.mode as TerminalMode })
     })
     window.api.floatingGlobalAgentPanel.getConfig().then((config) => {
       if (config) setStyle(config.style as 'widget' | 'icon')
     })
     const unsub = window.api.floatingGlobalAgentPanel.onSessionChanged(() => {
       window.api.floatingGlobalAgentPanel.getSession().then((data) => {
-        if (data) setSession({ sessionId: data.sessionId, cwd: data.cwd, mode: data.mode as TerminalMode })
+        if (data)
+          setSession({ sessionId: data.sessionId, cwd: data.cwd, mode: data.mode as TerminalMode })
       })
       window.api.floatingGlobalAgentPanel.getConfig().then((config) => {
         if (config) setStyle(config.style as 'widget' | 'icon')
@@ -96,7 +98,16 @@ export function FloatingGlobalAgentPanel() {
     if (style === 'icon') {
       return <FloatingGlobalAgentPanelCollapsedIcon state={terminalState} onExpand={handleToggle} />
     }
-    return <FloatingGlobalAgentPanelCollapsed state={terminalState} onExpand={handleToggle} onResetSize={handleResetSize} onClose={handleClose} showClose={showClose} showReset={showReset} />
+    return (
+      <FloatingGlobalAgentPanelCollapsed
+        state={terminalState}
+        onExpand={handleToggle}
+        onResetSize={handleResetSize}
+        onClose={handleClose}
+        showClose={showClose}
+        showReset={showReset}
+      />
+    )
   }
 
   return (
@@ -105,7 +116,9 @@ export function FloatingGlobalAgentPanel() {
         className="shrink-0 h-7 flex items-center justify-between px-3 bg-surface-1 border-b border-border select-none"
         style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
       >
-        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Global Agent</span>
+        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
+          Global Agent
+        </span>
         <div className="flex items-center gap-0.5">
           {showReset && (
             <button
@@ -140,7 +153,9 @@ export function FloatingGlobalAgentPanel() {
           )}
         </div>
       </div>
-      <div className={`flex-1 min-h-0 transition-opacity duration-200${showTerminal ? ' opacity-100' : ' opacity-0'}`}>
+      <div
+        className={`flex-1 min-h-0 transition-opacity duration-200${showTerminal ? ' opacity-100' : ' opacity-0'}`}
+      >
         {session && showTerminal ? (
           <Terminal
             key={session.sessionId}

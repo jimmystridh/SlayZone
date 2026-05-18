@@ -2,7 +2,11 @@ import type { TerminalState } from '@slayzone/terminal/shared'
 import type { ActivityState } from './adapters/types'
 
 /** Callback invoked when state actually changes (after debounce) */
-export type StateChangeCallback = (sessionId: string, newState: TerminalState, oldState: TerminalState) => void
+export type StateChangeCallback = (
+  sessionId: string,
+  newState: TerminalState,
+  oldState: TerminalState
+) => void
 
 const DEBOUNCE_DEFAULT = 100
 
@@ -52,14 +56,17 @@ export class StateMachine {
       session.state = newState
       this.onChange(sessionId, newState, oldState)
     } else {
-      this.timers.set(sessionId, setTimeout(() => {
-        this.timers.delete(sessionId)
-        const session = this.sessions.get(sessionId)
-        if (!session || session.state === newState) return
-        const oldState = session.state
-        session.state = newState
-        this.onChange(sessionId, newState, oldState)
-      }, DEBOUNCE_DEFAULT))
+      this.timers.set(
+        sessionId,
+        setTimeout(() => {
+          this.timers.delete(sessionId)
+          const session = this.sessions.get(sessionId)
+          if (!session || session.state === newState) return
+          const oldState = session.state
+          session.state = newState
+          this.onChange(sessionId, newState, oldState)
+        }, DEBOUNCE_DEFAULT)
+      )
     }
   }
 
@@ -138,11 +145,7 @@ export function shouldFlipToRunningOnInput(
   state: TerminalState,
   inputBufferTrimmedLength: number
 ): boolean {
-  return (
-    adapter.transitionOnInput !== false &&
-    inputBufferTrimmedLength > 0 &&
-    state !== 'running'
-  )
+  return adapter.transitionOnInput !== false && inputBufferTrimmedLength > 0 && state !== 'running'
 }
 
 /**
@@ -170,12 +173,12 @@ export function recordWorkingDetection(
   prev: number[] | undefined,
   now: number,
   windowMs: number = WORKING_DETECTION_WINDOW_MS,
-  threshold: number = WORKING_DETECTION_THRESHOLD,
+  threshold: number = WORKING_DETECTION_THRESHOLD
 ): { history: number[]; shouldPromote: boolean } {
   const recent = (prev ?? []).filter((t) => now - t < windowMs)
   recent.push(now)
   return {
     history: recent,
-    shouldPromote: recent.length >= threshold,
+    shouldPromote: recent.length >= threshold
   }
 }

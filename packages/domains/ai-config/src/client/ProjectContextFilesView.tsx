@@ -12,21 +12,33 @@ function SyncBadge({ entry }: { entry: ContextTreeEntry }) {
   const health = entry.syncHealth
   if (health === 'synced') {
     return (
-      <span className="text-green-600 dark:text-green-400" title="Synced with source" aria-label="Synced with source">
+      <span
+        className="text-green-600 dark:text-green-400"
+        title="Synced with source"
+        aria-label="Synced with source"
+      >
         <Check className="size-3" />
       </span>
     )
   }
   if (health === 'stale') {
     return (
-      <span className="text-amber-600 dark:text-amber-400" title="Out of sync with source" aria-label="Out of sync with source">
+      <span
+        className="text-amber-600 dark:text-amber-400"
+        title="Out of sync with source"
+        aria-label="Out of sync with source"
+      >
         <AlertCircle className="size-3" />
       </span>
     )
   }
   if (health !== 'unmanaged') return null
   return (
-    <span className="text-muted-foreground" title="Unmanaged (File exists but not linked in Database)" aria-label="Unmanaged file">
+    <span
+      className="text-muted-foreground"
+      title="Unmanaged (File exists but not linked in Database)"
+      aria-label="Unmanaged file"
+    >
       <Circle className="size-3" />
     </span>
   )
@@ -70,7 +82,7 @@ export function ProjectContextFilesView({ projectPath, projectId }: ProjectConte
           folders.add(path)
         }
       }
-      setExpandedFolders((prev) => prev.size === 0 ? folders : prev)
+      setExpandedFolders((prev) => (prev.size === 0 ? folders : prev))
     } catch {
       setMessage('Could not load context files')
     } finally {
@@ -91,63 +103,66 @@ export function ProjectContextFilesView({ projectPath, projectId }: ProjectConte
     })
   }, [])
 
-  const openFile = useCallback(async (entry: ContextTreeEntry) => {
-    if (!entry.exists) {
-      setSelectedPath(entry.path)
-      setSelectedContent('')
-      setMessage('This File is not created yet')
-      return
-    }
-    setLoadingFile(true)
-    setMessage('')
-    try {
-      const content = await window.api.aiConfig.readContextFile(entry.path, projectPath)
-      setSelectedPath(entry.path)
-      setSelectedContent(content)
-    } catch {
-      setMessage('Could not read file')
-    } finally {
-      setLoadingFile(false)
-    }
-  }, [projectPath])
+  const openFile = useCallback(
+    async (entry: ContextTreeEntry) => {
+      if (!entry.exists) {
+        setSelectedPath(entry.path)
+        setSelectedContent('')
+        setMessage('This File is not created yet')
+        return
+      }
+      setLoadingFile(true)
+      setMessage('')
+      try {
+        const content = await window.api.aiConfig.readContextFile(entry.path, projectPath)
+        setSelectedPath(entry.path)
+        setSelectedContent(content)
+      } catch {
+        setMessage('Could not read file')
+      } finally {
+        setLoadingFile(false)
+      }
+    },
+    [projectPath]
+  )
 
-  const renderContextFile = useCallback((entry: ContextTreeEntry, { name, depth }: { name: string; depth: number }) => {
-    const selected = selectedPath === entry.path
-    return (
-      <button
-        className={cn(
-          'group flex w-full select-none items-center gap-1.5 rounded px-1 py-1 text-xs text-left',
-          selected ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/50',
-          !entry.exists && 'text-muted-foreground'
-        )}
-        style={{ paddingLeft: fileTreeIndent(depth) }}
-        onClick={() => void openFile(entry)}
-      >
-        {entry.exists
-          ? (
+  const renderContextFile = useCallback(
+    (entry: ContextTreeEntry, { name, depth }: { name: string; depth: number }) => {
+      const selected = selectedPath === entry.path
+      return (
+        <button
+          className={cn(
+            'group flex w-full select-none items-center gap-1.5 rounded px-1 py-1 text-xs text-left',
+            selected ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/50',
+            !entry.exists && 'text-muted-foreground'
+          )}
+          style={{ paddingLeft: fileTreeIndent(depth) }}
+          onClick={() => void openFile(entry)}
+        >
+          {entry.exists ? (
             <span title="File exists" aria-label="File exists">
               <File className="size-3.5 shrink-0" />
             </span>
-            )
-          : (
+          ) : (
             <span title="File not created" aria-label="File not created">
               <FilePlus className="size-3.5 shrink-0" />
             </span>
-            )
-        }
-        <span className="min-w-0 flex-1 truncate font-mono">{name}</span>
-        <div className="flex shrink-0 items-center gap-1">
-          <ProviderBadge provider={entry.provider} />
-          {entry.linkedItemId && (
-            <span title="Linked to library item" aria-label="Linked to library item">
-              <Link className="size-3 text-muted-foreground" />
-            </span>
           )}
-          <SyncBadge entry={entry} />
-        </div>
-      </button>
-    )
-  }, [selectedPath, openFile])
+          <span className="min-w-0 flex-1 truncate font-mono">{name}</span>
+          <div className="flex shrink-0 items-center gap-1">
+            <ProviderBadge provider={entry.provider} />
+            {entry.linkedItemId && (
+              <span title="Linked to library item" aria-label="Linked to library item">
+                <Link className="size-3 text-muted-foreground" />
+              </span>
+            )}
+            <SyncBadge entry={entry} />
+          </div>
+        </button>
+      )
+    },
+    [selectedPath, openFile]
+  )
 
   const selectedEntry = entries.find((entry) => entry.path === selectedPath)
   const projectFiles = entries.filter((entry) => !entry.relativePath.startsWith('~'))
@@ -162,7 +177,12 @@ export function ProjectContextFilesView({ projectPath, projectId }: ProjectConte
       <div className="flex min-h-0 flex-col border-r p-3">
         <div className="mb-3 flex items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground">Project context files</p>
-          <Button size="sm" variant="outline" onClick={() => void loadTree()} disabled={loadingTree}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void loadTree()}
+            disabled={loadingTree}
+          >
             <RefreshCw className={cn('mr-1 size-3', loadingTree && 'animate-spin')} />
             Refresh
           </Button>
@@ -171,7 +191,9 @@ export function ProjectContextFilesView({ projectPath, projectId }: ProjectConte
         <div className="flex-1 space-y-8 overflow-y-auto">
           {projectFiles.length > 0 && (
             <div>
-              <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Project</p>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Project
+              </p>
               <FileTree
                 items={projectFiles}
                 getPath={getRelativePath}
@@ -184,7 +206,9 @@ export function ProjectContextFilesView({ projectPath, projectId }: ProjectConte
 
           {computerFiles.length > 0 && (
             <div>
-              <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Computer</p>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Computer
+              </p>
               <FileTree
                 items={computerFiles}
                 getPath={getRelativePath}
@@ -205,7 +229,9 @@ export function ProjectContextFilesView({ projectPath, projectId }: ProjectConte
         {selectedPath ? (
           <>
             <div className="flex items-center justify-between gap-2 pb-2">
-              <p className="truncate font-mono text-xs">{selectedEntry?.relativePath ?? selectedPath}</p>
+              <p className="truncate font-mono text-xs">
+                {selectedEntry?.relativePath ?? selectedPath}
+              </p>
               {message && <span className="text-[11px] text-muted-foreground">{message}</span>}
             </div>
             {loadingFile ? (

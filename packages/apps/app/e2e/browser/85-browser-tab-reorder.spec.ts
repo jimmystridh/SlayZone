@@ -10,18 +10,24 @@ import {
   tabEntries,
   ensureBrowserPanelVisible,
   openTaskViaSearch,
-  getViewsForTask,
+  getViewsForTask
 } from '../fixtures/browser-view'
 
-interface BrowserTab { id: string; url: string; title?: string }
+interface BrowserTab {
+  id: string
+  url: string
+  title?: string
+}
 
 async function readTabIds(page: Page, taskId: string): Promise<string[]> {
-  const task = await page.evaluate(async (id) => {
-    return (window as unknown as {
-      api: { db: { getTask: (id: string) => Promise<Record<string, unknown> | null> } }
-    }).api.db.getTask(id)
-  }, taskId) as { browser_tabs?: { tabs?: BrowserTab[] } | null } | null
-  return task?.browser_tabs?.tabs?.map(t => t.id) ?? []
+  const task = (await page.evaluate(async (id) => {
+    return (
+      window as unknown as {
+        api: { db: { getTask: (id: string) => Promise<Record<string, unknown> | null> } }
+      }
+    ).api.db.getTask(id)
+  }, taskId)) as { browser_tabs?: { tabs?: BrowserTab[] } | null } | null
+  return task?.browser_tabs?.tabs?.map((t) => t.id) ?? []
 }
 
 test.describe('Browser panel — tab drag reorder', () => {
@@ -31,7 +37,11 @@ test.describe('Browser panel — tab drag reorder', () => {
     await resetApp(mainWindow)
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Browser Reorder', color: '#0ea5e9', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Browser Reorder',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
     const t = await s.createTask({ projectId: p.id, title: 'Reorder task', status: 'todo' })
     taskId = t.id
     await s.refreshData()
@@ -41,8 +51,12 @@ test.describe('Browser panel — tab drag reorder', () => {
     // Default panel opens with 1 tab. Add 2 more for 3 total.
     await newTabBtn(mainWindow).click()
     await newTabBtn(mainWindow).click()
-    await expect.poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 }).toBe(3)
-    await expect.poll(async () => (await readTabIds(mainWindow, taskId)).length, { timeout: 10_000 }).toBe(3)
+    await expect
+      .poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 })
+      .toBe(3)
+    await expect
+      .poll(async () => (await readTabIds(mainWindow, taskId)).length, { timeout: 10_000 })
+      .toBe(3)
   })
 
   test('drag first tab past last tab — order becomes [b, c, a]', async ({ mainWindow }) => {

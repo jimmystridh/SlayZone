@@ -8,7 +8,7 @@ import {
   computeStates,
   findChain,
   removeSubtree,
-  globToRegex,
+  globToRegex
 } from './CopyFilesDialog.utils'
 
 let passed = 0
@@ -21,7 +21,7 @@ function test(name: string, fn: () => void) {
     passed++
   } catch (e) {
     console.log(`✗ ${name}`)
-    console.error(`  ${e instanceof Error ? e.stack ?? e.message : e}`)
+    console.error(`  ${e instanceof Error ? (e.stack ?? e.message) : e}`)
     failed++
   }
 }
@@ -29,22 +29,37 @@ function test(name: string, fn: () => void) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     },
     toEqual(expected: unknown) {
       if (JSON.stringify(actual) !== JSON.stringify(expected)) {
         throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
       }
-    },
+    }
   }
 }
 
 function file(name: string, parent: string, size = 10): IgnoredFileNode {
-  return { name, path: parent ? `${parent}/${name}` : name, isDirectory: false, size, fileCount: 1, children: [] }
+  return {
+    name,
+    path: parent ? `${parent}/${name}` : name,
+    isDirectory: false,
+    size,
+    fileCount: 1,
+    children: []
+  }
 }
 function dir(name: string, parent: string, children: IgnoredFileNode[]): IgnoredFileNode {
   const fileCount = children.reduce((acc, c) => acc + c.fileCount, 0)
-  return { name, path: parent ? `${parent}/${name}` : name, isDirectory: true, size: 0, fileCount, children }
+  return {
+    name,
+    path: parent ? `${parent}/${name}` : name,
+    isDirectory: true,
+    size: 0,
+    fileCount,
+    children
+  }
 }
 function sortedSet(s: Set<string>): string[] {
   return [...s].sort()
@@ -76,19 +91,14 @@ test('filterTreeByGlobs — empty globs returns top-level paths', () => {
 })
 
 test('filterTreeByGlobs — basename glob matches at any depth', () => {
-  const tree = [
-    file('.env', ''),
-    dir('apps', '', [
-      dir('web', 'apps', [file('.env', 'apps/web')]),
-    ]),
-  ]
+  const tree = [file('.env', ''), dir('apps', '', [dir('web', 'apps', [file('.env', 'apps/web')])])]
   expect(sortedSet(filterTreeByGlobs(tree, ['.env*']))).toEqual(['.env', 'apps/web/.env'])
 })
 
 test('filterTreeByGlobs — dir glob matches top-level only', () => {
   const tree = [
     dir('docs', '', [file('a.md', 'docs')]),
-    dir('apps', '', [dir('docs', 'apps', [file('b.md', 'apps/docs')])]),
+    dir('apps', '', [dir('docs', 'apps', [file('b.md', 'apps/docs')])])
   ]
   expect(sortedSet(filterTreeByGlobs(tree, ['docs/**']))).toEqual(['docs'])
 })
@@ -97,7 +107,7 @@ test('filterTreeByGlobs — invariant: ancestor selection collapses descendant b
   // Regression: previously {docs, docs/.env} both ended up in selected.
   const tree = [
     dir('docs', '', [file('.env', 'docs'), file('README.md', 'docs')]),
-    file('.env', ''),
+    file('.env', '')
   ]
   expect(sortedSet(filterTreeByGlobs(tree, ['docs/**', '.env*', '*.md']))).toEqual(['.env', 'docs'])
 })
@@ -105,7 +115,7 @@ test('filterTreeByGlobs — invariant: ancestor selection collapses descendant b
 test('filterTreeByGlobs — basename matches when no ancestor matched', () => {
   const tree = [
     dir('apps', '', [file('.env', 'apps'), file('readme.md', 'apps')]),
-    file('.env', ''),
+    file('.env', '')
   ]
   expect(sortedSet(filterTreeByGlobs(tree, ['docs/**', '.env*']))).toEqual(['.env', 'apps/.env'])
 })
@@ -145,11 +155,7 @@ test('computeStates — empty selection → all unchecked, count 0', () => {
 })
 
 test('computeStates — mixed indeterminate child propagates upward', () => {
-  const tree = [
-    dir('a', '', [
-      dir('b', 'a', [file('x', 'a/b'), file('y', 'a/b')]),
-    ]),
-  ]
+  const tree = [dir('a', '', [dir('b', 'a', [file('x', 'a/b'), file('y', 'a/b')])])]
   const { states } = computeStates(tree, new Set(['a/b/x']))
   expect(states.get('a/b')).toBe('indeterminate')
   expect(states.get('a')).toBe('indeterminate')
@@ -167,7 +173,7 @@ test('findChain — top-level node returns single-element chain', () => {
 test('findChain — nested target returns full chain', () => {
   const tree = [dir('a', '', [dir('b', 'a', [file('c', 'a/b')])])]
   const chain = findChain(tree, 'a/b/c')
-  expect(chain?.map(n => n.path).join(',')).toBe('a,a/b,a/b/c')
+  expect(chain?.map((n) => n.path).join(',')).toBe('a,a/b,a/b/c')
 })
 
 test('findChain — missing target returns null', () => {

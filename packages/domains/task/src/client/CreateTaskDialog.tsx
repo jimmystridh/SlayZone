@@ -11,31 +11,14 @@ import { CreateTagDialog } from '@slayzone/tags/client'
 import type { Project } from '@slayzone/projects/shared'
 import { getDefaultStatus } from '@slayzone/projects/shared'
 import { track } from '@slayzone/telemetry/client'
-import {
-  createTaskSchema,
-  type CreateTaskFormData,
-  priorityOptions
-} from '@slayzone/task/shared'
+import { createTaskSchema, type CreateTaskFormData, priorityOptions } from '@slayzone/task/shared'
 import { buildCreateTaskFormDefaults } from './createTaskFormDefaults'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@slayzone/ui'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@slayzone/ui'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@slayzone/ui'
 import { Input } from '@slayzone/ui'
 import { Textarea } from '@slayzone/ui'
 import { Button } from '@slayzone/ui'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@slayzone/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@slayzone/ui'
 import { Popover, PopoverContent, PopoverTrigger } from '@slayzone/ui'
 import { Calendar } from '@slayzone/ui'
 import { Checkbox } from '@slayzone/ui'
@@ -158,7 +141,9 @@ export function CreateTaskDialog({
       await window.api.taskTags.setTagsForTask(task.id, data.tagIds)
     }
     if (shouldAutoCreateWorktree && !task.worktree_path) {
-      window.alert('Task created, but worktree auto-create failed. You can add one from the Git panel.')
+      window.alert(
+        'Task created, but worktree auto-create failed. You can add one from the Git panel.'
+      )
     }
 
     if (shouldAutoCreateWorktree && task.worktree_path) {
@@ -182,14 +167,18 @@ export function CreateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[575px]" onOpenAutoFocus={(e) => {
+      <DialogContent
+        className="max-w-[575px]"
+        onOpenAutoFocus={(e) => {
           e.preventDefault()
           const input = document.querySelector<HTMLInputElement>('[name="title"]')
           input?.focus()
-        }} onCloseAutoFocus={(e) => {
+        }}
+        onCloseAutoFocus={(e) => {
           // Keep focus control in the task view (terminal/editor) when closing after create.
           e.preventDefault()
-        }}>
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Create Task</DialogTitle>
         </DialogHeader>
@@ -222,7 +211,8 @@ export function CreateTaskDialog({
                     <SelectItem value="__none__">None</SelectItem>
                     {templates.map((t) => (
                       <SelectItem key={t.id} value={t.id}>
-                        {t.name}{t.is_default ? ' (default)' : ''}
+                        {t.name}
+                        {t.is_default ? ' (default)' : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -386,7 +376,10 @@ export function CreateTaskDialog({
                       {tags.length > 0 && (
                         <div className="space-y-0.5">
                           {tags.map((tag) => (
-                            <label key={tag.id} className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 hover:bg-muted/50">
+                            <label
+                              key={tag.id}
+                              className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 hover:bg-muted/50"
+                            >
                               <Checkbox
                                 checked={field.value.includes(tag.id)}
                                 onCheckedChange={(checked) => {
@@ -466,7 +459,9 @@ export function CreateTaskDialog({
                   onClick={() => form.handleSubmit((data) => createTask(data, { andOpen: true }))()}
                 >
                   Create + open
-                  <kbd className="ml-2 text-muted-foreground" style={{ fontFamily: 'system-ui' }}>⌘↩</kbd>
+                  <kbd className="ml-2 text-muted-foreground" style={{ fontFamily: 'system-ui' }}>
+                    ⌘↩
+                  </kbd>
                 </Button>
               )}
             </div>

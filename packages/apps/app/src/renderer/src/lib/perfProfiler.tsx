@@ -43,15 +43,33 @@ function initBuffer() {
   }
 }
 
-const onRender: ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
+const onRender: ProfilerOnRenderCallback = (
+  id,
+  phase,
+  actualDuration,
+  baseDuration,
+  startTime,
+  commitTime
+) => {
   const buf = window.__slayzone_profiler__
   if (!buf || !buf.enabled) return
   if (buf.commits.length >= buf.max) buf.commits.shift()
-  buf.commits.push({ id, phase: phase as ProfilerCommit['phase'], actualDuration, baseDuration, startTime, commitTime })
+  buf.commits.push({
+    id,
+    phase: phase as ProfilerCommit['phase'],
+    actualDuration,
+    baseDuration,
+    startTime,
+    commitTime
+  })
 }
 
 export function MaybeProfiler({ children }: { children: ReactNode }): React.JSX.Element {
   if (!__SLAYZONE_PROFILE__) return <>{children}</>
   initBuffer()
-  return <Profiler id="app" onRender={onRender}>{children}</Profiler>
+  return (
+    <Profiler id="app" onRender={onRender}>
+      {children}
+    </Profiler>
+  )
 }

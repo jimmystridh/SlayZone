@@ -87,9 +87,10 @@ export async function parseQwenFiles(
           if (!usage) return
 
           const baseKey = `qwen:${entry.uuid ?? ''}:${entry.sessionId ?? ''}:${entry.timestamp ?? ''}`
-          const idKey = (entry.uuid || entry.sessionId || entry.timestamp)
-            ? baseKey
-            : `qwen:fallback:${filePath}:${lineIndex}:${line}`
+          const idKey =
+            entry.uuid || entry.sessionId || entry.timestamp
+              ? baseKey
+              : `qwen:fallback:${filePath}:${lineIndex}:${line}`
           const id = createHash('md5').update(idKey).digest('hex')
 
           records.push({

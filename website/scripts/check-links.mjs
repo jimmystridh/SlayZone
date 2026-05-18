@@ -17,7 +17,23 @@ async function walk(dir) {
 }
 
 const HREF = /href\s*=\s*"([^"]+)"/g
-const SKIP_EXT = new Set(['.png', '.jpg', '.jpeg', '.svg', '.webp', '.ico', '.xml', '.txt', '.json', '.pdf', '.css', '.js', '.mjs', '.woff', '.woff2'])
+const SKIP_EXT = new Set([
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.svg',
+  '.webp',
+  '.ico',
+  '.xml',
+  '.txt',
+  '.json',
+  '.pdf',
+  '.css',
+  '.js',
+  '.mjs',
+  '.woff',
+  '.woff2'
+])
 
 const violations = []
 

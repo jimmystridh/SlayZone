@@ -44,7 +44,14 @@ export interface OpenFileOptions {
   from?: 'sidebar' | 'keybind' | 'link' | 'terminal' | 'search'
 }
 
-export type GitFileStatus = 'modified' | 'staged' | 'untracked' | 'added' | 'deleted' | 'renamed' | 'conflicted'
+export type GitFileStatus =
+  | 'modified'
+  | 'staged'
+  | 'untracked'
+  | 'added'
+  | 'deleted'
+  | 'renamed'
+  | 'conflicted'
 
 export interface GitStatusMap {
   files: Record<string, GitFileStatus>

@@ -32,7 +32,7 @@ function expect(actual: unknown) {
     },
     toBeFalsy() {
       if (actual) throw new Error(`Expected falsy, got ${JSON.stringify(actual)}`)
-    },
+    }
   }
 }
 
@@ -49,12 +49,23 @@ function freshDbAt122(): Database.Database {
 }
 
 function seedProject(db: Database.Database, id: string): void {
-  db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(id, `P-${id}`, '#000000')
+  db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(
+    id,
+    `P-${id}`,
+    '#000000'
+  )
 }
 
 function insertTag(
   db: Database.Database,
-  args: { id: string; projectId: string; name: string; color: string; textColor?: string; createdAt?: string }
+  args: {
+    id: string
+    projectId: string
+    name: string
+    color: string
+    textColor?: string
+    createdAt?: string
+  }
 ): void {
   db.prepare(
     `INSERT INTO tags (id, project_id, name, color, text_color, sort_order, created_at)
@@ -84,16 +95,36 @@ function indexExists(db: Database.Database, name: string): boolean {
 // Snapshot of v123's TAG_PRESETS — duplicated here intentionally so tests
 // stay decoupled from any future preset edits.
 const PRESET_PAIRS = new Set<string>([
-  '#fecaca:#991b1b', '#ef4444:#ffffff', '#991b1b:#fecaca',
-  '#fed7aa:#9a3412', '#f97316:#ffffff', '#9a3412:#fed7aa',
-  '#fef08a:#854d0e', '#eab308:#422006', '#854d0e:#fef9c3',
-  '#bbf7d0:#166534', '#22c55e:#ffffff', '#166534:#bbf7d0',
-  '#99f6e4:#115e59', '#14b8a6:#ffffff', '#115e59:#ccfbf1',
-  '#bfdbfe:#1e3a8a', '#3b82f6:#ffffff', '#1e3a8a:#bfdbfe',
-  '#c7d2fe:#3730a3', '#6366f1:#ffffff', '#3730a3:#c7d2fe',
-  '#ddd6fe:#5b21b6', '#a855f7:#ffffff', '#5b21b6:#ede9fe',
-  '#fbcfe8:#9d174d', '#ec4899:#ffffff', '#9d174d:#fce7f3',
-  '#e5e7eb:#1f2937', '#6b7280:#ffffff', '#374151:#e5e7eb',
+  '#fecaca:#991b1b',
+  '#ef4444:#ffffff',
+  '#991b1b:#fecaca',
+  '#fed7aa:#9a3412',
+  '#f97316:#ffffff',
+  '#9a3412:#fed7aa',
+  '#fef08a:#854d0e',
+  '#eab308:#422006',
+  '#854d0e:#fef9c3',
+  '#bbf7d0:#166534',
+  '#22c55e:#ffffff',
+  '#166534:#bbf7d0',
+  '#99f6e4:#115e59',
+  '#14b8a6:#ffffff',
+  '#115e59:#ccfbf1',
+  '#bfdbfe:#1e3a8a',
+  '#3b82f6:#ffffff',
+  '#1e3a8a:#bfdbfe',
+  '#c7d2fe:#3730a3',
+  '#6366f1:#ffffff',
+  '#3730a3:#c7d2fe',
+  '#ddd6fe:#5b21b6',
+  '#a855f7:#ffffff',
+  '#5b21b6:#ede9fe',
+  '#fbcfe8:#9d174d',
+  '#ec4899:#ffffff',
+  '#9d174d:#fce7f3',
+  '#e5e7eb:#1f2937',
+  '#6b7280:#ffffff',
+  '#374151:#e5e7eb'
 ])
 
 function isPresetPair(bg: string, text: string): boolean {
@@ -107,8 +138,22 @@ test('reassigns newer duplicate to next free preset, keeps oldest', () => {
   try {
     const projectId = 'p1'
     seedProject(db, projectId)
-    insertTag(db, { id: 'a', projectId, name: 'old', color: '#22c55e', textColor: '#ffffff', createdAt: '2024-01-01' })
-    insertTag(db, { id: 'b', projectId, name: 'new', color: '#22c55e', textColor: '#ffffff', createdAt: '2024-02-01' })
+    insertTag(db, {
+      id: 'a',
+      projectId,
+      name: 'old',
+      color: '#22c55e',
+      textColor: '#ffffff',
+      createdAt: '2024-01-01'
+    })
+    insertTag(db, {
+      id: 'b',
+      projectId,
+      name: 'new',
+      color: '#22c55e',
+      textColor: '#ffffff',
+      createdAt: '2024-02-01'
+    })
 
     runMigrations(db)
 

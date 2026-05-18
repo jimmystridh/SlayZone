@@ -19,11 +19,11 @@ export const builtinCommands: BuiltinCommand[] = [
         interruptFirst: true,
         onSuccess: () => ctx.toast('Chat cleared'),
         onError: (err) =>
-          ctx.toast(`Clear failed: ${err instanceof Error ? err.message : String(err)}`),
+          ctx.toast(`Clear failed: ${err instanceof Error ? err.message : String(err)}`)
       }).catch(() => {
         /* handled via onError */
       })
-    },
+    }
   },
   {
     name: 'help',
@@ -32,28 +32,28 @@ export const builtinCommands: BuiltinCommand[] = [
       ctx.toast(
         'Slash commands: type / for skills, commands, agents, and built-ins. Type @ for files.'
       )
-    },
+    }
   },
   {
     name: 'bug',
     description: 'Open Claude Code issue tracker',
     run(ctx) {
       ctx.navigate.openExternal('https://github.com/anthropics/claude-code/issues/new')
-    },
+    }
   },
   {
     name: 'release-notes',
     description: 'Open Claude Code releases page',
     run(ctx) {
       ctx.navigate.openExternal('https://github.com/anthropics/claude-code/releases')
-    },
+    }
   },
   {
     name: 'config',
     description: 'Open settings',
     run(ctx) {
       ctx.navigate.openSettings('appearance')
-    },
+    }
   },
   {
     name: 'memory',
@@ -61,28 +61,28 @@ export const builtinCommands: BuiltinCommand[] = [
     run(ctx) {
       const sep = ctx.session.cwd.endsWith('/') ? '' : '/'
       ctx.navigate.openFile(`${ctx.session.cwd}${sep}CLAUDE.md`)
-    },
+    }
   },
   {
     name: 'permissions',
     description: 'Open permissions settings',
     run(ctx) {
       ctx.navigate.openSettings('permissions')
-    },
+    }
   },
   {
     name: 'hooks',
     description: 'Open hooks settings',
     run(ctx) {
       ctx.navigate.openSettings('hooks')
-    },
+    }
   },
   {
     name: 'mcp',
     description: 'Open MCP servers settings',
     run(ctx) {
       ctx.navigate.openSettings('mcp')
-    },
+    }
   },
   {
     name: 'init',
@@ -92,7 +92,7 @@ export const builtinCommands: BuiltinCommand[] = [
         ctx.session.tabId,
         'Initialize a CLAUDE.md file for this codebase. Include the stack, architecture, commands, and any conventions you can infer from the code.'
       )
-    },
+    }
   },
   {
     name: 'review',
@@ -102,14 +102,14 @@ export const builtinCommands: BuiltinCommand[] = [
         ctx.session.tabId,
         'Review the pending changes. Look for bugs, regressions, security issues, and anything that would not pass a thorough code review.'
       )
-    },
+    }
   },
   {
     name: 'status',
     description: 'Show current chat session info',
     run(ctx) {
       ctx.toast(`Session: ${ctx.session.mode} — cwd ${ctx.session.cwd}`)
-    },
+    }
   },
   {
     name: 'effort',
@@ -118,14 +118,14 @@ export const builtinCommands: BuiltinCommand[] = [
       // Park draft so user types the level, then handleSend intercepts on Enter.
       ctx.setDraft('/effort ')
       ctx.toast('effort: type level (low, medium, high, xhigh, max) then Enter')
-    },
-  },
+    }
+  }
 ]
 
 export function filterBuiltins(filter: string): BuiltinCommand[] {
   return rankByName(builtinCommands, filter, {
     getName: (b) => b.name,
-    getDescription: (b) => b.description,
+    getDescription: (b) => b.description
   })
 }
 

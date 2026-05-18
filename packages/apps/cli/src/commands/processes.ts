@@ -39,8 +39,12 @@ export function processesCommand(): Command {
       const idW = 9
       const statusW = 10
       const labelW = 20
-      console.log(`${'ID'.padEnd(idW)}  ${'STATUS'.padEnd(statusW)}  ${'LABEL'.padEnd(labelW)}  COMMAND`)
-      console.log(`${'-'.repeat(idW)}  ${'-'.repeat(statusW)}  ${'-'.repeat(labelW)}  ${'-'.repeat(30)}`)
+      console.log(
+        `${'ID'.padEnd(idW)}  ${'STATUS'.padEnd(statusW)}  ${'LABEL'.padEnd(labelW)}  COMMAND`
+      )
+      console.log(
+        `${'-'.repeat(idW)}  ${'-'.repeat(statusW)}  ${'-'.repeat(labelW)}  ${'-'.repeat(30)}`
+      )
       for (const p of procs) {
         const id = p.id.slice(0, 8).padEnd(idW)
         const status = p.status.padEnd(statusW)
@@ -56,19 +60,23 @@ export function processesCommand(): Command {
     .option('-n, --lines <n>', 'Last N lines', '50')
     .action(async (idPrefix, opts) => {
       const procs = await apiGet<ProcessInfo[]>('/api/processes')
-      const matches = procs.filter(p => p.id.startsWith(idPrefix))
+      const matches = procs.filter((p) => p.id.startsWith(idPrefix))
 
       if (matches.length === 0) {
         console.error(`Process not found: ${idPrefix}`)
         process.exit(1)
       }
       if (matches.length > 1) {
-        console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${matches.map(p => p.id.slice(0, 8)).join(', ')}`)
+        console.error(
+          `Ambiguous id prefix "${idPrefix}". Matches: ${matches.map((p) => p.id.slice(0, 8)).join(', ')}`
+        )
         process.exit(1)
       }
 
       const proc = matches[0]
-      const data = await apiGet<{ id: string; label: string; logs: string[] }>(`/api/processes/${proc.id}/logs`)
+      const data = await apiGet<{ id: string; label: string; logs: string[] }>(
+        `/api/processes/${proc.id}/logs`
+      )
       const lines = parseInt(opts.lines, 10)
       const output = data.logs.slice(-lines)
 
@@ -93,7 +101,9 @@ export function processesCommand(): Command {
         process.exit(1)
       }
       if (matches.length > 1) {
-        console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${matches.map((p) => p.id.slice(0, 8)).join(', ')}`)
+        console.error(
+          `Ambiguous id prefix "${idPrefix}". Matches: ${matches.map((p) => p.id.slice(0, 8)).join(', ')}`
+        )
         process.exit(1)
       }
 
@@ -115,7 +125,9 @@ export function processesCommand(): Command {
         process.exit(1)
       }
       if (matches.length > 1) {
-        console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${matches.map((p) => p.id.slice(0, 8)).join(', ')}`)
+        console.error(
+          `Ambiguous id prefix "${idPrefix}". Matches: ${matches.map((p) => p.id.slice(0, 8)).join(', ')}`
+        )
         process.exit(1)
       }
 

@@ -2,8 +2,13 @@ import { shortcutDefinitions } from './definitions'
 
 /** OS-level or native-edit Cmd+letter shortcuts that aren't in our definitions. */
 const OS_RESERVED_KEYS = new Set([
-  'h', 'q', 'm',      // macOS system (hide, quit, minimize)
-  'c', 'v', 'x', 'a', // native edit (copy, paste, cut, select-all)
+  'h',
+  'q',
+  'm', // macOS system (hide, quit, minimize)
+  'c',
+  'v',
+  'x',
+  'a' // native edit (copy, paste, cut, select-all)
 ])
 
 /**

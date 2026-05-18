@@ -22,7 +22,10 @@ export interface SlayDb {
   raw(): RawDb
 }
 
-export function resolveProjectByPath(db: SlayDb, dirPath: string): { id: string; name: string; path: string } {
+export function resolveProjectByPath(
+  db: SlayDb,
+  dirPath: string
+): { id: string; name: string; path: string } {
   const normalized = dirPath.replace(/\/+$/, '')
   const projects = db.query<{ id: string; name: string; path: string }>(
     `SELECT id, name, path FROM projects WHERE path IS NOT NULL`
@@ -58,7 +61,10 @@ export function resolveProjectArg(opt?: string): string {
   return val
 }
 
-export function resolveProject(db: SlayDb, proj: string): { id: string; name: string; path: string | null } {
+export function resolveProject(
+  db: SlayDb,
+  proj: string
+): { id: string; name: string; path: string | null } {
   const projects = db.query<{ id: string; name: string; path: string | null }>(
     `SELECT id, name, path FROM projects WHERE id = :proj OR LOWER(name) LIKE :projLike LIMIT 10`,
     { ':proj': proj, ':projLike': `%${proj.toLowerCase()}%` }

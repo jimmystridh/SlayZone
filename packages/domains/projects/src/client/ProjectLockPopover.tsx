@@ -24,7 +24,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogCancel,
-  AlertDialogAction,
+  AlertDialogAction
 } from '@slayzone/ui'
 import type { Project, ProjectLockConfig } from '@slayzone/projects/shared'
 
@@ -35,14 +35,14 @@ interface ProjectLockPopoverProps {
 
 const DURATION_UNITS = [
   { value: 'minutes', label: 'Minutes' },
-  { value: 'hours', label: 'Hours' },
+  { value: 'hours', label: 'Hours' }
 ]
 
 const WINDOW_OPTIONS = [
   { value: '5', label: '5 min' },
   { value: '15', label: '15 min' },
   { value: '30', label: '30 min' },
-  { value: '60', label: '1 hour' },
+  { value: '60', label: '1 hour' }
 ]
 
 export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverProps) {
@@ -109,25 +109,40 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
     }
     if (disableUnlockEarly !== (config?.disable_unlock_early ?? false)) return true
     return false
-  }, [config, durationEnabled, rateLimitEnabled, maxTasks, perMinutes, scheduleEnabled, scheduleFrom, scheduleTo, scheduleWeekdays, disableUnlockEarly])
+  }, [
+    config,
+    durationEnabled,
+    rateLimitEnabled,
+    maxTasks,
+    perMinutes,
+    scheduleEnabled,
+    scheduleFrom,
+    scheduleTo,
+    scheduleWeekdays,
+    disableUnlockEarly
+  ])
 
   async function handleApply() {
     const locked_until = durationEnabled
-      ? new Date(Date.now() + (durationUnit === 'hours' ? durationValue * 3_600_000 : durationValue * 60_000)).toISOString()
-      : config?.locked_until ?? null
+      ? new Date(
+          Date.now() +
+            (durationUnit === 'hours' ? durationValue * 3_600_000 : durationValue * 60_000)
+        ).toISOString()
+      : (config?.locked_until ?? null)
     const lockConfig: ProjectLockConfig = {
       locked_until,
       rate_limit: rateLimitEnabled
         ? { max_tasks: maxTasks, per_minutes: parseInt(perMinutes, 10) }
         : null,
-      schedule: scheduleEnabled && scheduleWeekdays.some(Boolean)
-        ? {
-            from: scheduleFrom,
-            to: scheduleTo,
-            weekdays: scheduleWeekdays.every(Boolean) ? undefined : [...scheduleWeekdays],
-          }
-        : null,
-      disable_unlock_early: disableUnlockEarly,
+      schedule:
+        scheduleEnabled && scheduleWeekdays.some(Boolean)
+          ? {
+              from: scheduleFrom,
+              to: scheduleTo,
+              weekdays: scheduleWeekdays.every(Boolean) ? undefined : [...scheduleWeekdays]
+            }
+          : null,
+      disable_unlock_early: disableUnlockEarly
     }
     const updated = await window.api.db.updateProject({ id: project.id, lockConfig })
     onUpdated(updated as unknown as Project)
@@ -158,7 +173,11 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
         align="end"
         onInteractOutside={(e) => {
           const target = e.target as HTMLElement | null
-          if (target?.closest('[data-slot="alert-dialog-content"], [data-slot="alert-dialog-overlay"], [data-slot="dialog-content"], [data-slot="dialog-overlay"]')) {
+          if (
+            target?.closest(
+              '[data-slot="alert-dialog-content"], [data-slot="alert-dialog-overlay"], [data-slot="dialog-content"], [data-slot="dialog-overlay"]'
+            )
+          ) {
             e.preventDefault()
           }
         }}
@@ -167,7 +186,12 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
           {/* Header */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">Lock project</span>
-            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground" onClick={() => setWhyOpen(true)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-muted-foreground"
+              onClick={() => setWhyOpen(true)}
+            >
               Why?
             </Button>
           </div>
@@ -191,16 +215,23 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
                     type="number"
                     min={1}
                     value={durationValue}
-                    onChange={(e) => setDurationValue(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    onChange={(e) =>
+                      setDurationValue(Math.max(1, parseInt(e.target.value, 10) || 1))
+                    }
                     className="h-8 flex-1 min-w-0 text-xs"
                   />
-                  <Select value={durationUnit} onValueChange={(v) => setDurationUnit(v as 'minutes' | 'hours')}>
+                  <Select
+                    value={durationUnit}
+                    onValueChange={(v) => setDurationUnit(v as 'minutes' | 'hours')}
+                  >
                     <SelectTrigger size="sm" className="flex-1 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DURATION_UNITS.map((u) => (
-                        <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                        <SelectItem key={u.value} value={u.value}>
+                          {u.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -238,7 +269,9 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
                     </SelectTrigger>
                     <SelectContent>
                       {WINDOW_OPTIONS.map((w) => (
-                        <SelectItem key={w.value} value={w.value}>{w.label}</SelectItem>
+                        <SelectItem key={w.value} value={w.value}>
+                          {w.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -284,7 +317,7 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
                     { storageIdx: 4, label: 'T' },
                     { storageIdx: 5, label: 'F' },
                     { storageIdx: 6, label: 'S' },
-                    { storageIdx: 0, label: 'S' },
+                    { storageIdx: 0, label: 'S' }
                   ].map(({ storageIdx, label }, displayIdx) => {
                     const active = scheduleWeekdays[storageIdx]
                     return (
@@ -316,7 +349,9 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
           <div className="h-px bg-border mx-8 my-3" />
 
           {/* Disable unlock early */}
-          <div className={`rounded-lg border p-3 ${disableUnlockEarly ? 'border-amber-500/50 bg-amber-500/10' : 'border-border bg-surface-1'}`}>
+          <div
+            className={`rounded-lg border p-3 ${disableUnlockEarly ? 'border-amber-500/50 bg-amber-500/10' : 'border-border bg-surface-1'}`}
+          >
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-xs font-medium">Disable unlock early</p>
@@ -335,7 +370,10 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
             {disableUnlockEarly && (
               <div className="mt-2 flex items-start gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="size-3.5 shrink-0 mt-px" />
-                <span>No escape until lock expires. Locked sessions cannot be ended early. Use at your own risk.</span>
+                <span>
+                  No escape until lock expires. Locked sessions cannot be ended early. Use at your
+                  own risk.
+                </span>
               </div>
             )}
           </div>
@@ -343,7 +381,12 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
           {/* Footer: Clear + Apply */}
           <div className="flex items-center justify-between gap-2 pt-1">
             {hasAnyLock ? (
-              <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" onClick={handleClearLocal}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-muted-foreground"
+                onClick={handleClearLocal}
+              >
                 Clear all locks
               </Button>
             ) : (
@@ -364,7 +407,8 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
               Disable unlock early?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Once locked, you will not be able to end the session early. The project will remain locked until the duration expires or the schedule window ends. Use at your own risk.
+              Once locked, you will not be able to end the session early. The project will remain
+              locked until the duration expires or the schedule window ends. Use at your own risk.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -386,10 +430,12 @@ export function ProjectLockPopover({ project, onUpdated }: ProjectLockPopoverPro
             <DialogDescription asChild>
               <div className="space-y-3">
                 <p>
-                  A focus tool to enforce deep work, prevent context switching, and protect time blocks from yourself.
+                  A focus tool to enforce deep work, prevent context switching, and protect time
+                  blocks from yourself.
                 </p>
                 <p className="rounded-md border border-border bg-surface-1 p-3 text-xs italic">
-                  Example: lock the side-project for 2 hours every weekday morning so the day job can't bleed in.
+                  Example: lock the side-project for 2 hours every weekday morning so the day job
+                  can't bleed in.
                 </p>
               </div>
             </DialogDescription>

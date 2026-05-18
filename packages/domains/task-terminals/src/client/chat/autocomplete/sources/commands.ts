@@ -7,7 +7,7 @@ import { renderCommandItem } from './render-command'
 export function filterCommands(items: CommandInfo[], filter: string): CommandInfo[] {
   return rankByName(items, filter, {
     getName: (c) => c.name,
-    getDescription: (c) => c.description,
+    getDescription: (c) => c.description
   })
 }
 
@@ -48,9 +48,11 @@ export function createCommandsSource(
       return { query: rest, tokenStart: 0, tokenEnd: cursorPos }
     },
     async fetch({ cwd }) {
-      const api = (window as unknown as {
-        api?: { chat?: { listCommands?: (cwd: string) => Promise<CommandInfo[]> } }
-      }).api
+      const api = (
+        window as unknown as {
+          api?: { chat?: { listCommands?: (cwd: string) => Promise<CommandInfo[]> } }
+        }
+      ).api
       const fn = api?.chat?.listCommands
       if (!fn) return []
       return fn(cwd)
@@ -76,6 +78,6 @@ export function createCommandsSource(
       ctx.setDraft(next)
       const prompt = expandCommandBody(cmd.body, rawAfter).trim()
       if (prompt) await onSend(prompt)
-    },
+    }
   }
 }

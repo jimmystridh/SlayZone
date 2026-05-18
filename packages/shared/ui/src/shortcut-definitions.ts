@@ -13,5 +13,5 @@ export {
   getBlockedWebPanelKeys,
   type ShortcutDefinition,
   type ShortcutScope,
-  type Platform,
+  type Platform
 } from '@slayzone/shortcuts'

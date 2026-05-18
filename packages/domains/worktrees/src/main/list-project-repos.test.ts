@@ -15,8 +15,10 @@ function git(cmd: string, cwd: string) {
     encoding: 'utf-8',
     env: {
       ...process.env,
-      GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@test.com',
-      GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@test.com'
+      GIT_AUTHOR_NAME: 'Test',
+      GIT_AUTHOR_EMAIL: 'test@test.com',
+      GIT_COMMITTER_NAME: 'Test',
+      GIT_COMMITTER_EMAIL: 'test@test.com'
     }
   }).trim()
 }
@@ -62,12 +64,12 @@ await describe('listProjectRepos: multi-repo wrapper', () => {
     fs.mkdirSync(path.join(root, 'docs')) // non-git dir, ignored
     const entries = await listProjectRepos(root)
     expect(entries).toHaveLength(3)
-    const names = entries.map(e => e.name).sort()
+    const names = entries.map((e) => e.name).sort()
     expect(names[0]).toBe('app-a')
     expect(names[1]).toBe('app-b')
     expect(names[2]).toBe('service-c')
-    expect(entries.every(e => e.kind === 'child-repo')).toBe(true)
-    expect(entries.every(e => e.parentPath === null)).toBe(true)
+    expect(entries.every((e) => e.kind === 'child-repo')).toBe(true)
+    expect(entries.every((e) => e.parentPath === null)).toBe(true)
     fs.rmSync(root, { recursive: true, force: true })
   })
 })
@@ -92,13 +94,13 @@ await describe('listProjectRepos: super-repo with submodules', () => {
 
     const entries = await listProjectRepos(root)
     expect(entries).toHaveLength(3)
-    const root_ = entries.find(e => e.kind === 'project-root')!
-    const subs = entries.filter(e => e.kind === 'submodule')
+    const root_ = entries.find((e) => e.kind === 'project-root')!
+    const subs = entries.filter((e) => e.kind === 'submodule')
     expect(root_.path).toBe(root)
     expect(root_.hasGitmodules).toBe(true)
     expect(subs).toHaveLength(2)
-    expect(subs.every(s => s.parentPath === root)).toBe(true)
-    const subPaths = subs.map(s => s.path).sort()
+    expect(subs.every((s) => s.parentPath === root)).toBe(true)
+    const subPaths = subs.map((s) => s.path).sort()
     expect(subPaths[0]).toBe(path.join(root, 'libs/sub-b'))
     expect(subPaths[1]).toBe(path.join(root, 'sub-a'))
     fs.rmSync(root, { recursive: true, force: true })
@@ -133,7 +135,7 @@ await describe('listProjectRepos: taskBoundPath', () => {
     makeRepo(path.join(root, 'one'))
     makeRepo(path.join(root, 'two'))
     const entries = await listProjectRepos(root, { taskBoundPath: path.join(root, 'two') })
-    const bound = entries.filter(e => e.isTaskBound)
+    const bound = entries.filter((e) => e.isTaskBound)
     expect(bound).toHaveLength(1)
     expect(bound[0].name).toBe('two')
     fs.rmSync(root, { recursive: true, force: true })
@@ -145,12 +147,12 @@ await describe('listProjectRepos: taskBoundPath', () => {
     makeRepo(path.join(root, 'one'))
     makeRepo(path.join(root, 'two'))
     const first = await listProjectRepos(root, { taskBoundPath: path.join(root, 'one') })
-    expect(first.find(e => e.name === 'one')!.isTaskBound).toBe(true)
-    expect(first.find(e => e.name === 'two')!.isTaskBound).toBe(false)
+    expect(first.find((e) => e.name === 'one')!.isTaskBound).toBe(true)
+    expect(first.find((e) => e.name === 'two')!.isTaskBound).toBe(false)
     // Same call w/ different bound — cached entries should re-flag
     const second = await listProjectRepos(root, { taskBoundPath: path.join(root, 'two') })
-    expect(second.find(e => e.name === 'one')!.isTaskBound).toBe(false)
-    expect(second.find(e => e.name === 'two')!.isTaskBound).toBe(true)
+    expect(second.find((e) => e.name === 'one')!.isTaskBound).toBe(false)
+    expect(second.find((e) => e.name === 'two')!.isTaskBound).toBe(true)
     fs.rmSync(root, { recursive: true, force: true })
   })
 })
@@ -184,7 +186,7 @@ await describe('listProjectRepos: depth cap', () => {
     // Depth 2: root/x/visible  → within cap
     makeRepo(path.join(root, 'x', 'visible'))
     const entries = await listProjectRepos(root)
-    const names = entries.map(e => e.name)
+    const names = entries.map((e) => e.name)
     expect(names.includes('a/b/c/too-deep')).toBe(false)
     expect(names.includes('x/visible')).toBe(true)
     fs.rmSync(root, { recursive: true, force: true })

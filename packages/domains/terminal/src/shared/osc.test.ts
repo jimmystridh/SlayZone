@@ -4,8 +4,25 @@
  */
 import { extractOscTitle } from './osc.js'
 
-function test(name: string, fn: () => void) { try { fn(); console.log(`  ✓ ${name}`) } catch (e) { console.error(`  ✗ ${name}`); throw e } }
-function expect<T>(v: T) { return { toBe(e: T) { if (v !== e) throw new Error(`expected ${JSON.stringify(e)}, got ${JSON.stringify(v)}`) }, toBeUndefined() { if (v !== undefined) throw new Error(`expected undefined, got ${JSON.stringify(v)}`) } } }
+function test(name: string, fn: () => void) {
+  try {
+    fn()
+    console.log(`  ✓ ${name}`)
+  } catch (e) {
+    console.error(`  ✗ ${name}`)
+    throw e
+  }
+}
+function expect<T>(v: T) {
+  return {
+    toBe(e: T) {
+      if (v !== e) throw new Error(`expected ${JSON.stringify(e)}, got ${JSON.stringify(v)}`)
+    },
+    toBeUndefined() {
+      if (v !== undefined) throw new Error(`expected undefined, got ${JSON.stringify(v)}`)
+    }
+  }
+}
 
 console.log('extractOscTitle')
 

@@ -24,7 +24,7 @@ function buildTaskEvent(
     actorType: 'user',
     source: 'task',
     summary,
-    payload,
+    payload
   }
 }
 
@@ -33,8 +33,8 @@ export function buildTaskCreatedEvents(task: Task): RecordActivityEventInput[] {
     buildTaskEvent(task, 'task.created', 'Task created', {
       title: task.title,
       status: task.status,
-      priority: task.priority,
-    }),
+      priority: task.priority
+    })
   ]
 }
 
@@ -42,52 +42,64 @@ export function buildTaskUpdatedEvents(before: Task, after: Task): RecordActivit
   const events: RecordActivityEventInput[] = []
 
   if (before.title !== after.title) {
-    events.push(buildTaskEvent(after, 'task.title_changed', 'Title changed', {
-      from: before.title,
-      to: after.title,
-    }))
+    events.push(
+      buildTaskEvent(after, 'task.title_changed', 'Title changed', {
+        from: before.title,
+        to: after.title
+      })
+    )
   }
 
   if (before.description !== after.description) {
-    events.push(buildTaskEvent(after, 'task.description_changed', 'Description updated', {
-      beforeLength: before.description?.length ?? 0,
-      afterLength: after.description?.length ?? 0,
-      beforeFormat: before.description_format,
-      afterFormat: after.description_format,
-    }))
+    events.push(
+      buildTaskEvent(after, 'task.description_changed', 'Description updated', {
+        beforeLength: before.description?.length ?? 0,
+        afterLength: after.description?.length ?? 0,
+        beforeFormat: before.description_format,
+        afterFormat: after.description_format
+      })
+    )
   }
 
   if (before.status !== after.status) {
-    events.push(buildTaskEvent(
-      after,
-      'task.status_changed',
-      `Status changed from ${toTitleCase(before.status)} to ${toTitleCase(after.status)}`,
-      {
-        from: before.status,
-        to: after.status,
-      }
-    ))
+    events.push(
+      buildTaskEvent(
+        after,
+        'task.status_changed',
+        `Status changed from ${toTitleCase(before.status)} to ${toTitleCase(after.status)}`,
+        {
+          from: before.status,
+          to: after.status
+        }
+      )
+    )
   }
 
   if (before.priority !== after.priority) {
-    events.push(buildTaskEvent(after, 'task.priority_changed', 'Priority changed', {
-      from: before.priority,
-      to: after.priority,
-    }))
+    events.push(
+      buildTaskEvent(after, 'task.priority_changed', 'Priority changed', {
+        from: before.priority,
+        to: after.priority
+      })
+    )
   }
 
   if (before.assignee !== after.assignee) {
-    events.push(buildTaskEvent(after, 'task.assignee_changed', 'Assignee changed', {
-      from: before.assignee,
-      to: after.assignee,
-    }))
+    events.push(
+      buildTaskEvent(after, 'task.assignee_changed', 'Assignee changed', {
+        from: before.assignee,
+        to: after.assignee
+      })
+    )
   }
 
   if (before.due_date !== after.due_date) {
-    events.push(buildTaskEvent(after, 'task.due_date_changed', 'Due date changed', {
-      from: before.due_date,
-      to: after.due_date,
-    }))
+    events.push(
+      buildTaskEvent(after, 'task.due_date_changed', 'Due date changed', {
+        from: before.due_date,
+        to: after.due_date
+      })
+    )
   }
 
   return events
@@ -126,7 +138,7 @@ export function buildTaskTagsChangedEvents(
   return [
     buildTaskEvent(task, 'task.tags_changed', 'Tags updated', {
       addedTagIds,
-      removedTagIds,
-    }),
+      removedTagIds
+    })
   ]
 }

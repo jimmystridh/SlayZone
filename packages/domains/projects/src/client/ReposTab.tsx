@@ -23,15 +23,23 @@ export function ReposTab({ project, repos, onUpdated }: ReposTabProps) {
   if (repos.length === 0) {
     return (
       <div className="space-y-6">
-        <SettingsTabIntro title="Repositories" description="Detected git repositories in this project folder." />
-        <p className="text-sm text-muted-foreground">No child git repositories found in {project.path}.</p>
+        <SettingsTabIntro
+          title="Repositories"
+          description="Detected git repositories in this project folder."
+        />
+        <p className="text-sm text-muted-foreground">
+          No child git repositories found in {project.path}.
+        </p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <SettingsTabIntro title="Repositories" description="Detected git repositories in this project folder. The default repo is used for new tasks and the home tab." />
+      <SettingsTabIntro
+        title="Repositories"
+        description="Detected git repositories in this project folder. The default repo is used for new tasks and the home tab."
+      />
 
       <div className="space-y-1">
         {repos.map((repo) => {
@@ -42,9 +50,7 @@ export function ReposTab({ project, repos, onUpdated }: ReposTabProps) {
               onClick={() => handleSetDefault(repo.name)}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left transition-colors',
-                isDefault
-                  ? 'bg-accent text-accent-foreground'
-                  : 'hover:bg-muted/50 text-foreground'
+                isDefault ? 'bg-accent text-accent-foreground' : 'hover:bg-muted/50 text-foreground'
               )}
             >
               <FolderGit2 className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -52,9 +58,7 @@ export function ReposTab({ project, repos, onUpdated }: ReposTabProps) {
                 <div className="text-sm font-medium truncate">{repo.name}</div>
                 <div className="text-xs text-muted-foreground truncate">{repo.path}</div>
               </div>
-              {isDefault && (
-                <Star className="h-3.5 w-3.5 shrink-0 text-amber-500 fill-amber-500" />
-              )}
+              {isDefault && <Star className="h-3.5 w-3.5 shrink-0 text-amber-500 fill-amber-500" />}
             </button>
           )
         })}

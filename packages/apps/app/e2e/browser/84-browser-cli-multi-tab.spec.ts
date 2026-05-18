@@ -8,7 +8,7 @@ import {
   ensureBrowserPanelVisible,
   openTaskViaSearch,
   getViewsForTask,
-  testInvoke,
+  testInvoke
 } from '../fixtures/browser-view'
 import { spawnSync } from 'child_process'
 import path from 'path'
@@ -56,7 +56,11 @@ test.describe('Browser CLI multi-tab targeting', () => {
     expect(mcpPort).toBeTruthy()
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Browser CLI', color: '#0ea5e9', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Browser CLI',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
     const t = await s.createTask({ projectId: p.id, title: 'Browser CLI task', status: 'todo' })
     taskId = t.id
     await s.refreshData()
@@ -65,7 +69,9 @@ test.describe('Browser CLI multi-tab targeting', () => {
 
     // Add a second tab so we have something to target other than the active tab.
     await newTabBtn(mainWindow).click()
-    await expect.poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 }).toBe(2)
+    await expect
+      .poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 })
+      .toBe(2)
   })
 
   function runCli(...args: string[]): CliResult {
@@ -74,9 +80,9 @@ test.describe('Browser CLI multi-tab targeting', () => {
         ...process.env,
         SLAYZONE_DB_PATH: dbPath,
         SLAYZONE_MCP_PORT: String(mcpPort),
-        SLAYZONE_TASK_ID: taskId,
+        SLAYZONE_TASK_ID: taskId
       },
-      encoding: 'utf8',
+      encoding: 'utf8'
     })
     return { status: r.status, stdout: r.stdout, stderr: r.stderr }
   }
@@ -90,7 +96,9 @@ test.describe('Browser CLI multi-tab targeting', () => {
     expect(r.stdout).toContain('*')
   })
 
-  test('navigate --tab targets the inactive tab without affecting the active tab', async ({ mainWindow }) => {
+  test('navigate --tab targets the inactive tab without affecting the active tab', async ({
+    mainWindow
+  }) => {
     const URL_TAB_0 = writeFixture('tab0', 'tab-zero')
     const URL_TAB_1 = writeFixture('tab1', 'tab-one')
 
@@ -102,13 +110,23 @@ test.describe('Browser CLI multi-tab targeting', () => {
     const views = await getViewsForTask(mainWindow, taskId)
     expect(views).toHaveLength(2)
 
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', views[0])) as string
-    }, { timeout: 15_000 }).toContain('tab0.html')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', views[0])) as string
+        },
+        { timeout: 15_000 }
+      )
+      .toContain('tab0.html')
 
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', views[1])) as string
-    }, { timeout: 15_000 }).toContain('tab1.html')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', views[1])) as string
+        },
+        { timeout: 15_000 }
+      )
+      .toContain('tab1.html')
   })
 
   test('url --tab returns the targeted tab url', () => {

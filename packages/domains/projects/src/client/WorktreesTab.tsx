@@ -1,7 +1,20 @@
 import { useState, useEffect } from 'react'
 import { AlertTriangle } from 'lucide-react'
-import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@slayzone/ui'
-import type { Project, WorktreeCopyBehavior, WorktreeSubmoduleInit } from '@slayzone/projects/shared'
+import {
+  Button,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@slayzone/ui'
+import type {
+  Project,
+  WorktreeCopyBehavior,
+  WorktreeSubmoduleInit
+} from '@slayzone/projects/shared'
 import { SettingsTabIntro } from './project-settings-shared'
 
 type CopyOverride = 'inherit' | WorktreeCopyBehavior
@@ -47,9 +60,7 @@ export function WorktreesTab({ project, onUpdated, onClose }: WorktreesTabProps)
       const updated = await window.api.db.updateProject({
         id: project.id,
         autoCreateWorktreeOnTaskCreate:
-          autoCreateOverride === 'inherit'
-            ? null
-            : autoCreateOverride === 'on',
+          autoCreateOverride === 'inherit' ? null : autoCreateOverride === 'on',
         worktreeSourceBranch: sourceBranch.trim() || null,
         worktreeCopyBehavior: copyOverride === 'inherit' ? null : copyOverride,
         worktreeCopyPaths: copyOverride === 'custom' ? customPaths.trim() || null : null,
@@ -69,7 +80,9 @@ export function WorktreesTab({ project, onUpdated, onClose }: WorktreesTabProps)
       />
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-1">
-          <Label htmlFor="auto-create-worktree-override">Auto-create worktree on task creation</Label>
+          <Label htmlFor="auto-create-worktree-override">
+            Auto-create worktree on task creation
+          </Label>
           <div className="flex items-center gap-2">
             <Select
               value={autoCreateOverride}
@@ -149,7 +162,11 @@ export function WorktreesTab({ project, onUpdated, onClose }: WorktreesTabProps)
           {copyOverride === 'all' && (
             <div className="flex items-start gap-2 px-3 py-2 rounded-md border border-yellow-500/30 bg-yellow-500/10 text-xs text-yellow-600 dark:text-yellow-400">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-              <span>This will copy all git-ignored files including potentially large directories like <code className="font-mono">node_modules</code>. This can be slow and use significant disk space.</span>
+              <span>
+                This will copy all git-ignored files including potentially large directories like{' '}
+                <code className="font-mono">node_modules</code>. This can be slow and use
+                significant disk space.
+              </span>
             </div>
           )}
           {copyOverride === 'custom' && (
@@ -170,7 +187,9 @@ export function WorktreesTab({ project, onUpdated, onClose }: WorktreesTabProps)
         <div className="space-y-1">
           <Label>Submodule init</Label>
           <p className="text-xs text-muted-foreground">
-            Initialize submodules (<code className="font-mono">git submodule update --init --recursive</code>) when a worktree is created.
+            Initialize submodules (
+            <code className="font-mono">git submodule update --init --recursive</code>) when a
+            worktree is created.
           </p>
           <div className="flex items-center gap-2">
             <Select

@@ -10,26 +10,31 @@ describe('buildCreateTaskFormDefaults', () => {
       status: 'inbox',
       priority: 3,
       dueDate: null,
-      tagIds: [],
+      tagIds: []
     })
   })
 
   it('merges the fallback project id with the task draft', () => {
-    expect(buildCreateTaskFormDefaults({
+    expect(
+      buildCreateTaskFormDefaults(
+        {
+          projectId: 'project-1',
+          title: 'Link: Docs',
+          description: 'https://example.com/docs',
+          status: 'todo',
+          priority: 2,
+          dueDate: '2026-04-01'
+        },
+        'fallback-project'
+      )
+    ).toEqual({
       projectId: 'project-1',
       title: 'Link: Docs',
       description: 'https://example.com/docs',
       status: 'todo',
       priority: 2,
       dueDate: '2026-04-01',
-    }, 'fallback-project')).toEqual({
-      projectId: 'project-1',
-      title: 'Link: Docs',
-      description: 'https://example.com/docs',
-      status: 'todo',
-      priority: 2,
-      dueDate: '2026-04-01',
-      tagIds: [],
+      tagIds: []
     })
   })
 
@@ -41,7 +46,7 @@ describe('buildCreateTaskFormDefaults', () => {
       status: 'inbox',
       priority: 3,
       dueDate: null,
-      tagIds: [],
+      tagIds: []
     })
   })
 })

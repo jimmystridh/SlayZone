@@ -3,7 +3,7 @@ import {
   WORKTREE_COLORS,
   hashStr,
   assignWorktreeColors,
-  assignNewWorktreeColors,
+  assignNewWorktreeColors
 } from './worktree-color'
 
 describe('hashStr', () => {

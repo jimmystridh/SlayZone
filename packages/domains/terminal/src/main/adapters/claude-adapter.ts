@@ -1,4 +1,10 @@
-import type { TerminalAdapter, PromptInfo, ActivityState, ErrorInfo, ValidationResult } from './types'
+import type {
+  TerminalAdapter,
+  PromptInfo,
+  ActivityState,
+  ErrorInfo,
+  ValidationResult
+} from './types'
 import { whichBinary, validateShellEnv } from '../shell-env'
 import { KITTY_SHIFT_ENTER, ENTER } from '@slayzone/terminal/shared'
 

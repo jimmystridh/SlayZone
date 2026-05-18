@@ -22,7 +22,9 @@ function test(name: string, fn: () => void) {
 
 function assertEqual<T>(actual: T, expected: T, label?: string): void {
   if (actual !== expected) {
-    throw new Error(`${label ?? 'values'}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+    throw new Error(
+      `${label ?? 'values'}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+    )
   }
 }
 
@@ -38,7 +40,7 @@ const all: SkillInfo[] = [
   skill('release', 'cut release'),
   skill('slay', 'manage slay CLI'),
   skill('slay-tasks', 'tasks'),
-  skill('unrelated', 'includes the word caveman in text'),
+  skill('unrelated', 'includes the word caveman in text')
 ]
 
 console.log('\nfilterSkills')

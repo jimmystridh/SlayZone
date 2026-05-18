@@ -1,10 +1,20 @@
-import { test, expect, seed, goHome, clickProject, projectBlob, resetApp } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  projectBlob,
+  resetApp
+} from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 test.describe('Edge cases', () => {
   let projectAbbrev: string
 
-  test.beforeAll(async ({ mainWindow }) => { await resetApp(mainWindow) })
+  test.beforeAll(async ({ mainWindow }) => {
+    await resetApp(mainWindow)
+  })
 
   test('delete all projects shows empty state', async ({ mainWindow }) => {
     const s = seed(mainWindow)
@@ -16,14 +26,18 @@ test.describe('Edge cases', () => {
 
   test('create project after empty state restores kanban', async ({ mainWindow }) => {
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Restored Project', color: '#10b981', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Restored Project',
+      color: '#10b981',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     await s.refreshData()
 
     await clickProject(mainWindow, projectAbbrev)
 
     await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({
-      timeout: 5_000,
+      timeout: 5_000
     })
   })
 
@@ -34,7 +48,7 @@ test.describe('Edge cases', () => {
     const task = await s.createTask({
       projectId: p.id,
       title: 'Archive me immediately',
-      status: 'done',
+      status: 'done'
     })
     await s.archiveTask(task.id)
     await s.refreshData()
@@ -51,12 +65,12 @@ test.describe('Edge cases', () => {
     const blocker = await s.createTask({
       projectId: p.id,
       title: 'Blocker task',
-      status: 'in_progress',
+      status: 'in_progress'
     })
     const blocked = await s.createTask({
       projectId: p.id,
       title: 'Blocked task',
-      status: 'todo',
+      status: 'todo'
     })
     await s.addBlocker(blocked.id, blocker.id)
     await s.refreshData()

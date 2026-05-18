@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { switchTerminalMode } from '../fixtures/terminal'
 
@@ -58,21 +58,50 @@ test.describe('Session banner behavior', () => {
 
       ipcMain.removeHandler('pty:exists')
       ipcMain.handle('pty:exists', async () => {
-        const override = (globalThis as unknown as { __ptyExistsOverride?: boolean | null }).__ptyExistsOverride
+        const override = (globalThis as unknown as { __ptyExistsOverride?: boolean | null })
+          .__ptyExistsOverride
         return override ?? true
       })
     }, detectedId)
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Zed Retry', color: '#22c55e', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Zed Retry',
+      color: '#22c55e',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const noAutoTask = await s.createTask({ projectId: p.id, title: 'SB no auto fire', status: 'in_progress' })
-    const switchTask = await s.createTask({ projectId: p.id, title: 'SB mode switch', status: 'in_progress' })
-    const navTask = await s.createTask({ projectId: p.id, title: 'SB nav away', status: 'in_progress' })
-    const dismissTask1 = await s.createTask({ projectId: p.id, title: 'SB dismiss one', status: 'in_progress' })
-    const dismissTask2 = await s.createTask({ projectId: p.id, title: 'SB dismiss two', status: 'in_progress' })
-    const noPtyTask = await s.createTask({ projectId: p.id, title: 'SB no pty', status: 'in_progress' })
+    const noAutoTask = await s.createTask({
+      projectId: p.id,
+      title: 'SB no auto fire',
+      status: 'in_progress'
+    })
+    const switchTask = await s.createTask({
+      projectId: p.id,
+      title: 'SB mode switch',
+      status: 'in_progress'
+    })
+    const navTask = await s.createTask({
+      projectId: p.id,
+      title: 'SB nav away',
+      status: 'in_progress'
+    })
+    const dismissTask1 = await s.createTask({
+      projectId: p.id,
+      title: 'SB dismiss one',
+      status: 'in_progress'
+    })
+    const dismissTask2 = await s.createTask({
+      projectId: p.id,
+      title: 'SB dismiss two',
+      status: 'in_progress'
+    })
+    const noPtyTask = await s.createTask({
+      projectId: p.id,
+      title: 'SB no pty',
+      status: 'in_progress'
+    })
     noAutoTaskId = noAutoTask.id
     switchTaskId = switchTask.id
     navTaskId = navTask.id
@@ -80,15 +109,24 @@ test.describe('Session banner behavior', () => {
     dismissTask2Id = dismissTask2.id
     noPtyTaskId = noPtyTask.id
 
-    await mainWindow.evaluate(({ noAuto, nav, d1, d2, noPty }) => {
-      return Promise.all([
-        window.api.db.updateTask({ id: noAuto, terminalMode: 'codex' }),
-        window.api.db.updateTask({ id: nav, terminalMode: 'codex' }),
-        window.api.db.updateTask({ id: d1, terminalMode: 'cursor-agent' }),
-        window.api.db.updateTask({ id: d2, terminalMode: 'cursor-agent' }),
-        window.api.db.updateTask({ id: noPty, terminalMode: 'codex' }),
-      ])
-    }, { noAuto: noAutoTaskId, nav: navTaskId, d1: dismissTask1Id, d2: dismissTask2Id, noPty: noPtyTaskId })
+    await mainWindow.evaluate(
+      ({ noAuto, nav, d1, d2, noPty }) => {
+        return Promise.all([
+          window.api.db.updateTask({ id: noAuto, terminalMode: 'codex' }),
+          window.api.db.updateTask({ id: nav, terminalMode: 'codex' }),
+          window.api.db.updateTask({ id: d1, terminalMode: 'cursor-agent' }),
+          window.api.db.updateTask({ id: d2, terminalMode: 'cursor-agent' }),
+          window.api.db.updateTask({ id: noPty, terminalMode: 'codex' })
+        ])
+      },
+      {
+        noAuto: noAutoTaskId,
+        nav: navTaskId,
+        d1: dismissTask1Id,
+        d2: dismissTask2Id,
+        noPty: noPtyTaskId
+      }
+    )
 
     await s.refreshData()
     await goHome(mainWindow)
@@ -102,7 +140,8 @@ test.describe('Session banner behavior', () => {
       for (const ch of ['pty:submit', 'chat:list', 'session:list', 'session:getState']) {
         ipcMain.removeHandler(ch)
       }
-      const restore = (globalThis as unknown as { __restorePtyHandlers?: () => void }).__restorePtyHandlers
+      const restore = (globalThis as unknown as { __restorePtyHandlers?: () => void })
+        .__restorePtyHandlers
       restore?.()
     })
   })
@@ -118,7 +157,9 @@ test.describe('Session banner behavior', () => {
     await mainWindow.waitForTimeout(1500)
 
     const statusCount = await electronApp.evaluate(() => {
-      const counts = (globalThis as unknown as { __statusCommandCounts?: Record<string, number> }).__statusCommandCounts ?? {}
+      const counts =
+        (globalThis as unknown as { __statusCommandCounts?: Record<string, number> })
+          .__statusCommandCounts ?? {}
       return Object.values(counts).reduce((sum, value) => sum + value, 0)
     })
     expect(statusCount).toBe(0)
@@ -132,7 +173,9 @@ test.describe('Session banner behavior', () => {
   // the gemini "Run /stats" detect button doesn't appear after the switch.
   // The detect banner condition probably requires PTY data the fallback path
   // doesn't generate.
-  test.skip('switching modes transitions between detect / unavailable / no banner', async ({ mainWindow }) => {
+  test.skip('switching modes transitions between detect / unavailable / no banner', async ({
+    mainWindow
+  }) => {
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
     await expect(mainWindow.getByText('SB mode switch').first()).toBeVisible({ timeout: 5_000 })
@@ -140,12 +183,16 @@ test.describe('Session banner behavior', () => {
 
     // Default claude-code: no banners
     await expect(mainWindow.getByText('Session not saved').first()).not.toBeVisible()
-    await expect(mainWindow.getByText(/Session ID detection not available/).first()).not.toBeVisible()
+    await expect(
+      mainWindow.getByText(/Session ID detection not available/).first()
+    ).not.toBeVisible()
 
     // Switch to Codex → detect banner
     await switchTerminalMode(mainWindow, 'codex')
     await expect(mainWindow.getByText('Session not saved').last()).toBeVisible()
-    await expect(mainWindow.getByText(/Session ID detection not available/).first()).not.toBeVisible()
+    await expect(
+      mainWindow.getByText(/Session ID detection not available/).first()
+    ).not.toBeVisible()
 
     // Switch to Cursor → unavailable banner
     await switchTerminalMode(mainWindow, 'cursor-agent')
@@ -155,7 +202,9 @@ test.describe('Session banner behavior', () => {
     // Switch to Terminal → no banners
     await switchTerminalMode(mainWindow, 'terminal')
     await expect(mainWindow.getByText('Session not saved').first()).not.toBeVisible()
-    await expect(mainWindow.getByText(/Session ID detection not available/).first()).not.toBeVisible()
+    await expect(
+      mainWindow.getByText(/Session ID detection not available/).first()
+    ).not.toBeVisible()
 
     // Switch to Gemini → detect banner with /stats
     await switchTerminalMode(mainWindow, 'gemini')
@@ -165,7 +214,9 @@ test.describe('Session banner behavior', () => {
     // Switch back to Claude → no banners
     await switchTerminalMode(mainWindow, 'claude-code')
     await expect(mainWindow.getByText('Session not saved').first()).not.toBeVisible()
-    await expect(mainWindow.getByText(/Session ID detection not available/).first()).not.toBeVisible()
+    await expect(
+      mainWindow.getByText(/Session ID detection not available/).first()
+    ).not.toBeVisible()
   })
 
   test('detect banner reappears after navigating away and back', async ({ mainWindow }) => {
@@ -201,9 +252,14 @@ test.describe('Session banner behavior', () => {
     // Open first cursor task, dismiss banner
     await mainWindow.getByText('SB dismiss one').first().click()
     await expect(mainWindow.getByText(/Session ID detection not available/).last()).toBeVisible()
-    const banner1 = mainWindow.getByText(/Session ID detection not available/).last().locator('..')
+    const banner1 = mainWindow
+      .getByText(/Session ID detection not available/)
+      .last()
+      .locator('..')
     await banner1.locator('button').click()
-    await expect(mainWindow.getByText(/Session ID detection not available/).first()).not.toBeVisible()
+    await expect(
+      mainWindow.getByText(/Session ID detection not available/).first()
+    ).not.toBeVisible()
 
     // Open second cursor task — banner should appear (dismiss was for task 1 only)
     await goHome(mainWindow)
@@ -213,10 +269,14 @@ test.describe('Session banner behavior', () => {
     await expect(mainWindow.getByText(/Session ID detection not available/).last()).toBeVisible()
   })
 
-  test('detect button is a no-op when PTY does not exist yet', async ({ mainWindow, electronApp }) => {
+  test('detect button is a no-op when PTY does not exist yet', async ({
+    mainWindow,
+    electronApp
+  }) => {
     // Make pty:exists return false
     await electronApp.evaluate(() => {
-      (globalThis as unknown as { __ptyExistsOverride?: boolean | null }).__ptyExistsOverride = false
+      ;(globalThis as unknown as { __ptyExistsOverride?: boolean | null }).__ptyExistsOverride =
+        false
     })
 
     await goHome(mainWindow)
@@ -227,7 +287,10 @@ test.describe('Session banner behavior', () => {
     await expect(mainWindow.getByText('Session not saved').last()).toBeVisible()
 
     // Click detect — should not crash, banner stays (PTY doesn't exist)
-    await mainWindow.getByRole('button', { name: /Run \/status/ }).last().click()
+    await mainWindow
+      .getByRole('button', { name: /Run \/status/ })
+      .last()
+      .click()
 
     // Banner still visible, session not saved
     await expect(mainWindow.getByText('Session not saved').last()).toBeVisible()
@@ -236,7 +299,8 @@ test.describe('Session banner behavior', () => {
 
     // Restore pty:exists
     await electronApp.evaluate(() => {
-      (globalThis as unknown as { __ptyExistsOverride?: boolean | null }).__ptyExistsOverride = null
+      ;(globalThis as unknown as { __ptyExistsOverride?: boolean | null }).__ptyExistsOverride =
+        null
     })
   })
 })

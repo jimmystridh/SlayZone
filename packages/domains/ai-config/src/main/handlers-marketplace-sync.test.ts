@@ -3,21 +3,42 @@
  *
  * Run: ELECTRON_RUN_AS_NODE=1 pnpm exec electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/ai-config/src/main/handlers-marketplace-sync.test.ts
  */
-import { createTestHarness, test, expect, describe, type TestHarness } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe,
+  type TestHarness
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerAiConfigHandlers } from './handlers.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 
-type AiConfigItem = { id: string; slug: string; scope: string; project_id: string | null; content: string; metadata_json: string }
-type ListEntry = { id: string; installed: boolean; installed_library_item_id: string | null; installed_project_item_id: string | null; has_update: boolean }
+type AiConfigItem = {
+  id: string
+  slug: string
+  scope: string
+  project_id: string | null
+  content: string
+  metadata_json: string
+}
+type ListEntry = {
+  id: string
+  installed: boolean
+  installed_library_item_id: string | null
+  installed_project_item_id: string | null
+  has_update: boolean
+}
 
 function seedProject(h: TestHarness, providers: string[] = ['claude']) {
   const projectId = crypto.randomUUID()
   const projectPath = h.tmpDir()
-  h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projectId, 'TestProj', '#000', projectPath)
-  h.db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)').run(
-    `ai_providers:${projectId}`, JSON.stringify(providers)
-  )
+  h.db
+    .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+    .run(projectId, 'TestProj', '#000', projectPath)
+  h.db
+    .prepare('INSERT INTO settings (key, value) VALUES (?, ?)')
+    .run(`ai_providers:${projectId}`, JSON.stringify(providers))
   return { projectId, projectPath }
 }
 
@@ -29,14 +50,17 @@ const h1 = await createTestHarness()
 registerAiConfigHandlers(h1.ipcMain as never, h1.db)
 const p1 = seedProject(h1)
 
-const entry1 = h1.db.prepare(`
+const entry1 = h1.db
+  .prepare(`
   SELECT id, slug FROM skill_registry_entries WHERE registry_id = 'builtin-slayzone' LIMIT 1
-`).get() as { id: string; slug: string }
+`)
+  .get() as { id: string; slug: string }
 
 describe('library and project installs are independent', () => {
   test('install to library creates library item', () => {
     const item = h1.invoke('ai-config:marketplace:install-skill', {
-      entryId: entry1.id, scope: 'library'
+      entryId: entry1.id,
+      scope: 'library'
     }) as AiConfigItem
     expect(item.scope).toBe('library')
     expect(item.project_id).toBeNull()
@@ -44,27 +68,35 @@ describe('library and project installs are independent', () => {
 
   test('install to project creates separate project item', () => {
     const item = h1.invoke('ai-config:marketplace:install-skill', {
-      entryId: entry1.id, scope: 'project', projectId: p1.projectId
+      entryId: entry1.id,
+      scope: 'project',
+      projectId: p1.projectId
     }) as AiConfigItem
     expect(item.scope).toBe('project')
     expect(item.project_id).toBe(p1.projectId)
   })
 
   test('list-entries shows both scopes independently', () => {
-    const entries = h1.invoke('ai-config:marketplace:list-entries', { projectId: p1.projectId }) as ListEntry[]
-    const entry = entries.find(e => e.id === entry1.id)
+    const entries = h1.invoke('ai-config:marketplace:list-entries', {
+      projectId: p1.projectId
+    }) as ListEntry[]
+    const entry = entries.find((e) => e.id === entry1.id)
     expect(entry).toBeTruthy()
     expect(entry!.installed_library_item_id).toBeTruthy()
     expect(entry!.installed_project_item_id).toBeTruthy()
   })
 
   test('removing from library does not affect project', () => {
-    const entries = h1.invoke('ai-config:marketplace:list-entries', { projectId: p1.projectId }) as ListEntry[]
-    const entry = entries.find(e => e.id === entry1.id)!
+    const entries = h1.invoke('ai-config:marketplace:list-entries', {
+      projectId: p1.projectId
+    }) as ListEntry[]
+    const entry = entries.find((e) => e.id === entry1.id)!
     h1.invoke('ai-config:delete-item', entry.installed_library_item_id!)
 
-    const after = h1.invoke('ai-config:marketplace:list-entries', { projectId: p1.projectId }) as ListEntry[]
-    const updated = after.find(e => e.id === entry1.id)!
+    const after = h1.invoke('ai-config:marketplace:list-entries', {
+      projectId: p1.projectId
+    }) as ListEntry[]
+    const updated = after.find((e) => e.id === entry1.id)!
     expect(updated.installed_library_item_id).toBeNull()
     expect(updated.installed_project_item_id).toBeTruthy()
   })
@@ -73,12 +105,16 @@ describe('library and project installs are independent', () => {
     // Re-install to library
     h1.invoke('ai-config:marketplace:install-skill', { entryId: entry1.id, scope: 'library' })
 
-    const entries = h1.invoke('ai-config:marketplace:list-entries', { projectId: p1.projectId }) as ListEntry[]
-    const entry = entries.find(e => e.id === entry1.id)!
+    const entries = h1.invoke('ai-config:marketplace:list-entries', {
+      projectId: p1.projectId
+    }) as ListEntry[]
+    const entry = entries.find((e) => e.id === entry1.id)!
     h1.invoke('ai-config:delete-item', entry.installed_project_item_id!)
 
-    const after = h1.invoke('ai-config:marketplace:list-entries', { projectId: p1.projectId }) as ListEntry[]
-    const updated = after.find(e => e.id === entry1.id)!
+    const after = h1.invoke('ai-config:marketplace:list-entries', {
+      projectId: p1.projectId
+    }) as ListEntry[]
+    const updated = after.find((e) => e.id === entry1.id)!
     expect(updated.installed_library_item_id).toBeTruthy()
     expect(updated.installed_project_item_id).toBeNull()
   })
@@ -92,20 +128,36 @@ const h2 = await createTestHarness()
 registerAiConfigHandlers(h2.ipcMain as never, h2.db)
 const p2 = seedProject(h2)
 
-const entry2 = h2.db.prepare(`
+const entry2 = h2.db
+  .prepare(`
   SELECT id, slug FROM skill_registry_entries WHERE registry_id = 'builtin-slayzone' LIMIT 1
-`).get() as { id: string; slug: string }
+`)
+  .get() as { id: string; slug: string }
 
 describe('install is idempotent per scope', () => {
   test('double library install returns same item', () => {
-    const first = h2.invoke('ai-config:marketplace:install-skill', { entryId: entry2.id, scope: 'library' }) as AiConfigItem
-    const second = h2.invoke('ai-config:marketplace:install-skill', { entryId: entry2.id, scope: 'library' }) as AiConfigItem
+    const first = h2.invoke('ai-config:marketplace:install-skill', {
+      entryId: entry2.id,
+      scope: 'library'
+    }) as AiConfigItem
+    const second = h2.invoke('ai-config:marketplace:install-skill', {
+      entryId: entry2.id,
+      scope: 'library'
+    }) as AiConfigItem
     expect(second.id).toBe(first.id)
   })
 
   test('double project install returns same item', () => {
-    const first = h2.invoke('ai-config:marketplace:install-skill', { entryId: entry2.id, scope: 'project', projectId: p2.projectId }) as AiConfigItem
-    const second = h2.invoke('ai-config:marketplace:install-skill', { entryId: entry2.id, scope: 'project', projectId: p2.projectId }) as AiConfigItem
+    const first = h2.invoke('ai-config:marketplace:install-skill', {
+      entryId: entry2.id,
+      scope: 'project',
+      projectId: p2.projectId
+    }) as AiConfigItem
+    const second = h2.invoke('ai-config:marketplace:install-skill', {
+      entryId: entry2.id,
+      scope: 'project',
+      projectId: p2.projectId
+    }) as AiConfigItem
     expect(second.id).toBe(first.id)
   })
 })
@@ -118,23 +170,37 @@ const h3 = await createTestHarness()
 registerAiConfigHandlers(h3.ipcMain as never, h3.db)
 const p3 = seedProject(h3)
 
-const entry3 = h3.db.prepare(`
+const entry3 = h3.db
+  .prepare(`
   SELECT id, slug FROM skill_registry_entries WHERE registry_id = 'builtin-slayzone' LIMIT 1
-`).get() as { id: string; slug: string }
+`)
+  .get() as { id: string; slug: string }
 
 describe('uninstall via delete-item', () => {
   test('delete-item cascades to project selections', () => {
-    const item = h3.invoke('ai-config:marketplace:install-skill', { entryId: entry3.id, scope: 'library' }) as AiConfigItem
+    const item = h3.invoke('ai-config:marketplace:install-skill', {
+      entryId: entry3.id,
+      scope: 'library'
+    }) as AiConfigItem
     const providers = h3.invoke('ai-config:get-project-providers', p3.projectId) as string[]
-    h3.invoke('ai-config:load-library-item', { projectId: p3.projectId, projectPath: p3.projectPath, itemId: item.id, providers })
+    h3.invoke('ai-config:load-library-item', {
+      projectId: p3.projectId,
+      projectPath: p3.projectPath,
+      itemId: item.id,
+      providers
+    })
 
-    const selections = h3.invoke('ai-config:list-project-selections', p3.projectId) as { item_id: string }[]
+    const selections = h3.invoke('ai-config:list-project-selections', p3.projectId) as {
+      item_id: string
+    }[]
     expect(selections.length > 0).toBe(true)
 
     h3.invoke('ai-config:delete-item', item.id)
 
-    const after = h3.invoke('ai-config:list-project-selections', p3.projectId) as { item_id: string }[]
-    expect(after.find(s => s.item_id === item.id)).toBeUndefined()
+    const after = h3.invoke('ai-config:list-project-selections', p3.projectId) as {
+      item_id: string
+    }[]
+    expect(after.find((s) => s.item_id === item.id)).toBeUndefined()
   })
 })
 
@@ -146,20 +212,28 @@ const h4 = await createTestHarness()
 registerAiConfigHandlers(h4.ipcMain as never, h4.db)
 const p4 = seedProject(h4, ['claude', 'cursor'])
 
-const entry4 = h4.db.prepare(`
+const entry4 = h4.db
+  .prepare(`
   SELECT id, slug FROM skill_registry_entries WHERE registry_id = 'builtin-slayzone' LIMIT 1
-`).get() as { id: string; slug: string }
+`)
+  .get() as { id: string; slug: string }
 
 describe('project install + sync writes files', () => {
   test('sync-linked-file writes to all enabled providers', () => {
     const item = h4.invoke('ai-config:marketplace:install-skill', {
-      entryId: entry4.id, scope: 'project', projectId: p4.projectId
+      entryId: entry4.id,
+      scope: 'project',
+      projectId: p4.projectId
     }) as AiConfigItem
 
     h4.invoke('ai-config:sync-linked-file', p4.projectId, p4.projectPath, item.id)
 
-    expect(fs.existsSync(path.join(p4.projectPath, '.claude', 'skills', entry4.slug, 'SKILL.md'))).toBe(true)
-    expect(fs.existsSync(path.join(p4.projectPath, '.cursor', 'skills', entry4.slug, 'SKILL.md'))).toBe(true)
+    expect(
+      fs.existsSync(path.join(p4.projectPath, '.claude', 'skills', entry4.slug, 'SKILL.md'))
+    ).toBe(true)
+    expect(
+      fs.existsSync(path.join(p4.projectPath, '.cursor', 'skills', entry4.slug, 'SKILL.md'))
+    ).toBe(true)
   })
 })
 
@@ -171,16 +245,22 @@ const h5 = await createTestHarness()
 registerAiConfigHandlers(h5.ipcMain as never, h5.db)
 const p5 = seedProject(h5)
 
-const entry5 = h5.db.prepare(`
+const entry5 = h5.db
+  .prepare(`
   SELECT id, slug FROM skill_registry_entries WHERE registry_id = 'builtin-slayzone' LIMIT 1
-`).get() as { id: string; slug: string }
+`)
+  .get() as { id: string; slug: string }
 
 describe('list-entries without projectId', () => {
   test('project-only install not visible without projectId', () => {
-    h5.invoke('ai-config:marketplace:install-skill', { entryId: entry5.id, scope: 'project', projectId: p5.projectId })
+    h5.invoke('ai-config:marketplace:install-skill', {
+      entryId: entry5.id,
+      scope: 'project',
+      projectId: p5.projectId
+    })
 
     const entries = h5.invoke('ai-config:marketplace:list-entries') as ListEntry[]
-    const entry = entries.find(e => e.id === entry5.id)!
+    const entry = entries.find((e) => e.id === entry5.id)!
     expect(entry.installed_library_item_id).toBeNull()
     expect(entry.installed_project_item_id).toBeNull()
   })
@@ -189,7 +269,7 @@ describe('list-entries without projectId', () => {
     h5.invoke('ai-config:marketplace:install-skill', { entryId: entry5.id, scope: 'library' })
 
     const entries = h5.invoke('ai-config:marketplace:list-entries') as ListEntry[]
-    const entry = entries.find(e => e.id === entry5.id)!
+    const entry = entries.find((e) => e.id === entry5.id)!
     expect(entry.installed_library_item_id).toBeTruthy()
   })
 })
@@ -202,47 +282,62 @@ const h6 = await createTestHarness()
 registerAiConfigHandlers(h6.ipcMain as never, h6.db)
 const p6 = seedProject(h6)
 
-const entry6 = h6.db.prepare(`
+const entry6 = h6.db
+  .prepare(`
   SELECT id, slug FROM skill_registry_entries WHERE registry_id = 'builtin-slayzone' LIMIT 1
-`).get() as { id: string; slug: string }
+`)
+  .get() as { id: string; slug: string }
 
 describe('slug conflict returns existing item', () => {
   test('project install with pre-existing slug returns existing item', () => {
     // Create a non-marketplace item with the same slug
     const existingId = crypto.randomUUID()
-    h6.db.prepare(`
+    h6.db
+      .prepare(`
       INSERT INTO ai_config_items (id, type, scope, project_id, name, slug, content, metadata_json, created_at, updated_at)
       VALUES (?, 'skill', 'project', ?, ?, ?, '# existing', '{}', datetime('now'), datetime('now'))
-    `).run(existingId, p6.projectId, entry6.slug, entry6.slug)
+    `)
+      .run(existingId, p6.projectId, entry6.slug, entry6.slug)
 
     const item = h6.invoke('ai-config:marketplace:install-skill', {
-      entryId: entry6.id, scope: 'project', projectId: p6.projectId
+      entryId: entry6.id,
+      scope: 'project',
+      projectId: p6.projectId
     }) as AiConfigItem
     expect(item.id).toBe(existingId)
   })
 
   test('library install with pre-existing slug returns existing item', () => {
     const existingId = crypto.randomUUID()
-    h6.db.prepare(`
+    h6.db
+      .prepare(`
       INSERT INTO ai_config_items (id, type, scope, project_id, name, slug, content, metadata_json, created_at, updated_at)
       VALUES (?, 'skill', 'library', NULL, ?, ?, '# existing', '{}', datetime('now'), datetime('now'))
-    `).run(existingId, entry6.slug + '-library-test', entry6.slug + '-library-test')
+    `)
+      .run(existingId, entry6.slug + '-library-test', entry6.slug + '-library-test')
 
-    const entry6b = h6.db.prepare(`
+    const entry6b = h6.db
+      .prepare(`
       SELECT id, slug FROM skill_registry_entries WHERE registry_id = 'builtin-slayzone' AND slug = ?
-    `).get(entry6.slug + '-library-test') as { id: string; slug: string } | undefined
+    `)
+      .get(entry6.slug + '-library-test') as { id: string; slug: string } | undefined
 
     // If no matching registry entry with that slug, test the conflict directly
     // by using a registry entry whose slug matches the pre-existing item
     // For this test, we'll rename the existing item to match a known registry entry
-    const entry6c = h6.db.prepare(`
+    const entry6c = h6.db
+      .prepare(`
       SELECT id, slug FROM skill_registry_entries WHERE registry_id = 'builtin-slayzone' LIMIT 1 OFFSET 1
-    `).get() as { id: string; slug: string }
+    `)
+      .get() as { id: string; slug: string }
 
-    h6.db.prepare(`UPDATE ai_config_items SET slug = ?, name = ? WHERE id = ?`).run(entry6c.slug, entry6c.slug, existingId)
+    h6.db
+      .prepare(`UPDATE ai_config_items SET slug = ?, name = ? WHERE id = ?`)
+      .run(entry6c.slug, entry6c.slug, existingId)
 
     const item = h6.invoke('ai-config:marketplace:install-skill', {
-      entryId: entry6c.id, scope: 'library'
+      entryId: entry6c.id,
+      scope: 'library'
     }) as AiConfigItem
     expect(item.id).toBe(existingId)
   })
@@ -265,25 +360,31 @@ describe('orphan marketplace metadata scrub', () => {
         registryName: 'SlayZone Built-in',
         entryId: 'builtin-ghost-skill',
         installedVersion: 'deadbeef',
-        installedAt: new Date().toISOString(),
-      },
+        installedAt: new Date().toISOString()
+      }
     }
-    h7.db.prepare(`
+    h7.db
+      .prepare(`
       INSERT INTO ai_config_items (id, type, scope, project_id, name, slug, content, metadata_json, created_at, updated_at)
       VALUES (?, 'skill', 'project', ?, 'Ghost Skill', 'ghost-skill', '# ghost', ?, datetime('now'), datetime('now'))
-    `).run(itemId, p7.projectId, JSON.stringify(orphanMeta))
+    `)
+      .run(itemId, p7.projectId, JSON.stringify(orphanMeta))
 
     h7.invoke('ai-config:marketplace:refresh-registry', 'builtin-slayzone')
 
-    const row = h7.db.prepare('SELECT metadata_json FROM ai_config_items WHERE id = ?').get(itemId) as { metadata_json: string }
+    const row = h7.db
+      .prepare('SELECT metadata_json FROM ai_config_items WHERE id = ?')
+      .get(itemId) as { metadata_json: string }
     const meta = JSON.parse(row.metadata_json) as Record<string, unknown>
     expect(meta.marketplace).toBeUndefined()
   })
 
   test('item pointing at valid builtin entry keeps its marketplace metadata', () => {
-    const entry = h7.db.prepare(`
+    const entry = h7.db
+      .prepare(`
       SELECT id, slug, content_hash FROM skill_registry_entries WHERE registry_id = 'builtin-slayzone' LIMIT 1
-    `).get() as { id: string; slug: string; content_hash: string }
+    `)
+      .get() as { id: string; slug: string; content_hash: string }
     const itemId = crypto.randomUUID()
     const validMeta = {
       marketplace: {
@@ -291,17 +392,27 @@ describe('orphan marketplace metadata scrub', () => {
         registryName: 'SlayZone Built-in',
         entryId: entry.id,
         installedVersion: entry.content_hash,
-        installedAt: new Date().toISOString(),
-      },
+        installedAt: new Date().toISOString()
+      }
     }
-    h7.db.prepare(`
+    h7.db
+      .prepare(`
       INSERT INTO ai_config_items (id, type, scope, project_id, name, slug, content, metadata_json, created_at, updated_at)
       VALUES (?, 'skill', 'project', ?, ?, ?, '# valid', ?, datetime('now'), datetime('now'))
-    `).run(itemId, p7.projectId, entry.slug + '-valid', entry.slug + '-valid', JSON.stringify(validMeta))
+    `)
+      .run(
+        itemId,
+        p7.projectId,
+        entry.slug + '-valid',
+        entry.slug + '-valid',
+        JSON.stringify(validMeta)
+      )
 
     h7.invoke('ai-config:marketplace:refresh-registry', 'builtin-slayzone')
 
-    const row = h7.db.prepare('SELECT metadata_json FROM ai_config_items WHERE id = ?').get(itemId) as { metadata_json: string }
+    const row = h7.db
+      .prepare('SELECT metadata_json FROM ai_config_items WHERE id = ?')
+      .get(itemId) as { metadata_json: string }
     const meta = JSON.parse(row.metadata_json) as { marketplace?: { entryId?: string } }
     expect(meta.marketplace?.entryId).toBe(entry.id)
   })

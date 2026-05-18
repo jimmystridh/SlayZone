@@ -26,7 +26,7 @@ function expect(actual: unknown) {
       if (actual !== expected) {
         throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
       }
-    },
+    }
   }
 }
 
@@ -39,12 +39,16 @@ function createDb(): Database.Database {
 }
 
 function getSetting(db: Database.Database, key: string): string | null {
-  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as
+    | { value: string }
+    | undefined
   return row?.value ?? null
 }
 
 function getCodexModeFlags(db: Database.Database): string | null {
-  const row = db.prepare("SELECT default_flags FROM terminal_modes WHERE id = 'codex'").get() as { default_flags: string | null } | undefined
+  const row = db.prepare("SELECT default_flags FROM terminal_modes WHERE id = 'codex'").get() as
+    | { default_flags: string | null }
+    | undefined
   return row?.default_flags ?? null
 }
 
@@ -69,9 +73,13 @@ test('v134 migrates persisted Codex defaults away from removed --full-auto', () 
         'codex', 'Codex', 'codex', 'codex {flags}', 'codex {flags} resume {id}', 'codex exec {flags} {prompt}', '', 1, 1, 1
       )
     `).run()
-    db.prepare("UPDATE terminal_modes SET default_flags = '--full-auto --search' WHERE id = 'codex'").run()
+    db.prepare(
+      "UPDATE terminal_modes SET default_flags = '--full-auto --search' WHERE id = 'codex'"
+    ).run()
 
-    db.prepare("INSERT INTO projects (id, name, color, path) VALUES ('p1', 'P', '#000', '/tmp/p')").run()
+    db.prepare(
+      "INSERT INTO projects (id, name, color, path) VALUES ('p1', 'P', '#000', '/tmp/p')"
+    ).run()
     db.prepare(`
       INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, codex_flags, provider_config)
       VALUES (?, 'p1', ?, 'todo', 3, 'codex', ?, ?)
@@ -79,7 +87,9 @@ test('v134 migrates persisted Codex defaults away from removed --full-auto', () 
       't1',
       'Task',
       '--full-auto --search',
-      JSON.stringify({ codex: { flags: '--full-auto --search --disable apps', conversationId: 'cid' } })
+      JSON.stringify({
+        codex: { flags: '--full-auto --search --disable apps', conversationId: 'cid' }
+      })
     )
     db.prepare(`
       INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, codex_flags, provider_config)
@@ -96,16 +106,22 @@ test('v134 migrates persisted Codex defaults away from removed --full-auto', () 
     expect(getSetting(db, 'default_codex_flags')).toBe('--sandbox workspace-write')
     expect(getCodexModeFlags(db)).toBe('--sandbox workspace-write')
 
-    const migrated = db.prepare('SELECT codex_flags, provider_config FROM tasks WHERE id = ?').get('t1') as {
+    const migrated = db
+      .prepare('SELECT codex_flags, provider_config FROM tasks WHERE id = ?')
+      .get('t1') as {
       codex_flags: string
       provider_config: string
     }
     expect(migrated.codex_flags).toBe('--sandbox workspace-write')
-    const migratedConfig = JSON.parse(migrated.provider_config) as { codex: { flags: string; conversationId: string } }
+    const migratedConfig = JSON.parse(migrated.provider_config) as {
+      codex: { flags: string; conversationId: string }
+    }
     expect(migratedConfig.codex.flags).toBe('--sandbox workspace-write --disable apps')
     expect(migratedConfig.codex.conversationId).toBe('cid')
 
-    const custom = db.prepare('SELECT codex_flags, provider_config FROM tasks WHERE id = ?').get('t2') as {
+    const custom = db
+      .prepare('SELECT codex_flags, provider_config FROM tasks WHERE id = ?')
+      .get('t2') as {
       codex_flags: string
       provider_config: string
     }

@@ -8,12 +8,7 @@ import type {
 } from '../shared'
 import { readCredential } from './credentials'
 import { htmlToMarkdown, markdownToHtml } from './markdown'
-import {
-  toMs,
-  getProjectColumns,
-  normalizeMarkdown,
-  upsertFieldState
-} from './sync-helpers'
+import { toMs, getProjectColumns, normalizeMarkdown, upsertFieldState } from './sync-helpers'
 import {
   getColumnById,
   getDefaultStatus,
@@ -65,12 +60,14 @@ export function resolveLocalStatus(
   const columns = getProjectColumns(db, projectId)
 
   if (mapping) {
-    const mapped = db.prepare(`
+    const mapped = db
+      .prepare(`
       SELECT local_status FROM integration_state_mappings
       WHERE provider = ? AND project_mapping_id = ? AND state_type = ?
       ORDER BY rowid ASC
       LIMIT 1
-    `).get(mapping.provider, mapping.id, remoteStatusType) as { local_status: string } | undefined
+    `)
+      .get(mapping.provider, mapping.id, remoteStatusType) as { local_status: string } | undefined
 
     if (mapped && isKnownStatus(mapped.local_status, columns)) {
       return mapped.local_status
@@ -87,7 +84,10 @@ export function resolveLocalStatus(
   return resolveStatusByCategory(category, columns)
 }
 
-export function resolveStatusByCategory(category: WorkflowCategory, columns: ColumnConfig[] | null): string {
+export function resolveStatusByCategory(
+  category: WorkflowCategory,
+  columns: ColumnConfig[] | null
+): string {
   const CATEGORY_FALLBACKS: Record<WorkflowCategory, WorkflowCategory[]> = {
     triage: ['triage', 'unstarted', 'backlog'],
     backlog: ['backlog', 'unstarted', 'triage'],
@@ -112,10 +112,12 @@ export function getDesiredRemoteStatusId(
   if (!mapping) return undefined
 
   // Direct mapping: local_status → state_id
-  const direct = db.prepare(`
+  const direct = db
+    .prepare(`
     SELECT state_id FROM integration_state_mappings
     WHERE provider = ? AND project_mapping_id = ? AND local_status = ?
-  `).get(mapping.provider, mapping.id, taskStatus) as { state_id: string } | undefined
+  `)
+    .get(mapping.provider, mapping.id, taskStatus) as { state_id: string } | undefined
   if (direct?.state_id) return direct.state_id
 
   // Category-based fallback: find state mappings with matching category
@@ -133,12 +135,14 @@ export function getDesiredRemoteStatusId(
   }
 
   for (const stateType of CATEGORY_FALLBACKS[statusColumn.category]) {
-    const byType = db.prepare(`
+    const byType = db
+      .prepare(`
       SELECT state_id FROM integration_state_mappings
       WHERE provider = ? AND project_mapping_id = ? AND state_type = ?
       ORDER BY rowid ASC
       LIMIT 1
-    `).get(mapping.provider, mapping.id, stateType) as { state_id: string } | undefined
+    `)
+      .get(mapping.provider, mapping.id, stateType) as { state_id: string } | undefined
     if (byType?.state_id) return byType.state_id
   }
 
@@ -155,13 +159,19 @@ function loadTask(db: Database, taskId: string): Task | null {
   return row ?? null
 }
 
-function loadProjectMappingByTask(db: Database, taskId: string, provider: IntegrationProvider): ProjectMapping | undefined {
-  return db.prepare(`
+function loadProjectMappingByTask(
+  db: Database,
+  taskId: string,
+  provider: IntegrationProvider
+): ProjectMapping | undefined {
+  return db
+    .prepare(`
     SELECT pm.*
     FROM integration_project_mappings pm
     JOIN tasks t ON t.project_id = pm.project_id
     WHERE t.id = ? AND pm.provider = ?
-  `).get(taskId, provider) as ProjectMapping | undefined
+  `)
+    .get(taskId, provider) as ProjectMapping | undefined
 }
 
 function markLinkSynced(db: Database, link: LinkRow): void {
@@ -251,18 +261,40 @@ function upsertNormalizedFieldState(
 ): void {
   upsertFieldState(db, linkId, 'title', task.title, issue.title, task.updated_at, issue.updatedAt)
   upsertFieldState(
-    db, linkId, 'description',
+    db,
+    linkId,
+    'description',
     normalizeMarkdown(task.description ? htmlToMarkdown(task.description) : null),
     normalizeMarkdown(issue.description),
-    task.updated_at, issue.updatedAt
+    task.updated_at,
+    issue.updatedAt
   )
-  upsertFieldState(db, linkId, 'status', task.status, issue.status.type, task.updated_at, issue.updatedAt)
+  upsertFieldState(
+    db,
+    linkId,
+    'status',
+    task.status,
+    issue.status.type,
+    task.updated_at,
+    issue.updatedAt
+  )
   if (issue.extras.priority !== undefined) {
-    upsertFieldState(db, linkId, 'priority', task.priority, issue.extras.priority, task.updated_at, issue.updatedAt)
+    upsertFieldState(
+      db,
+      linkId,
+      'priority',
+      task.priority,
+      issue.extras.priority,
+      task.updated_at,
+      issue.updatedAt
+    )
   }
 }
 
-function resolvePriorityFromExtras(extras: Record<string, unknown>, existingPriority: number): number {
+function resolvePriorityFromExtras(
+  extras: Record<string, unknown>,
+  existingPriority: number
+): number {
   const raw = extras.priority
   if (typeof raw !== 'number') return existingPriority
   // Linear priority mapping: 0=none→3, 1=urgent→5, 2=high→4, 3=medium→3, 4=low→2
@@ -292,25 +324,40 @@ export async function runProviderSync(
 ): Promise<SyncNowResult> {
   const adapter = getAdapter(provider)
   const result: SyncNowResult = {
-    scanned: 0, pushed: 0, pulled: 0, conflictsResolved: 0,
-    errors: [], at: new Date().toISOString()
+    scanned: 0,
+    pushed: 0,
+    pulled: 0,
+    conflictsResolved: 0,
+    errors: [],
+    at: new Date().toISOString()
   }
 
   const where: string[] = ['l.provider = ?', 'c.enabled = 1']
   const values: unknown[] = [provider]
 
-  if (input.connectionId) { where.push('l.connection_id = ?'); values.push(input.connectionId) }
-  if (input.taskId) { where.push('l.task_id = ?'); values.push(input.taskId) }
-  if (input.projectId) { where.push('t.project_id = ?'); values.push(input.projectId) }
+  if (input.connectionId) {
+    where.push('l.connection_id = ?')
+    values.push(input.connectionId)
+  }
+  if (input.taskId) {
+    where.push('l.task_id = ?')
+    values.push(input.taskId)
+  }
+  if (input.projectId) {
+    where.push('t.project_id = ?')
+    values.push(input.projectId)
+  }
 
-  const links = db.prepare(`
+  const links = db
+    .prepare(`
     SELECT l.*, c.credential_ref
     FROM external_links l
     JOIN integration_connections c ON c.id = l.connection_id
     JOIN tasks t ON t.id = l.task_id
     JOIN integration_project_mappings pm ON pm.project_id = t.project_id AND pm.provider = l.provider
     WHERE ${where.join(' AND ')} AND pm.status_setup_complete = 1
-  `).all(...values) as LinkRow[]
+  `)
+    .all(...values) as LinkRow[]
 
   if (links.length === 0) return result
 
@@ -368,8 +415,9 @@ export async function runProviderSync(
 
         if (!remoteIssue) {
           // Issue gone — archive local task
-          db.prepare("UPDATE tasks SET archived_at = datetime('now') WHERE id = ? AND archived_at IS NULL")
-            .run(link.task_id)
+          db.prepare(
+            "UPDATE tasks SET archived_at = datetime('now') WHERE id = ? AND archived_at IS NULL"
+          ).run(link.task_id)
           markLinkSynced(db, link)
           result.pulled += 1
           continue
@@ -387,11 +435,21 @@ export async function runProviderSync(
         if (remoteUpdatedMs > localUpdatedMs) {
           // Pull remote changes
           const localStatus = resolveLocalStatus(
-            db, adapter, mapping, task.project_id,
-            remoteIssue.status.type, remoteIssue.status.name
+            db,
+            adapter,
+            mapping,
+            task.project_id,
+            remoteIssue.status.type,
+            remoteIssue.status.name
           )
           const priority = resolvePriorityFromExtras(remoteIssue.extras, task.priority)
-          applyRemoteUpdate(db, task.id, remoteIssue, localStatus, remoteIssue.extras.priority !== undefined ? priority : undefined)
+          applyRemoteUpdate(
+            db,
+            task.id,
+            remoteIssue,
+            localStatus,
+            remoteIssue.extras.priority !== undefined ? priority : undefined
+          )
           const updatedTask = loadTask(db, task.id)!
           const columns = getProjectColumns(db, task.project_id)
           if (isTerminalStatus(localStatus, columns)) onTaskReachedTerminal(task.id)
@@ -411,14 +469,18 @@ export async function runProviderSync(
           if (provider === 'github') {
             const columns = getProjectColumns(db, task.project_id)
             const col = getColumnById(task.status, columns)
-            extras.state = (col?.category === 'completed' || col?.category === 'canceled') ? 'closed' : 'open'
+            extras.state =
+              col?.category === 'completed' || col?.category === 'canceled' ? 'closed' : 'open'
           }
 
           const updatedIssue = await adapter.updateIssue(
-            credential, link.external_id,
+            credential,
+            link.external_id,
             {
               title: task.title,
-              description: normalizeMarkdown(task.description ? htmlToMarkdown(task.description) : null),
+              description: normalizeMarkdown(
+                task.description ? htmlToMarkdown(task.description) : null
+              ),
               statusId,
               extras
             },
@@ -435,7 +497,7 @@ export async function runProviderSync(
         if (remoteIssue.isArchived && !task.archived_at) {
           db.prepare("UPDATE tasks SET archived_at = datetime('now') WHERE id = ?").run(task.id)
         } else if (!remoteIssue.isArchived && task.archived_at) {
-          db.prepare("UPDATE tasks SET archived_at = NULL WHERE id = ?").run(task.id)
+          db.prepare('UPDATE tasks SET archived_at = NULL WHERE id = ?').run(task.id)
         }
 
         markLinkSynced(db, link)
@@ -474,16 +536,17 @@ export function startSyncPoller(db: Database, onChanged?: () => void): NodeJS.Ti
     if (syncRunning) return
     syncRunning = true
     const providers = getRegisteredProviders()
-    void Promise.all(
-      providers.map((provider) => runProviderSync(db, provider, {}))
-    ).then((results) => {
-      const totalChanges = results.reduce((sum, r) => sum + r.pulled + r.pushed, 0)
-      if (totalChanges > 0) onChanged?.()
-    }).catch((err) => {
-      console.error('Periodic sync failed:', err)
-    }).finally(() => {
-      syncRunning = false
-    })
+    void Promise.all(providers.map((provider) => runProviderSync(db, provider, {})))
+      .then((results) => {
+        const totalChanges = results.reduce((sum, r) => sum + r.pulled + r.pushed, 0)
+        if (totalChanges > 0) onChanged?.()
+      })
+      .catch((err) => {
+        console.error('Periodic sync failed:', err)
+      })
+      .finally(() => {
+        syncRunning = false
+      })
   }, 10 * 1000)
 }
 
@@ -496,9 +559,9 @@ export async function pushTaskAfterEdit(
   taskId: string,
   opts?: { pushGithubTask?: (taskId: string) => Promise<void> }
 ): Promise<void> {
-  const links = db.prepare(
-    "SELECT provider FROM external_links WHERE task_id = ?"
-  ).all(taskId) as Array<{ provider: string }>
+  const links = db
+    .prepare('SELECT provider FROM external_links WHERE task_id = ?')
+    .all(taskId) as Array<{ provider: string }>
   if (links.length === 0) return
 
   const providers = new Set(links.map((l) => l.provider))
@@ -540,7 +603,7 @@ async function createLocalTaskFromNormalizedIssue(
     status,
     priority,
     assignee: issue.assignee?.name ?? null,
-    externalUpdatedAt: issue.updatedAt,
+    externalUpdatedAt: issue.updatedAt
   })
   if (!task) throw new Error(`Failed to create imported ${adapter.provider} task`)
   return task.id
@@ -548,21 +611,27 @@ async function createLocalTaskFromNormalizedIssue(
 
 // --- Unified push functions ---
 
-export async function pushNewTaskToProviders(db: Database, taskId: string, projectId: string): Promise<void> {
-  const mappings = db.prepare(`
+export async function pushNewTaskToProviders(
+  db: Database,
+  taskId: string,
+  projectId: string
+): Promise<void> {
+  const mappings = db
+    .prepare(`
     SELECT pm.*, c.credential_ref
     FROM integration_project_mappings pm
     JOIN integration_connections c ON c.id = pm.connection_id AND c.enabled = 1
     WHERE pm.project_id = ? AND pm.sync_mode = 'two_way' AND pm.status_setup_complete = 1
-  `).all(projectId) as Array<IntegrationProjectMapping & { credential_ref: string }>
+  `)
+    .all(projectId) as Array<IntegrationProjectMapping & { credential_ref: string }>
 
   const task = loadTask(db, taskId)
   if (!task) return
 
   for (const mapping of mappings) {
-    const existing = db.prepare(
-      'SELECT id FROM external_links WHERE task_id = ? AND provider = ?'
-    ).get(taskId, mapping.provider)
+    const existing = db
+      .prepare('SELECT id FROM external_links WHERE task_id = ? AND provider = ?')
+      .get(taskId, mapping.provider)
     if (existing) continue
 
     try {
@@ -593,8 +662,13 @@ export async function pushNewTaskToProviders(db: Database, taskId: string, proje
 
       const externalKey = adapter.buildExternalKey(issue)
       const linkId = createExternalLink(
-        db, mapping.provider as IntegrationProvider, mapping.connection_id,
-        issue.id, externalKey, issue.url, taskId
+        db,
+        mapping.provider as IntegrationProvider,
+        mapping.connection_id,
+        issue.id,
+        externalKey,
+        issue.url,
+        taskId
       )
       upsertNormalizedFieldState(db, linkId, task, issue)
     } catch (err) {
@@ -604,12 +678,14 @@ export async function pushNewTaskToProviders(db: Database, taskId: string, proje
 }
 
 export async function pushArchiveToProviders(db: Database, taskId: string): Promise<void> {
-  const links = db.prepare(`
+  const links = db
+    .prepare(`
     SELECT l.*, c.credential_ref
     FROM external_links l
     JOIN integration_connections c ON c.id = l.connection_id AND c.enabled = 1
     WHERE l.task_id = ?
-  `).all(taskId) as LinkRow[]
+  `)
+    .all(taskId) as LinkRow[]
 
   const task = loadTask(db, taskId)
   if (!task) return
@@ -633,12 +709,19 @@ export async function pushArchiveToProviders(db: Database, taskId: string): Prom
         extras.state = 'closed'
       }
 
-      await adapter.updateIssue(credential, link.external_id, {
-        title: task.title,
-        description: normalizeMarkdown(task.description ? htmlToMarkdown(task.description) : null),
-        statusId,
-        extras
-      }, ctx)
+      await adapter.updateIssue(
+        credential,
+        link.external_id,
+        {
+          title: task.title,
+          description: normalizeMarkdown(
+            task.description ? htmlToMarkdown(task.description) : null
+          ),
+          statusId,
+          extras
+        },
+        ctx
+      )
     } catch (err) {
       console.error(`[sync] push-archive failed for task ${taskId} (${link.provider}):`, err)
     }
@@ -646,12 +729,14 @@ export async function pushArchiveToProviders(db: Database, taskId: string): Prom
 }
 
 export async function pushUnarchiveToProviders(db: Database, taskId: string): Promise<void> {
-  const links = db.prepare(`
+  const links = db
+    .prepare(`
     SELECT l.*, c.credential_ref
     FROM external_links l
     JOIN integration_connections c ON c.id = l.connection_id AND c.enabled = 1
     WHERE l.task_id = ?
-  `).all(taskId) as LinkRow[]
+  `)
+    .all(taskId) as LinkRow[]
 
   const task = loadTask(db, taskId)
   if (!task) return
@@ -675,12 +760,19 @@ export async function pushUnarchiveToProviders(db: Database, taskId: string): Pr
         extras.state = 'open'
       }
 
-      await adapter.updateIssue(credential, link.external_id, {
-        title: task.title,
-        description: normalizeMarkdown(task.description ? htmlToMarkdown(task.description) : null),
-        statusId,
-        extras
-      }, ctx)
+      await adapter.updateIssue(
+        credential,
+        link.external_id,
+        {
+          title: task.title,
+          description: normalizeMarkdown(
+            task.description ? htmlToMarkdown(task.description) : null
+          ),
+          statusId,
+          extras
+        },
+        ctx
+      )
     } catch (err) {
       console.error(`[sync] push-unarchive failed for task ${taskId} (${link.provider}):`, err)
     }
@@ -696,7 +788,10 @@ async function discoverIssues(
   credential: string
 ): Promise<number> {
   // GitHub needs repo configured for discovery
-  if (mapping.provider === 'github' && (!mapping.external_repo_owner || !mapping.external_repo_name)) {
+  if (
+    mapping.provider === 'github' &&
+    (!mapping.external_repo_owner || !mapping.external_repo_name)
+  ) {
     console.log(`[discovery] GitHub: skipping mapping ${mapping.id} — no repo configured`)
     return 0
   }
@@ -721,17 +816,27 @@ async function discoverIssues(
     })
 
     for (const issue of issues) {
-      const linked = db.prepare(
-        'SELECT id FROM external_links WHERE provider = ? AND external_id = ?'
-      ).get(mapping.provider, issue.id)
+      const linked = db
+        .prepare('SELECT id FROM external_links WHERE provider = ? AND external_id = ?')
+        .get(mapping.provider, issue.id)
       if (linked) continue
 
       try {
-        const taskId = await createLocalTaskFromNormalizedIssue(db, adapter, mapping.project_id, issue)
+        const taskId = await createLocalTaskFromNormalizedIssue(
+          db,
+          adapter,
+          mapping.project_id,
+          issue
+        )
         const externalKey = adapter.buildExternalKey(issue)
         const linkId = createExternalLink(
-          db, mapping.provider as IntegrationProvider, mapping.connection_id,
-          issue.id, externalKey, issue.url, taskId
+          db,
+          mapping.provider as IntegrationProvider,
+          mapping.connection_id,
+          issue.id,
+          externalKey,
+          issue.url,
+          taskId
         )
         const task = loadTask(db, taskId)!
         upsertNormalizedFieldState(db, linkId, task, issue)
@@ -750,18 +855,22 @@ async function discoverIssues(
   ).run(mapping.id)
 
   if (discovered > 0) {
-    console.log(`[discovery] ${mapping.provider}: discovered ${discovered} new issues for project ${mapping.project_id}`)
+    console.log(
+      `[discovery] ${mapping.provider}: discovered ${discovered} new issues for project ${mapping.project_id}`
+    )
   }
   return discovered
 }
 
 export async function runDiscovery(db: Database): Promise<number> {
-  const mappings = db.prepare(`
+  const mappings = db
+    .prepare(`
     SELECT pm.*, c.credential_ref
     FROM integration_project_mappings pm
     JOIN integration_connections c ON c.id = pm.connection_id AND c.enabled = 1
     WHERE pm.status_setup_complete = 1
-  `).all() as Array<IntegrationProjectMapping & { credential_ref: string }>
+  `)
+    .all() as Array<IntegrationProjectMapping & { credential_ref: string }>
 
   let totalDiscovered = 0
   let networkDown = false
@@ -793,17 +902,27 @@ const MAX_INTERVAL = 30 * 60 * 1000 // 30 min cap
 function isNetworkError(err: unknown): boolean {
   if (!(err instanceof Error)) return false
   const msg = err.message + (err.cause instanceof Error ? err.cause.message : '')
-  return msg.includes('ENOTFOUND') || msg.includes('CONNECT_TIMEOUT') || msg.includes('fetch failed') || msg.includes('ENETUNREACH')
+  return (
+    msg.includes('ENOTFOUND') ||
+    msg.includes('CONNECT_TIMEOUT') ||
+    msg.includes('fetch failed') ||
+    msg.includes('ENETUNREACH')
+  )
 }
 
 export function startDiscoveryPoller(db: Database, onChanged?: () => void): NodeJS.Timeout {
-  void runDiscovery(db).then((discovered) => {
-    consecutiveFailures = 0
-    if (discovered && discovered > 0) onChanged?.()
-  }).catch((err) => {
-    consecutiveFailures++
-    console.error('Initial discovery failed:', isNetworkError(err) ? `[offline] ${(err as Error).message}` : err)
-  })
+  void runDiscovery(db)
+    .then((discovered) => {
+      consecutiveFailures = 0
+      if (discovered && discovered > 0) onChanged?.()
+    })
+    .catch((err) => {
+      consecutiveFailures++
+      console.error(
+        'Initial discovery failed:',
+        isNetworkError(err) ? `[offline] ${(err as Error).message}` : err
+      )
+    })
   return setInterval(() => {
     if (discoveryRunning) return
     // Exponential backoff: skip ticks when backing off
@@ -814,21 +933,24 @@ export function startDiscoveryPoller(db: Database, onChanged?: () => void): Node
       if (Math.random() > 1 / ticksToSkip) return
     }
     discoveryRunning = true
-    void runDiscovery(db).then((discovered) => {
-      consecutiveFailures = 0
-      if (discovered && discovered > 0) onChanged?.()
-    }).catch((err) => {
-      consecutiveFailures++
-      if (isNetworkError(err)) {
-        // Log once, then suppress until success
-        if (consecutiveFailures <= 2) {
-          console.warn(`[discovery] offline, backing off (attempt ${consecutiveFailures})`)
+    void runDiscovery(db)
+      .then((discovered) => {
+        consecutiveFailures = 0
+        if (discovered && discovered > 0) onChanged?.()
+      })
+      .catch((err) => {
+        consecutiveFailures++
+        if (isNetworkError(err)) {
+          // Log once, then suppress until success
+          if (consecutiveFailures <= 2) {
+            console.warn(`[discovery] offline, backing off (attempt ${consecutiveFailures})`)
+          }
+        } else {
+          console.error('Discovery poll failed:', err)
         }
-      } else {
-        console.error('Discovery poll failed:', err)
-      }
-    }).finally(() => {
-      discoveryRunning = false
-    })
+      })
+      .finally(() => {
+        discoveryRunning = false
+      })
   }, BASE_INTERVAL)
 }

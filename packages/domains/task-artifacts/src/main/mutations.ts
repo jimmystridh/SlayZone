@@ -4,7 +4,13 @@ import type { DbLike, TxnRunner } from './db'
 import { VersionError } from './errors'
 import { parseRow } from './parse'
 import { getCurrentVersion, isLocked, isReservedName, resolveVersionRef } from './resolve'
-import type { ArtifactId, ArtifactVersion, AuthorContext, VersionId, VersionRef } from '../shared/types'
+import type {
+  ArtifactId,
+  ArtifactVersion,
+  AuthorContext,
+  VersionId,
+  VersionRef
+} from '../shared/types'
 
 export interface CreateVersionArgs {
   artifactId: ArtifactId | string
@@ -30,11 +36,17 @@ function insertBlobRow(db: DbLike, hash: string, size: number): void {
 function selectVersionById(db: DbLike, id: string): ArtifactVersion {
   const row = db.prepare('SELECT * FROM artifact_versions WHERE id = ?').get(id)
   const parsed = parseRow(row)
-  if (!parsed) throw new VersionError('NOT_FOUND', `Version row vanished after insert: ${id}`, { id })
+  if (!parsed)
+    throw new VersionError('NOT_FOUND', `Version row vanished after insert: ${id}`, { id })
   return parsed
 }
 
-function checkNameAvailable(db: DbLike, artifactId: ArtifactId | string, name: string, ignoreId?: string): void {
+function checkNameAvailable(
+  db: DbLike,
+  artifactId: ArtifactId | string,
+  name: string,
+  ignoreId?: string
+): void {
   if (isReservedName(name)) {
     throw new VersionError('NAME_RESERVED', `Name "${name}" is reserved`, { name })
   }
@@ -46,13 +58,20 @@ function checkNameAvailable(db: DbLike, artifactId: ArtifactId | string, name: s
     : db.prepare(sql).get(artifactId, name)
   if (existing) {
     throw new VersionError('NAME_TAKEN', `Name "${name}" already used on another version`, {
-      name,
+      name
     })
   }
 }
 
-function setCurrentVersionRow(db: DbLike, artifactId: ArtifactId | string, versionId: string | null): void {
-  db.prepare('UPDATE task_artifacts SET current_version_id = ? WHERE id = ?').run(versionId, artifactId)
+function setCurrentVersionRow(
+  db: DbLike,
+  artifactId: ArtifactId | string,
+  versionId: string | null
+): void {
+  db.prepare('UPDATE task_artifacts SET current_version_id = ? WHERE id = ?').run(
+    versionId,
+    artifactId
+  )
 }
 
 /**

@@ -28,8 +28,22 @@ export interface TerminalTheme {
 // xterm default ANSI palette (indices 0-15) used when the renderer has not
 // supplied an explicit palette yet.
 export const XTERM_ANSI_PALETTE: readonly string[] = [
-  '#000000', '#cd0000', '#00cd00', '#cdcd00', '#0000ee', '#cd00cd', '#00cdcd', '#e5e5e5',
-  '#7f7f7f', '#ff0000', '#00ff00', '#ffff00', '#5c5cff', '#ff00ff', '#00ffff', '#ffffff'
+  '#000000',
+  '#cd0000',
+  '#00cd00',
+  '#cdcd00',
+  '#0000ee',
+  '#cd00cd',
+  '#00cdcd',
+  '#e5e5e5',
+  '#7f7f7f',
+  '#ff0000',
+  '#00ff00',
+  '#ffff00',
+  '#5c5cff',
+  '#ff00ff',
+  '#00ffff',
+  '#ffffff'
 ]
 
 export function hexToOscRgb(hex: string): string {
@@ -50,15 +64,27 @@ export function computeSyncQueryResponse(input: string, theme: TerminalTheme): S
   let forwarded = input
 
   // DA1 — Primary Device Attributes
-  forwarded = forwarded.replace(/\x1b\[0?c/g, () => { response += '\x1b[?62;4;22c'; return '' })
+  forwarded = forwarded.replace(/\x1b\[0?c/g, () => {
+    response += '\x1b[?62;4;22c'
+    return ''
+  })
   // DA2 — Secondary Device Attributes
-  forwarded = forwarded.replace(/\x1b\[>0?c/g, () => { response += '\x1b[>0;10;1c'; return '' })
+  forwarded = forwarded.replace(/\x1b\[>0?c/g, () => {
+    response += '\x1b[>0;10;1c'
+    return ''
+  })
   // DSR — Device Status Report
-  forwarded = forwarded.replace(/\x1b\[5n/g, () => { response += '\x1b[0n'; return '' })
+  forwarded = forwarded.replace(/\x1b\[5n/g, () => {
+    response += '\x1b[0n'
+    return ''
+  })
   // CPR — Cursor Position. Respond with row=1 col=1. Programs (readline) use CPR mainly
   // to check if the cursor is at col=1 before drawing a prompt. In practice the terminal
   // is at col=1 at this point (startup output ends with a newline).
-  forwarded = forwarded.replace(/\x1b\[6n/g, () => { response += '\x1b[1;1R'; return '' })
+  forwarded = forwarded.replace(/\x1b\[6n/g, () => {
+    response += '\x1b[1;1R'
+    return ''
+  })
 
   // OSC 10/11/12 — Foreground / Background / Cursor color queries.
   forwarded = forwarded.replace(/\x1b\]10;\?(?:\x07|\x1b\\)/g, () => {

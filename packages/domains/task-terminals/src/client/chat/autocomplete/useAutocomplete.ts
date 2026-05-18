@@ -70,10 +70,16 @@ export function useAutocomplete(opts: UseAutocompleteOptions): UseAutocompleteRe
     let cancelled = false
     const fn = getApi()?.getAutocompleteUsage
     if (!fn) return
-    void fn().then((m) => {
-      if (!cancelled) setUsage(m ?? {})
-    }).catch(() => { /* ignore — usage is best-effort */ })
-    return () => { cancelled = true }
+    void fn()
+      .then((m) => {
+        if (!cancelled) setUsage(m ?? {})
+      })
+      .catch(() => {
+        /* ignore — usage is best-effort */
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Fetch items per source once (cwd-scoped). Sources are stable refs.
@@ -171,7 +177,7 @@ export function useAutocomplete(opts: UseAutocompleteOptions): UseAutocompleteRe
         draft,
         setDraft,
         tokenStart: active.match.tokenStart,
-        tokenEnd: active.match.tokenEnd,
+        tokenEnd: active.match.tokenEnd
       })
     },
     [active, acceptCtx, draft, setDraft]
@@ -275,7 +281,9 @@ export function useAutocomplete(opts: UseAutocompleteOptions): UseAutocompleteRe
         try {
           const m = await getFn()
           setUsage(m ?? {})
-        } catch { /* best-effort */ }
+        } catch {
+          /* best-effort */
+        }
       }
     },
     [sources, itemsBySource]
@@ -290,7 +298,7 @@ export function useAutocomplete(opts: UseAutocompleteOptions): UseAutocompleteRe
     close,
     handleKeyDown,
     transformSubmit,
-    bumpUsageFromMessage,
+    bumpUsageFromMessage
   }
 }
 

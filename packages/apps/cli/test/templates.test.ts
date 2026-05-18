@@ -2,32 +2,58 @@
  * CLI templates command tests
  * Run with: ELECTRON_RUN_AS_NODE=1 electron --import tsx/esm packages/apps/cli/test/templates.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../shared/test-utils/ipc-harness.js'
 import { createSlayDbAdapter } from './test-harness.js'
 
 const h = await createTestHarness()
 const db = createSlayDbAdapter(h.db)
 
 const projectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(projectId, 'TplProj', '#000')
+h.db
+  .prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)')
+  .run(projectId, 'TplProj', '#000')
 
 function createTemplate(name: string, opts: Record<string, unknown> = {}) {
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
-  const nextOrder = (h.db.prepare(
-    `SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM task_templates WHERE project_id = ?`
-  ).get(projectId) as { n: number }).n
-  h.db.prepare(
-    `INSERT INTO task_templates (id, project_id, name, description, terminal_mode, default_status, default_priority, is_default, sort_order, created_at, updated_at)
+  const nextOrder = (
+    h.db
+      .prepare(
+        `SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM task_templates WHERE project_id = ?`
+      )
+      .get(projectId) as { n: number }
+  ).n
+  h.db
+    .prepare(
+      `INSERT INTO task_templates (id, project_id, name, description, terminal_mode, default_status, default_priority, is_default, sort_order, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(id, projectId, name, opts.description ?? null, opts.terminal_mode ?? null,
-    opts.default_status ?? null, opts.default_priority ?? null,
-    opts.is_default ? 1 : 0, nextOrder, now, now)
+    )
+    .run(
+      id,
+      projectId,
+      name,
+      opts.description ?? null,
+      opts.terminal_mode ?? null,
+      opts.default_status ?? null,
+      opts.default_priority ?? null,
+      opts.is_default ? 1 : 0,
+      nextOrder,
+      now,
+      now
+    )
   return id
 }
 
 function getTemplate(id: string) {
-  return h.db.prepare('SELECT * FROM task_templates WHERE id = ?').get(id) as Record<string, unknown>
+  return h.db.prepare('SELECT * FROM task_templates WHERE id = ?').get(id) as Record<
+    string,
+    unknown
+  >
 }
 
 describe('templates create', () => {
@@ -41,16 +67,22 @@ describe('templates create', () => {
 
   test('creates with --default clears other defaults', () => {
     const id1 = createTemplate('Default1', { is_default: true })
-    expect((getTemplate(id1)).is_default).toBe(1)
+    expect(getTemplate(id1).is_default).toBe(1)
     // Simulate CLI: clear existing default then create new
-    h.db.prepare('UPDATE task_templates SET is_default = 0 WHERE project_id = ? AND is_default = 1').run(projectId)
+    h.db
+      .prepare('UPDATE task_templates SET is_default = 0 WHERE project_id = ? AND is_default = 1')
+      .run(projectId)
     const id2 = createTemplate('Default2', { is_default: true })
-    expect((getTemplate(id1)).is_default).toBe(0)
-    expect((getTemplate(id2)).is_default).toBe(1)
+    expect(getTemplate(id1).is_default).toBe(0)
+    expect(getTemplate(id2).is_default).toBe(1)
   })
 
   test('stores terminal_mode and priority', () => {
-    const id = createTemplate('Full', { terminal_mode: 'codex', default_priority: 1, default_status: 'todo' })
+    const id = createTemplate('Full', {
+      terminal_mode: 'codex',
+      default_priority: 1,
+      default_status: 'todo'
+    })
     const t = getTemplate(id)
     expect(t.terminal_mode).toBe('codex')
     expect(t.default_priority).toBe(1)
@@ -61,13 +93,18 @@ describe('templates create', () => {
 describe('templates update', () => {
   test('updates name only', () => {
     const id = createTemplate('Old')
-    h.db.prepare('UPDATE task_templates SET name = ?, updated_at = ? WHERE id = ?').run('New', new Date().toISOString(), id)
-    expect((getTemplate(id)).name).toBe('New')
+    h.db
+      .prepare('UPDATE task_templates SET name = ?, updated_at = ? WHERE id = ?')
+      .run('New', new Date().toISOString(), id)
+    expect(getTemplate(id).name).toBe('New')
   })
 
   test('updates multiple fields', () => {
     const id = createTemplate('Multi')
-    h.db.prepare('UPDATE task_templates SET terminal_mode = ?, default_priority = ?, updated_at = ? WHERE id = ?')
+    h.db
+      .prepare(
+        'UPDATE task_templates SET terminal_mode = ?, default_priority = ?, updated_at = ? WHERE id = ?'
+      )
       .run('gemini', 2, new Date().toISOString(), id)
     const t = getTemplate(id)
     expect(t.terminal_mode).toBe('gemini')

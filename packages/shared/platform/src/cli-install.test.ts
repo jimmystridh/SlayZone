@@ -24,7 +24,7 @@ vi.mock('fs', async () => {
       existsSync: (...args: unknown[]) => mockExistsSync(...args),
       symlinkSync: (...args: unknown[]) => mockSymlinkSync(...args),
       unlinkSync: (...args: unknown[]) => mockUnlinkSync(...args),
-      realpathSync: (...args: unknown[]) => mockRealpathSync(...args),
+      realpathSync: (...args: unknown[]) => mockRealpathSync(...args)
     }
   }
 })
@@ -41,7 +41,11 @@ function eaccesError(): NodeJS.ErrnoException {
   return err
 }
 
-function execError(opts: { code?: number; stderr?: string; message?: string }): Error & { code?: number; stderr?: string } {
+function execError(opts: {
+  code?: number
+  stderr?: string
+  message?: string
+}): Error & { code?: number; stderr?: string } {
   const err = new Error(opts.message ?? 'exec failed') as Error & { code?: number; stderr?: string }
   if (opts.code !== undefined) err.code = opts.code
   if (opts.stderr !== undefined) err.stderr = opts.stderr
@@ -99,7 +103,9 @@ describe('installCli', () => {
 
   test('macOS EACCES → osascript elevation succeeds', async () => {
     setPlatform('darwin')
-    mockMkdirSync.mockImplementation(() => { throw eaccesError() })
+    mockMkdirSync.mockImplementation(() => {
+      throw eaccesError()
+    })
     mockExecFileSuccess()
 
     const installCli = await getInstallCli()
@@ -113,7 +119,9 @@ describe('installCli', () => {
 
   test('macOS user cancels password dialog → elevationCancelled', async () => {
     setPlatform('darwin')
-    mockMkdirSync.mockImplementation(() => { throw eaccesError() })
+    mockMkdirSync.mockImplementation(() => {
+      throw eaccesError()
+    })
     mockExecFileFailure(execError({ code: 1, stderr: 'User canceled' }))
 
     const installCli = await getInstallCli()
@@ -124,7 +132,9 @@ describe('installCli', () => {
 
   test('macOS elevation fails (other error) → falls back to permissionDenied', async () => {
     setPlatform('darwin')
-    mockMkdirSync.mockImplementation(() => { throw eaccesError() })
+    mockMkdirSync.mockImplementation(() => {
+      throw eaccesError()
+    })
     mockExecFileFailure(execError({ code: 1, stderr: 'some other error' }))
 
     const installCli = await getInstallCli()
@@ -137,7 +147,9 @@ describe('installCli', () => {
 
   test('Linux EACCES → pkexec elevation succeeds', async () => {
     setPlatform('linux')
-    mockMkdirSync.mockImplementation(() => { throw eaccesError() })
+    mockMkdirSync.mockImplementation(() => {
+      throw eaccesError()
+    })
     mockExecFileSuccess()
     process.env.PATH = `${process.env.HOME}/.local/bin:/usr/bin`
 
@@ -151,7 +163,9 @@ describe('installCli', () => {
 
   test('Linux user cancels polkit dialog (code 126) → elevationCancelled', async () => {
     setPlatform('linux')
-    mockMkdirSync.mockImplementation(() => { throw eaccesError() })
+    mockMkdirSync.mockImplementation(() => {
+      throw eaccesError()
+    })
     mockExecFileFailure(execError({ code: 126 }))
 
     const installCli = await getInstallCli()
@@ -162,7 +176,9 @@ describe('installCli', () => {
 
   test('Linux pkexec not found (ENOENT) → falls back to permissionDenied', async () => {
     setPlatform('linux')
-    mockMkdirSync.mockImplementation(() => { throw eaccesError() })
+    mockMkdirSync.mockImplementation(() => {
+      throw eaccesError()
+    })
     const err = execError({ message: 'spawn pkexec ENOENT' }) as NodeJS.ErrnoException
     err.code = 'ENOENT' as unknown as number // execFile ENOENT uses string code
     mockExecFileFailure(err)
@@ -177,7 +193,9 @@ describe('installCli', () => {
 
   test('Windows EACCES → no elevation, straight to permissionDenied', async () => {
     setPlatform('win32')
-    mockMkdirSync.mockImplementation(() => { throw eaccesError() })
+    mockMkdirSync.mockImplementation(() => {
+      throw eaccesError()
+    })
 
     const installCli = await getInstallCli()
     const result = await installCli('/app/bin/slay')

@@ -4,7 +4,8 @@ import {
   testEmit,
   ensureBrowserPanelVisible,
   focusForAppShortcut,
-  openTaskViaSearch, getActiveViewId,
+  openTaskViaSearch,
+  getActiveViewId
 } from '../fixtures/browser-view'
 
 test.describe('Browser view focus (WebContentsView)', () => {
@@ -28,7 +29,7 @@ test.describe('Browser view focus (WebContentsView)', () => {
     await testInvoke(mainWindow, 'browser:focus', viewId)
 
     // isFocused should return a boolean
-    const isFocused = await testInvoke(mainWindow, 'browser:is-focused', viewId) as boolean
+    const isFocused = (await testInvoke(mainWindow, 'browser:is-focused', viewId)) as boolean
     expect(typeof isFocused).toBe('boolean')
   })
 
@@ -42,7 +43,7 @@ test.describe('Browser view focus (WebContentsView)', () => {
     await mainWindow.waitForTimeout(200)
 
     // Verify the IPC path exists (focus may not propagate in headless)
-    const isFocused = await testInvoke(mainWindow, 'browser:is-focused', viewId) as boolean
+    const isFocused = (await testInvoke(mainWindow, 'browser:is-focused', viewId)) as boolean
     expect(typeof isFocused).toBe('boolean')
   })
 
@@ -52,10 +53,12 @@ test.describe('Browser view focus (WebContentsView)', () => {
 
     await testInvoke(mainWindow, 'browser:focus', viewId)
 
-    const url = await testInvoke(mainWindow, 'browser:get-url', viewId) as string
+    const url = (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
     expect(typeof url).toBe('string')
 
-    const wcId = await testInvoke(mainWindow, 'browser:get-web-contents-id', viewId) as number | null
+    const wcId = (await testInvoke(mainWindow, 'browser:get-web-contents-id', viewId)) as
+      | number
+      | null
     expect(wcId).toBeGreaterThan(0)
   })
 
@@ -68,7 +71,9 @@ test.describe('Browser view focus (WebContentsView)', () => {
     await mainWindow.waitForTimeout(200)
 
     // Verify search dialog is not open
-    const searchInput = mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
+    const searchInput = mainWindow.getByPlaceholder(
+      'Search files, folders, commands, projects, and tasks...'
+    )
     await expect(searchInput).not.toBeVisible({ timeout: 2_000 })
 
     // Simulate Cmd+K arriving via the IPC bridge (as if pressed in WebContentsView)
@@ -78,7 +83,7 @@ test.describe('Browser view focus (WebContentsView)', () => {
       shift: false,
       alt: false,
       meta: true,
-      control: false,
+      control: false
     })
 
     // Search dialog should open — this proves the IPC bridge dispatches events
@@ -99,7 +104,7 @@ test.describe('Browser view focus (WebContentsView)', () => {
       alt: false,
       meta: true,
       control: false,
-      kind: 'browser-tab',
+      kind: 'browser-tab'
     })
 
     const findInput = mainWindow.getByPlaceholder('Find in page...')
@@ -114,7 +119,9 @@ test.describe('Browser view focus (WebContentsView)', () => {
     await ensureBrowserPanelVisible(mainWindow)
 
     // Glow only renders when multiple panels are visible.
-    await expect(mainWindow.locator('[data-panel-id="terminal"]:visible')).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.locator('[data-panel-id="terminal"]:visible')).toBeVisible({
+      timeout: 3_000
+    })
 
     const browserPanel = mainWindow.locator('[data-panel-id="browser"]:visible').first()
 

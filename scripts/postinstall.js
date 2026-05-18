@@ -4,7 +4,7 @@ const { join } = require('path')
 
 if (!process.env.CI_SKIP_POSTINSTALL && !process.env.CF_PAGES) {
   execSync('pnpm --filter @slayzone/app exec electron-rebuild -f -w better-sqlite3,node-pty', {
-    stdio: 'inherit',
+    stdio: 'inherit'
   })
 
   // pnpm can strip execute bits from prebuilt binaries — restore them

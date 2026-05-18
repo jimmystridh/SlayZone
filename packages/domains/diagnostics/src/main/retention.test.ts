@@ -73,7 +73,7 @@ async function run(): Promise<void> {
   // 2. Under hard cap, all rows fresh → no delete
   {
     const db = makeDb()
-    seed(db, 1000, Date.now())  // all rows ts = now → no expiry
+    seed(db, 1000, Date.now()) // all rows ts = now → no expiry
     const result = runRetentionChunk(db, CONFIG, Date.now())
     expect(result.deleted).toBe(0)
     expect(rowCount(db)).toBe(1000)
@@ -84,11 +84,11 @@ async function run(): Promise<void> {
   // 3. Over hard cap → delete oldest, up to CHUNK_LIMIT (10_000)
   {
     const db = makeDb()
-    seed(db, 215_000, Date.now())  // 15k over cap of 200k
+    seed(db, 215_000, Date.now()) // 15k over cap of 200k
     const result = runRetentionChunk(db, CONFIG, Date.now())
     // Chunks at 10_000; over by 15k → first chunk deletes min(15000, 10000) = 10_000
     expect(result.deleted).toBe(10_000)
-    expect(result.moreWork).toBe(true)  // still over cap after one chunk
+    expect(result.moreWork).toBe(true) // still over cap after one chunk
     expect(rowCount(db)).toBe(205_000)
     db.close()
     console.log('  ✓ over cap → deletes 10k chunk, signals moreWork')
@@ -98,13 +98,13 @@ async function run(): Promise<void> {
   {
     const db = makeDb()
     const now = Date.now()
-    const oldCutoff = now - 30 * 24 * 60 * 60 * 1000  // 30 days ago
-    seed(db, 500, oldCutoff)  // these rows are all expired (older than 14d)
-    seed(db, 500, now)         // these are fresh
+    const oldCutoff = now - 30 * 24 * 60 * 60 * 1000 // 30 days ago
+    seed(db, 500, oldCutoff) // these rows are all expired (older than 14d)
+    seed(db, 500, now) // these are fresh
 
     const result = runRetentionChunk(db, CONFIG, now)
-    expect(result.deleted).toBe(500)  // only the old ones
-    expect(rowCount(db)).toBe(500)    // fresh remain
+    expect(result.deleted).toBe(500) // only the old ones
+    expect(rowCount(db)).toBe(500) // fresh remain
     db.close()
     console.log('  ✓ retention by date — expired rows dropped, fresh kept')
   }
@@ -114,10 +114,10 @@ async function run(): Promise<void> {
     const db = makeDb()
     const now = Date.now()
     const oldCutoff = now - 30 * 24 * 60 * 60 * 1000
-    seed(db, 12_000, oldCutoff)  // 12k all expired
+    seed(db, 12_000, oldCutoff) // 12k all expired
 
     const result = runRetentionChunk(db, CONFIG, now)
-    expect(result.deleted).toBe(10_000)  // chunk limit
+    expect(result.deleted).toBe(10_000) // chunk limit
     expect(result.moreWork).toBe(true)
     expect(rowCount(db)).toBe(2_000)
     db.close()
@@ -128,25 +128,25 @@ async function run(): Promise<void> {
   {
     const db = makeDb()
     const now = Date.now()
-    seed(db, 100, now - 100)  // fresh rows (last 100 ms)
+    seed(db, 100, now - 100) // fresh rows (last 100 ms)
     // Delete middle rows to create gaps — rowid math overestimates but that's OK
     db.exec(`DELETE FROM diagnostics_events WHERE ts_ms BETWEEN ${now - 80} AND ${now - 20}`)
     // 39 rows remain; rowid math says ~100; still under cap, all fresh
     const result = runRetentionChunk(db, CONFIG, now)
-    expect(result.deleted).toBe(0)  // not over cap, not expired
+    expect(result.deleted).toBe(0) // not over cap, not expired
     db.close()
     console.log('  ✓ tolerates rowid gaps — overestimate harmless under cap')
   }
 
   // 7. incremental_vacuum actually frees pages (auto_vacuum=INCREMENTAL)
   {
-    const db = makeDb(true)  // auto_vacuum on
+    const db = makeDb(true) // auto_vacuum on
     const now = Date.now()
     const oldCutoff = now - 30 * 24 * 60 * 60 * 1000
-    seed(db, 5_000, oldCutoff)  // expired
-    const pagesBefore = (db.pragma('page_count', { simple: true }) as number)
+    seed(db, 5_000, oldCutoff) // expired
+    const pagesBefore = db.pragma('page_count', { simple: true }) as number
     runRetentionChunk(db, CONFIG, now)
-    const pagesAfter = (db.pragma('page_count', { simple: true }) as number)
+    const pagesAfter = db.pragma('page_count', { simple: true }) as number
     if (pagesAfter >= pagesBefore) {
       throw new Error(`Expected pages to shrink, got ${pagesBefore} → ${pagesAfter}`)
     }

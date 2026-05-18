@@ -9,7 +9,7 @@ import {
   isLoopbackUrl,
   isUrlWithinHostScope,
   normalizeDesktopHostScope,
-  normalizeDesktopProtocol,
+  normalizeDesktopProtocol
 } from '../shared/handoff'
 import type { DesktopHandoffPolicy } from '../shared/types'
 import { useState } from 'react'
@@ -41,7 +41,7 @@ export function WebPanelView({
   onUrlChange,
   onFaviconChange,
   isResizing,
-  isActive,
+  isActive
 }: WebPanelViewProps) {
   const [copied, setCopied] = useState(false)
   const { browserDefaultZoom } = useAppearance()
@@ -61,23 +61,28 @@ export function WebPanelView({
 
   const actionsRef = useRef<{ navigate: (url: string) => void }>({ navigate: () => {} })
 
-  const onPopupRoute = useCallback((popupUrl: string) => {
-    if (isLoopbackUrl(popupUrl)) return
-    if (desktopHandoffPolicy && isEncodedDesktopHandoffUrl(popupUrl, desktopHandoffPolicy)) return
+  const onPopupRoute = useCallback(
+    (popupUrl: string) => {
+      if (isLoopbackUrl(popupUrl)) return
+      if (desktopHandoffPolicy && isEncodedDesktopHandoffUrl(popupUrl, desktopHandoffPolicy)) return
 
-    if (
-      desktopHandoffPolicy?.hostScope &&
-      isUrlWithinHostScope(popupUrl, desktopHandoffPolicy.hostScope)
-    ) {
-      actionsRef.current.navigate(popupUrl)
-      return
-    }
+      if (
+        desktopHandoffPolicy?.hostScope &&
+        isUrlWithinHostScope(popupUrl, desktopHandoffPolicy.hostScope)
+      ) {
+        actionsRef.current.navigate(popupUrl)
+        return
+      }
 
-    void window.api.shell.openExternal(
-      popupUrl,
-      desktopHandoffPolicy ? { desktopHandoff: desktopHandoffPolicy } : undefined
-    ).catch(() => {})
-  }, [desktopHandoffPolicy])
+      void window.api.shell
+        .openExternal(
+          popupUrl,
+          desktopHandoffPolicy ? { desktopHandoff: desktopHandoffPolicy } : undefined
+        )
+        .catch(() => {})
+    },
+    [desktopHandoffPolicy]
+  )
 
   const { viewId, state, actions, placeholderRef } = useBrowserView({
     tabId: panelId,
@@ -88,7 +93,7 @@ export function WebPanelView({
     desktopHandoffPolicy,
     onPopupRoute,
     isResizing,
-    visible: isActive !== false,
+    visible: isActive !== false
   })
   actionsRef.current = actions
 
@@ -107,8 +112,18 @@ export function WebPanelView({
     // Don't persist transient OAuth/SSO URLs — they're dead-ends when reloaded
     try {
       const u = new URL(state.url)
-      if (u.pathname.includes('sso') || u.pathname.includes('oauth') || u.pathname.includes('callback') || u.pathname.includes('auth/') || u.searchParams.has('code') || u.searchParams.has('state')) return
-    } catch { /* invalid URL — skip persist */ return }
+      if (
+        u.pathname.includes('sso') ||
+        u.pathname.includes('oauth') ||
+        u.pathname.includes('callback') ||
+        u.pathname.includes('auth/') ||
+        u.searchParams.has('code') ||
+        u.searchParams.has('state')
+      )
+        return
+    } catch {
+      /* invalid URL — skip persist */ return
+    }
     onUrlChangeRef.current(panelId, state.url)
   }, [state.url, panelId])
 
@@ -128,7 +143,9 @@ export function WebPanelView({
       <div className="shrink-0 flex items-center h-10 px-2 gap-1.5 border-b border-border bg-surface-1">
         <Globe className="size-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs font-medium text-muted-foreground shrink-0">{name}</span>
-        <span className="text-[10px] text-muted-foreground/50 truncate flex-1 min-w-0 ml-2 bg-muted/50 rounded-full px-2 py-0.5">{state.url || url}</span>
+        <span className="text-[10px] text-muted-foreground/50 truncate flex-1 min-w-0 ml-2 bg-muted/50 rounded-full px-2 py-0.5">
+          {state.url || url}
+        </span>
 
         <Tooltip>
           <TooltipTrigger asChild>
@@ -143,7 +160,11 @@ export function WebPanelView({
                   setTimeout(() => setCopied(false), 1500)
                 }}
               >
-                {copied ? <Check className="size-3.5 text-green-500" /> : <Copy className="size-3.5" />}
+                {copied ? (
+                  <Check className="size-3.5 text-green-500" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )}
               </IconButton>
             </span>
           </TooltipTrigger>
@@ -191,7 +212,12 @@ export function WebPanelView({
 
       {/* WCV placeholder */}
       <div className="relative flex-1">
-        <div ref={placeholderRef} data-view-id={viewId} data-web-panel className="absolute inset-0" />
+        <div
+          ref={placeholderRef}
+          data-view-id={viewId}
+          data-web-panel
+          className="absolute inset-0"
+        />
         {state.error && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-surface-0 text-muted-foreground gap-2">
             <div className="text-xs font-medium text-muted-foreground">Failed to load</div>

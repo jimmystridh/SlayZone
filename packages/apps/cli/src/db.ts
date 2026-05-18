@@ -35,10 +35,12 @@ export function getMcpPort(): number | null {
   if (process.env.SLAYZONE_MCP_PORT) return parseInt(process.env.SLAYZONE_MCP_PORT, 10) || null
   try {
     const db = openDb()
-    const row = db.query<{ value: string }>(`SELECT value FROM settings WHERE key = 'mcp_server_port' LIMIT 1`)
+    const row = db.query<{ value: string }>(
+      `SELECT value FROM settings WHERE key = 'mcp_server_port' LIMIT 1`
+    )
     db.close()
     const port = parseInt(row[0]?.value ?? '', 10)
-    return (port > 0 && port <= 65535) ? port : null
+    return port > 0 && port <= 65535 ? port : null
   } catch {
     return null
   }
@@ -51,10 +53,12 @@ function getAlternateMcpPort(): number | null {
   if (!fs.existsSync(altPath)) return null
   try {
     const altDb = new DatabaseSync(altPath)
-    const row = altDb.prepare(`SELECT value FROM settings WHERE key = 'mcp_server_port' LIMIT 1`).get() as { value: string } | undefined
+    const row = altDb
+      .prepare(`SELECT value FROM settings WHERE key = 'mcp_server_port' LIMIT 1`)
+      .get() as { value: string } | undefined
     altDb.close()
     const port = parseInt(row?.value ?? '', 10)
-    return (port > 0 && port <= 65535) ? port : null
+    return port > 0 && port <= 65535 ? port : null
   } catch {
     return null
   }
@@ -62,18 +66,18 @@ function getAlternateMcpPort(): number | null {
 
 export function postJson(port: number, path: string, timeoutMs = 3000): Promise<boolean> {
   return new Promise((resolve) => {
-    const req = http.request(
-      { hostname: '127.0.0.1', port, path, method: 'POST' },
-      (res) => {
-        res.resume()
-        res.on('end', () => {
-          const code = res.statusCode ?? 0
-          resolve(code >= 200 && code < 300)
-        })
-      },
-    )
+    const req = http.request({ hostname: '127.0.0.1', port, path, method: 'POST' }, (res) => {
+      res.resume()
+      res.on('end', () => {
+        const code = res.statusCode ?? 0
+        resolve(code >= 200 && code < 300)
+      })
+    })
     req.on('error', () => resolve(false))
-    req.setTimeout(timeoutMs, () => { req.destroy(); resolve(false) })
+    req.setTimeout(timeoutMs, () => {
+      req.destroy()
+      resolve(false)
+    })
     req.end()
   })
 }
@@ -87,17 +91,21 @@ export async function notifyApp(): Promise<void> {
   if (port) {
     const ok = await postJson(port, '/api/notify')
     if (!ok) {
-      console.error('Warning: app notify failed (POST /api/notify) — app may be stale or unreachable')
+      console.error(
+        'Warning: app notify failed (POST /api/notify) — app may be stale or unreachable'
+      )
     }
     return
   }
 
   // No MCP port in current DB — check if app is running on the other DB
   const altPort = getAlternateMcpPort()
-  if (altPort && await probePort(altPort)) {
+  if (altPort && (await probePort(altPort))) {
     const dev = process.env.SLAYZONE_DEV === '1'
     const hint = dev ? 'without --dev' : 'with --dev'
-    console.error(`Warning: SlayZone app is running ${hint}. Changes were saved but the app was not notified.`)
+    console.error(
+      `Warning: SlayZone app is running ${hint}. Changes were saved but the app was not notified.`
+    )
     console.error(`  Re-run ${dev ? 'without --dev' : 'with --dev'} to target the same database.`)
   }
 }
@@ -141,7 +149,7 @@ export function openDb(): SlayDb {
     },
     raw() {
       return db as unknown as ReturnType<SlayDb['raw']>
-    },
+    }
   }
 }
 

@@ -17,7 +17,7 @@ export const CLAUDE_HOOK_EVENTS = [
   'Stop',
   'SubagentStop',
   'Notification',
-  'PreCompact',
+  'PreCompact'
 ] as const
 
 const TOOL_MATCHED_EVENTS = new Set<string>(['PreToolUse', 'PostToolUse', 'Notification'])
@@ -68,7 +68,7 @@ export interface InstallClaudeHooksResult {
  * - Atomic write via `writeFileIfChanged` (no-op if content unchanged).
  */
 export async function installClaudeHooks(
-  opts: InstallClaudeHooksOpts,
+  opts: InstallClaudeHooksOpts
 ): Promise<InstallClaudeHooksResult> {
   const target = opts.settingsPath ?? getClaudeSettingsPath()
   const events = opts.events ?? CLAUDE_HOOK_EVENTS
@@ -83,7 +83,11 @@ export async function installClaudeHooks(
       }
       settings = parsed as ClaudeSettings
     } catch {
-      return { installed: false, eventsAdded: [], reason: 'settings.json is not valid JSON — refusing to overwrite' }
+      return {
+        installed: false,
+        eventsAdded: [],
+        reason: 'settings.json is not valid JSON — refusing to overwrite'
+      }
     }
   } catch (err: unknown) {
     if (!isENOENT(err)) throw err
@@ -116,9 +120,9 @@ function buildManagedEntry(event: string, scriptPath: string): ClaudeHookEntry {
       {
         type: 'command',
         command: scriptPath,
-        [MARKER_KEY]: true,
-      },
-    ],
+        [MARKER_KEY]: true
+      }
+    ]
   }
   if (TOOL_MATCHED_EVENTS.has(event)) entry.matcher = '*'
   return entry

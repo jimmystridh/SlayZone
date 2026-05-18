@@ -78,7 +78,7 @@ export function ContextFilesPanel({ projectPath }: ContextFilesPanelProps) {
         {files.map((file) => (
           <button
             key={file.path}
-            onClick={() => file.exists ? openFile(file.path) : createFile(file.path)}
+            onClick={() => (file.exists ? openFile(file.path) : createFile(file.path))}
             className={cn(
               'flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors',
               selectedPath === file.path

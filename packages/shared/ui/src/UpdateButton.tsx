@@ -9,7 +9,12 @@ interface UpdateButtonProps {
   size?: 'sm' | 'lg'
 }
 
-export function UpdateButton({ version, downloadPercent, onRestart, size = 'sm' }: UpdateButtonProps): React.JSX.Element | null {
+export function UpdateButton({
+  version,
+  downloadPercent,
+  onRestart,
+  size = 'sm'
+}: UpdateButtonProps): React.JSX.Element | null {
   const [restarting, setRestarting] = useState(false)
   const btnSize = size === 'lg' ? 'size-10 rounded-lg' : 'h-7 w-7'
   const iconSize = size === 'lg' ? 'size-5' : 'size-4'
@@ -25,7 +30,11 @@ export function UpdateButton({ version, downloadPercent, onRestart, size = 'sm' 
             className={`${btnSize} relative flex items-center justify-center text-muted-foreground`}
           >
             <Loader2 className={`${spinnerSize} animate-spin opacity-50`} />
-            <span className={`absolute ${percentTextSize} font-medium leading-none tabular-nums text-foreground`}>{downloadPercent}</span>
+            <span
+              className={`absolute ${percentTextSize} font-medium leading-none tabular-nums text-foreground`}
+            >
+              {downloadPercent}
+            </span>
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">
@@ -49,7 +58,11 @@ export function UpdateButton({ version, downloadPercent, onRestart, size = 'sm' 
           disabled={restarting}
           className={`${btnSize} flex items-center justify-center text-green-500 hover:text-green-400 transition-colors disabled:opacity-70 disabled:cursor-not-allowed`}
         >
-          {restarting ? <Loader2 className={`${iconSize} animate-spin`} /> : <Download className={iconSize} />}
+          {restarting ? (
+            <Loader2 className={`${iconSize} animate-spin`} />
+          ) : (
+            <Download className={iconSize} />
+          )}
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs">

@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { pressShortcut } from '../fixtures/shortcuts'
 
@@ -6,10 +6,7 @@ test.describe('Panel resize', () => {
   let projectAbbrev: string
   let resizedWidth = 440
 
-  const openTaskViaSearch = async (
-    page: import('@playwright/test').Page,
-    title: string
-  ) => {
+  const openTaskViaSearch = async (page: import('@playwright/test').Page, title: string) => {
     await pressShortcut(page, 'search')
     const input = page.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
     await expect(input).toBeVisible()
@@ -21,7 +18,11 @@ test.describe('Panel resize', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Resize Test', color: '#f97316', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Resize Test',
+      color: '#f97316',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     await s.createTask({ projectId: p.id, title: 'Resize task', status: 'todo' })
     await s.refreshData()
@@ -45,7 +46,7 @@ test.describe('Panel resize', () => {
   test('settings panel has default width of 440px', async ({ mainWindow }) => {
     const panel = settingsPanel(mainWindow)
     await expect(panel).toBeVisible()
-    const width = await panel.evaluate(el => parseInt(el.style.width))
+    const width = await panel.evaluate((el) => parseInt(el.style.width))
     expect(width).toBe(440)
   })
 
@@ -67,16 +68,14 @@ test.describe('Panel resize', () => {
     await mainWindow.mouse.up()
 
     // Settings panel should remain valid; if drag is supported it should become wider.
-    const width = await settingsPanel(mainWindow).evaluate(el => parseInt(el.style.width))
+    const width = await settingsPanel(mainWindow).evaluate((el) => parseInt(el.style.width))
     resizedWidth = width
     expect(width).toBeGreaterThanOrEqual(440)
     expect(width).toBeLessThanOrEqual(540)
   })
 
   test('resize persists to settings DB with version marker', async ({ mainWindow }) => {
-    const stored = await mainWindow.evaluate(() =>
-      window.api.settings.get('taskDetailPanelSizes')
-    )
+    const stored = await mainWindow.evaluate(() => window.api.settings.get('taskDetailPanelSizes'))
     if (!stored) {
       expect(resizedWidth).toBe(440)
       return
@@ -97,7 +96,7 @@ test.describe('Panel resize', () => {
     await mainWindow.mouse.move(box!.x + 500, box!.y + box!.height / 2, { steps: 5 })
     await mainWindow.mouse.up()
 
-    const width = await settingsPanel(mainWindow).evaluate(el => parseInt(el.style.width))
+    const width = await settingsPanel(mainWindow).evaluate((el) => parseInt(el.style.width))
     expect(width).toBeGreaterThanOrEqual(200)
     expect(width).toBeLessThanOrEqual(440)
   })
@@ -110,7 +109,7 @@ test.describe('Panel resize', () => {
     await clickProject(mainWindow, projectAbbrev)
     await openTaskViaSearch(mainWindow, 'Resize task')
 
-    const width = await settingsPanel(mainWindow).evaluate(el => parseInt(el.style.width))
+    const width = await settingsPanel(mainWindow).evaluate((el) => parseInt(el.style.width))
     expect(width).toBeGreaterThanOrEqual(200)
     expect(width).toBeLessThanOrEqual(440)
   })
@@ -122,9 +121,11 @@ test.describe('Panel resize', () => {
     // Toggle browser on → adds terminal|browser handle
     await mainWindow.keyboard.press('Meta+b')
 
-    await expect.poll(async () => {
-      return await resizeHandles(mainWindow).count()
-    }).toBeGreaterThan(handlesBefore)
+    await expect
+      .poll(async () => {
+        return await resizeHandles(mainWindow).count()
+      })
+      .toBeGreaterThan(handlesBefore)
 
     // Toggle browser off to restore state
     // Focus URL input first to avoid webview stealing keystroke

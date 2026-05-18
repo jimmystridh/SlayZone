@@ -25,6 +25,6 @@ export function createBuiltinsSource(): AutocompleteSource<BuiltinCommand> {
       const next = spliceReplace(ctx.draft, ctx.tokenStart, ctx.draft.length, '')
       ctx.setDraft(next)
       await cmd.run(ctx)
-    },
+    }
   }
 }

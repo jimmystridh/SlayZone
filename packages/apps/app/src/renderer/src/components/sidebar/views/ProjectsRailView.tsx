@@ -18,7 +18,7 @@ export function ProjectsRailView({
   onSelectProject,
   onProjectSettings,
   onReorderProjects,
-  idleByProject,
+  idleByProject
 }: SidebarViewContext) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 

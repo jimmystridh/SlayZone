@@ -80,7 +80,7 @@ function normalizeDates<T>(value: T): T {
 
   if (value && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [key, normalizeDates(item)]),
+      Object.entries(value).map(([key, item]) => [key, normalizeDates(item)])
     ) as T
   }
 

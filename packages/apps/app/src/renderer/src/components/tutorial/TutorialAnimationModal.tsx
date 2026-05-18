@@ -35,9 +35,9 @@ const TABS: TutorialTab[] = [
       {
         title: 'Work across multiple projects',
         subtitle: 'Switch between projects — each with its own kanban board and tasks.',
-        Component: SceneProjects,
-      },
-    ],
+        Component: SceneProjects
+      }
+    ]
   },
   {
     id: 'open-task',
@@ -47,9 +47,9 @@ const TABS: TutorialTab[] = [
       {
         title: 'Open a task to start working',
         subtitle: 'Each task opens with an AI terminal and its own workspace.',
-        Component: SceneOpenTask,
-      },
-    ],
+        Component: SceneOpenTask
+      }
+    ]
   },
   {
     id: 'terminal',
@@ -59,9 +59,9 @@ const TABS: TutorialTab[] = [
       {
         title: 'AI terminals, per task',
         subtitle: 'Each task gets its own AI terminal — Claude Code, Codex, Gemini, and more.',
-        Component: SceneTerminal,
-      },
-    ],
+        Component: SceneTerminal
+      }
+    ]
   },
   {
     id: 'browser',
@@ -71,9 +71,9 @@ const TABS: TutorialTab[] = [
       {
         title: 'Preview right next to your terminal',
         subtitle: 'Built-in browser panel — see your changes without leaving the app.',
-        Component: SceneBrowser,
-      },
-    ],
+        Component: SceneBrowser
+      }
+    ]
   },
   {
     id: 'git',
@@ -83,9 +83,9 @@ const TABS: TutorialTab[] = [
       {
         title: 'Git & worktrees',
         subtitle: 'Manage branches, review diffs, and commit — all from within the task.',
-        Component: SceneGit,
-      },
-    ],
+        Component: SceneGit
+      }
+    ]
   },
   {
     id: 'processes',
@@ -95,9 +95,9 @@ const TABS: TutorialTab[] = [
       {
         title: 'Background processes',
         subtitle: 'Run dev servers, watchers, and scripts — scoped to each task or global.',
-        Component: SceneProcesses,
-      },
-    ],
+        Component: SceneProcesses
+      }
+    ]
   },
   {
     id: 'editor',
@@ -107,9 +107,9 @@ const TABS: TutorialTab[] = [
       {
         title: 'Code editor built in',
         subtitle: 'Edit files directly in the app — no context switching.',
-        Component: SceneEditor,
-      },
-    ],
+        Component: SceneEditor
+      }
+    ]
   },
   {
     id: 'custom-panels',
@@ -120,10 +120,10 @@ const TABS: TutorialTab[] = [
         title: 'Add your own panels',
         subtitle: 'Enable Figma, Excalidraw, or any web app — right next to your terminal.',
         Component: SceneCustomPanels,
-        duration: 10000,
-      },
-    ],
-  },
+        duration: 10000
+      }
+    ]
+  }
 ]
 
 const slideEase = [0.25, 0.46, 0.45, 0.94] as const
@@ -131,7 +131,11 @@ const slideEase = [0.25, 0.46, 0.45, 0.94] as const
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 48 : -48, opacity: 0 }),
   center: { x: 0, opacity: 1, transition: { duration: 0.12, ease: slideEase, delay: 0.06 } },
-  exit: (dir: number) => ({ x: dir > 0 ? -48 : 48, opacity: 0, transition: { duration: 0.12, ease: slideEase } }),
+  exit: (dir: number) => ({
+    x: dir > 0 ? -48 : 48,
+    opacity: 0,
+    transition: { duration: 0.12, ease: slideEase }
+  })
 }
 
 interface Props {
@@ -234,15 +238,18 @@ export function TutorialAnimationModal({ open, onClose }: Props): React.JSX.Elem
           {/* Tab cards — grouped by category */}
           <div className="w-68 shrink-0 flex flex-col pr-12 gap-0 overflow-y-auto">
             {(() => {
-              const groups = TABS.reduce<{ category: string; indices: number[] }[]>((acc, tab, i) => {
-                const last = acc[acc.length - 1]
-                if (last && last.category === tab.category) {
-                  last.indices.push(i)
-                } else {
-                  acc.push({ category: tab.category, indices: [i] })
-                }
-                return acc
-              }, [])
+              const groups = TABS.reduce<{ category: string; indices: number[] }[]>(
+                (acc, tab, i) => {
+                  const last = acc[acc.length - 1]
+                  if (last && last.category === tab.category) {
+                    last.indices.push(i)
+                  } else {
+                    acc.push({ category: tab.category, indices: [i] })
+                  }
+                  return acc
+                },
+                []
+              )
               return groups.map(({ category, indices }) => (
                 <div key={category} className="mb-5">
                   <div className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-wider px-3 pt-1 pb-1.5">
@@ -284,7 +291,9 @@ export function TutorialAnimationModal({ open, onClose }: Props): React.JSX.Elem
                       transition={{ duration: 0.18 }}
                     >
                       {title && <h3 className="text-2xl font-semibold tracking-tight">{title}</h3>}
-                      {subtitle && <p className="text-base text-muted-foreground mt-1">{subtitle}</p>}
+                      {subtitle && (
+                        <p className="text-base text-muted-foreground mt-1">{subtitle}</p>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -312,7 +321,7 @@ export function TutorialAnimationModal({ open, onClose }: Props): React.JSX.Elem
                 className="mx-auto overflow-hidden"
                 style={{
                   width: 1440 * sceneScale,
-                  height: 1080 * sceneScale,
+                  height: 1080 * sceneScale
                 }}
               >
                 <div
@@ -337,7 +346,11 @@ export function TutorialAnimationModal({ open, onClose }: Props): React.JSX.Elem
                             className="w-full h-full"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: [0, 1, 1, 0] }}
-                            transition={{ duration: sceneDuration / 1000, times: [0, 0.033, 0.967, 1], ease: 'linear' }}
+                            transition={{
+                              duration: sceneDuration / 1000,
+                              times: [0, 0.033, 0.967, 1],
+                              ease: 'linear'
+                            }}
                           >
                             <Component />
                           </motion.div>
@@ -359,7 +372,6 @@ export function TutorialAnimationModal({ open, onClose }: Props): React.JSX.Elem
                 transition={{ duration: sceneDuration / 1000, ease: 'linear' }}
               />
             </div>
-
           </div>
         </div>
       </DialogContent>

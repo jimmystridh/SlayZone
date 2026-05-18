@@ -51,8 +51,12 @@ test('backfills legacy split skill rows into raw content and strips canonical me
     db.pragma('user_version = 77')
 
     const projectId = crypto.randomUUID()
-    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
-      .run(projectId, 'Migration', '#000', '/tmp/migration')
+    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(
+      projectId,
+      'Migration',
+      '#000',
+      '/tmp/migration'
+    )
 
     const itemId = crypto.randomUUID()
     db.prepare(`
@@ -77,7 +81,9 @@ test('backfills legacy split skill rows into raw content and strips canonical me
 
     runMigrations(db)
 
-    const row = db.prepare('SELECT content, metadata_json FROM ai_config_items WHERE id = ?').get(itemId) as {
+    const row = db
+      .prepare('SELECT content, metadata_json FROM ai_config_items WHERE id = ?')
+      .get(itemId) as {
       content: string
       metadata_json: string
     }
@@ -103,23 +109,23 @@ test('leaves body-only skills without canonical frontmatter invalid after migrat
       INSERT INTO ai_config_items (
         id, type, scope, project_id, name, slug, content, metadata_json, created_at, updated_at
       ) VALUES (?, 'skill', 'global', NULL, ?, ?, ?, ?, datetime('now'), datetime('now'))
-    `).run(
-      itemId,
-      'body-only-skill',
-      'body-only-skill',
-      '# body only\n',
-      '{}'
-    )
+    `).run(itemId, 'body-only-skill', 'body-only-skill', '# body only\n', '{}')
 
     runMigrations(db)
 
-    const row = db.prepare('SELECT content, metadata_json FROM ai_config_items WHERE id = ?').get(itemId) as {
+    const row = db
+      .prepare('SELECT content, metadata_json FROM ai_config_items WHERE id = ?')
+      .get(itemId) as {
       content: string
       metadata_json: string
     }
     expect(row.content).toBe('# body only\n')
-    expect(JSON.stringify(JSON.parse(row.metadata_json).skillValidation)).toContain('"status":"invalid"')
-    expect(JSON.stringify(JSON.parse(row.metadata_json).skillValidation)).toContain('"frontmatter_missing"')
+    expect(JSON.stringify(JSON.parse(row.metadata_json).skillValidation)).toContain(
+      '"status":"invalid"'
+    )
+    expect(JSON.stringify(JSON.parse(row.metadata_json).skillValidation)).toContain(
+      '"frontmatter_missing"'
+    )
   } finally {
     db.close()
   }

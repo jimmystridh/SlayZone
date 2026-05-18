@@ -88,7 +88,8 @@ export function KanbanBoard({
   const disableDrag = groupBy === 'due_date'
 
   const handleCreateTask = useMemo(() => {
-    return (column: Column) => useDialogStore.getState().openCreateTask(columnToCreateTaskDraft(column, groupBy))
+    return (column: Column) =>
+      useDialogStore.getState().openCreateTask(columnToCreateTaskDraft(column, groupBy))
   }, [groupBy])
   const { reduceMotion } = useAppearance()
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -103,8 +104,13 @@ export function KanbanBoard({
     useSensor(KeyboardSensor)
   )
 
-  const allColumns = groupTasksBy(tasks, groupBy, sortBy, projectColumns, { blockedTaskIds, viewConfig })
-  const visibleColumns = showEmptyColumns ? allColumns : allColumns.filter((c) => c.tasks.length > 0)
+  const allColumns = groupTasksBy(tasks, groupBy, sortBy, projectColumns, {
+    blockedTaskIds,
+    viewConfig
+  })
+  const visibleColumns = showEmptyColumns
+    ? allColumns
+    : allColumns.filter((c) => c.tasks.length > 0)
   const activeTask = activeId ? tasks.find((t) => t.id === activeId) : null
 
   const selection = useKanbanSelection({ columns: visibleColumns, resetKey: selectionResetKey })
@@ -166,7 +172,8 @@ export function KanbanBoard({
     // Capture multi-drag set: if active id is in selection AND >1 selected, drag whole set in grid order.
     if (selection.selectedIds.has(taskId) && selection.selectedIds.size > 1) {
       const ordered: string[] = []
-      for (const c of visibleColumns) for (const t of c.tasks) if (selection.selectedIds.has(t.id)) ordered.push(t.id)
+      for (const c of visibleColumns)
+        for (const t of c.tasks) if (selection.selectedIds.has(t.id)) ordered.push(t.id)
       dragSetRef.current = ordered
       setDragSetSize(ordered.length)
     } else {
@@ -278,7 +285,10 @@ export function KanbanBoard({
         }
         if (currentColumn.id === '__blocked__') {
           track('task_unblocked')
-          onBulkUpdateTasks?.(dragSet, { is_blocked: false, blocked_comment: null } as Partial<Task>)
+          onBulkUpdateTasks?.(dragSet, {
+            is_blocked: false,
+            blocked_comment: null
+          } as Partial<Task>)
           for (const id of dragSet) onClearBlockers?.(id)
         }
       } else {
@@ -306,45 +316,43 @@ export function KanbanBoard({
       onDragEnd={handleDragEnd}
     >
       <div className="relative h-full min-h-0">
-      <div className="flex h-full min-h-0 min-w-0 gap-4 overflow-x-auto pr-16 scrollbar-thin">
-        {visibleColumns.map((column) => (
-          <KanbanColumn
-            key={column.id}
-            column={column}
-            columns={projectColumns}
-            activeColumnId={activeColumnId}
-            overColumnId={overColumnId}
-            onTaskClick={handleCardClick}
-            onCardContextMenu={handleCardContextMenu}
-            onCreateTask={handleCreateTask}
-            disableDrag={disableDrag}
-            cardProperties={cardProperties}
-            taskTags={taskTags}
-            tags={tags}
-            onTaskTagsChange={onTaskTagsChange}
-            blockedTaskIds={blockedTaskIds}
-            subTaskCounts={subTaskCounts}
-            focusedTaskId={focusedTaskId}
-            selectedTaskIds={selection.selectedIds}
-            onCardMouseEnter={setHoveredTaskId}
-            cardRefs={cardRefs}
-            allProjects={allProjects}
-            onUpdateTask={onUpdateTask}
-            onBulkUpdateTasks={onBulkUpdateTasks}
-            onArchiveTask={onArchiveTask}
-            onDeleteTask={onDeleteTask}
-            onBulkDeleteTasks={onBulkDeleteTasks}
-            onArchiveAllTasks={onArchiveAllTasks}
-            activeAgentTaskIds={activeAgentTaskIds}
-            onShutdownAgent={onShutdownAgent}
-            allTasks={tasks}
-          />
-        ))}
+        <div className="flex h-full min-h-0 min-w-0 gap-4 overflow-x-auto pr-16 scrollbar-thin">
+          {visibleColumns.map((column) => (
+            <KanbanColumn
+              key={column.id}
+              column={column}
+              columns={projectColumns}
+              activeColumnId={activeColumnId}
+              overColumnId={overColumnId}
+              onTaskClick={handleCardClick}
+              onCardContextMenu={handleCardContextMenu}
+              onCreateTask={handleCreateTask}
+              disableDrag={disableDrag}
+              cardProperties={cardProperties}
+              taskTags={taskTags}
+              tags={tags}
+              onTaskTagsChange={onTaskTagsChange}
+              blockedTaskIds={blockedTaskIds}
+              subTaskCounts={subTaskCounts}
+              focusedTaskId={focusedTaskId}
+              selectedTaskIds={selection.selectedIds}
+              onCardMouseEnter={setHoveredTaskId}
+              cardRefs={cardRefs}
+              allProjects={allProjects}
+              onUpdateTask={onUpdateTask}
+              onBulkUpdateTasks={onBulkUpdateTasks}
+              onArchiveTask={onArchiveTask}
+              onDeleteTask={onDeleteTask}
+              onBulkDeleteTasks={onBulkDeleteTasks}
+              onArchiveAllTasks={onArchiveAllTasks}
+              activeAgentTaskIds={activeAgentTaskIds}
+              onShutdownAgent={onShutdownAgent}
+              allTasks={tasks}
+            />
+          ))}
+        </div>
       </div>
-      </div>
-      <DragOverlay
-        dropAnimation={reduceMotion ? null : { duration: 33, easing: 'ease-out' }}
-      >
+      <DragOverlay dropAnimation={reduceMotion ? null : { duration: 33, easing: 'ease-out' }}>
         {activeTask ? (
           <motion.div
             className="relative"
@@ -354,15 +362,17 @@ export function KanbanBoard({
           >
             {dragSetSize > 1 && (
               <>
-                <div aria-hidden className="absolute inset-0 -z-10 translate-x-2 translate-y-2 rounded-lg bg-surface-3/60 ring-1 ring-border" />
-                <div aria-hidden className="absolute inset-0 -z-20 translate-x-4 translate-y-4 rounded-lg bg-surface-3/40 ring-1 ring-border" />
+                <div
+                  aria-hidden
+                  className="absolute inset-0 -z-10 translate-x-2 translate-y-2 rounded-lg bg-surface-3/60 ring-1 ring-border"
+                />
+                <div
+                  aria-hidden
+                  className="absolute inset-0 -z-20 translate-x-4 translate-y-4 rounded-lg bg-surface-3/40 ring-1 ring-border"
+                />
               </>
             )}
-            <KanbanCard
-              task={activeTask}
-              columns={projectColumns}
-              isDragging
-            />
+            <KanbanCard task={activeTask} columns={projectColumns} isDragging />
             {dragSetSize > 1 && (
               <span className="absolute -top-2 -right-2 z-10 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow">
                 {dragSetSize}

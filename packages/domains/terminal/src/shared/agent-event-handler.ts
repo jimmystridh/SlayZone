@@ -15,7 +15,12 @@ export type AgentId = 'claude-code' | 'codex' | 'gemini' | 'opencode'
  * Used at PTY/chat spawn time to gate `SLAYZONE_AGENT_HOOK_URL` injection.
  * Add an agent here once both its hook script + installer have shipped.
  */
-export const HOOK_SUPPORTED_AGENT_IDS: ReadonlySet<AgentId> = new Set<AgentId>(['claude-code', 'codex', 'gemini', 'opencode'])
+export const HOOK_SUPPORTED_AGENT_IDS: ReadonlySet<AgentId> = new Set<AgentId>([
+  'claude-code',
+  'codex',
+  'gemini',
+  'opencode'
+])
 
 export type AgentLifecycleEventType =
   | 'agent-start'
@@ -87,7 +92,7 @@ const ALIAS_TABLE: Record<string, AgentLifecycleEventType> = {
   prerequest: 'agent-start',
   pre_request: 'agent-start',
   postrequest: 'agent-stop',
-  post_request: 'agent-stop',
+  post_request: 'agent-stop'
 }
 
 /**
@@ -101,8 +106,8 @@ const PER_AGENT_OVERRIDES: Partial<Record<AgentId, Record<string, AgentLifecycle
   gemini: {
     beforeagent: 'agent-start',
     afteragent: 'agent-stop',
-    aftertool: 'agent-start',
-  },
+    aftertool: 'agent-start'
+  }
 }
 
 /**
@@ -112,10 +117,7 @@ const PER_AGENT_OVERRIDES: Partial<Record<AgentId, Record<string, AgentLifecycle
  *
  * Pass `agentId` to consult per-agent overrides before the shared table.
  */
-export function mapEventType(
-  hookEvent: string,
-  agentId?: AgentId,
-): AgentLifecycleEventType | null {
+export function mapEventType(hookEvent: string, agentId?: AgentId): AgentLifecycleEventType | null {
   if (!hookEvent) return null
   const key = hookEvent.trim().toLowerCase()
   const stripped = key.replace(/[_\-\s]/g, '')

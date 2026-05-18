@@ -12,7 +12,7 @@ export function useChangelogAutoOpen(): [boolean, string | null, () => void] {
     async function check() {
       const [currentVersion, lastSeen] = await Promise.all([
         window.api.app.getVersion(),
-        window.api.settings.get(SETTINGS_KEY),
+        window.api.settings.get(SETTINGS_KEY)
       ])
       if (cancelled) return
 
@@ -28,7 +28,9 @@ export function useChangelogAutoOpen(): [boolean, string | null, () => void] {
       }
     }
     check()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const dismiss = () => {

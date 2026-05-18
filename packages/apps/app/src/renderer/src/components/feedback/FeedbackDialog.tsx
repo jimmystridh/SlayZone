@@ -112,22 +112,25 @@ export function FeedbackDialog(): React.JSX.Element {
     setContent('')
   }, [])
 
-  const handleDeleteThread = useCallback(async (thread: FeedbackThread) => {
-    try {
-      if (thread.discord_thread_id) {
-        await markDeleted({ threadId: thread.discord_thread_id }).catch(() => {})
+  const handleDeleteThread = useCallback(
+    async (thread: FeedbackThread) => {
+      try {
+        if (thread.discord_thread_id) {
+          await markDeleted({ threadId: thread.discord_thread_id }).catch(() => {})
+        }
+        await window.api.feedback.deleteThread(thread.id)
+        if (selectedId === thread.id) {
+          setSelectedId(null)
+          setMessages([])
+        }
+        await loadThreads()
+        toast.success('Feedback deleted')
+      } catch {
+        toast.error('Failed to delete feedback')
       }
-      await window.api.feedback.deleteThread(thread.id)
-      if (selectedId === thread.id) {
-        setSelectedId(null)
-        setMessages([])
-      }
-      await loadThreads()
-      toast.success('Feedback deleted')
-    } catch {
-      toast.error('Failed to delete feedback')
-    }
-  }, [selectedId, markDeleted, loadThreads])
+    },
+    [selectedId, markDeleted, loadThreads]
+  )
 
   const handleSend = useCallback(async () => {
     const text = content.trim()
@@ -235,7 +238,12 @@ export function FeedbackDialog(): React.JSX.Element {
                   <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
                     <MessageSquare className="size-6 text-muted-foreground/25" />
                     <p className="text-xs text-muted-foreground">No feedback yet</p>
-                    <Button size="sm" variant="outline" onClick={handleNewThread} className="h-7 text-xs">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleNewThread}
+                      className="h-7 text-xs"
+                    >
                       <Plus className="mr-1 size-3" />
                       New thread
                     </Button>
@@ -253,8 +261,12 @@ export function FeedbackDialog(): React.JSX.Element {
                         : 'border-l-2 border-l-transparent'
                     )}
                   >
-                    <p className="truncate pr-6 text-[13px] font-medium leading-snug">{thread.title}</p>
-                    <p className="mt-1 text-[11px] text-muted-foreground/60">{timeAgo(thread.created_at)}</p>
+                    <p className="truncate pr-6 text-[13px] font-medium leading-snug">
+                      {thread.title}
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground/60">
+                      {timeAgo(thread.created_at)}
+                    </p>
                     <span
                       role="button"
                       tabIndex={0}
@@ -303,7 +315,9 @@ export function FeedbackDialog(): React.JSX.Element {
                         {composingNew ? 'New feedback' : selectedThread?.title}
                       </p>
                       {selectedThread && (
-                        <p className="text-[11px] text-muted-foreground/60">{formatDate(selectedThread.created_at)}</p>
+                        <p className="text-[11px] text-muted-foreground/60">
+                          {formatDate(selectedThread.created_at)}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -316,8 +330,12 @@ export function FeedbackDialog(): React.JSX.Element {
                           {messages.map((msg) => (
                             <div key={msg.id} className="pb-3">
                               <div className="rounded-lg border bg-surface-1 p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                                <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{msg.content}</p>
-                                <p className="mt-2 text-[10px] text-muted-foreground/50">{formatDate(msg.created_at)}</p>
+                                <p className="whitespace-pre-wrap text-[13px] leading-relaxed">
+                                  {msg.content}
+                                </p>
+                                <p className="mt-2 text-[10px] text-muted-foreground/50">
+                                  {formatDate(msg.created_at)}
+                                </p>
                               </div>
                             </div>
                           ))}
@@ -335,14 +353,18 @@ export function FeedbackDialog(): React.JSX.Element {
                           <Send className="size-4 text-primary" />
                         </div>
                         <p className="text-sm font-medium">Start a conversation</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Your feedback goes directly to the team</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Your feedback goes directly to the team
+                        </p>
                       </div>
                     </div>
                   )}
 
                   {/* Compose */}
                   <div className="bg-muted/5 px-5 py-4">
-                    <p className="mb-2 text-[10px] font-medium text-amber-500">Do not share any sensitive or personal information.</p>
+                    <p className="mb-2 text-[10px] font-medium text-amber-500">
+                      Do not share any sensitive or personal information.
+                    </p>
                     <div className="rounded-lg border bg-surface-1 shadow-[0_1px_3px_rgba(0,0,0,0.04)] focus-within:ring-2 focus-within:ring-ring/50">
                       <textarea
                         value={content}
@@ -385,7 +407,11 @@ export function FeedbackDialog(): React.JSX.Element {
                     <p className="mx-auto mt-1.5 max-w-[240px] text-xs leading-relaxed text-muted-foreground">
                       Share ideas, report bugs, or let us know how we can improve
                     </p>
-                    <Button size="sm" onClick={handleNewThread} className="mt-4 h-8 gap-1.5 px-4 text-xs">
+                    <Button
+                      size="sm"
+                      onClick={handleNewThread}
+                      className="mt-4 h-8 gap-1.5 px-4 text-xs"
+                    >
                       <Plus className="size-3.5" />
                       New feedback
                     </Button>
@@ -396,9 +422,24 @@ export function FeedbackDialog(): React.JSX.Element {
           </div>
           <div className="border-t border-amber-500/20 bg-amber-500/5 px-5 py-4 text-center text-[13px] font-semibold text-amber-400">
             Want a discussion? Create a{' '}
-            <a href="https://github.com/debuglebowski/slayzone/issues" target="_blank" rel="noopener noreferrer" className="underline decoration-amber-400/40 hover:decoration-amber-400">GitHub issue</a>
-            {' '}or join our{' '}
-            <a href="https://discord.gg/g7xPHXaU98" target="_blank" rel="noopener noreferrer" className="underline decoration-amber-400/40 hover:decoration-amber-400">Discord</a>!
+            <a
+              href="https://github.com/debuglebowski/slayzone/issues"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-amber-400/40 hover:decoration-amber-400"
+            >
+              GitHub issue
+            </a>{' '}
+            or join our{' '}
+            <a
+              href="https://discord.gg/g7xPHXaU98"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-amber-400/40 hover:decoration-amber-400"
+            >
+              Discord
+            </a>
+            !
           </div>
         </DialogContent>
       </Dialog>

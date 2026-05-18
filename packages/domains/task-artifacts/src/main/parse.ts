@@ -11,7 +11,7 @@ const RowSchema = z.object({
   author_type: z.union([z.literal('user'), z.literal('agent'), z.null()]),
   author_id: z.string().nullable(),
   created_at: z.string(),
-  parent_id: z.string().nullable().optional(),
+  parent_id: z.string().nullable().optional()
 })
 
 export function parseRow(row: unknown): ArtifactVersion | null {
@@ -27,7 +27,7 @@ export function parseRow(row: unknown): ArtifactVersion | null {
     author_type: parsed.author_type,
     author_id: parsed.author_id,
     created_at: parsed.created_at,
-    parent_id: (parsed.parent_id ?? null) as VersionId | null,
+    parent_id: (parsed.parent_id ?? null) as VersionId | null
   }
 }
 

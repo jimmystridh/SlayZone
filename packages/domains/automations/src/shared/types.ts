@@ -144,6 +144,6 @@ export function parseAutomationRow(row: AutomationRow): Automation {
     catchup_on_start: row.catchup_on_start === 1,
     trigger_config: JSON.parse(row.trigger_config),
     conditions: row.conditions ? JSON.parse(row.conditions) : [],
-    actions: JSON.parse(row.actions),
+    actions: JSON.parse(row.actions)
   }
 }

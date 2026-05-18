@@ -11,21 +11,34 @@ import { pressShortcut } from './shortcuts'
 // ── IPC bridge ──────────────────────────────────────────────────────
 
 /** Invoke an IPC channel directly via the renderer's __testInvoke bridge. */
-export async function testInvoke(page: Page, channel: string, ...args: unknown[]): Promise<unknown> {
-  return page.evaluate(async ({ c, a }) => {
-    const invoke = (window as unknown as { __testInvoke?: (ch: string, ...rest: unknown[]) => Promise<unknown> }).__testInvoke
-    if (!invoke) throw new Error('__testInvoke unavailable in e2e')
-    return invoke(c, ...(a ?? []))
-  }, { c: channel, a: args })
+export async function testInvoke(
+  page: Page,
+  channel: string,
+  ...args: unknown[]
+): Promise<unknown> {
+  return page.evaluate(
+    async ({ c, a }) => {
+      const invoke = (
+        window as unknown as { __testInvoke?: (ch: string, ...rest: unknown[]) => Promise<unknown> }
+      ).__testInvoke
+      if (!invoke) throw new Error('__testInvoke unavailable in e2e')
+      return invoke(c, ...(a ?? []))
+    },
+    { c: channel, a: args }
+  )
 }
 
 /** Simulate a main→renderer IPC event via the renderer's __testEmit bridge. */
 export async function testEmit(page: Page, channel: string, data: unknown): Promise<void> {
-  await page.evaluate(({ c, d }) => {
-    const emit = (window as unknown as { __testEmit?: (ch: string, data: unknown) => void }).__testEmit
-    if (!emit) throw new Error('__testEmit unavailable in e2e')
-    emit(c, d)
-  }, { c: channel, d: data })
+  await page.evaluate(
+    ({ c, d }) => {
+      const emit = (window as unknown as { __testEmit?: (ch: string, data: unknown) => void })
+        .__testEmit
+      if (!emit) throw new Error('__testEmit unavailable in e2e')
+      emit(c, d)
+    },
+    { c: channel, d: data }
+  )
 }
 
 // ── Locator helpers ─────────────────────────────────────────────────
@@ -33,14 +46,12 @@ export async function testEmit(page: Page, channel: string, data: unknown): Prom
 export const urlInput = (page: Page) =>
   page.locator('input[placeholder="Enter URL..."]:visible').first()
 
-export const tabBar = (page: Page) =>
-  page.locator('.h-10.overflow-x-auto:visible').first()
+export const tabBar = (page: Page) => page.locator('.h-10.overflow-x-auto:visible').first()
 
 export const tabEntries = (page: Page) =>
   tabBar(page).locator('[role="button"]:not(:has(.lucide-plus))')
 
-export const newTabBtn = (page: Page) =>
-  tabBar(page).locator('button:has(.lucide-plus)').first()
+export const newTabBtn = (page: Page) => tabBar(page).locator('button:has(.lucide-plus)').first()
 
 // ── Focus & shortcut helpers ────────────────────────────────────────
 
@@ -51,7 +62,10 @@ export async function focusForAppShortcut(page: Page): Promise<void> {
   if (await sidebar.isVisible().catch(() => false)) {
     await sidebar.click({ position: { x: 12, y: 12 } }).catch(() => {})
   } else {
-    await page.locator('#root').click({ position: { x: 12, y: 12 } }).catch(() => {})
+    await page
+      .locator('#root')
+      .click({ position: { x: 12, y: 12 } })
+      .catch(() => {})
   }
 }
 
@@ -62,7 +76,12 @@ export async function focusForAppShortcut(page: Page): Promise<void> {
  */
 export async function ensureBrowserPanelVisible(page: Page): Promise<void> {
   for (let attempt = 0; attempt < 5; attempt++) {
-    if (await urlInput(page).isVisible().catch(() => false)) return
+    if (
+      await urlInput(page)
+        .isVisible()
+        .catch(() => false)
+    )
+      return
     await focusForAppShortcut(page)
     await page.waitForTimeout(150)
     await page.keyboard.press('Meta+b')
@@ -73,7 +92,11 @@ export async function ensureBrowserPanelVisible(page: Page): Promise<void> {
 
 /** Close the browser panel if it's currently visible. */
 export async function ensureBrowserPanelHidden(page: Page): Promise<void> {
-  if (await urlInput(page).isVisible().catch(() => false)) {
+  if (
+    await urlInput(page)
+      .isVisible()
+      .catch(() => false)
+  ) {
     await focusForAppShortcut(page)
     await page.waitForTimeout(150)
     await page.keyboard.press('Meta+b')
@@ -105,10 +128,15 @@ export async function getAllViewIds(page: Page): Promise<string[]> {
 /** Wait for at least one view to exist for a task and return the first viewId. */
 export async function getActiveViewId(page: Page, taskId: string): Promise<string> {
   let viewId = ''
-  await expect.poll(async () => {
-    const views = await getViewsForTask(page, taskId)
-    viewId = views?.[0] ?? ''
-    return viewId
-  }, { timeout: 10000 }).toBeTruthy()
+  await expect
+    .poll(
+      async () => {
+        const views = await getViewsForTask(page, taskId)
+        viewId = views?.[0] ?? ''
+        return viewId
+      },
+      { timeout: 10000 }
+    )
+    .toBeTruthy()
   return viewId
 }

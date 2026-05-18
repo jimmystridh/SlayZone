@@ -1,8 +1,15 @@
 import type { Database } from 'better-sqlite3'
 import { broadcastToWindows } from '../../broadcast-to-windows'
 
-interface StoredTab { id: string; agentTouched?: boolean; [k: string]: unknown }
-interface StoredState { tabs?: StoredTab[]; activeTabId?: string | null }
+interface StoredTab {
+  id: string
+  agentTouched?: boolean
+  [k: string]: unknown
+}
+interface StoredState {
+  tabs?: StoredTab[]
+  activeTabId?: string | null
+}
 
 /**
  * Flip `agentTouched: true` on the matching tab inside `tasks.browser_tabs` JSON.
@@ -19,7 +26,7 @@ export function markTabAgentTouched(
   db: Database,
   notifyRenderer: () => void,
   taskId: string,
-  tabId: string | null,
+  tabId: string | null
 ): void {
   if (!tabId) return
   // Always announce: even if the DB row already has the flag, the renderer
@@ -32,11 +39,15 @@ export function markTabAgentTouched(
   if (!row?.browser_tabs) return
 
   let state: StoredState
-  try { state = JSON.parse(row.browser_tabs) as StoredState } catch { return }
+  try {
+    state = JSON.parse(row.browser_tabs) as StoredState
+  } catch {
+    return
+  }
   const tabs = state.tabs
   if (!Array.isArray(tabs)) return
 
-  const tab = tabs.find(t => t?.id === tabId)
+  const tab = tabs.find((t) => t?.id === tabId)
   if (!tab) return
   if (tab.agentTouched === true) return
 

@@ -11,7 +11,7 @@ export const escapeBlurPlugin = $prose(() => {
           return true
         }
         return false
-      },
-    },
+      }
+    }
   })
 })

@@ -34,13 +34,17 @@ export function selfHealDiagnosticsDb(dbPath: string): SelfHealResult {
     try {
       fs.renameSync(src, `${salvagePath}${suffix}`)
     } catch {
-      try { fs.unlinkSync(src) } catch { /* ignore */ }
+      try {
+        fs.unlinkSync(src)
+      } catch {
+        /* ignore */
+      }
     }
   }
 
   console.warn(
     `[diagnostics] DB ${formatBytes(stat.size)} exceeded ${formatBytes(SIZE_THRESHOLD_BYTES)} cap. ` +
-    `Rotated to ${path.basename(salvagePath)}. Newest ${SALVAGE_ROW_LIMIT} rows will salvage in background.`
+      `Rotated to ${path.basename(salvagePath)}. Newest ${SALVAGE_ROW_LIMIT} rows will salvage in background.`
   )
 
   return {
@@ -113,7 +117,11 @@ function findSalvageFiles(dbPath: string): string[] {
 
 function deleteSalvage(salvagePath: string): void {
   for (const suffix of DB_SUFFIXES) {
-    try { fs.unlinkSync(`${salvagePath}${suffix}`) } catch { /* ignore */ }
+    try {
+      fs.unlinkSync(`${salvagePath}${suffix}`)
+    } catch {
+      /* ignore */
+    }
   }
 }
 

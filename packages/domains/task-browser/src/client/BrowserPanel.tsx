@@ -1,6 +1,40 @@
-import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle, createRef } from 'react'
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+  createRef
+} from 'react'
 import { track } from '@slayzone/telemetry/client'
-import { ArrowLeft, ArrowRight, RotateCw, X, Plus, Import, Smartphone, Monitor, Tablet, LayoutGrid, ChevronDown, ChevronUp, Crosshair, Camera, Bug, Sun, Moon, PaintbrushVertical, Keyboard, Puzzle, Trash2, Download, TriangleAlert, Lock, Unlock } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  RotateCw,
+  X,
+  Plus,
+  Import,
+  Smartphone,
+  Monitor,
+  Tablet,
+  LayoutGrid,
+  ChevronDown,
+  ChevronUp,
+  Crosshair,
+  Camera,
+  Bug,
+  Sun,
+  Moon,
+  PaintbrushVertical,
+  Keyboard,
+  Puzzle,
+  Trash2,
+  Download,
+  TriangleAlert,
+  Lock,
+  Unlock
+} from 'lucide-react'
 import type { BrowserTabTheme } from '../shared'
 import { BrowserTabPlaceholder, type BrowserTabPlaceholderHandle } from './BrowserTabPlaceholder'
 import { BrowserLoadingAnimation } from './BrowserLoadingAnimation'
@@ -30,10 +64,16 @@ import {
   ContextMenuShortcut,
   useShortcutDisplay,
   useShortcutAction,
-  withShortcut,
+  withShortcut
 } from '@slayzone/ui'
 import { useAppearance } from '@slayzone/settings/client'
-import type { BrowserTab, BrowserTabsState, MultiDeviceConfig, GridLayout, DeviceSlot } from '../shared'
+import type {
+  BrowserTab,
+  BrowserTabsState,
+  MultiDeviceConfig,
+  GridLayout,
+  DeviceSlot
+} from '../shared'
 import { defaultMultiDeviceConfig } from './device-presets'
 import { MultiDeviceGrid } from './MultiDeviceGrid'
 import { buildDomElementSnippet, type PickedDomPayload } from './dom-picker'
@@ -46,17 +86,13 @@ import {
   useSensors,
   type DragEndEvent
 } from '@dnd-kit/core'
-import {
-  SortableContext,
-  useSortable,
-  horizontalListSortingStrategy
-} from '@dnd-kit/sortable'
+import { SortableContext, useSortable, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 const SLOT_BUTTONS: { slot: DeviceSlot; icon: typeof Monitor; label: string }[] = [
   { slot: 'desktop', icon: Monitor, label: 'Desktop' },
   { slot: 'tablet', icon: Tablet, label: 'Tablet' },
-  { slot: 'mobile', icon: Smartphone, label: 'Mobile' },
+  { slot: 'mobile', icon: Smartphone, label: 'Mobile' }
 ]
 
 interface TaskUrlEntry {
@@ -93,9 +129,9 @@ interface BrowserExtensionSource {
 const THEME_CSS: Record<'light' | 'dark', string> = {
   dark: [
     'html{filter:invert(90%) hue-rotate(180deg)!important}',
-    'img,video,canvas,svg,iframe{filter:invert(90%) hue-rotate(180deg)!important}',
+    'img,video,canvas,svg,iframe{filter:invert(90%) hue-rotate(180deg)!important}'
   ].join(''),
-  light: ':root{color-scheme:light!important}',
+  light: ':root{color-scheme:light!important}'
 }
 
 const THEME_CYCLE: BrowserTabTheme[] = ['system', 'dark', 'light']
@@ -151,19 +187,23 @@ function ExtensionsManagerView({
   onActivate,
   onRemove,
   onImport,
-  onLoadUnpacked,
+  onLoadUnpacked
 }: ExtensionsManagerViewProps) {
   const availableSources = browserExtensions
     .map((browser) => ({
       ...browser,
-      extensions: browser.extensions.filter(extension => !extension.alreadyImported),
+      extensions: browser.extensions.filter((extension) => !extension.alreadyImported)
     }))
-    .filter(browser => browser.extensions.length > 0)
-  const availableCount = availableSources.reduce((total, browser) => total + browser.extensions.length, 0)
-  const hasManifestV3 = (
-    extensions.some(extension => extension.manifestVersion === 3) ||
-    availableSources.some(browser => browser.extensions.some(extension => extension.manifestVersion === 3))
+    .filter((browser) => browser.extensions.length > 0)
+  const availableCount = availableSources.reduce(
+    (total, browser) => total + browser.extensions.length,
+    0
   )
+  const hasManifestV3 =
+    extensions.some((extension) => extension.manifestVersion === 3) ||
+    availableSources.some((browser) =>
+      browser.extensions.some((extension) => extension.manifestVersion === 3)
+    )
 
   return (
     <div
@@ -188,7 +228,8 @@ function ExtensionsManagerView({
             <CardHeader className="gap-1">
               <CardTitle className="text-base">Options</CardTitle>
               <CardDescription>
-                Refresh what is installed, import from detected browsers, or load an unpacked extension.
+                Refresh what is installed, import from detected browsers, or load an unpacked
+                extension.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -215,7 +256,8 @@ function ExtensionsManagerView({
               </dl>
               {hasManifestV3 && (
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-                  Manifest V3 extensions are marked below. Their popups, background workers, and permissions may not work exactly as they do in Chrome.
+                  Manifest V3 extensions are marked below. Their popups, background workers, and
+                  permissions may not work exactly as they do in Chrome.
                 </div>
               )}
               {error && (
@@ -241,7 +283,7 @@ function ExtensionsManagerView({
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {extensions.map(extension => (
+                    {extensions.map((extension) => (
                       <div
                         key={extension.id}
                         className={cn(
@@ -252,7 +294,11 @@ function ExtensionsManagerView({
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 items-center gap-3">
                             {extension.icon ? (
-                              <img src={extension.icon} className="size-10 shrink-0 rounded-md" alt="" />
+                              <img
+                                src={extension.icon}
+                                className="size-10 shrink-0 rounded-md"
+                                alt=""
+                              />
                             ) : (
                               <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
                                 <Puzzle className="size-4" />
@@ -273,7 +319,11 @@ function ExtensionsManagerView({
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => onActivate(extension.id)}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onActivate(extension.id)}
+                            >
                               Open
                             </Button>
                             <IconButton
@@ -290,7 +340,10 @@ function ExtensionsManagerView({
                         {extension.manifestVersion === 3 && (
                           <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
                             <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
-                            <span>Manifest V3 extension. Popups, service workers, or permissions may not behave exactly like Chrome.</span>
+                            <span>
+                              Manifest V3 extension. Popups, service workers, or permissions may not
+                              behave exactly like Chrome.
+                            </span>
                           </div>
                         )}
                       </div>
@@ -314,24 +367,27 @@ function ExtensionsManagerView({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {availableSources.map(browser => (
+                    {availableSources.map((browser) => (
                       <div key={browser.name} className="space-y-2">
                         <div className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                           {browser.name}
                         </div>
                         <div className="space-y-2">
-                          {browser.extensions.map(extension => (
+                          {browser.extensions.map((extension) => (
                             <div
                               key={extension.id}
                               className={cn(
                                 'flex flex-col gap-3 rounded-lg border bg-background/80 px-4 py-3',
-                                extension.manifestVersion === 3 && 'border-amber-500/40 bg-amber-500/5'
+                                extension.manifestVersion === 3 &&
+                                  'border-amber-500/40 bg-amber-500/5'
                               )}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2">
-                                    <div className="truncate text-sm font-medium">{extension.name}</div>
+                                    <div className="truncate text-sm font-medium">
+                                      {extension.name}
+                                    </div>
                                     {extension.manifestVersion === 3 && (
                                       <span className="shrink-0 rounded-full border border-amber-500/40 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-100">
                                         MV3
@@ -342,7 +398,11 @@ function ExtensionsManagerView({
                                     Version {extension.version}
                                   </div>
                                 </div>
-                                <Button variant="outline" size="sm" onClick={() => onImport(extension.path, extension.name)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => onImport(extension.path, extension.name)}
+                                >
                                   <Download className="size-4" />
                                   Import
                                 </Button>
@@ -350,7 +410,10 @@ function ExtensionsManagerView({
                               {extension.manifestVersion === 3 && (
                                 <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-100">
                                   <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
-                                  <span>Manifest V3 extension. Expect some behavior differences after import.</span>
+                                  <span>
+                                    Manifest V3 extension. Expect some behavior differences after
+                                    import.
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -379,8 +442,18 @@ interface SortableBrowserTabProps {
   onRename: (id: string, name: string) => void
 }
 
-function SortableBrowserTab({ tab, isActive, isPickingElement, isLocked, onSwitch, onClose, onRename }: SortableBrowserTabProps): React.JSX.Element {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: tab.id })
+function SortableBrowserTab({
+  tab,
+  isActive,
+  isPickingElement,
+  isLocked,
+  onSwitch,
+  onClose,
+  onRename
+}: SortableBrowserTabProps): React.JSX.Element {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: tab.id
+  })
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -419,29 +492,40 @@ function SortableBrowserTab({ tab, isActive, isPickingElement, isLocked, onSwitc
       ref={setNodeRef}
       style={style}
       {...dragProps}
-      onClick={() => { if (!isEditing) onSwitch(tab.id) }}
-      onDoubleClick={(e) => { e.preventDefault(); e.stopPropagation(); startEdit() }}
+      onClick={() => {
+        if (!isEditing) onSwitch(tab.id)
+      }}
+      onDoubleClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        startEdit()
+      }}
       onKeyDown={(e) => {
         if (isEditing) return
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSwitch(tab.id) }
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSwitch(tab.id)
+        }
       }}
       onAuxClick={(e) => {
-        if (e.button === 1) { e.preventDefault(); onClose(tab.id) }
+        if (e.button === 1) {
+          e.preventDefault()
+          onClose(tab.id)
+        }
       }}
       className={cn(
         'group flex items-center gap-1.5 h-7 px-3 rounded-md cursor-pointer transition-colors select-none flex-shrink-0',
         'bg-surface-2 dark:bg-surface-2/50 hover:bg-accent/80 dark:hover:bg-accent/50',
         'max-w-[300px]',
-        isActive ? 'bg-tab-active border border-border' : 'text-muted-foreground dark:text-muted-foreground',
+        isActive
+          ? 'bg-tab-active border border-border'
+          : 'text-muted-foreground dark:text-muted-foreground',
         isActive && isPickingElement && 'ring-2 ring-amber-500/70 border-amber-500/70',
         isLocked && 'ring-1 ring-amber-500/60'
       )}
     >
       {isLocked && (
-        <Lock
-          aria-label="Browser controlled by agent"
-          className="size-3 shrink-0 text-amber-500"
-        />
+        <Lock aria-label="Browser controlled by agent" className="size-3 shrink-0 text-amber-500" />
       )}
       {isEditing ? (
         <input
@@ -453,17 +537,27 @@ function SortableBrowserTab({ tab, isActive, isPickingElement, isLocked, onSwitc
           onPointerDown={(e) => e.stopPropagation()}
           onKeyDown={(e) => {
             e.stopPropagation()
-            if (e.key === 'Enter') { e.preventDefault(); commit() }
-            else if (e.key === 'Escape') { e.preventDefault(); cancel() }
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              commit()
+            } else if (e.key === 'Escape') {
+              e.preventDefault()
+              cancel()
+            }
           }}
           placeholder={tab.url === 'about:blank' ? 'New Tab' : tab.url}
           className="flex-1 min-w-0 bg-transparent outline-none text-sm text-foreground"
         />
       ) : (
-        <span className="truncate text-sm" title="Double-click to rename">{displayName}</span>
+        <span className="truncate text-sm" title="Double-click to rename">
+          {displayName}
+        </span>
       )}
       <button
-        onClick={(e) => { e.stopPropagation(); onClose(tab.id) }}
+        onClick={(e) => {
+          e.stopPropagation()
+          onClose(tab.id)
+        }}
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         className="h-4 w-4 rounded hover:bg-muted-foreground/20 flex items-center justify-center"
@@ -474,19 +568,22 @@ function SortableBrowserTab({ tab, isActive, isPickingElement, isLocked, onSwitc
   )
 }
 
-export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(function BrowserPanel({
-  className,
-  tabs,
-  onTabsChange,
-  onRequestHide,
-  taskId,
-  projectId,
-  isResizing,
-  isActive,
-  onElementSnippet,
-  onScreenshot,
-  canUseDomPicker = true,
-}: BrowserPanelProps, ref) {
+export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(function BrowserPanel(
+  {
+    className,
+    tabs,
+    onTabsChange,
+    onRequestHide,
+    taskId,
+    projectId,
+    isResizing,
+    isActive,
+    onElementSnippet,
+    onScreenshot,
+    canUseDomPicker = true
+  }: BrowserPanelProps,
+  ref
+) {
   const { browserDefaultUrl, browserDefaultZoom, browserDeviceDefaults } = useAppearance()
   const elementPickerShortcut = useShortcutDisplay('browser-element-picker')
   const urlInputRef = useRef<HTMLInputElement>(null)
@@ -522,7 +619,9 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   const prevTouchedRef = useRef<Map<string, boolean>>(new Map())
 
   // Per-tab view refs — each BrowserTabPlaceholder exposes its viewId/state/actions
-  const tabRefsRef = useRef<Map<string, React.RefObject<BrowserTabPlaceholderHandle | null>>>(new Map())
+  const tabRefsRef = useRef<Map<string, React.RefObject<BrowserTabPlaceholderHandle | null>>>(
+    new Map()
+  )
   const getTabRef = useCallback((tabId: string) => {
     let existing = tabRefsRef.current.get(tabId)
     if (!existing) {
@@ -534,8 +633,15 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
 
   // Active tab's state (updated via onStateChange callback from placeholder)
   const [activeViewState, setActiveViewState] = useState<BrowserViewState>({
-    url: '', title: '', favicon: '', canGoBack: false, canGoForward: false,
-    isLoading: false, error: null, domReady: false, hasLoadedRealPage: false,
+    url: '',
+    title: '',
+    favicon: '',
+    canGoBack: false,
+    canGoForward: false,
+    isLoading: false,
+    error: null,
+    domReady: false,
+    hasLoadedRealPage: false
   })
   const [hiddenByOverlay, setHiddenByOverlay] = useState(false)
 
@@ -547,8 +653,15 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
       setActiveViewState(handle.state)
     } else {
       setActiveViewState({
-        url: '', title: '', favicon: '', canGoBack: false, canGoForward: false,
-        isLoading: false, error: null, domReady: false, hasLoadedRealPage: false,
+        url: '',
+        title: '',
+        favicon: '',
+        canGoBack: false,
+        canGoForward: false,
+        isLoading: false,
+        error: null,
+        domReady: false,
+        hasLoadedRealPage: false
       })
     }
   }, [tabs.activeTabId])
@@ -560,7 +673,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   activeTabIdRef.current = tabs.activeTabId
   const getActiveHandle = useCallback(() => {
     const tabId = activeTabIdRef.current
-    return tabId ? tabRefsRef.current.get(tabId)?.current ?? null : null
+    return tabId ? (tabRefsRef.current.get(tabId)?.current ?? null) : null
   }, [])
   const activeTabRef = getActiveHandle()
   const activeActions = activeTabRef?.actions
@@ -609,7 +722,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
       // banner stale. Pre-applying here keeps the UI in sync immediately.
       onTabsChange({
         ...tabs,
-        tabs: tabs.tabs.map(t => t.id === toLock ? { ...t, locked: true } : t),
+        tabs: tabs.tabs.map((t) => (t.id === toLock ? { ...t, locked: true } : t))
       })
     }
   }, [taskId, tabs, onTabsChange])
@@ -622,11 +735,11 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     if (!taskId) return
     const off = window.api.browser.onAgentTouched(({ taskId: evtTaskId, tabId }) => {
       if (evtTaskId !== taskId) return
-      const target = tabs.tabs.find(t => t.id === tabId)
+      const target = tabs.tabs.find((t) => t.id === tabId)
       if (!target || target.agentTouched === true) return
       onTabsChange({
         ...tabs,
-        tabs: tabs.tabs.map(t => (t.id === tabId ? { ...t, agentTouched: true } : t)),
+        tabs: tabs.tabs.map((t) => (t.id === tabId ? { ...t, agentTouched: true } : t))
       })
     })
     return off
@@ -638,7 +751,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     const promise = projectId
       ? window.api.db.getTasksByProject(projectId)
       : window.api.db.getTasks()
-    promise.then(tasks => {
+    promise.then((tasks) => {
       const entries: TaskUrlEntry[] = []
       for (const t of tasks) {
         if (t.id === taskId) continue
@@ -653,22 +766,23 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     })
   }, [importDropdownOpen, taskId, projectId])
 
-  const activeTab = tabs.tabs.find(t => t.id === tabs.activeTabId) || null
+  const activeTab = tabs.tabs.find((t) => t.id === tabs.activeTabId) || null
   // Multi-device state (derived from active tab)
   const multiDeviceMode = activeTab?.multiDeviceMode ?? false
   const [defaultConfig] = useState(() => defaultMultiDeviceConfig(browserDeviceDefaults))
   const multiDeviceConfig = activeTab?.multiDeviceConfig ?? defaultConfig
   const multiDeviceLayout: GridLayout = activeTab?.multiDeviceLayout ?? 'horizontal'
 
-  const updateActiveTab = useCallback((patch: Partial<BrowserTab>) => {
-    if (!tabs.activeTabId) return
-    onTabsChange({
-      ...tabs,
-      tabs: tabs.tabs.map(t =>
-        t.id === tabs.activeTabId ? { ...t, ...patch } : t
-      )
-    })
-  }, [tabs, onTabsChange])
+  const updateActiveTab = useCallback(
+    (patch: Partial<BrowserTab>) => {
+      if (!tabs.activeTabId) return
+      onTabsChange({
+        ...tabs,
+        tabs: tabs.tabs.map((t) => (t.id === tabs.activeTabId ? { ...t, ...patch } : t))
+      })
+    },
+    [tabs, onTabsChange]
+  )
 
   const toggleMultiDevice = useCallback(() => {
     if (!activeTab) return
@@ -677,23 +791,33 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     track('browser_multidevice_toggled')
     updateActiveTab({
       multiDeviceMode: entering,
-      ...(entering && !activeTab.multiDeviceConfig ? { multiDeviceConfig: defaultMultiDeviceConfig(browserDeviceDefaults) } : {}),
-      ...(entering && !activeTab.multiDeviceLayout ? { multiDeviceLayout: 'horizontal' as GridLayout } : {}),
+      ...(entering && !activeTab.multiDeviceConfig
+        ? { multiDeviceConfig: defaultMultiDeviceConfig(browserDeviceDefaults) }
+        : {}),
+      ...(entering && !activeTab.multiDeviceLayout
+        ? { multiDeviceLayout: 'horizontal' as GridLayout }
+        : {})
     })
   }, [activeTab, multiDeviceMode, updateActiveTab])
 
-  const applyThemeCss = useCallback((mode: BrowserTabTheme) => {
-    if (!activeActions) return
-    void (async () => {
-      const key = darkModeCSSKeyRef.current
-      if (key) { darkModeCSSKeyRef.current = null; activeActions.removeCss(key) }
-      const css = mode === 'system' ? null : THEME_CSS[mode]
-      if (css) darkModeCSSKeyRef.current = await activeActions.insertCss(css) || null
-    })()
-  }, [activeActions])
+  const applyThemeCss = useCallback(
+    (mode: BrowserTabTheme) => {
+      if (!activeActions) return
+      void (async () => {
+        const key = darkModeCSSKeyRef.current
+        if (key) {
+          darkModeCSSKeyRef.current = null
+          activeActions.removeCss(key)
+        }
+        const css = mode === 'system' ? null : THEME_CSS[mode]
+        if (css) darkModeCSSKeyRef.current = (await activeActions.insertCss(css)) || null
+      })()
+    },
+    [activeActions]
+  )
 
   const toggleCaptureShortcuts = useCallback(() => {
-    setCaptureShortcuts(prev => !prev)
+    setCaptureShortcuts((prev) => !prev)
   }, [])
 
   const cycleTheme = useCallback(() => {
@@ -704,23 +828,38 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     applyThemeCss(next)
   }, [activeTab, updateActiveTab, applyThemeCss])
 
-  const setMultiDeviceLayout = useCallback((layout: GridLayout) => {
-    updateActiveTab({ multiDeviceLayout: layout })
-  }, [updateActiveTab])
+  const setMultiDeviceLayout = useCallback(
+    (layout: GridLayout) => {
+      updateActiveTab({ multiDeviceLayout: layout })
+    },
+    [updateActiveTab]
+  )
 
-  const setMultiDeviceConfig = useCallback((config: MultiDeviceConfig) => {
-    updateActiveTab({ multiDeviceConfig: config })
-  }, [updateActiveTab])
+  const setMultiDeviceConfig = useCallback(
+    (config: MultiDeviceConfig) => {
+      updateActiveTab({ multiDeviceConfig: config })
+    },
+    [updateActiveTab]
+  )
 
-  const toggleSlot = useCallback((slot: DeviceSlot) => {
-    const newConfig = { ...multiDeviceConfig, [slot]: { ...multiDeviceConfig[slot], enabled: !multiDeviceConfig[slot].enabled } }
-    if (!Object.values(newConfig).some(c => c.enabled)) return
-    setMultiDeviceConfig(newConfig)
-  }, [multiDeviceConfig, setMultiDeviceConfig])
+  const toggleSlot = useCallback(
+    (slot: DeviceSlot) => {
+      const newConfig = {
+        ...multiDeviceConfig,
+        [slot]: { ...multiDeviceConfig[slot], enabled: !multiDeviceConfig[slot].enabled }
+      }
+      if (!Object.values(newConfig).some((c) => c.enabled)) return
+      setMultiDeviceConfig(newConfig)
+    },
+    [multiDeviceConfig, setMultiDeviceConfig]
+  )
 
-  const setPreset = useCallback((slot: DeviceSlot, preset: import('../shared').DeviceEmulation) => {
-    setMultiDeviceConfig({ ...multiDeviceConfig, [slot]: { ...multiDeviceConfig[slot], preset } })
-  }, [multiDeviceConfig, setMultiDeviceConfig])
+  const setPreset = useCallback(
+    (slot: DeviceSlot, preset: import('../shared').DeviceEmulation) => {
+      setMultiDeviceConfig({ ...multiDeviceConfig, [slot]: { ...multiDeviceConfig[slot], preset } })
+    },
+    [multiDeviceConfig, setMultiDeviceConfig]
+  )
 
   const refreshExtensions = useCallback(async () => {
     setExtensionsLoading(true)
@@ -728,17 +867,17 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     try {
       const [installed, discovered] = await Promise.all([
         window.api.browser.getExtensions(),
-        window.api.browser.discoverBrowserExtensions(),
+        window.api.browser.discoverBrowserExtensions()
       ])
-      const installedIds = new Set(installed.map(extension => extension.id))
+      const installedIds = new Set(installed.map((extension) => extension.id))
       setExtensions(installed)
       setBrowserExtensions(
-        discovered.map(browser => ({
+        discovered.map((browser) => ({
           ...browser,
-          extensions: browser.extensions.map(extension => ({
+          extensions: browser.extensions.map((extension) => ({
             ...extension,
-            alreadyImported: extension.alreadyImported || installedIds.has(extension.id),
-          })),
+            alreadyImported: extension.alreadyImported || installedIds.has(extension.id)
+          }))
         }))
       )
     } catch (error) {
@@ -755,7 +894,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   }, [extensionsManagerOpen, refreshExtensions])
 
   const handleToggleExtensionsManager = useCallback(() => {
-    setExtensionsManagerOpen(prev => !prev)
+    setExtensionsManagerOpen((prev) => !prev)
   }, [])
 
   const handleActivateExtension = useCallback((extensionId: string) => {
@@ -765,19 +904,22 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     })
   }, [])
 
-  const handleImportExtension = useCallback(async (path: string, name: string) => {
-    try {
-      const result = await window.api.browser.importExtension(path)
-      if ('id' in result) {
-        await refreshExtensions()
-        return
+  const handleImportExtension = useCallback(
+    async (path: string, name: string) => {
+      try {
+        const result = await window.api.browser.importExtension(path)
+        if ('id' in result) {
+          await refreshExtensions()
+          return
+        }
+        setExtensionsError(result.error)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : `Failed to import ${name}`
+        setExtensionsError(message)
       }
-      setExtensionsError(result.error)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : `Failed to import ${name}`
-      setExtensionsError(message)
-    }
-  }, [refreshExtensions])
+    },
+    [refreshExtensions]
+  )
 
   const handleLoadExtension = useCallback(async () => {
     try {
@@ -795,91 +937,110 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     }
   }, [refreshExtensions])
 
-  const handleRemoveExtension = useCallback(async (extensionId: string) => {
-    try {
-      await window.api.browser.removeExtension(extensionId)
-      await refreshExtensions()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to remove extension'
-      setExtensionsError(message)
-    }
-  }, [refreshExtensions])
+  const handleRemoveExtension = useCallback(
+    async (extensionId: string) => {
+      try {
+        await window.api.browser.removeExtension(extensionId)
+        await refreshExtensions()
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to remove extension'
+        setExtensionsError(message)
+      }
+    },
+    [refreshExtensions]
+  )
 
   // Tab callbacks
   const newTabUrl = browserDefaultUrl || 'about:blank'
-  const createNewTab = useCallback((url?: string) => {
-    const tabUrl = url ?? newTabUrl
-    const newTab: BrowserTab = {
-      id: generateTabId(),
-      url: tabUrl,
-      title: tabUrl === 'about:blank' ? 'New Tab' : tabUrl
-    }
-    onTabsChange({
-      tabs: [...tabs.tabs, newTab],
-      activeTabId: newTab.id
-    })
-    track('web_panel_tab_added', { predefined_vs_custom: 'custom' })
-  }, [tabs, onTabsChange, newTabUrl])
-
-  const closeTab = useCallback((tabId: string) => {
-    const idx = tabs.tabs.findIndex(t => t.id === tabId)
-    const newTabs = tabs.tabs.filter(t => t.id !== tabId)
-
-    let newActiveId = tabs.activeTabId
-    if (tabId === tabs.activeTabId) {
-      if (newTabs.length === 0) {
-        onTabsChange({ tabs: [], activeTabId: null })
-        track('browser_tab_closed')
-        onRequestHide?.()
-        return
+  const createNewTab = useCallback(
+    (url?: string) => {
+      const tabUrl = url ?? newTabUrl
+      const newTab: BrowserTab = {
+        id: generateTabId(),
+        url: tabUrl,
+        title: tabUrl === 'about:blank' ? 'New Tab' : tabUrl
       }
-      newActiveId = newTabs[Math.min(idx, newTabs.length - 1)]?.id || null
-    }
-
-    onTabsChange({ tabs: newTabs, activeTabId: newActiveId })
-    track('browser_tab_closed')
-  }, [tabs, onTabsChange, onRequestHide])
-
-  const switchToTab = useCallback((tabId: string) => {
-    onTabsChange({ ...tabs, activeTabId: tabId })
-  }, [tabs, onTabsChange])
-
-  const renameTab = useCallback((tabId: string, name: string) => {
-    const next = tabs.tabs.map(t =>
-      t.id === tabId ? { ...t, customName: name || undefined } : t
-    )
-    onTabsChange({ ...tabs, tabs: next })
-  }, [tabs, onTabsChange])
-
-  const reorderTabs = useCallback((fromId: string, toId: string) => {
-    if (fromId === toId) return
-    const fromIdx = tabs.tabs.findIndex(t => t.id === fromId)
-    const toIdx = tabs.tabs.findIndex(t => t.id === toId)
-    if (fromIdx === -1 || toIdx === -1) return
-    const next = [...tabs.tabs]
-    const [moved] = next.splice(fromIdx, 1)
-    next.splice(toIdx, 0, moved)
-    onTabsChange({ ...tabs, tabs: next })
-    track('web_panel_tab_reordered')
-  }, [tabs, onTabsChange])
-
-  const tabSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 3 } })
+      onTabsChange({
+        tabs: [...tabs.tabs, newTab],
+        activeTabId: newTab.id
+      })
+      track('web_panel_tab_added', { predefined_vs_custom: 'custom' })
+    },
+    [tabs, onTabsChange, newTabUrl]
   )
 
-  const handleTabDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over) return
-    reorderTabs(active.id as string, over.id as string)
-  }, [reorderTabs])
+  const closeTab = useCallback(
+    (tabId: string) => {
+      const idx = tabs.tabs.findIndex((t) => t.id === tabId)
+      const newTabs = tabs.tabs.filter((t) => t.id !== tabId)
+
+      let newActiveId = tabs.activeTabId
+      if (tabId === tabs.activeTabId) {
+        if (newTabs.length === 0) {
+          onTabsChange({ tabs: [], activeTabId: null })
+          track('browser_tab_closed')
+          onRequestHide?.()
+          return
+        }
+        newActiveId = newTabs[Math.min(idx, newTabs.length - 1)]?.id || null
+      }
+
+      onTabsChange({ tabs: newTabs, activeTabId: newActiveId })
+      track('browser_tab_closed')
+    },
+    [tabs, onTabsChange, onRequestHide]
+  )
+
+  const switchToTab = useCallback(
+    (tabId: string) => {
+      onTabsChange({ ...tabs, activeTabId: tabId })
+    },
+    [tabs, onTabsChange]
+  )
+
+  const renameTab = useCallback(
+    (tabId: string, name: string) => {
+      const next = tabs.tabs.map((t) =>
+        t.id === tabId ? { ...t, customName: name || undefined } : t
+      )
+      onTabsChange({ ...tabs, tabs: next })
+    },
+    [tabs, onTabsChange]
+  )
+
+  const reorderTabs = useCallback(
+    (fromId: string, toId: string) => {
+      if (fromId === toId) return
+      const fromIdx = tabs.tabs.findIndex((t) => t.id === fromId)
+      const toIdx = tabs.tabs.findIndex((t) => t.id === toId)
+      if (fromIdx === -1 || toIdx === -1) return
+      const next = [...tabs.tabs]
+      const [moved] = next.splice(fromIdx, 1)
+      next.splice(toIdx, 0, moved)
+      onTabsChange({ ...tabs, tabs: next })
+      track('web_panel_tab_reordered')
+    },
+    [tabs, onTabsChange]
+  )
+
+  const tabSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 3 } }))
+
+  const handleTabDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over) return
+      reorderTabs(active.id as string, over.id as string)
+    },
+    [reorderTabs]
+  )
 
   const switchToNextTab = useCallback(() => {
-    const idx = tabs.tabs.findIndex(t => t.id === tabs.activeTabId)
+    const idx = tabs.tabs.findIndex((t) => t.id === tabs.activeTabId)
     switchToTab(tabs.tabs[(idx + 1) % tabs.tabs.length].id)
   }, [tabs, switchToTab])
 
   const switchToPrevTab = useCallback(() => {
-    const idx = tabs.tabs.findIndex(t => t.id === tabs.activeTabId)
+    const idx = tabs.tabs.findIndex((t) => t.id === tabs.activeTabId)
     switchToTab(tabs.tabs[(idx - 1 + tabs.tabs.length) % tabs.tabs.length].id)
   }, [tabs, switchToTab])
 
@@ -893,7 +1054,8 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     for (const [tabId, ref] of tabRefsRef.current) {
       const handle = ref.current
       if (!handle?.viewId) continue
-      const shouldBeVisible = tabId === tabs.activeTabId && isActive !== false && !extensionsManagerOpen
+      const shouldBeVisible =
+        tabId === tabs.activeTabId && isActive !== false && !extensionsManagerOpen
       void window.api.browser.setVisible(handle.viewId, shouldBeVisible)
     }
   }, [tabs.activeTabId, isActive, extensionsManagerOpen])
@@ -920,11 +1082,11 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   useEffect(() => {
     if (!activeViewState.url || !tabs.activeTabId) return
     const t = tabsRef.current
-    const activeTabData = t.tabs.find(tab => tab.id === t.activeTabId)
+    const activeTabData = t.tabs.find((tab) => tab.id === t.activeTabId)
     if (activeTabData && activeViewState.url !== activeTabData.url) {
       commitTabsUpdate({
         ...t,
-        tabs: t.tabs.map(tab =>
+        tabs: t.tabs.map((tab) =>
           tab.id === t.activeTabId ? { ...tab, url: activeViewState.url } : tab
         )
       })
@@ -936,7 +1098,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     const t = tabsRef.current
     commitTabsUpdate({
       ...t,
-      tabs: t.tabs.map(tab =>
+      tabs: t.tabs.map((tab) =>
         tab.id === t.activeTabId ? { ...tab, title: activeViewState.title } : tab
       )
     })
@@ -947,7 +1109,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     const t = tabsRef.current
     commitTabsUpdate({
       ...t,
-      tabs: t.tabs.map(tab =>
+      tabs: t.tabs.map((tab) =>
         tab.id === t.activeTabId ? { ...tab, favicon: activeViewState.favicon } : tab
       )
     })
@@ -982,12 +1144,20 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   // Only fires when browser scope is active (panel or WebContentsView focused).
   useShortcutAction('browser-scroll-top', () => {
     if (!activeViewId) return false // decline — let event propagate
-    void window.api.browser.sendInputEvent(activeViewId, { type: 'keyDown', keyCode: 'Up', modifiers: ['meta'] })
+    void window.api.browser.sendInputEvent(activeViewId, {
+      type: 'keyDown',
+      keyCode: 'Up',
+      modifiers: ['meta']
+    })
     return undefined
   })
   useShortcutAction('browser-scroll-bottom', () => {
     if (!activeViewId) return false
-    void window.api.browser.sendInputEvent(activeViewId, { type: 'keyDown', keyCode: 'Down', modifiers: ['meta'] })
+    void window.api.browser.sendInputEvent(activeViewId, {
+      type: 'keyDown',
+      keyCode: 'Down',
+      modifiers: ['meta']
+    })
     return undefined
   })
 
@@ -998,10 +1168,22 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isFocused || !captureShortcuts) return
-      if (e.metaKey && e.key === 't') { e.preventDefault(); createNewTab() }
-      if (e.metaKey && e.key === 'w') { e.preventDefault(); if (tabs.activeTabId) closeTab(tabs.activeTabId) }
-      if (e.ctrlKey && e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); switchToNextTab() }
-      if (e.ctrlKey && e.key === 'Tab' && e.shiftKey) { e.preventDefault(); switchToPrevTab() }
+      if (e.metaKey && e.key === 't') {
+        e.preventDefault()
+        createNewTab()
+      }
+      if (e.metaKey && e.key === 'w') {
+        e.preventDefault()
+        if (tabs.activeTabId) closeTab(tabs.activeTabId)
+      }
+      if (e.ctrlKey && e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault()
+        switchToNextTab()
+      }
+      if (e.ctrlKey && e.key === 'Tab' && e.shiftKey) {
+        e.preventDefault()
+        switchToPrevTab()
+      }
     }
 
     container.addEventListener('keydown', handleKeyDown)
@@ -1018,7 +1200,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     // the banner shows/hides immediately rather than waiting for tasks:changed.
     onTabsChange({
       ...tabs,
-      tabs: tabs.tabs.map(t => t.id === activeTab.id ? { ...t, locked: next } : t),
+      tabs: tabs.tabs.map((t) => (t.id === activeTab.id ? { ...t, locked: next } : t))
     })
   }
 
@@ -1031,8 +1213,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
       url = `file://${url}`
     } else if (!hasScheme) {
       const isLocal =
-        /^localhost(:\d+)?(\/|$)/.test(url) ||
-        /^\d{1,3}(\.\d{1,3}){3}(:\d+)?(\/|$)/.test(url)
+        /^localhost(:\d+)?(\/|$)/.test(url) || /^\d{1,3}(\.\d{1,3}){3}(:\d+)?(\/|$)/.test(url)
       const looksLikeUrl = isLocal || (url.includes('.') && !url.includes(' '))
       url = looksLikeUrl
         ? `${isLocal ? 'http' : 'https'}://${url}`
@@ -1116,12 +1297,19 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   }, [isPickingElement, cancelPickElement])
 
   const startPickElement = useCallback(async () => {
-    if (extensionsManagerOpen || !canUseDomPicker || multiDeviceMode || isPickingElement || !activeActions) return
+    if (
+      extensionsManagerOpen ||
+      !canUseDomPicker ||
+      multiDeviceMode ||
+      isPickingElement ||
+      !activeActions
+    )
+      return
 
     setIsPickingElement(true)
     setPickError(null)
     try {
-      const payload = await activeActions.executeJs(DOM_PICKER_SCRIPT) as PickedDomPayload | null
+      const payload = (await activeActions.executeJs(DOM_PICKER_SCRIPT)) as PickedDomPayload | null
       if (!payload) {
         setIsPickingElement(false)
         return
@@ -1181,21 +1369,27 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
     if (findMode) focusFindInput()
   }, [findMode, focusFindInput])
 
-  const findNext = useCallback((forward: boolean) => {
-    if (!activeViewId || !findText) return
-    void window.api.browser.findInPage(activeViewId, findText, { forward, findNext: true })
-  }, [activeViewId, findText])
+  const findNext = useCallback(
+    (forward: boolean) => {
+      if (!activeViewId || !findText) return
+      void window.api.browser.findInPage(activeViewId, findText, { forward, findNext: true })
+    },
+    [activeViewId, findText]
+  )
 
-  const handleFindTextChange = useCallback((text: string) => {
-    setFindText(text)
-    if (!activeViewId) return
-    if (text) {
-      void window.api.browser.findInPage(activeViewId, text, { forward: true })
-    } else {
-      void window.api.browser.stopFindInPage(activeViewId, 'clearSelection')
-      setFindResult(null)
-    }
-  }, [activeViewId])
+  const handleFindTextChange = useCallback(
+    (text: string) => {
+      setFindText(text)
+      if (!activeViewId) return
+      if (text) {
+        void window.api.browser.findInPage(activeViewId, text, { forward: true })
+      } else {
+        void window.api.browser.stopFindInPage(activeViewId, 'clearSelection')
+        setFindResult(null)
+      }
+    },
+    [activeViewId]
+  )
 
   // Subscribe to found-in-page results
   useEffect(() => {
@@ -1206,7 +1400,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
       if (event.finalUpdate) {
         setFindResult({
           active: event.activeMatchOrdinal as number,
-          total: event.matches as number,
+          total: event.matches as number
         })
       }
     })
@@ -1215,7 +1409,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   // Close find when switching tabs
   useEffect(() => {
     if (findMode) closeFindMode()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabs.activeTabId])
 
   // Find shortcuts via scope-aware registry. Routes from both DOM focus
@@ -1231,22 +1425,26 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
   useShortcutAction('browser-find-prev', () => findNext(false), { enabled: findMode })
   useShortcutAction('browser-escape', closeFindMode, { enabled: findMode })
 
-  useImperativeHandle(ref, () => ({
-    focus: () => containerRef.current?.focus(),
-    pickElement: () => {
-      handlePickElement()
-    },
-    reload: () => {
-      activeActions?.reload()
-    },
-    focusUrlBar: () => {
-      if (findMode) closeFindMode()
-      urlInputRef.current?.focus()
-      urlInputRef.current?.select()
-    },
-    getActiveViewId: () => activeViewId,
-    newTab: (url?: string) => createNewTab(url)
-  }), [handlePickElement, activeActions, findMode, closeFindMode, createNewTab])
+  useImperativeHandle(
+    ref,
+    () => ({
+      focus: () => containerRef.current?.focus(),
+      pickElement: () => {
+        handlePickElement()
+      },
+      reload: () => {
+        activeActions?.reload()
+      },
+      focusUrlBar: () => {
+        if (findMode) closeFindMode()
+        urlInputRef.current?.focus()
+        urlInputRef.current?.select()
+      },
+      getActiveViewId: () => activeViewId,
+      newTab: (url?: string) => createNewTab(url)
+    }),
+    [handlePickElement, activeActions, findMode, closeFindMode, createNewTab]
+  )
 
   useEffect(() => {
     return () => {
@@ -1278,8 +1476,11 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
           collisionDetection={closestCenter}
           onDragEnd={handleTabDragEnd}
         >
-          <SortableContext items={tabs.tabs.map(t => t.id)} strategy={horizontalListSortingStrategy}>
-            {tabs.tabs.map(tab => (
+          <SortableContext
+            items={tabs.tabs.map((t) => t.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            {tabs.tabs.map((tab) => (
               <SortableBrowserTab
                 key={tab.id}
                 tab={tab}
@@ -1313,7 +1514,9 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
             <div className="relative h-full flex items-center gap-2 px-2 text-sm text-amber-600 dark:text-amber-400 min-w-0">
               <Lock className="size-3.5 shrink-0" />
               <span className="font-medium shrink-0">Browser controlled by agent</span>
-              <span className="truncate text-xs opacity-70 font-mono">{activeViewState.url || activeTab?.url || ''}</span>
+              <span className="truncate text-xs opacity-70 font-mono">
+                {activeViewState.url || activeTab?.url || ''}
+              </span>
               <button
                 type="button"
                 data-testid="browser-agent-lock-toggle"
@@ -1327,365 +1530,444 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
             </div>
           </div>
         )}
-        {findMode ? (<>
-          <Input
-            ref={findInputRef}
-            value={findText}
-            onChange={(e) => handleFindTextChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault()
-                findNext(!e.shiftKey)
-              }
-              if (e.key === 'Escape') {
-                e.preventDefault()
-                closeFindMode()
-              }
-            }}
-            placeholder="Find in page..."
-            className="flex-1 h-7 text-sm"
-          />
-          {findResult && (
-            <span className="text-xs text-muted-foreground whitespace-nowrap px-1">
-              {findResult.total > 0
-                ? `${findResult.active} of ${findResult.total}`
-                : 'No matches'}
-            </span>
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <IconButton aria-label="Previous match" variant="ghost" size="icon-sm" disabled={!findText} onClick={() => findNext(false)}>
-                  <ChevronUp className="size-4" />
-                </IconButton>
+        {findMode ? (
+          <>
+            <Input
+              ref={findInputRef}
+              value={findText}
+              onChange={(e) => handleFindTextChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  findNext(!e.shiftKey)
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault()
+                  closeFindMode()
+                }
+              }}
+              placeholder="Find in page..."
+              className="flex-1 h-7 text-sm"
+            />
+            {findResult && (
+              <span className="text-xs text-muted-foreground whitespace-nowrap px-1">
+                {findResult.total > 0
+                  ? `${findResult.active} of ${findResult.total}`
+                  : 'No matches'}
               </span>
-            </TooltipTrigger>
-            <TooltipContent>Previous match (⇧Enter)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <IconButton aria-label="Next match" variant="ghost" size="icon-sm" disabled={!findText} onClick={() => findNext(true)}>
-                  <ChevronDown className="size-4" />
-                </IconButton>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>Next match (Enter)</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <IconButton aria-label="Close find" variant="ghost" size="icon-sm" onClick={closeFindMode}>
-                  <X className="size-4" />
-                </IconButton>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>Close (Esc)</TooltipContent>
-          </Tooltip>
-        </>) : (
-        <div className="contents" {...(activeLocked ? { inert: '' as unknown as undefined } : {})}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <IconButton aria-label="Back" variant="ghost" size="icon-sm" disabled={extensionsManagerOpen || !canGoBack || multiDeviceMode} onClick={() => { activeActions?.goBack(); track('browser_navigated') }}>
-                <ArrowLeft className="size-4" />
-              </IconButton>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Back</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <IconButton aria-label="Forward" variant="ghost" size="icon-sm" disabled={extensionsManagerOpen || !canGoForward || multiDeviceMode} onClick={() => { activeActions?.goForward(); track('browser_navigated') }}>
-                <ArrowRight className="size-4" />
-              </IconButton>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Forward</TooltipContent>
-        </Tooltip>
-        <ContextMenu>
-          <Tooltip>
-            <ContextMenuTrigger asChild>
+            )}
+            <Tooltip>
               <TooltipTrigger asChild>
                 <span>
                   <IconButton
-                    aria-label={isLoading && !multiDeviceMode ? 'Stop loading' : 'Reload'}
+                    aria-label="Previous match"
                     variant="ghost"
                     size="icon-sm"
-                    disabled={extensionsManagerOpen}
-                    onClick={(e) => {
-                      if (multiDeviceMode) {
-                        if (e.shiftKey) setForceReloadTrigger(r => r + 1)
-                        else setReloadTrigger(r => r + 1)
-                      } else if (isLoading) {
-                        activeActions?.stop()
-                      } else if (e.shiftKey) {
-                        activeActions?.reload(true)
-                      } else {
-                        activeActions?.reload()
-                      }
-                      track('browser_navigated')
-                    }}
+                    disabled={!findText}
+                    onClick={() => findNext(false)}
                   >
-                    {isLoading && !multiDeviceMode ? <X className="size-4" /> : <RotateCw className="size-4" />}
+                    <ChevronUp className="size-4" />
                   </IconButton>
                 </span>
               </TooltipTrigger>
-            </ContextMenuTrigger>
-            <TooltipContent>{isLoading && !multiDeviceMode ? 'Stop loading' : 'Reload'}</TooltipContent>
-          </Tooltip>
-          <ContextMenuContent>
-            <ContextMenuItem onClick={() => {
-              if (multiDeviceMode) setReloadTrigger(r => r + 1)
-              else activeActions?.reload()
-            }}>
-              Reload
-              <ContextMenuShortcut>⌘R</ContextMenuShortcut>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={() => {
-              if (multiDeviceMode) setForceReloadTrigger(r => r + 1)
-              else activeActions?.reload(true)
-            }}>
-              Hard Reload
-              <ContextMenuShortcut>⇧⌘R</ContextMenuShortcut>
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
-
-        <Input
-          ref={urlInputRef}
-          value={inputUrl}
-          onChange={(e) => setInputUrl(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Enter URL..."
-          disabled={extensionsManagerOpen}
-          className="flex-1 h-7 text-sm"
-        />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className={cn(!activeTab?.agentTouched && 'invisible pointer-events-none')}>
-              <IconButton
-                aria-label="Lock tab (block user input, agent unaffected)"
-                data-testid="browser-agent-lock-toggle"
-                data-locked="false"
-                variant="ghost"
-                size="icon-sm"
-                disabled={extensionsManagerOpen || !activeTab?.agentTouched}
-                onClick={toggleActiveLock}
-                tabIndex={activeTab?.agentTouched ? 0 : -1}
-              >
-                <Unlock className="size-4" />
-              </IconButton>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>Agent controlled this tab. Click to lock user input.</TooltipContent>
-        </Tooltip>
-
-        {taskId && (
-          <DropdownMenu open={importDropdownOpen} onOpenChange={setImportDropdownOpen}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <DropdownMenuTrigger asChild>
-                    <IconButton aria-label="Import URL from another task" variant="ghost" size="icon-sm" disabled={extensionsManagerOpen}>
-                      <Import className="size-4" />
-                    </IconButton>
-                  </DropdownMenuTrigger>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>Import URL from another task</TooltipContent>
+              <TooltipContent>Previous match (⇧Enter)</TooltipContent>
             </Tooltip>
-            <DropdownMenuContent align="end" className="max-h-64 w-auto max-w-[50vw] overflow-y-auto">
-              {otherTaskUrls.length === 0 ? (
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                  No URLs from other project tasks
-                </div>
-              ) : (
-                otherTaskUrls.map((entry, idx) => (
-                  <DropdownMenuItem
-                    key={`${entry.taskId}-${idx}`}
-                    onClick={() => {
-                      setInputUrl(entry.url)
-                      updateActiveTab({ url: entry.url })
-                      if (!multiDeviceMode) {
-                        activeActions?.navigate(entry.url)
-                      }
-                    }}
-                    className="flex flex-col items-start gap-0.5"
-                  >
-                    <span className="text-xs text-muted-foreground truncate w-full">
-                      {entry.taskTitle}
-                    </span>
-                    <span className="text-sm truncate w-full">{entry.url}</span>
-                  </DropdownMenuItem>
-                ))
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <IconButton
-                aria-label={multiDeviceMode ? 'Exit responsive preview' : 'Responsive preview'}
-                variant="ghost"
-                size="icon-sm"
-                disabled={extensionsManagerOpen}
-                className={cn(multiDeviceMode && 'text-blue-500 bg-blue-500/10')}
-                onClick={toggleMultiDevice}
-              >
-                <LayoutGrid className="size-4" />
-              </IconButton>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{multiDeviceMode ? 'Exit responsive preview' : 'Responsive preview'}</TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <IconButton
-                aria-label="Pick element"
-                data-testid="browser-pick-element"
-                variant="ghost"
-                size="icon-sm"
-                disabled={extensionsManagerOpen || !canUseDomPicker || multiDeviceMode || !webviewReady}
-                className={cn(isPickingElement && 'text-amber-600 bg-amber-500/15 hover:bg-amber-500/20')}
-                onClick={handlePickElement}
-              >
-                <Crosshair className="size-4" />
-              </IconButton>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {!canUseDomPicker
-              ? 'Open terminal panel to pick element'
-                : isPickingElement
-                ? 'Element picker active (click again to exit)'
-                : withShortcut('Pick element', elementPickerShortcut)}
-          </TooltipContent>
-        </Tooltip>
-
-        {onScreenshot && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <IconButton
-                  aria-label="Screenshot to terminal"
-                  data-testid="browser-screenshot"
-                  variant="ghost"
-                  size="icon-sm"
-                  disabled={extensionsManagerOpen || !activeViewId || !webviewReady}
-                  onClick={() => activeViewId && onScreenshot(activeViewId)}
-                >
-                  <Camera className="size-4" />
-                </IconButton>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>Screenshot to terminal</TooltipContent>
-          </Tooltip>
-        )}
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <IconButton
-                aria-label="Toggle Chromium DevTools"
-                data-testid="browser-devtools"
-                variant="ghost"
-                size="icon-sm"
-                disabled={extensionsManagerOpen || multiDeviceMode || !webviewReady}
-                className={cn(devToolsOpen && 'text-blue-500 bg-blue-500/10')}
-                onClick={toggleDevTools}
-              >
-                <Bug className="size-4" />
-              </IconButton>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {multiDeviceMode ? 'DevTools unavailable in responsive preview' : 'Toggle Chromium DevTools'}
-          </TooltipContent>
-        </Tooltip>
-
-        {(() => {
-          const themeMode = activeTab?.themeMode ?? 'system'
-          const ThemeIcon = themeMode === 'dark' ? Moon : themeMode === 'light' ? Sun : PaintbrushVertical
-          const themeLabel = themeMode === 'dark' ? 'Dark (forced)' : themeMode === 'light' ? 'Light (forced)' : 'System theme'
-          return (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
                   <IconButton
-                    aria-label={themeLabel}
-                    data-testid="browser-theme-mode"
+                    aria-label="Next match"
                     variant="ghost"
                     size="icon-sm"
-                    disabled={extensionsManagerOpen || multiDeviceMode || !webviewReady}
-                    className={cn(
-                      themeMode === 'dark' && 'text-blue-400 bg-blue-500/10',
-                      themeMode === 'light' && 'text-amber-400 bg-amber-500/10',
-                    )}
-                    onClick={cycleTheme}
+                    disabled={!findText}
+                    onClick={() => findNext(true)}
                   >
-                    <ThemeIcon className="size-4" />
+                    <ChevronDown className="size-4" />
+                  </IconButton>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Next match (Enter)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <IconButton
+                    aria-label="Close find"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={closeFindMode}
+                  >
+                    <X className="size-4" />
+                  </IconButton>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Close (Esc)</TooltipContent>
+            </Tooltip>
+          </>
+        ) : (
+          <div
+            className="contents"
+            {...(activeLocked ? { inert: '' as unknown as undefined } : {})}
+          >
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <IconButton
+                    aria-label="Back"
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={extensionsManagerOpen || !canGoBack || multiDeviceMode}
+                    onClick={() => {
+                      activeActions?.goBack()
+                      track('browser_navigated')
+                    }}
+                  >
+                    <ArrowLeft className="size-4" />
+                  </IconButton>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Back</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <IconButton
+                    aria-label="Forward"
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={extensionsManagerOpen || !canGoForward || multiDeviceMode}
+                    onClick={() => {
+                      activeActions?.goForward()
+                      track('browser_navigated')
+                    }}
+                  >
+                    <ArrowRight className="size-4" />
+                  </IconButton>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Forward</TooltipContent>
+            </Tooltip>
+            <ContextMenu>
+              <Tooltip>
+                <ContextMenuTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <IconButton
+                        aria-label={isLoading && !multiDeviceMode ? 'Stop loading' : 'Reload'}
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={extensionsManagerOpen}
+                        onClick={(e) => {
+                          if (multiDeviceMode) {
+                            if (e.shiftKey) setForceReloadTrigger((r) => r + 1)
+                            else setReloadTrigger((r) => r + 1)
+                          } else if (isLoading) {
+                            activeActions?.stop()
+                          } else if (e.shiftKey) {
+                            activeActions?.reload(true)
+                          } else {
+                            activeActions?.reload()
+                          }
+                          track('browser_navigated')
+                        }}
+                      >
+                        {isLoading && !multiDeviceMode ? (
+                          <X className="size-4" />
+                        ) : (
+                          <RotateCw className="size-4" />
+                        )}
+                      </IconButton>
+                    </span>
+                  </TooltipTrigger>
+                </ContextMenuTrigger>
+                <TooltipContent>
+                  {isLoading && !multiDeviceMode ? 'Stop loading' : 'Reload'}
+                </TooltipContent>
+              </Tooltip>
+              <ContextMenuContent>
+                <ContextMenuItem
+                  onClick={() => {
+                    if (multiDeviceMode) setReloadTrigger((r) => r + 1)
+                    else activeActions?.reload()
+                  }}
+                >
+                  Reload
+                  <ContextMenuShortcut>⌘R</ContextMenuShortcut>
+                </ContextMenuItem>
+                <ContextMenuItem
+                  onClick={() => {
+                    if (multiDeviceMode) setForceReloadTrigger((r) => r + 1)
+                    else activeActions?.reload(true)
+                  }}
+                >
+                  Hard Reload
+                  <ContextMenuShortcut>⇧⌘R</ContextMenuShortcut>
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
+
+            <Input
+              ref={urlInputRef}
+              value={inputUrl}
+              onChange={(e) => setInputUrl(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Enter URL..."
+              disabled={extensionsManagerOpen}
+              className="flex-1 h-7 text-sm"
+            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className={cn(!activeTab?.agentTouched && 'invisible pointer-events-none')}>
+                  <IconButton
+                    aria-label="Lock tab (block user input, agent unaffected)"
+                    data-testid="browser-agent-lock-toggle"
+                    data-locked="false"
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={extensionsManagerOpen || !activeTab?.agentTouched}
+                    onClick={toggleActiveLock}
+                    tabIndex={activeTab?.agentTouched ? 0 : -1}
+                  >
+                    <Unlock className="size-4" />
+                  </IconButton>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Agent controlled this tab. Click to lock user input.</TooltipContent>
+            </Tooltip>
+
+            {taskId && (
+              <DropdownMenu open={importDropdownOpen} onOpenChange={setImportDropdownOpen}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <DropdownMenuTrigger asChild>
+                        <IconButton
+                          aria-label="Import URL from another task"
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={extensionsManagerOpen}
+                        >
+                          <Import className="size-4" />
+                        </IconButton>
+                      </DropdownMenuTrigger>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>Import URL from another task</TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent
+                  align="end"
+                  className="max-h-64 w-auto max-w-[50vw] overflow-y-auto"
+                >
+                  {otherTaskUrls.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                      No URLs from other project tasks
+                    </div>
+                  ) : (
+                    otherTaskUrls.map((entry, idx) => (
+                      <DropdownMenuItem
+                        key={`${entry.taskId}-${idx}`}
+                        onClick={() => {
+                          setInputUrl(entry.url)
+                          updateActiveTab({ url: entry.url })
+                          if (!multiDeviceMode) {
+                            activeActions?.navigate(entry.url)
+                          }
+                        }}
+                        className="flex flex-col items-start gap-0.5"
+                      >
+                        <span className="text-xs text-muted-foreground truncate w-full">
+                          {entry.taskTitle}
+                        </span>
+                        <span className="text-sm truncate w-full">{entry.url}</span>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <IconButton
+                    aria-label={multiDeviceMode ? 'Exit responsive preview' : 'Responsive preview'}
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={extensionsManagerOpen}
+                    className={cn(multiDeviceMode && 'text-blue-500 bg-blue-500/10')}
+                    onClick={toggleMultiDevice}
+                  >
+                    <LayoutGrid className="size-4" />
                   </IconButton>
                 </span>
               </TooltipTrigger>
               <TooltipContent>
-                {multiDeviceMode ? 'Theme unavailable in responsive preview' : `${themeLabel} — click to cycle`}
+                {multiDeviceMode ? 'Exit responsive preview' : 'Responsive preview'}
               </TooltipContent>
             </Tooltip>
-          )
-        })()}
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span>
-              <IconButton
-                aria-label="Keyboard passthrough"
-                data-testid="browser-keyboard-passthrough"
-                variant="ghost"
-                size="icon-sm"
-                disabled={extensionsManagerOpen || multiDeviceMode || !webviewReady}
-                className={cn(captureShortcuts && 'text-green-500 bg-green-500/10')}
-                onClick={toggleCaptureShortcuts}
-              >
-                <Keyboard className="size-4" />
-              </IconButton>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>
-            {captureShortcuts ? 'Webpage shortcuts enabled' : 'Webpage shortcuts disabled'}
-          </TooltipContent>
-        </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <IconButton
+                    aria-label="Pick element"
+                    data-testid="browser-pick-element"
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={
+                      extensionsManagerOpen || !canUseDomPicker || multiDeviceMode || !webviewReady
+                    }
+                    className={cn(
+                      isPickingElement && 'text-amber-600 bg-amber-500/15 hover:bg-amber-500/20'
+                    )}
+                    onClick={handlePickElement}
+                  >
+                    <Crosshair className="size-4" />
+                  </IconButton>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {!canUseDomPicker
+                  ? 'Open terminal panel to pick element'
+                  : isPickingElement
+                    ? 'Element picker active (click again to exit)'
+                    : withShortcut('Pick element', elementPickerShortcut)}
+              </TooltipContent>
+            </Tooltip>
 
-        {EXTENSIONS_MANAGER_ENABLED && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <IconButton
-                  aria-label="Extensions"
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-pressed={extensionsManagerOpen}
-                  className={cn(extensionsManagerOpen && 'text-blue-500 bg-blue-500/10')}
-                  onClick={handleToggleExtensionsManager}
-                >
-                  <Puzzle className="size-4" />
-                </IconButton>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>{extensionsManagerOpen ? 'Close extensions manager' : 'Extensions'}</TooltipContent>
-          </Tooltip>
-        )}
-        </div>
+            {onScreenshot && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <IconButton
+                      aria-label="Screenshot to terminal"
+                      data-testid="browser-screenshot"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={extensionsManagerOpen || !activeViewId || !webviewReady}
+                      onClick={() => activeViewId && onScreenshot(activeViewId)}
+                    >
+                      <Camera className="size-4" />
+                    </IconButton>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>Screenshot to terminal</TooltipContent>
+              </Tooltip>
+            )}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <IconButton
+                    aria-label="Toggle Chromium DevTools"
+                    data-testid="browser-devtools"
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={extensionsManagerOpen || multiDeviceMode || !webviewReady}
+                    className={cn(devToolsOpen && 'text-blue-500 bg-blue-500/10')}
+                    onClick={toggleDevTools}
+                  >
+                    <Bug className="size-4" />
+                  </IconButton>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {multiDeviceMode
+                  ? 'DevTools unavailable in responsive preview'
+                  : 'Toggle Chromium DevTools'}
+              </TooltipContent>
+            </Tooltip>
+
+            {(() => {
+              const themeMode = activeTab?.themeMode ?? 'system'
+              const ThemeIcon =
+                themeMode === 'dark' ? Moon : themeMode === 'light' ? Sun : PaintbrushVertical
+              const themeLabel =
+                themeMode === 'dark'
+                  ? 'Dark (forced)'
+                  : themeMode === 'light'
+                    ? 'Light (forced)'
+                    : 'System theme'
+              return (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <IconButton
+                        aria-label={themeLabel}
+                        data-testid="browser-theme-mode"
+                        variant="ghost"
+                        size="icon-sm"
+                        disabled={extensionsManagerOpen || multiDeviceMode || !webviewReady}
+                        className={cn(
+                          themeMode === 'dark' && 'text-blue-400 bg-blue-500/10',
+                          themeMode === 'light' && 'text-amber-400 bg-amber-500/10'
+                        )}
+                        onClick={cycleTheme}
+                      >
+                        <ThemeIcon className="size-4" />
+                      </IconButton>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {multiDeviceMode
+                      ? 'Theme unavailable in responsive preview'
+                      : `${themeLabel} — click to cycle`}
+                  </TooltipContent>
+                </Tooltip>
+              )
+            })()}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <IconButton
+                    aria-label="Keyboard passthrough"
+                    data-testid="browser-keyboard-passthrough"
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={extensionsManagerOpen || multiDeviceMode || !webviewReady}
+                    className={cn(captureShortcuts && 'text-green-500 bg-green-500/10')}
+                    onClick={toggleCaptureShortcuts}
+                  >
+                    <Keyboard className="size-4" />
+                  </IconButton>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {captureShortcuts ? 'Webpage shortcuts enabled' : 'Webpage shortcuts disabled'}
+              </TooltipContent>
+            </Tooltip>
+
+            {EXTENSIONS_MANAGER_ENABLED && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <IconButton
+                      aria-label="Extensions"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-pressed={extensionsManagerOpen}
+                      className={cn(extensionsManagerOpen && 'text-blue-500 bg-blue-500/10')}
+                      onClick={handleToggleExtensionsManager}
+                    >
+                      <Puzzle className="size-4" />
+                    </IconButton>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {extensionsManagerOpen ? 'Close extensions manager' : 'Extensions'}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
         )}
       </div>
 
       {pickError && !multiDeviceMode && !extensionsManagerOpen && (
-        <div className="shrink-0 px-2 py-1.5 border-b text-xs text-destructive bg-destructive/5 truncate" title={pickError}>
+        <div
+          className="shrink-0 px-2 py-1.5 border-b text-xs text-destructive bg-destructive/5 truncate"
+          title={pickError}
+        >
           Element picker error: {pickError}
         </div>
       )}
@@ -1715,7 +1997,10 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
           <div className="flex-1" />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1">
+              <Button
+                variant="ghost"
+                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+              >
                 {multiDeviceLayout === 'horizontal' ? 'Side by side' : 'Stacked'}
                 <ChevronDown className="size-3" />
               </Button>
@@ -1745,12 +2030,20 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
           browserExtensions={browserExtensions}
           isLoading={extensionsLoading}
           error={extensionsError}
-          onRefresh={() => { void refreshExtensions() }}
+          onRefresh={() => {
+            void refreshExtensions()
+          }}
           onClose={() => setExtensionsManagerOpen(false)}
           onActivate={handleActivateExtension}
-          onRemove={(extensionId) => { void handleRemoveExtension(extensionId) }}
-          onImport={(path, name) => { void handleImportExtension(path, name) }}
-          onLoadUnpacked={() => { void handleLoadExtension() }}
+          onRemove={(extensionId) => {
+            void handleRemoveExtension(extensionId)
+          }}
+          onImport={(path, name) => {
+            void handleImportExtension(path, name)
+          }}
+          onLoadUnpacked={() => {
+            void handleLoadExtension()
+          }}
         />
       ) : multiDeviceMode ? (
         <MultiDeviceGrid
@@ -1765,7 +2058,7 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
       ) : (
         <div className="relative flex-1 min-h-0">
           {/* Render a placeholder per tab — each owns its own WebContentsView */}
-          {tabs.tabs.map(tab => (
+          {tabs.tabs.map((tab) => (
             <BrowserTabPlaceholder
               key={tab.id}
               ref={getTabRef(tab.id)}
@@ -1783,19 +2076,28 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
             />
           ))}
           {!activeViewState.hasLoadedRealPage && !loadError && !hiddenByOverlay && (
-            <div data-testid="browser-loading-animation" className="absolute inset-0 z-10 bg-surface-0">
+            <div
+              data-testid="browser-loading-animation"
+              className="absolute inset-0 z-10 bg-surface-0"
+            >
               <BrowserLoadingAnimation />
             </div>
           )}
           {loadError && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-surface-0 text-muted-foreground gap-3">
               <div className="text-sm font-medium text-foreground">Failed to load page</div>
-              <div className="text-xs text-muted-foreground max-w-xs text-center truncate" title={loadError.url}>
+              <div
+                className="text-xs text-muted-foreground max-w-xs text-center truncate"
+                title={loadError.url}
+              >
                 {loadError.description} ({loadError.code})
               </div>
               <button
                 className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs text-foreground hover:bg-accent"
-                onClick={() => { setActiveViewState(prev => ({ ...prev, error: null })); activeActions?.reload() }}
+                onClick={() => {
+                  setActiveViewState((prev) => ({ ...prev, error: null }))
+                  activeActions?.reload()
+                }}
               >
                 <RotateCw className="size-3.5" />
                 Retry
@@ -1803,7 +2105,10 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
             </div>
           )}
           {isPickingElement && (
-            <div data-testid="browser-picker-active-overlay" className="absolute inset-0 z-10 pointer-events-none border-2 border-amber-500/70 bg-amber-500/8">
+            <div
+              data-testid="browser-picker-active-overlay"
+              className="absolute inset-0 z-10 pointer-events-none border-2 border-amber-500/70 bg-amber-500/8"
+            >
               <div className="absolute top-2 left-2 rounded bg-amber-500 text-black text-[11px] px-2 py-1 font-medium">
                 Element picker active
               </div>
@@ -1817,22 +2122,63 @@ export const BrowserPanel = forwardRef<BrowserPanelHandle, BrowserPanelProps>(fu
                 {/* Dot grid */}
                 <svg className="absolute inset-0 size-full opacity-[0.07]">
                   <defs>
-                    <pattern id="browser-dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+                    <pattern
+                      id="browser-dots"
+                      x="0"
+                      y="0"
+                      width="24"
+                      height="24"
+                      patternUnits="userSpaceOnUse"
+                    >
                       <circle cx="2" cy="2" r="1" fill="currentColor" />
                     </pattern>
                   </defs>
                   <rect width="100%" height="100%" fill="url(#browser-dots)" />
                 </svg>
                 {/* Concentric arcs */}
-                <svg className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[32rem]" viewBox="0 0 400 400" fill="none">
-                  <circle cx="200" cy="200" r="180" stroke="currentColor" strokeWidth="0.5" strokeDasharray="8 12" className="text-muted-foreground/10" />
-                  <circle cx="200" cy="200" r="140" stroke="currentColor" strokeWidth="0.5" strokeDasharray="4 16" className="text-muted-foreground/8" />
-                  <path d="M 200 40 A 160 160 0 0 1 360 200" stroke="currentColor" strokeWidth="1" className="text-muted-foreground/15" />
-                  <path d="M 200 360 A 160 160 0 0 1 40 200" stroke="currentColor" strokeWidth="1" className="text-muted-foreground/15" />
+                <svg
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[32rem]"
+                  viewBox="0 0 400 400"
+                  fill="none"
+                >
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="180"
+                    stroke="currentColor"
+                    strokeWidth="0.5"
+                    strokeDasharray="8 12"
+                    className="text-muted-foreground/10"
+                  />
+                  <circle
+                    cx="200"
+                    cy="200"
+                    r="140"
+                    stroke="currentColor"
+                    strokeWidth="0.5"
+                    strokeDasharray="4 16"
+                    className="text-muted-foreground/8"
+                  />
+                  <path
+                    d="M 200 40 A 160 160 0 0 1 360 200"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    className="text-muted-foreground/15"
+                  />
+                  <path
+                    d="M 200 360 A 160 160 0 0 1 40 200"
+                    stroke="currentColor"
+                    strokeWidth="1"
+                    className="text-muted-foreground/15"
+                  />
                 </svg>
               </div>
-              <p className="text-3xl font-semibold tracking-tight text-muted-foreground/60">Browser paused</p>
-              <p className="text-base text-muted-foreground/40">Temporarily hidden while a popup is open</p>
+              <p className="text-3xl font-semibold tracking-tight text-muted-foreground/60">
+                Browser paused
+              </p>
+              <p className="text-base text-muted-foreground/40">
+                Temporarily hidden while a popup is open
+              </p>
             </div>
           )}
         </div>

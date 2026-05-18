@@ -15,7 +15,7 @@ const LOADING_TEXTS = [
   'Negotiating with the kernel...',
   'Teaching bits to be bytes...',
   'Consulting the magic 8-ball...',
-  'Adjusting the vibes...',
+  'Adjusting the vibes...'
 ]
 
 export function PulseGrid() {
@@ -27,7 +27,7 @@ export function PulseGrid() {
     const interval = setInterval(() => {
       setFade(false)
       setTimeout(() => {
-        setTextIndex(i => (i + 1) % LOADING_TEXTS.length)
+        setTextIndex((i) => (i + 1) % LOADING_TEXTS.length)
         setFade(true)
       }, 300)
     }, 3000)
@@ -45,7 +45,7 @@ export function PulseGrid() {
             const cy = (size - 1) / 2
             const dist = Math.sqrt((col - cx) ** 2 + (row - cy) ** 2)
             const maxDist = Math.sqrt(cx ** 2 + cy ** 2)
-            const edgeFade = 1 - (dist / maxDist)
+            const edgeFade = 1 - dist / maxDist
             const delay = dist * 0.12
 
             return (
@@ -55,7 +55,7 @@ export function PulseGrid() {
                 style={{
                   opacity: edgeFade * 0.15,
                   animation: `pulse-grid 2s ease-in-out ${delay}s infinite`,
-                  ['--edge-fade' as string]: edgeFade,
+                  ['--edge-fade' as string]: edgeFade
                 }}
               />
             )

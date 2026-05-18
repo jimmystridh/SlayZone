@@ -4,7 +4,16 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const RESULTS_DIR = path.resolve(__dirname, '..', '..', '..', '..', '..', 'working-notes', 'performance')
+const RESULTS_DIR = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  '..',
+  '..',
+  'working-notes',
+  'performance'
+)
 
 interface BootStep {
   step: string
@@ -24,7 +33,7 @@ function parseBootLog(content: string): BootStep[] {
       t: Number(m[1]),
       delta: Number(m[2]),
       step,
-      source: step.startsWith('renderer:') ? 'renderer' : 'main',
+      source: step.startsWith('renderer:') ? 'renderer' : 'main'
     })
   }
   return out
@@ -46,7 +55,9 @@ test('profile main-process boot', async ({ electronApp, mainWindow }) => {
 
   const content = fs.readFileSync(bootLogPath, 'utf8')
   const steps = parseBootLog(content)
-  expect(steps.length, 'no [boot] lines parsed — SLAYZONE_DEBUG_BOOT not active?').toBeGreaterThan(5)
+  expect(steps.length, 'no [boot] lines parsed — SLAYZONE_DEBUG_BOOT not active?').toBeGreaterThan(
+    5
+  )
 
   const total = steps[steps.length - 1].t
   const sortedByDelta = [...steps].sort((a, b) => b.delta - a.delta)
@@ -56,7 +67,9 @@ test('profile main-process boot', async ({ electronApp, mainWindow }) => {
   console.log('─'.repeat(80))
   for (const s of steps) {
     const tag = s.source === 'renderer' ? 'R' : 'M'
-    console.log(`  [${tag}] t=${String(s.t).padStart(5)}ms Δ=${String(s.delta).padStart(5)}ms  ${s.step}`)
+    console.log(
+      `  [${tag}] t=${String(s.t).padStart(5)}ms Δ=${String(s.delta).padStart(5)}ms  ${s.step}`
+    )
   }
 
   console.log('\n=== TOP 15 SLOWEST GAPS ===')
@@ -67,7 +80,9 @@ test('profile main-process boot', async ({ electronApp, mainWindow }) => {
     const len = Math.max(1, Math.round((s.delta / maxDelta) * barWidth))
     const bar = '█'.repeat(len)
     const tag = s.source === 'renderer' ? 'R' : 'M'
-    console.log(`  Δ=${String(s.delta).padStart(5)}ms  t=${String(s.t).padStart(5)}ms  [${tag}]  ${bar.padEnd(barWidth)}  ${s.step}`)
+    console.log(
+      `  Δ=${String(s.delta).padStart(5)}ms  t=${String(s.t).padStart(5)}ms  [${tag}]  ${bar.padEnd(barWidth)}  ${s.step}`
+    )
   }
   console.log(`\n  Total to last marker: ${total}ms  (${steps.length} steps)\n`)
 
@@ -81,11 +96,11 @@ test('profile main-process boot', async ({ electronApp, mainWindow }) => {
         totalMs: total,
         stepCount: steps.length,
         topGaps: top,
-        steps,
+        steps
       },
       null,
-      2,
-    ),
+      2
+    )
   )
   console.log(`📊 Results written to ${outFile}`)
 

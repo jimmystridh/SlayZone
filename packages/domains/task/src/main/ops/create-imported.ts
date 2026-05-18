@@ -1,12 +1,7 @@
 import type { Database } from 'better-sqlite3'
 import type { ProviderConfig, Task } from '@slayzone/task/shared'
 import { taskEvents } from '../events.js'
-import {
-  colorOne,
-  getEnabledModeDefaults,
-  maybeAutoCreateWorktree,
-  parseTask,
-} from './shared.js'
+import { colorOne, getEnabledModeDefaults, maybeAutoCreateWorktree, parseTask } from './shared.js'
 import { insertTaskRow } from './insert.js'
 
 /**
@@ -33,14 +28,17 @@ export interface CreateImportedTaskInput {
 
 export async function createImportedTaskOp(
   db: Database,
-  data: CreateImportedTaskInput,
+  data: CreateImportedTaskInput
 ): Promise<Task | null> {
   const id = crypto.randomUUID()
 
   // Default terminal mode from settings (no template path for imports)
   const terminalMode =
-    (db.prepare("SELECT value FROM settings WHERE key = 'default_terminal_mode'")
-      .get() as { value: string } | undefined)?.value ?? 'claude-code'
+    (
+      db.prepare("SELECT value FROM settings WHERE key = 'default_terminal_mode'").get() as
+        | { value: string }
+        | undefined
+    )?.value ?? 'claude-code'
 
   // Provider config from terminal_modes defaults
   const providerConfig: ProviderConfig = {}
@@ -49,8 +47,11 @@ export async function createImportedTaskOp(
   }
 
   const ccsDefaultProfile =
-    (db.prepare('SELECT value FROM settings WHERE key = ?')
-      .get('ccs_default_profile') as { value: string } | undefined)?.value ?? null
+    (
+      db.prepare('SELECT value FROM settings WHERE key = ?').get('ccs_default_profile') as
+        | { value: string }
+        | undefined
+    )?.value ?? null
 
   const initialTask = insertTaskRow(db, {
     id,
@@ -72,14 +73,16 @@ export async function createImportedTaskOp(
     panelVisibility: null,
     browserTabs: null,
     webPanelUrls: null,
-    updatedAt: data.externalUpdatedAt,
+    updatedAt: data.externalUpdatedAt
   })
 
   if (!initialTask) return null
 
   await maybeAutoCreateWorktree(db, id, data.projectId, data.title, null)
 
-  const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as Record<string, unknown> | undefined
+  const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as
+    | Record<string, unknown>
+    | undefined
   const task = parseTask(row)
   if (task) {
     taskEvents.emit('task:created', { taskId: id, projectId: data.projectId })

@@ -22,11 +22,14 @@ export function SettingsLayout({
   className
 }: SettingsLayoutProps): React.JSX.Element {
   return (
-    <div className={cn('grid h-[calc(88vh-76px)] min-h-0 grid-cols-[280px_minmax(0,1fr)]', className)}>
+    <div
+      className={cn('grid h-[calc(88vh-76px)] min-h-0 grid-cols-[280px_minmax(0,1fr)]', className)}
+    >
       <aside className="min-h-0 overflow-y-auto border-r p-5">
         <div className="space-y-1.5 rounded-xl p-2.5">
           {items.map((item) => {
-            const isParentActive = activeKey === item.key || (item.children && activeKey.startsWith(item.key + '/'))
+            const isParentActive =
+              activeKey === item.key || (item.children && activeKey.startsWith(item.key + '/'))
             return (
               <div key={item.key}>
                 <button

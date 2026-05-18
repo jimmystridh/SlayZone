@@ -24,21 +24,27 @@ async function dedupInvoke<T>(channel: string, ...args: unknown[]): Promise<T> {
 let lastDropPaths: string[] = []
 let lastPastePaths: string[] = []
 window.addEventListener('dragover', (e) => e.preventDefault(), true)
-window.addEventListener('drop', (e) => {
-  e.preventDefault()
-  if (!e.dataTransfer?.files.length) return
-  lastDropPaths = Array.from(e.dataTransfer.files).map((f) => webUtils.getPathForFile(f))
-}, true)
+window.addEventListener(
+  'drop',
+  (e) => {
+    e.preventDefault()
+    if (!e.dataTransfer?.files.length) return
+    lastDropPaths = Array.from(e.dataTransfer.files).map((f) => webUtils.getPathForFile(f))
+  },
+  true
+)
 // Electron 32+ removed File.path; webUtils.getPathForFile only runs in main
 // world. Capture here so renderers can resolve Finder-pasted file paths.
 // Reset on every paste — text pastes must clear prior file-paste state so
 // later consumers don't read stale paths.
-window.addEventListener('paste', (e) => {
-  const files = e.clipboardData?.files
-  lastPastePaths = files?.length
-    ? Array.from(files).map((f) => webUtils.getPathForFile(f))
-    : []
-}, true)
+window.addEventListener(
+  'paste',
+  (e) => {
+    const files = e.clipboardData?.files
+    lastPastePaths = files?.length ? Array.from(files).map((f) => webUtils.getPathForFile(f)) : []
+  },
+  true
+)
 
 // Custom APIs for renderer
 const api: ElectronAPI = {
@@ -49,7 +55,8 @@ const api: ElectronAPI = {
     updateProject: (data) => ipcRenderer.invoke('db:projects:update', data),
     deleteProject: (id) => ipcRenderer.invoke('db:projects:delete', id),
     reorderProjects: (projectIds) => ipcRenderer.invoke('db:projects:reorder', projectIds),
-    uploadProjectIcon: (projectId, sourcePath) => ipcRenderer.invoke('db:projects:uploadIcon', projectId, sourcePath),
+    uploadProjectIcon: (projectId, sourcePath) =>
+      ipcRenderer.invoke('db:projects:uploadIcon', projectId, sourcePath),
 
     // Tasks
     getTasks: () => ipcRenderer.invoke('db:tasks:getAll'),
@@ -67,7 +74,8 @@ const api: ElectronAPI = {
     archiveTasks: (ids) => ipcRenderer.invoke('db:tasks:archiveMany', ids),
     unarchiveTask: (id) => ipcRenderer.invoke('db:tasks:unarchive', id),
     reorderTasks: (taskIds) => ipcRenderer.invoke('db:tasks:reorder', taskIds),
-    setBrowserTabLocked: (taskId, tabId, locked) => ipcRenderer.invoke('db:tasks:setBrowserTabLocked', taskId, tabId, locked)
+    setBrowserTabLocked: (taskId, tabId, locked) =>
+      ipcRenderer.invoke('db:tasks:setBrowserTabLocked', taskId, tabId, locked)
   },
   tags: {
     getTags: () => ipcRenderer.invoke('db:tags:getAll'),
@@ -93,7 +101,9 @@ const api: ElectronAPI = {
         if (process.env.PLAYWRIGHT === '1') {
           try {
             ;(globalThis as Record<string, unknown>).__lastAgentLifecycleEvent = event
-          } catch { /* noop */ }
+          } catch {
+            /* noop */
+          }
         }
       }
       ipcRenderer.on('agent:lifecycle', handler)
@@ -138,8 +148,8 @@ const api: ElectronAPI = {
       rename: (data) => ipcRenderer.invoke('db:artifacts:versions:rename', data),
       diff: (data) => ipcRenderer.invoke('db:artifacts:versions:diff', data),
       prune: (data) => ipcRenderer.invoke('db:artifacts:versions:prune', data),
-      setCurrent: (data) => ipcRenderer.invoke('db:artifacts:versions:setCurrent', data),
-    },
+      setCurrent: (data) => ipcRenderer.invoke('db:artifacts:versions:setCurrent', data)
+    }
   },
   artifactFolders: {
     getByTask: (taskId) => ipcRenderer.invoke('db:artifactFolders:getByTask', taskId),
@@ -147,7 +157,7 @@ const api: ElectronAPI = {
     create: (data) => ipcRenderer.invoke('db:artifactFolders:create', data),
     update: (data) => ipcRenderer.invoke('db:artifactFolders:update', data),
     delete: (id) => ipcRenderer.invoke('db:artifactFolders:delete', id),
-    reorder: (data) => ipcRenderer.invoke('db:artifactFolders:reorder', data),
+    reorder: (data) => ipcRenderer.invoke('db:artifactFolders:reorder', data)
   },
   taskTemplates: {
     getByProject: (projectId) => ipcRenderer.invoke('db:taskTemplates:getByProject', projectId),
@@ -155,7 +165,8 @@ const api: ElectronAPI = {
     create: (data) => ipcRenderer.invoke('db:taskTemplates:create', data),
     update: (data) => ipcRenderer.invoke('db:taskTemplates:update', data),
     delete: (id) => ipcRenderer.invoke('db:taskTemplates:delete', id),
-    setDefault: (projectId, templateId) => ipcRenderer.invoke('db:taskTemplates:setDefault', projectId, templateId),
+    setDefault: (projectId, templateId) =>
+      ipcRenderer.invoke('db:taskTemplates:setDefault', projectId, templateId)
   },
   taskDependencies: {
     getAllBlockedTaskIds: () => ipcRenderer.invoke('db:taskDependencies:getAllBlockedTaskIds'),
@@ -170,15 +181,16 @@ const api: ElectronAPI = {
   },
   history: {
     listForTask: (taskId, options) => ipcRenderer.invoke('history:listForTask', taskId, options),
-    getAutomationActionRuns: (runId) => ipcRenderer.invoke('history:getAutomationActionRuns', runId),
+    getAutomationActionRuns: (runId) => ipcRenderer.invoke('history:getAutomationActionRuns', runId)
   },
   feedback: {
     listThreads: () => ipcRenderer.invoke('db:feedback:listThreads'),
     createThread: (input) => ipcRenderer.invoke('db:feedback:createThread', input),
     getMessages: (threadId) => ipcRenderer.invoke('db:feedback:getMessages', threadId),
     addMessage: (input) => ipcRenderer.invoke('db:feedback:addMessage', input),
-    updateThreadDiscordId: (threadId, discordThreadId) => ipcRenderer.invoke('db:feedback:updateThreadDiscordId', threadId, discordThreadId),
-    deleteThread: (threadId) => ipcRenderer.invoke('db:feedback:deleteThread', threadId),
+    updateThreadDiscordId: (threadId, discordThreadId) =>
+      ipcRenderer.invoke('db:feedback:updateThreadDiscordId', threadId, discordThreadId),
+    deleteThread: (threadId) => ipcRenderer.invoke('db:feedback:deleteThread', threadId)
   },
   settings: {
     get: (key) => ipcRenderer.invoke('db:settings:get', key),
@@ -186,7 +198,7 @@ const api: ElectronAPI = {
     getAll: () => ipcRenderer.invoke('db:settings:getAll')
   },
   shortcuts: {
-    changed: () => ipcRenderer.send('shortcuts:changed'),
+    changed: () => ipcRenderer.send('shortcuts:changed')
   },
   theme: {
     getEffective: () => ipcRenderer.invoke('theme:get-effective'),
@@ -205,8 +217,7 @@ const api: ElectronAPI = {
         blockDesktopHandoff?: boolean
         desktopHandoff?: import('@slayzone/task/shared').DesktopHandoffPolicy
       }
-    ) =>
-      ipcRenderer.invoke('shell:open-external', url, options),
+    ) => ipcRenderer.invoke('shell:open-external', url, options),
     openPath: (absPath: string) => ipcRenderer.invoke('shell:open-path', absPath)
   },
   auth: {
@@ -223,11 +234,14 @@ const api: ElectronAPI = {
     isTestsPanelEnabled: () => ipcRenderer.invoke('app:is-tests-panel-enabled'),
     isTestsPanelEnabledSync: ipcRenderer.sendSync('app:is-tests-panel-enabled-sync') as boolean,
     isJiraIntegrationEnabled: () => ipcRenderer.invoke('app:is-jira-integration-enabled'),
-    isJiraIntegrationEnabledSync: ipcRenderer.sendSync('app:is-jira-integration-enabled-sync') as boolean,
+    isJiraIntegrationEnabledSync: ipcRenderer.sendSync(
+      'app:is-jira-integration-enabled-sync'
+    ) as boolean,
     isLoopModeEnabled: () => ipcRenderer.invoke('app:is-loop-mode-enabled'),
     isLoopModeEnabledSync: ipcRenderer.sendSync('app:is-loop-mode-enabled-sync') as boolean,
     getZoomFactor: () => ipcRenderer.invoke('app:get-zoom-factor'),
-    adjustZoom: (command: 'in' | 'out' | 'reset') => ipcRenderer.invoke('app:adjust-zoom', command) as Promise<number>,
+    adjustZoom: (command: 'in' | 'out' | 'reset') =>
+      ipcRenderer.invoke('app:adjust-zoom', command) as Promise<number>,
     focusRenderer: () => ipcRenderer.invoke('app:focus-renderer'),
     isPlaywright: process.env.PLAYWRIGHT === '1',
     onGoHome: (callback: () => void) => {
@@ -275,28 +289,38 @@ const api: ElectronAPI = {
       ipcRenderer.on('app:close-task', handler)
       return () => ipcRenderer.removeListener('app:close-task', handler)
     },
-    onBrowserEnsurePanelOpen: (callback: (taskId: string, url?: string, tabId?: string) => void) => {
-      const handler = (_: unknown, taskId: string, url?: string, tabId?: string) => callback(taskId, url, tabId)
+    onBrowserEnsurePanelOpen: (
+      callback: (taskId: string, url?: string, tabId?: string) => void
+    ) => {
+      const handler = (_: unknown, taskId: string, url?: string, tabId?: string) =>
+        callback(taskId, url, tabId)
       ipcRenderer.on('browser:ensure-panel-open', handler)
       return () => ipcRenderer.removeListener('browser:ensure-panel-open', handler)
     },
     onBrowserCreateTab: (
-      callback: (payload: { taskId: string; tabId: string; url?: string; background?: boolean }) => void,
+      callback: (payload: {
+        taskId: string
+        tabId: string
+        url?: string
+        background?: boolean
+      }) => void
     ) => {
       const handler = (
         _: unknown,
-        payload: { taskId: string; tabId: string; url?: string; background?: boolean },
+        payload: { taskId: string; tabId: string; url?: string; background?: boolean }
       ) => callback(payload)
       ipcRenderer.on('browser:create-tab', handler)
       return () => ipcRenderer.removeListener('browser:create-tab', handler)
     },
     onOpenTask: (callback: (taskId: string, background?: boolean) => void) => {
-      const handler = (_: unknown, taskId: string, background?: boolean) => callback(taskId, background)
+      const handler = (_: unknown, taskId: string, background?: boolean) =>
+        callback(taskId, background)
       ipcRenderer.on('app:open-task', handler)
       return () => ipcRenderer.removeListener('app:open-task', handler)
     },
     onOpenArtifact: (callback: (taskId: string, artifactId: string) => void) => {
-      const handler = (_: unknown, payload: { taskId: string; artifactId: string }) => callback(payload.taskId, payload.artifactId)
+      const handler = (_: unknown, payload: { taskId: string; artifactId: string }) =>
+        callback(payload.taskId, payload.artifactId)
       ipcRenderer.on('app:open-artifact', handler)
       return () => ipcRenderer.removeListener('app:open-artifact', handler)
     },
@@ -336,25 +360,30 @@ const api: ElectronAPI = {
       return () => ipcRenderer.removeListener('app:close-active-task', handler)
     },
     onUpdateStatus: (callback) => {
-      const handler = (_: unknown, status: import('@slayzone/types').UpdateStatus) => callback(status)
+      const handler = (_: unknown, status: import('@slayzone/types').UpdateStatus) =>
+        callback(status)
       ipcRenderer.on('app:update-status', handler)
       return () => ipcRenderer.removeListener('app:update-status', handler)
     },
     dataReady: () => ipcRenderer.send('app:data-ready'),
     // No-op in prod — only emits IPC when main is collecting boot timing.
     // Avoids per-cold-start IPC waste for an instrumentation hook.
-    bootMark: process.env.SLAYZONE_DEBUG_BOOT === '1'
-      ? (label: string) => ipcRenderer.send('boot:mark', label)
-      : () => {},
+    bootMark:
+      process.env.SLAYZONE_DEBUG_BOOT === '1'
+        ? (label: string) => ipcRenderer.send('boot:mark', label)
+        : () => {},
     restartForUpdate: () => ipcRenderer.invoke('app:restart-for-update'),
     checkForUpdates: () => ipcRenderer.invoke('app:check-for-updates'),
     cliStatus: () => ipcRenderer.invoke('app:cli-status'),
     installCli: () => ipcRenderer.invoke('app:install-cli')
   },
   floatingGlobalAgentPanel: {
-    setEnabled: (enabled: boolean) => ipcRenderer.invoke('floating-global-agent-panel:set-enabled', enabled),
-    setSessionId: (sessionId: string | null) => ipcRenderer.invoke('floating-global-agent-panel:set-session-id', sessionId),
-    setPanelOpen: (isOpen: boolean) => ipcRenderer.invoke('floating-global-agent-panel:set-panel-open', isOpen),
+    setEnabled: (enabled: boolean) =>
+      ipcRenderer.invoke('floating-global-agent-panel:set-enabled', enabled),
+    setSessionId: (sessionId: string | null) =>
+      ipcRenderer.invoke('floating-global-agent-panel:set-session-id', sessionId),
+    setPanelOpen: (isOpen: boolean) =>
+      ipcRenderer.invoke('floating-global-agent-panel:set-panel-open', isOpen),
     toggleCollapse: () => ipcRenderer.invoke('floating-global-agent-panel:toggle-collapse'),
     resetSize: () => ipcRenderer.invoke('floating-global-agent-panel:reset-size'),
     detach: () => ipcRenderer.invoke('floating-global-agent-panel:detach'),
@@ -362,21 +391,38 @@ const api: ElectronAPI = {
     getState: () => ipcRenderer.invoke('floating-global-agent-panel:get-state'),
     getSession: () => ipcRenderer.invoke('floating-global-agent-panel:get-session'),
     getConfig: () => ipcRenderer.invoke('floating-global-agent-panel:get-config'),
-    onState: (callback: (state: { kind: string; sessionId: string | null; mode: 'auto' | 'manual' | null; hasCustomSize: boolean }) => void) => {
-      const handler = (_: unknown, state: { kind: string; sessionId: string | null; mode: 'auto' | 'manual' | null; hasCustomSize: boolean }) => callback(state)
+    onState: (
+      callback: (state: {
+        kind: string
+        sessionId: string | null
+        mode: 'auto' | 'manual' | null
+        hasCustomSize: boolean
+      }) => void
+    ) => {
+      const handler = (
+        _: unknown,
+        state: {
+          kind: string
+          sessionId: string | null
+          mode: 'auto' | 'manual' | null
+          hasCustomSize: boolean
+        }
+      ) => callback(state)
       ipcRenderer.on('floating-global-agent-panel:state', handler)
       return () => ipcRenderer.removeListener('floating-global-agent-panel:state', handler)
     },
     onSessionChanged: (callback: () => void) => {
       const handler = () => callback()
       ipcRenderer.on('floating-global-agent-panel:session-changed', handler)
-      return () => ipcRenderer.removeListener('floating-global-agent-panel:session-changed', handler)
+      return () =>
+        ipcRenderer.removeListener('floating-global-agent-panel:session-changed', handler)
     },
     onCollapseChanged: (callback: (collapsed: boolean) => void) => {
       const handler = (_: unknown, collapsed: boolean) => callback(collapsed)
       ipcRenderer.on('floating-global-agent-panel:collapse-changed', handler)
-      return () => ipcRenderer.removeListener('floating-global-agent-panel:collapse-changed', handler)
-    },
+      return () =>
+        ipcRenderer.removeListener('floating-global-agent-panel:collapse-changed', handler)
+    }
   },
   taskWindow: {
     open: (taskId: string) => ipcRenderer.invoke('task-window:open', taskId),
@@ -387,7 +433,8 @@ const api: ElectronAPI = {
       ipcRenderer.on('task-window:list-changed', handler)
       return () => ipcRenderer.removeListener('task-window:list-changed', handler)
     },
-    setPrimaryActive: (taskId: string | null) => ipcRenderer.invoke('task-window:set-primary-active', taskId),
+    setPrimaryActive: (taskId: string | null) =>
+      ipcRenderer.invoke('task-window:set-primary-active', taskId),
     getPrimaryActive: () => ipcRenderer.invoke('task-window:get-primary-active'),
     onPrimaryActiveChanged: (callback: (taskId: string | null) => void) => {
       const handler = (_: unknown, id: string | null) => callback(id)
@@ -397,23 +444,43 @@ const api: ElectronAPI = {
   },
   panels: {
     claim: (taskId: string, panelId: string) => ipcRenderer.invoke('panels:claim', taskId, panelId),
-    claimAndCloseOther: (taskId: string, panelId: string) => ipcRenderer.invoke('panels:claim-and-close-other', taskId, panelId),
-    release: (taskId: string, panelId: string) => ipcRenderer.invoke('panels:release', taskId, panelId),
-    releaseAllForTask: (taskId: string) => ipcRenderer.invoke('panels:release-all-for-task', taskId),
+    claimAndCloseOther: (taskId: string, panelId: string) =>
+      ipcRenderer.invoke('panels:claim-and-close-other', taskId, panelId),
+    release: (taskId: string, panelId: string) =>
+      ipcRenderer.invoke('panels:release', taskId, panelId),
+    releaseAllForTask: (taskId: string) =>
+      ipcRenderer.invoke('panels:release-all-for-task', taskId),
     getOwnership: (taskId: string) => ipcRenderer.invoke('panels:get-ownership', taskId),
     getWindowId: () => ipcRenderer.invoke('panels:get-window-id'),
-    onOwnershipChanged: (callback: (payload: { taskId: string; ownership: Array<{ panelId: string; ownerWindowId: number }> }) => void) => {
-      const handler = (_: unknown, payload: { taskId: string; ownership: Array<{ panelId: string; ownerWindowId: number }> }) => callback(payload)
+    onOwnershipChanged: (
+      callback: (payload: {
+        taskId: string
+        ownership: Array<{ panelId: string; ownerWindowId: number }>
+      }) => void
+    ) => {
+      const handler = (
+        _: unknown,
+        payload: { taskId: string; ownership: Array<{ panelId: string; ownerWindowId: number }> }
+      ) => callback(payload)
       ipcRenderer.on('panels:ownership-changed', handler)
       return () => ipcRenderer.removeListener('panels:ownership-changed', handler)
     },
-    onReleasedOnClose: (callback: (payload: { closedWindowId: number; released: Array<{ taskId: string; panelId: string }> }) => void) => {
-      const handler = (_: unknown, payload: { closedWindowId: number; released: Array<{ taskId: string; panelId: string }> }) => callback(payload)
+    onReleasedOnClose: (
+      callback: (payload: {
+        closedWindowId: number
+        released: Array<{ taskId: string; panelId: string }>
+      }) => void
+    ) => {
+      const handler = (
+        _: unknown,
+        payload: { closedWindowId: number; released: Array<{ taskId: string; panelId: string }> }
+      ) => callback(payload)
       ipcRenderer.on('panels:released-on-close', handler)
       return () => ipcRenderer.removeListener('panels:released-on-close', handler)
     },
     onCloseRequest: (callback: (payload: { taskId: string; panelId: string }) => void) => {
-      const handler = (_: unknown, payload: { taskId: string; panelId: string }) => callback(payload)
+      const handler = (_: unknown, payload: { taskId: string; panelId: string }) =>
+        callback(payload)
       ipcRenderer.on('panels:close-request', handler)
       return () => ipcRenderer.removeListener('panels:close-request', handler)
     }
@@ -426,7 +493,8 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('window:set-window-button-visibility', visible)
   },
   files: {
-    saveTempImage: (base64, mimeType) => ipcRenderer.invoke('files:saveTempImage', base64, mimeType),
+    saveTempImage: (base64, mimeType) =>
+      ipcRenderer.invoke('files:saveTempImage', base64, mimeType),
     pathExists: (path) => ipcRenderer.invoke('files:pathExists', path),
     getDropPaths: () => {
       const paths = lastDropPaths
@@ -458,10 +526,12 @@ const api: ElectronAPI = {
     exists: (sessionId) => ipcRenderer.invoke('pty:exists', sessionId),
     getBuffer: (sessionId) => ipcRenderer.invoke('pty:getBuffer', sessionId),
     clearBuffer: (sessionId) => ipcRenderer.invoke('pty:clearBuffer', sessionId),
-    getBufferSince: (sessionId, afterSeq) => ipcRenderer.invoke('pty:getBufferSince', sessionId, afterSeq),
+    getBufferSince: (sessionId, afterSeq) =>
+      ipcRenderer.invoke('pty:getBufferSince', sessionId, afterSeq),
     list: () => ipcRenderer.invoke('pty:list'),
     onData: (callback: (sessionId: string, data: string, seq: number) => void) => {
-      const handler = (_event: unknown, sessionId: string, data: string, seq: number) => callback(sessionId, data, seq)
+      const handler = (_event: unknown, sessionId: string, data: string, seq: number) =>
+        callback(sessionId, data, seq)
       ipcRenderer.on('pty:data', handler)
       return () => ipcRenderer.removeListener('pty:data', handler)
     },
@@ -476,9 +546,7 @@ const api: ElectronAPI = {
       ipcRenderer.on('pty:respawn-suggested', handler)
       return () => ipcRenderer.removeListener('pty:respawn-suggested', handler)
     },
-    onEnsureAlive: (
-      callback: (taskId: string, reqId: number, force: boolean) => void
-    ) => {
+    onEnsureAlive: (callback: (taskId: string, reqId: number, force: boolean) => void) => {
       const handler = (_event: unknown, taskId: string, reqId: number, force: boolean) =>
         callback(taskId, reqId, force)
       ipcRenderer.on('pty:ensure-alive', handler)
@@ -517,8 +585,7 @@ const api: ElectronAPI = {
       return () => ipcRenderer.removeListener('pty:session-detected', handler)
     },
     onDevServerDetected: (callback: (sessionId: string, url: string) => void) => {
-      const handler = (_event: unknown, sessionId: string, url: string) =>
-        callback(sessionId, url)
+      const handler = (_event: unknown, sessionId: string, url: string) => callback(sessionId, url)
       ipcRenderer.on('pty:dev-server-detected', handler)
       return () => ipcRenderer.removeListener('pty:dev-server-detected', handler)
     },
@@ -534,7 +601,10 @@ const api: ElectronAPI = {
       return () => ipcRenderer.removeListener('pty:resize-needed', handler)
     },
     onStats: (cb) => {
-      const handler = (_event: unknown, stats: Record<string, import('@slayzone/types').ProcessStats>) => cb(stats)
+      const handler = (
+        _event: unknown,
+        stats: Record<string, import('@slayzone/types').ProcessStats>
+      ) => cb(stats)
       ipcRenderer.on('pty:stats', handler)
       return () => ipcRenderer.removeListener('pty:stats', handler)
     },
@@ -547,10 +617,20 @@ const api: ElectronAPI = {
   },
   chat: {
     supports: (mode: string) => ipcRenderer.invoke('chat:supports', mode),
-    hydrate: (opts: { tabId: string; taskId: string; mode: string; cwd: string; providerFlagsOverride?: string | null }) =>
-      ipcRenderer.invoke('chat:hydrate', opts),
-    start: (opts: { tabId: string; taskId: string; mode: string; cwd: string; providerFlagsOverride?: string | null }) =>
-      ipcRenderer.invoke('chat:start', opts),
+    hydrate: (opts: {
+      tabId: string
+      taskId: string
+      mode: string
+      cwd: string
+      providerFlagsOverride?: string | null
+    }) => ipcRenderer.invoke('chat:hydrate', opts),
+    start: (opts: {
+      tabId: string
+      taskId: string
+      mode: string
+      cwd: string
+      providerFlagsOverride?: string | null
+    }) => ipcRenderer.invoke('chat:start', opts),
     send: (tabId: string, text: string) => ipcRenderer.invoke('chat:send', tabId, text),
     sendToolResult: (
       tabId: string,
@@ -561,35 +641,66 @@ const api: ElectronAPI = {
       args: {
         requestId: string
         decision:
-          | { behavior: 'allow'; updatedInput?: Record<string, unknown>; updatedPermissions?: unknown[] }
+          | {
+              behavior: 'allow'
+              updatedInput?: Record<string, unknown>
+              updatedPermissions?: unknown[]
+            }
           | { behavior: 'deny'; message: string; interrupt?: boolean }
       }
     ) => ipcRenderer.invoke('chat:respondPermission', tabId, args),
-    interrupt: (opts: { tabId: string; taskId: string; mode: string; cwd: string; providerFlagsOverride?: string | null }) =>
-      ipcRenderer.invoke('chat:interrupt', opts),
-    abortAndPop: (opts: { tabId: string; taskId: string; mode: string; cwd: string; providerFlagsOverride?: string | null }) =>
-      ipcRenderer.invoke('chat:abortAndPop', opts),
+    interrupt: (opts: {
+      tabId: string
+      taskId: string
+      mode: string
+      cwd: string
+      providerFlagsOverride?: string | null
+    }) => ipcRenderer.invoke('chat:interrupt', opts),
+    abortAndPop: (opts: {
+      tabId: string
+      taskId: string
+      mode: string
+      cwd: string
+      providerFlagsOverride?: string | null
+    }) => ipcRenderer.invoke('chat:abortAndPop', opts),
     kill: (tabId: string) => ipcRenderer.invoke('chat:kill', tabId),
     remove: (tabId: string) => ipcRenderer.invoke('chat:remove', tabId),
-    reset: (opts: { tabId: string; taskId: string; mode: string; cwd: string; providerFlagsOverride?: string | null }) =>
-      ipcRenderer.invoke('chat:reset', opts),
+    reset: (opts: {
+      tabId: string
+      taskId: string
+      mode: string
+      cwd: string
+      providerFlagsOverride?: string | null
+    }) => ipcRenderer.invoke('chat:reset', opts),
     getBufferSince: (tabId: string, afterSeq: number) =>
       ipcRenderer.invoke('chat:getBufferSince', tabId, afterSeq),
     getInfo: (tabId: string) => ipcRenderer.invoke('chat:getInfo', tabId),
     inspectPermissions: (taskId: string, mode: string) =>
       ipcRenderer.invoke('chat:inspectPermissions', taskId, mode),
-    getMode: (taskId: string, mode: string) =>
-      ipcRenderer.invoke('chat:getMode', taskId, mode),
-    setMode: (opts: { tabId: string; taskId: string; mode: string; cwd: string; chatMode: 'plan' | 'auto-accept' | 'auto' | 'bypass' }) =>
-      ipcRenderer.invoke('chat:setMode', opts),
-    getModel: (taskId: string, mode: string) =>
-      ipcRenderer.invoke('chat:getModel', taskId, mode),
-    setModel: (opts: { tabId: string; taskId: string; mode: string; cwd: string; chatModel: 'sonnet' | 'opus' | 'haiku' }) =>
-      ipcRenderer.invoke('chat:setModel', opts),
-    getEffort: (taskId: string, mode: string) =>
-      ipcRenderer.invoke('chat:getEffort', taskId, mode),
-    setEffort: (opts: { tabId: string; taskId: string; mode: string; cwd: string; chatEffort: 'low' | 'medium' | 'high' | 'xhigh' | 'max' }) =>
-      ipcRenderer.invoke('chat:setEffort', opts),
+    getMode: (taskId: string, mode: string) => ipcRenderer.invoke('chat:getMode', taskId, mode),
+    setMode: (opts: {
+      tabId: string
+      taskId: string
+      mode: string
+      cwd: string
+      chatMode: 'plan' | 'auto-accept' | 'auto' | 'bypass'
+    }) => ipcRenderer.invoke('chat:setMode', opts),
+    getModel: (taskId: string, mode: string) => ipcRenderer.invoke('chat:getModel', taskId, mode),
+    setModel: (opts: {
+      tabId: string
+      taskId: string
+      mode: string
+      cwd: string
+      chatModel: 'sonnet' | 'opus' | 'haiku'
+    }) => ipcRenderer.invoke('chat:setModel', opts),
+    getEffort: (taskId: string, mode: string) => ipcRenderer.invoke('chat:getEffort', taskId, mode),
+    setEffort: (opts: {
+      tabId: string
+      taskId: string
+      mode: string
+      cwd: string
+      chatEffort: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+    }) => ipcRenderer.invoke('chat:setEffort', opts),
     getAutoEligibility: () => ipcRenderer.invoke('chat:getAutoEligibility'),
     list: () => ipcRenderer.invoke('chat:list'),
     listSkills: (cwd: string) => ipcRenderer.invoke('chat:listSkills', cwd),
@@ -627,7 +738,7 @@ const api: ElectronAPI = {
       return () => {
         ipcRenderer.removeListener('chat:exit', handler)
       }
-    },
+    }
   },
   chatQueue: {
     list: (tabId: string) => ipcRenderer.invoke('chat:queue:list', tabId),
@@ -644,7 +755,7 @@ const api: ElectronAPI = {
       const handler = (_: unknown, tabId: string, original: string) => callback(tabId, original)
       ipcRenderer.on('chat:queue-drained', handler)
       return () => ipcRenderer.removeListener('chat:queue-drained', handler)
-    },
+    }
   },
   terminalModes: {
     list: () => ipcRenderer.invoke('terminalModes:list'),
@@ -659,16 +770,18 @@ const api: ElectronAPI = {
   git: {
     isGitRepo: (path) => ipcRenderer.invoke('git:isGitRepo', path),
     detectChildRepos: (projectPath) => ipcRenderer.invoke('git:detectChildRepos', projectPath),
-    listProjectRepos: (projectPath, opts) => ipcRenderer.invoke('git:listProjectRepos', projectPath, opts),
+    listProjectRepos: (projectPath, opts) =>
+      ipcRenderer.invoke('git:listProjectRepos', projectPath, opts),
     detectWorktrees: (repoPath) => dedupInvoke('git:detectWorktrees', repoPath),
-    createWorktree: (opts) =>
-      ipcRenderer.invoke('git:createWorktree', opts),
+    createWorktree: (opts) => ipcRenderer.invoke('git:createWorktree', opts),
     onCreateWorktreePhase: (requestId, cb) => {
       const handler = (_: unknown, payload: { requestId: string; phase: string }) => {
         if (payload.requestId === requestId) cb(payload.phase as never)
       }
       ipcRenderer.on('git:createWorktree:phase', handler)
-      return () => { ipcRenderer.off('git:createWorktree:phase', handler) }
+      return () => {
+        ipcRenderer.off('git:createWorktree:phase', handler)
+      }
     },
     removeWorktree: (repoPath, worktreePath, branchToDelete?) =>
       ipcRenderer.invoke('git:removeWorktree', repoPath, worktreePath, branchToDelete),
@@ -686,15 +799,20 @@ const api: ElectronAPI = {
     isMergeInProgress: (path) => ipcRenderer.invoke('git:isMergeInProgress', path),
     getConflictedFiles: (path) => ipcRenderer.invoke('git:getConflictedFiles', path),
     getWorkingDiff: (path, opts?) => ipcRenderer.invoke('git:getWorkingDiff', path, opts),
-    getFileDiff: (repoPath, filePath, staged, opts?) => ipcRenderer.invoke('git:getFileDiff', repoPath, filePath, staged, opts),
+    getFileDiff: (repoPath, filePath, staged, opts?) =>
+      ipcRenderer.invoke('git:getFileDiff', repoPath, filePath, staged, opts),
     stageFile: (path, filePath) => ipcRenderer.invoke('git:stageFile', path, filePath),
     unstageFile: (path, filePath) => ipcRenderer.invoke('git:unstageFile', path, filePath),
-    discardFile: (path, filePath, untracked?) => ipcRenderer.invoke('git:discardFile', path, filePath, untracked),
+    discardFile: (path, filePath, untracked?) =>
+      ipcRenderer.invoke('git:discardFile', path, filePath, untracked),
     stageAll: (path) => ipcRenderer.invoke('git:stageAll', path),
     unstageAll: (path) => ipcRenderer.invoke('git:unstageAll', path),
-    getUntrackedFileDiff: (repoPath, filePath) => ipcRenderer.invoke('git:getUntrackedFileDiff', repoPath, filePath),
-    getConflictContent: (repoPath, filePath) => ipcRenderer.invoke('git:getConflictContent', repoPath, filePath),
-    writeResolvedFile: (repoPath, filePath, content) => ipcRenderer.invoke('git:writeResolvedFile', repoPath, filePath, content),
+    getUntrackedFileDiff: (repoPath, filePath) =>
+      ipcRenderer.invoke('git:getUntrackedFileDiff', repoPath, filePath),
+    getConflictContent: (repoPath, filePath) =>
+      ipcRenderer.invoke('git:getConflictContent', repoPath, filePath),
+    writeResolvedFile: (repoPath, filePath, content) =>
+      ipcRenderer.invoke('git:writeResolvedFile', repoPath, filePath, content),
     commitFiles: (repoPath, message) => ipcRenderer.invoke('git:commitFiles', repoPath, message),
     analyzeConflict: (mode, filePath, base, ours, theirs) =>
       ipcRenderer.invoke('git:analyzeConflict', mode, filePath, base, ours, theirs),
@@ -704,66 +822,103 @@ const api: ElectronAPI = {
     continueRebase: (path) => ipcRenderer.invoke('git:continueRebase', path),
     skipRebaseCommit: (path) => ipcRenderer.invoke('git:skipRebaseCommit', path),
     getMergeContext: (repoPath) => ipcRenderer.invoke('git:getMergeContext', repoPath),
-    getRecentCommits: (repoPath, count) => ipcRenderer.invoke('git:getRecentCommits', repoPath, count),
-    getAheadBehind: (repoPath, branch, upstream) => ipcRenderer.invoke('git:getAheadBehind', repoPath, branch, upstream),
+    getRecentCommits: (repoPath, count) =>
+      ipcRenderer.invoke('git:getRecentCommits', repoPath, count),
+    getAheadBehind: (repoPath, branch, upstream) =>
+      ipcRenderer.invoke('git:getAheadBehind', repoPath, branch, upstream),
     getStatusSummary: (repoPath) => ipcRenderer.invoke('git:getStatusSummary', repoPath),
     revealInFinder: (path) => ipcRenderer.invoke('git:revealInFinder', path),
     isDirty: (path) => ipcRenderer.invoke('git:isDirty', path),
     getRemoteUrl: (path) => ipcRenderer.invoke('git:getRemoteUrl', path),
-    getAheadBehindUpstream: (path, branch) => ipcRenderer.invoke('git:getAheadBehindUpstream', path, branch),
+    getAheadBehindUpstream: (path, branch) =>
+      ipcRenderer.invoke('git:getAheadBehindUpstream', path, branch),
     fetch: (path) => ipcRenderer.invoke('git:fetch', path),
     push: (path, branch?, force?) => ipcRenderer.invoke('git:push', path, branch, force),
     pull: (path) => ipcRenderer.invoke('git:pull', path),
     getDefaultBranch: (path) => ipcRenderer.invoke('git:getDefaultBranch', path),
     listBranchesDetailed: (path) => ipcRenderer.invoke('git:listBranchesDetailed', path),
     listRemoteBranches: (path) => ipcRenderer.invoke('git:listRemoteBranches', path),
-    getMergeBase: (path, branch1, branch2) => ipcRenderer.invoke('git:getMergeBase', path, branch1, branch2),
-    getCommitsSince: (path, sinceRef, branch) => ipcRenderer.invoke('git:getCommitsSince', path, sinceRef, branch),
-    getCommitsBeforeRef: (path, ref, count?) => ipcRenderer.invoke('git:getCommitsBeforeRef', path, ref, count),
-    deleteBranch: (path, branch, force?) => ipcRenderer.invoke('git:deleteBranch', path, branch, force),
+    getMergeBase: (path, branch1, branch2) =>
+      ipcRenderer.invoke('git:getMergeBase', path, branch1, branch2),
+    getCommitsSince: (path, sinceRef, branch) =>
+      ipcRenderer.invoke('git:getCommitsSince', path, sinceRef, branch),
+    getCommitsBeforeRef: (path, ref, count?) =>
+      ipcRenderer.invoke('git:getCommitsBeforeRef', path, ref, count),
+    deleteBranch: (path, branch, force?) =>
+      ipcRenderer.invoke('git:deleteBranch', path, branch, force),
     pruneRemote: (path) => ipcRenderer.invoke('git:pruneRemote', path),
     rebaseOnto: (path, ontoBranch) => ipcRenderer.invoke('git:rebaseOnto', path, ontoBranch),
     mergeFrom: (path, branch) => ipcRenderer.invoke('git:mergeFrom', path, branch),
     getDiffStats: (path, ref) => dedupInvoke('git:getDiffStats', path, ref),
     getWorktreeMetadata: (path) => ipcRenderer.invoke('git:getWorktreeMetadata', path),
-    getCommitDag: (path, limit, branches?) => ipcRenderer.invoke('git:getCommitDag', path, limit, branches),
-    getResolvedCommitDag: (path, limit, branches, baseBranch) => dedupInvoke('git:getResolvedCommitDag', path, limit, branches, baseBranch),
-    getResolvedForkGraph: (targetPath, repoPath, activeBranch, compareBranch, activeBranchLabel, compareBranchLabel) => dedupInvoke('git:getResolvedForkGraph', targetPath, repoPath, activeBranch, compareBranch, activeBranchLabel, compareBranchLabel),
-    getResolvedUpstreamGraph: (repoPath, branch) => ipcRenderer.invoke('git:getResolvedUpstreamGraph', repoPath, branch),
-    getResolvedRecentCommits: (path, count, branchName) => ipcRenderer.invoke('git:getResolvedRecentCommits', path, count, branchName),
-    resolveChildBranches: (path, baseBranch) => ipcRenderer.invoke('git:resolveChildBranches', path, baseBranch),
+    getCommitDag: (path, limit, branches?) =>
+      ipcRenderer.invoke('git:getCommitDag', path, limit, branches),
+    getResolvedCommitDag: (path, limit, branches, baseBranch) =>
+      dedupInvoke('git:getResolvedCommitDag', path, limit, branches, baseBranch),
+    getResolvedForkGraph: (
+      targetPath,
+      repoPath,
+      activeBranch,
+      compareBranch,
+      activeBranchLabel,
+      compareBranchLabel
+    ) =>
+      dedupInvoke(
+        'git:getResolvedForkGraph',
+        targetPath,
+        repoPath,
+        activeBranch,
+        compareBranch,
+        activeBranchLabel,
+        compareBranchLabel
+      ),
+    getResolvedUpstreamGraph: (repoPath, branch) =>
+      ipcRenderer.invoke('git:getResolvedUpstreamGraph', repoPath, branch),
+    getResolvedRecentCommits: (path, count, branchName) =>
+      ipcRenderer.invoke('git:getResolvedRecentCommits', path, count, branchName),
+    resolveChildBranches: (path, baseBranch) =>
+      ipcRenderer.invoke('git:resolveChildBranches', path, baseBranch),
     resolveCopyBehavior: (projectId?) => ipcRenderer.invoke('git:resolveCopyBehavior', projectId),
     getIgnoredFileTree: (repoPath) => ipcRenderer.invoke('git:getIgnoredFileTree', repoPath),
-    copyIgnoredFiles: (repoPath, worktreePath, paths, mode?) => ipcRenderer.invoke('git:copyIgnoredFiles', repoPath, worktreePath, paths, mode),
+    copyIgnoredFiles: (repoPath, worktreePath, paths, mode?) =>
+      ipcRenderer.invoke('git:copyIgnoredFiles', repoPath, worktreePath, paths, mode),
     checkGhInstalled: () => ipcRenderer.invoke('git:checkGhInstalled'),
     hasGithubRemote: (repoPath) => ipcRenderer.invoke('git:hasGithubRemote', repoPath),
     listOpenPrs: (repoPath) => dedupInvoke('git:listOpenPrs', repoPath),
     getPrByUrl: (repoPath, url) => ipcRenderer.invoke('git:getPrByUrl', repoPath, url),
     createPr: (input) => ipcRenderer.invoke('git:createPr', input),
-    getPrComments: (repoPath, prNumber) => ipcRenderer.invoke('git:getPrComments', repoPath, prNumber),
-    addPrComment: (repoPath, prNumber, body) => ipcRenderer.invoke('git:addPrComment', repoPath, prNumber, body),
+    getPrComments: (repoPath, prNumber) =>
+      ipcRenderer.invoke('git:getPrComments', repoPath, prNumber),
+    addPrComment: (repoPath, prNumber, body) =>
+      ipcRenderer.invoke('git:addPrComment', repoPath, prNumber, body),
     mergePr: (input) => ipcRenderer.invoke('git:mergePr', input),
     getPrDiff: (repoPath, prNumber) => ipcRenderer.invoke('git:getPrDiff', repoPath, prNumber),
     getGhUser: (repoPath) => ipcRenderer.invoke('git:getGhUser', repoPath),
     editPrComment: (input) => ipcRenderer.invoke('git:editPrComment', input),
     listStashes: (repoPath) => ipcRenderer.invoke('git:listStashes', repoPath),
-    createStash: (repoPath, message, includeUntracked, keepIndex) => ipcRenderer.invoke('git:createStash', repoPath, message, includeUntracked, keepIndex),
+    createStash: (repoPath, message, includeUntracked, keepIndex) =>
+      ipcRenderer.invoke('git:createStash', repoPath, message, includeUntracked, keepIndex),
     applyStash: (repoPath, index) => ipcRenderer.invoke('git:applyStash', repoPath, index),
     popStash: (repoPath, index) => ipcRenderer.invoke('git:popStash', repoPath, index),
     dropStash: (repoPath, index) => ipcRenderer.invoke('git:dropStash', repoPath, index),
-    branchFromStash: (repoPath, index, branchName) => ipcRenderer.invoke('git:branchFromStash', repoPath, index, branchName),
+    branchFromStash: (repoPath, index, branchName) =>
+      ipcRenderer.invoke('git:branchFromStash', repoPath, index, branchName),
     getStashDiff: (repoPath, index) => ipcRenderer.invoke('git:getStashDiff', repoPath, index),
     watchStart: (worktreePath) => ipcRenderer.invoke('git:watch-start', worktreePath),
     watchStop: (worktreePath) => ipcRenderer.invoke('git:watch-stop', worktreePath),
     onDiffChanged: (cb) => {
       const handler = (_: unknown, payload: { worktreePath: string }) => cb(payload.worktreePath)
       ipcRenderer.on('git:diff-changed', handler)
-      return () => { ipcRenderer.off('git:diff-changed', handler) }
+      return () => {
+        ipcRenderer.off('git:diff-changed', handler)
+      }
     },
     onDiffWatchFailed: (cb) => {
       const handler = (_: unknown, payload: { worktreePath: string }) => cb(payload.worktreePath)
       ipcRenderer.on('git:diff-watch-failed', handler)
-      return () => { ipcRenderer.off('git:diff-watch-failed', handler) }
+      return () => {
+        ipcRenderer.off('git:diff-watch-failed', handler)
+      }
     }
   },
   tabs: {
@@ -773,11 +928,15 @@ const api: ElectronAPI = {
     delete: (tabId) => ipcRenderer.invoke('tabs:delete', tabId),
     ensureMain: (taskId, mode) => ipcRenderer.invoke('tabs:ensureMain', taskId, mode),
     split: (tabId) => ipcRenderer.invoke('tabs:split', tabId),
-    moveToGroup: (tabId, targetGroupId) => ipcRenderer.invoke('tabs:moveToGroup', tabId, targetGroupId),
+    moveToGroup: (tabId, targetGroupId) =>
+      ipcRenderer.invoke('tabs:moveToGroup', tabId, targetGroupId),
     onChanged: (cb) => {
-      const handler = (_: unknown, payload: { taskId: string; focusTabId?: string | null }) => cb(payload)
+      const handler = (_: unknown, payload: { taskId: string; focusTabId?: string | null }) =>
+        cb(payload)
       ipcRenderer.on('tabs:changed', handler)
-      return () => { ipcRenderer.off('tabs:changed', handler) }
+      return () => {
+        ipcRenderer.off('tabs:changed', handler)
+      }
     }
   },
   diagnostics: {
@@ -789,7 +948,8 @@ const api: ElectronAPI = {
   },
   telemetry: {
     onIpcEvent: (callback: (event: string, props: Record<string, unknown>) => void) => {
-      const handler = (_: unknown, event: string, props: Record<string, unknown>) => callback(event, props)
+      const handler = (_: unknown, event: string, props: Record<string, unknown>) =>
+        callback(event, props)
       ipcRenderer.on('telemetry:ipc-event', handler)
       return () => ipcRenderer.removeListener('telemetry:ipc-event', handler)
     }
@@ -800,22 +960,30 @@ const api: ElectronAPI = {
     createItem: (input) => ipcRenderer.invoke('ai-config:create-item', input),
     updateItem: (input) => ipcRenderer.invoke('ai-config:update-item', input),
     deleteItem: (id) => ipcRenderer.invoke('ai-config:delete-item', id),
-    listProjectSelections: (projectId) => ipcRenderer.invoke('ai-config:list-project-selections', projectId),
+    listProjectSelections: (projectId) =>
+      ipcRenderer.invoke('ai-config:list-project-selections', projectId),
     setProjectSelection: (input) => ipcRenderer.invoke('ai-config:set-project-selection', input),
     removeProjectSelection: (projectId, itemId, provider?) =>
       ipcRenderer.invoke('ai-config:remove-project-selection', projectId, itemId, provider),
-    discoverContextFiles: (projectPath) => ipcRenderer.invoke('ai-config:discover-context-files', projectPath),
-    readContextFile: (filePath, projectPath) => ipcRenderer.invoke('ai-config:read-context-file', filePath, projectPath),
+    discoverContextFiles: (projectPath) =>
+      ipcRenderer.invoke('ai-config:discover-context-files', projectPath),
+    readContextFile: (filePath, projectPath) =>
+      ipcRenderer.invoke('ai-config:read-context-file', filePath, projectPath),
     writeContextFile: (filePath, content, projectPath) =>
       ipcRenderer.invoke('ai-config:write-context-file', filePath, content, projectPath),
     getContextTree: (projectPath, projectId) =>
       ipcRenderer.invoke('ai-config:get-context-tree', projectPath, projectId),
     reconcileProjectSkills: (projectId, projectPath) =>
-      ipcRenderer.invoke('ai-config:reconcile-project-skills', projectId, projectPath) as Promise<number>,
+      ipcRenderer.invoke(
+        'ai-config:reconcile-project-skills',
+        projectId,
+        projectPath
+      ) as Promise<number>,
     loadLibraryItem: (input) => ipcRenderer.invoke('ai-config:load-library-item', input),
     syncLinkedFile: (projectId, projectPath, itemId, provider?) =>
       ipcRenderer.invoke('ai-config:sync-linked-file', projectId, projectPath, itemId, provider),
-    unlinkFile: (projectId, itemId) => ipcRenderer.invoke('ai-config:unlink-file', projectId, itemId),
+    unlinkFile: (projectId, itemId) =>
+      ipcRenderer.invoke('ai-config:unlink-file', projectId, itemId),
     renameContextFile: (oldPath, newPath, projectPath) =>
       ipcRenderer.invoke('ai-config:rename-context-file', oldPath, newPath, projectPath),
     deleteContextFile: (filePath, projectPath, projectId) =>
@@ -828,20 +996,15 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('ai-config:write-computer-skill', provider, slug, content),
     discoverMcpConfigs: (projectPath) =>
       ipcRenderer.invoke('ai-config:discover-mcp-configs', projectPath),
-    writeMcpServer: (input) =>
-      ipcRenderer.invoke('ai-config:write-mcp-server', input),
-    removeMcpServer: (input) =>
-      ipcRenderer.invoke('ai-config:remove-mcp-server', input),
-    discoverComputerMcpConfigs: () =>
-      ipcRenderer.invoke('ai-config:discover-computer-mcp-configs'),
+    writeMcpServer: (input) => ipcRenderer.invoke('ai-config:write-mcp-server', input),
+    removeMcpServer: (input) => ipcRenderer.invoke('ai-config:remove-mcp-server', input),
+    discoverComputerMcpConfigs: () => ipcRenderer.invoke('ai-config:discover-computer-mcp-configs'),
     writeComputerMcpServer: (input) =>
       ipcRenderer.invoke('ai-config:write-computer-mcp-server', input),
     removeComputerMcpServer: (input) =>
       ipcRenderer.invoke('ai-config:remove-computer-mcp-server', input),
-    listProviders: () =>
-      ipcRenderer.invoke('ai-config:list-providers'),
-    toggleProvider: (id, enabled) =>
-      ipcRenderer.invoke('ai-config:toggle-provider', id, enabled),
+    listProviders: () => ipcRenderer.invoke('ai-config:list-providers'),
+    toggleProvider: (id, enabled) => ipcRenderer.invoke('ai-config:toggle-provider', id, enabled),
     getProjectProviders: (projectId) =>
       ipcRenderer.invoke('ai-config:get-project-providers', projectId),
     setProjectProviders: (projectId, providers) =>
@@ -852,16 +1015,14 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('ai-config:get-project-stale-skill-count', projectId, projectPath),
     getProjectsStaleSkillCounts: (pairs) =>
       ipcRenderer.invoke('ai-config:get-projects-stale-skill-counts', pairs),
-    syncAll: (input) =>
-      ipcRenderer.invoke('ai-config:sync-all', input),
+    syncAll: (input) => ipcRenderer.invoke('ai-config:sync-all', input),
     checkSyncStatus: (projectId, projectPath) =>
       ipcRenderer.invoke('ai-config:check-sync-status', projectId, projectPath),
     getLibraryInstructions: (variantId?) =>
       ipcRenderer.invoke('ai-config:get-library-instructions', variantId),
     saveLibraryInstructions: (content, variantId?) =>
       ipcRenderer.invoke('ai-config:save-library-instructions', content, variantId),
-    listInstructionVariants: () =>
-      ipcRenderer.invoke('ai-config:list-instruction-variants'),
+    listInstructionVariants: () => ipcRenderer.invoke('ai-config:list-instruction-variants'),
     getProjectInstructionVariant: (projectId) =>
       ipcRenderer.invoke('ai-config:get-project-instruction-variant', projectId),
     setProjectInstructionVariant: (projectId, variantItemId) =>
@@ -875,7 +1036,13 @@ const api: ElectronAPI = {
     readProviderInstructions: (projectPath, provider) =>
       ipcRenderer.invoke('ai-config:read-provider-instructions', projectPath, provider),
     pushProviderInstructions: (projectId, projectPath, provider, content) =>
-      ipcRenderer.invoke('ai-config:push-provider-instructions', projectId, projectPath, provider, content),
+      ipcRenderer.invoke(
+        'ai-config:push-provider-instructions',
+        projectId,
+        projectPath,
+        provider,
+        content
+      ),
     pullProviderInstructions: (projectId, projectPath, provider) =>
       ipcRenderer.invoke('ai-config:pull-provider-instructions', projectId, projectPath, provider),
     getProjectSkillsStatus: (projectId, projectPath) =>
@@ -887,47 +1054,62 @@ const api: ElectronAPI = {
     pullProviderSkill: (projectId, projectPath, provider, itemId) =>
       ipcRenderer.invoke('ai-config:pull-provider-skill', projectId, projectPath, provider, itemId),
     getComputerFiles: () => ipcRenderer.invoke('ai-config:get-computer-files'),
-    checkSlayConfigured: (projectPath) => ipcRenderer.invoke('ai-config:check-slay-configured', projectPath),
-    setupSlay: (projectPath, projectId) => ipcRenderer.invoke('ai-config:setup-slay', projectPath, projectId),
+    checkSlayConfigured: (projectPath) =>
+      ipcRenderer.invoke('ai-config:check-slay-configured', projectPath),
+    setupSlay: (projectPath, projectId) =>
+      ipcRenderer.invoke('ai-config:setup-slay', projectPath, projectId),
 
     marketplace: {
       listRegistries: () => ipcRenderer.invoke('ai-config:marketplace:list-registries'),
       addRegistry: (input) => ipcRenderer.invoke('ai-config:marketplace:add-registry', input),
-      removeRegistry: (registryId) => ipcRenderer.invoke('ai-config:marketplace:remove-registry', registryId),
-      toggleRegistry: (registryId, enabled) => ipcRenderer.invoke('ai-config:marketplace:toggle-registry', registryId, enabled),
-      refreshRegistry: (registryId) => ipcRenderer.invoke('ai-config:marketplace:refresh-registry', registryId),
+      removeRegistry: (registryId) =>
+        ipcRenderer.invoke('ai-config:marketplace:remove-registry', registryId),
+      toggleRegistry: (registryId, enabled) =>
+        ipcRenderer.invoke('ai-config:marketplace:toggle-registry', registryId, enabled),
+      refreshRegistry: (registryId) =>
+        ipcRenderer.invoke('ai-config:marketplace:refresh-registry', registryId),
       refreshAll: () => ipcRenderer.invoke('ai-config:marketplace:refresh-all'),
       listEntries: (input?) => ipcRenderer.invoke('ai-config:marketplace:list-entries', input),
       installSkill: (input) => ipcRenderer.invoke('ai-config:marketplace:install-skill', input),
       checkUpdates: () => ipcRenderer.invoke('ai-config:marketplace:check-updates'),
-      updateSkill: (itemId, entryId) => ipcRenderer.invoke('ai-config:marketplace:update-skill', itemId, entryId),
+      updateSkill: (itemId, entryId) =>
+        ipcRenderer.invoke('ai-config:marketplace:update-skill', itemId, entryId),
       unlinkSkill: (itemId) => ipcRenderer.invoke('ai-config:marketplace:unlink-skill', itemId),
       ensureFresh: () => ipcRenderer.invoke('ai-config:marketplace:ensure-fresh')
     }
   },
   fs: {
     readDir: (rootPath, dirPath) => ipcRenderer.invoke('fs:readDir', rootPath, dirPath),
-    readFile: (rootPath, filePath, force) => ipcRenderer.invoke('fs:readFile', rootPath, filePath, force),
-    writeFile: (rootPath, filePath, content) => ipcRenderer.invoke('fs:writeFile', rootPath, filePath, content),
+    readFile: (rootPath, filePath, force) =>
+      ipcRenderer.invoke('fs:readFile', rootPath, filePath, force),
+    writeFile: (rootPath, filePath, content) =>
+      ipcRenderer.invoke('fs:writeFile', rootPath, filePath, content),
     createFile: (rootPath, filePath) => ipcRenderer.invoke('fs:createFile', rootPath, filePath),
     createDir: (rootPath, dirPath) => ipcRenderer.invoke('fs:createDir', rootPath, dirPath),
-    rename: (rootPath, oldPath, newPath) => ipcRenderer.invoke('fs:rename', rootPath, oldPath, newPath),
+    rename: (rootPath, oldPath, newPath) =>
+      ipcRenderer.invoke('fs:rename', rootPath, oldPath, newPath),
     delete: (rootPath, targetPath) => ipcRenderer.invoke('fs:delete', rootPath, targetPath),
-    copy: (rootPath, srcPath, destPath) => ipcRenderer.invoke('fs:copy', rootPath, srcPath, destPath),
-    copyIn: (rootPath, absoluteSrc, targetDir) => ipcRenderer.invoke('fs:copyIn', rootPath, absoluteSrc, targetDir),
-    showInFinder: (rootPath, targetPath) => ipcRenderer.invoke('fs:showInFinder', rootPath, targetPath),
+    copy: (rootPath, srcPath, destPath) =>
+      ipcRenderer.invoke('fs:copy', rootPath, srcPath, destPath),
+    copyIn: (rootPath, absoluteSrc, targetDir) =>
+      ipcRenderer.invoke('fs:copyIn', rootPath, absoluteSrc, targetDir),
+    showInFinder: (rootPath, targetPath) =>
+      ipcRenderer.invoke('fs:showInFinder', rootPath, targetPath),
     listAllFiles: (rootPath) => ipcRenderer.invoke('fs:listAllFiles', rootPath),
-    searchFiles: (rootPath, query, opts) => ipcRenderer.invoke('fs:searchFiles', rootPath, query, opts),
+    searchFiles: (rootPath, query, opts) =>
+      ipcRenderer.invoke('fs:searchFiles', rootPath, query, opts),
     gitStatus: (rootPath) => ipcRenderer.invoke('fs:gitStatus', rootPath),
     watch: (rootPath) => ipcRenderer.invoke('fs:watch', rootPath),
     unwatch: (rootPath) => ipcRenderer.invoke('fs:unwatch', rootPath),
     onFileChanged: (callback) => {
-      const handler = (_event: unknown, rootPath: string, relPath: string) => callback(rootPath, relPath)
+      const handler = (_event: unknown, rootPath: string, relPath: string) =>
+        callback(rootPath, relPath)
       ipcRenderer.on('fs:changed', handler)
       return () => ipcRenderer.removeListener('fs:changed', handler)
     },
     onFileDeleted: (callback) => {
-      const handler = (_event: unknown, rootPath: string, relPath: string) => callback(rootPath, relPath)
+      const handler = (_event: unknown, rootPath: string, relPath: string) =>
+        callback(rootPath, relPath)
       ipcRenderer.on('fs:deleted', handler)
       return () => ipcRenderer.removeListener('fs:deleted', handler)
     }
@@ -943,15 +1125,16 @@ const api: ElectronAPI = {
     captureView: (viewId: string) => ipcRenderer.invoke('screenshot:captureView', viewId)
   },
   webview: {
-    registerShortcuts: (webviewId) =>
-      ipcRenderer.invoke('webview:register-shortcuts', webviewId),
+    registerShortcuts: (webviewId) => ipcRenderer.invoke('webview:register-shortcuts', webviewId),
     setKeyboardPassthrough: (webviewId, enabled) =>
       ipcRenderer.invoke('webview:set-keyboard-passthrough', webviewId, enabled),
     setDesktopHandoffPolicy: (webviewId, policy) =>
       ipcRenderer.invoke('webview:set-desktop-handoff-policy', webviewId, policy),
     onShortcut: (callback) => {
-      const handler = (_event: unknown, payload: { key: string; shift?: boolean; webviewId?: number }) =>
-        callback(payload)
+      const handler = (
+        _event: unknown,
+        payload: { key: string; shift?: boolean; webviewId?: number }
+      ) => callback(payload)
       ipcRenderer.on('webview:shortcut', handler)
       return () => ipcRenderer.removeListener('webview:shortcut', handler)
     },
@@ -959,10 +1142,8 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('webview:open-devtools-bottom', webviewId),
     openDevToolsDetached: (webviewId) =>
       ipcRenderer.invoke('webview:open-devtools-detached', webviewId),
-    closeDevTools: (webviewId) =>
-      ipcRenderer.invoke('webview:close-devtools', webviewId),
-    isDevToolsOpened: (webviewId) =>
-      ipcRenderer.invoke('webview:is-devtools-opened', webviewId),
+    closeDevTools: (webviewId) => ipcRenderer.invoke('webview:close-devtools', webviewId),
+    isDevToolsOpened: (webviewId) => ipcRenderer.invoke('webview:is-devtools-opened', webviewId),
     enableDeviceEmulation: (webviewId, params) =>
       ipcRenderer.invoke('webview:enable-device-emulation', webviewId, params),
     disableDeviceEmulation: (webviewId) =>
@@ -972,11 +1153,12 @@ const api: ElectronAPI = {
     unregisterBrowserTab: (taskId, tabId) =>
       ipcRenderer.invoke('webview:unregister-browser-tab', taskId, tabId),
     setActiveBrowserTab: (taskId, tabId) =>
-      ipcRenderer.invoke('webview:set-active-browser-tab', taskId, tabId),
+      ipcRenderer.invoke('webview:set-active-browser-tab', taskId, tabId)
   },
   browser: {
     createView: (opts) => ipcRenderer.invoke('browser:create-view', opts),
-    reparentToCurrentWindow: (viewId: string) => ipcRenderer.invoke('browser:reparent-to-current-window', viewId),
+    reparentToCurrentWindow: (viewId: string) =>
+      ipcRenderer.invoke('browser:reparent-to-current-window', viewId),
     destroyView: (viewId) => ipcRenderer.invoke('browser:destroy-view', viewId),
     destroyAllForTask: (taskId) => ipcRenderer.invoke('browser:destroy-all-for-task', taskId),
     listViews: () => ipcRenderer.invoke('browser:list-views'),
@@ -985,7 +1167,8 @@ const api: ElectronAPI = {
     setLocked: (viewId, locked) => ipcRenderer.invoke('browser:set-locked', viewId, locked),
     hideAll: () => ipcRenderer.invoke('browser:hide-all'),
     showAll: () => ipcRenderer.invoke('browser:show-all'),
-    setHandoffPolicy: (viewId, policy) => ipcRenderer.invoke('browser:set-handoff-policy', viewId, policy),
+    setHandoffPolicy: (viewId, policy) =>
+      ipcRenderer.invoke('browser:set-handoff-policy', viewId, policy),
     navigate: (viewId, url) => ipcRenderer.invoke('browser:navigate', viewId, url),
     goBack: (viewId) => ipcRenderer.invoke('browser:go-back', viewId),
     goForward: (viewId) => ipcRenderer.invoke('browser:go-forward', viewId),
@@ -996,13 +1179,28 @@ const api: ElectronAPI = {
     removeCss: (viewId, key) => ipcRenderer.invoke('browser:remove-css', viewId, key),
     setZoom: (viewId, factor) => ipcRenderer.invoke('browser:set-zoom', viewId, factor),
     focus: (viewId) => ipcRenderer.invoke('browser:focus', viewId),
-    findInPage: (viewId, text, options) => ipcRenderer.invoke('browser:find-in-page', viewId, text, options),
-    stopFindInPage: (viewId, action) => ipcRenderer.invoke('browser:stop-find-in-page', viewId, action),
+    findInPage: (viewId, text, options) =>
+      ipcRenderer.invoke('browser:find-in-page', viewId, text, options),
+    stopFindInPage: (viewId, action) =>
+      ipcRenderer.invoke('browser:stop-find-in-page', viewId, action),
     getWebContentsId: (viewId) => ipcRenderer.invoke('browser:get-web-contents-id', viewId),
-    setKeyboardPassthrough: (viewId, enabled) => ipcRenderer.invoke('browser:set-keyboard-passthrough', viewId, enabled),
-    sendInputEvent: (viewId, input) => ipcRenderer.invoke('browser:send-input-event', viewId, input),
+    setKeyboardPassthrough: (viewId, enabled) =>
+      ipcRenderer.invoke('browser:set-keyboard-passthrough', viewId, enabled),
+    sendInputEvent: (viewId, input) =>
+      ipcRenderer.invoke('browser:send-input-event', viewId, input),
     onBrowserViewShortcut: (cb) => {
-      const handler = (_event: unknown, data: { viewId: string; key: string; shift: boolean; alt: boolean; meta: boolean; control: boolean; kind?: string }) => cb(data)
+      const handler = (
+        _event: unknown,
+        data: {
+          viewId: string
+          key: string
+          shift: boolean
+          alt: boolean
+          meta: boolean
+          control: boolean
+          kind?: string
+        }
+      ) => cb(data)
       ipcRenderer.on('browser-view:shortcut', handler)
       return () => ipcRenderer.removeListener('browser-view:shortcut', handler)
     },
@@ -1019,7 +1217,8 @@ const api: ElectronAPI = {
     removeExtension: (extensionId) => ipcRenderer.invoke('browser:remove-extension', extensionId),
     discoverBrowserExtensions: () => ipcRenderer.invoke('browser:discover-browser-extensions'),
     importExtension: (path) => ipcRenderer.invoke('browser:import-extension', path),
-    activateExtension: (extensionId) => ipcRenderer.invoke('browser:activate-extension', extensionId),
+    activateExtension: (extensionId) =>
+      ipcRenderer.invoke('browser:activate-extension', extensionId),
     onCreateTaskFromLink: (cb) => {
       const handler = (_event: unknown, intent: BrowserCreateTaskFromLinkIntent) => cb(intent)
       ipcRenderer.on('browser:create-task-from-link', handler)
@@ -1031,10 +1230,13 @@ const api: ElectronAPI = {
       return () => ipcRenderer.removeListener('browser:agent-touched', handler)
     },
     onEvent: (cb) => {
-      const handler = (_event: unknown, data: { viewId: string; type: string; [key: string]: unknown }) => cb(data)
+      const handler = (
+        _event: unknown,
+        data: { viewId: string; type: string; [key: string]: unknown }
+      ) => cb(data)
       ipcRenderer.on('browser:event', handler)
       return () => ipcRenderer.removeListener('browser:event', handler)
-    },
+    }
   },
   exportImport: {
     exportAll: () => ipcRenderer.invoke('export-import:export-all'),
@@ -1050,7 +1252,8 @@ const api: ElectronAPI = {
     stop: (processId) => ipcRenderer.invoke('processes:stop', processId),
     kill: (processId) => ipcRenderer.invoke('processes:kill', processId),
     restart: (processId) => ipcRenderer.invoke('processes:restart', processId),
-    listForTask: (taskId, projectId) => ipcRenderer.invoke('processes:listForTask', taskId, projectId),
+    listForTask: (taskId, projectId) =>
+      ipcRenderer.invoke('processes:listForTask', taskId, projectId),
     listAll: () => ipcRenderer.invoke('processes:listAll'),
     killTask: (taskId) => ipcRenderer.invoke('processes:killTask', taskId),
     onLog: (cb) => {
@@ -1059,17 +1262,25 @@ const api: ElectronAPI = {
       return () => ipcRenderer.removeListener('processes:log', handler)
     },
     onStatus: (cb) => {
-      const handler = (_event: unknown, processId: string, status: import('@slayzone/types').ProcessStatus) => cb(processId, status)
+      const handler = (
+        _event: unknown,
+        processId: string,
+        status: import('@slayzone/types').ProcessStatus
+      ) => cb(processId, status)
       ipcRenderer.on('processes:status', handler)
       return () => ipcRenderer.removeListener('processes:status', handler)
     },
     onStats: (cb) => {
-      const handler = (_event: unknown, stats: Record<string, import('@slayzone/types').ProcessStats>) => cb(stats)
+      const handler = (
+        _event: unknown,
+        stats: Record<string, import('@slayzone/types').ProcessStats>
+      ) => cb(stats)
       ipcRenderer.on('processes:stats', handler)
       return () => ipcRenderer.removeListener('processes:stats', handler)
     },
     onTitle: (cb) => {
-      const handler = (_event: unknown, processId: string, title: string | null) => cb(processId, title)
+      const handler = (_event: unknown, processId: string, title: string | null) =>
+        cb(processId, title)
       ipcRenderer.on('processes:title', handler)
       return () => ipcRenderer.removeListener('processes:title', handler)
     }
@@ -1081,13 +1292,17 @@ const api: ElectronAPI = {
     getJiraTransitions: (taskId) => ipcRenderer.invoke('integrations:get-jira-transitions', taskId),
     updateConnection: (input) => ipcRenderer.invoke('integrations:update-connection', input),
     listConnections: (provider) => ipcRenderer.invoke('integrations:list-connections', provider),
-    getConnectionUsage: (connectionId) => ipcRenderer.invoke('integrations:get-connection-usage', connectionId),
+    getConnectionUsage: (connectionId) =>
+      ipcRenderer.invoke('integrations:get-connection-usage', connectionId),
     disconnect: (connectionId) => ipcRenderer.invoke('integrations:disconnect', connectionId),
-    clearProjectProvider: (input) => ipcRenderer.invoke('integrations:clear-project-provider', input),
+    clearProjectProvider: (input) =>
+      ipcRenderer.invoke('integrations:clear-project-provider', input),
     getProjectConnection: (projectId, provider) =>
       ipcRenderer.invoke('integrations:get-project-connection', projectId, provider),
-    setProjectConnection: (input) => ipcRenderer.invoke('integrations:set-project-connection', input),
-    clearProjectConnection: (input) => ipcRenderer.invoke('integrations:clear-project-connection', input),
+    setProjectConnection: (input) =>
+      ipcRenderer.invoke('integrations:set-project-connection', input),
+    clearProjectConnection: (input) =>
+      ipcRenderer.invoke('integrations:clear-project-connection', input),
     listGithubRepositories: (connectionId) =>
       ipcRenderer.invoke('integrations:list-github-repositories', connectionId),
     listGithubProjects: (connectionId) =>
@@ -1098,7 +1313,8 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('integrations:list-github-repository-issues', input),
     importGithubRepositoryIssues: (input) =>
       ipcRenderer.invoke('integrations:import-github-repository-issues', input),
-    listLinearTeams: (connectionId) => ipcRenderer.invoke('integrations:list-linear-teams', connectionId),
+    listLinearTeams: (connectionId) =>
+      ipcRenderer.invoke('integrations:list-linear-teams', connectionId),
     listLinearProjects: (connectionId, teamId) =>
       ipcRenderer.invoke('integrations:list-linear-projects', connectionId, teamId),
     listLinearIssues: (input) => ipcRenderer.invoke('integrations:list-linear-issues', input),
@@ -1107,21 +1323,29 @@ const api: ElectronAPI = {
       ipcRenderer.invoke('integrations:get-project-mapping', projectId, provider),
     importLinearIssues: (input) => ipcRenderer.invoke('integrations:import-linear-issues', input),
     syncNow: (input) => ipcRenderer.invoke('integrations:sync-now', input),
-    getTaskSyncStatus: (taskId, provider) => ipcRenderer.invoke('integrations:get-task-sync-status', taskId, provider),
-    getBatchTaskSyncStatus: (taskIds, provider) => ipcRenderer.invoke('integrations:get-batch-task-sync-status', taskIds, provider),
+    getTaskSyncStatus: (taskId, provider) =>
+      ipcRenderer.invoke('integrations:get-task-sync-status', taskId, provider),
+    getBatchTaskSyncStatus: (taskIds, provider) =>
+      ipcRenderer.invoke('integrations:get-batch-task-sync-status', taskIds, provider),
     pushTask: (input) => ipcRenderer.invoke('integrations:push-task', input),
     pullTask: (input) => ipcRenderer.invoke('integrations:pull-task', input),
     getLink: (taskId, provider) => ipcRenderer.invoke('integrations:get-link', taskId, provider),
-    unlinkTask: (taskId, provider) => ipcRenderer.invoke('integrations:unlink-task', taskId, provider),
+    unlinkTask: (taskId, provider) =>
+      ipcRenderer.invoke('integrations:unlink-task', taskId, provider),
     pushUnlinkedTasks: (input) => ipcRenderer.invoke('integrations:push-unlinked-tasks', input),
-    fetchProviderStatuses: (input) => ipcRenderer.invoke('integrations:fetch-provider-statuses', input),
+    fetchProviderStatuses: (input) =>
+      ipcRenderer.invoke('integrations:fetch-provider-statuses', input),
     applyStatusSync: (input) => ipcRenderer.invoke('integrations:apply-status-sync', input),
-    resyncProviderStatuses: (input) => ipcRenderer.invoke('integrations:resync-provider-statuses', input),
+    resyncProviderStatuses: (input) =>
+      ipcRenderer.invoke('integrations:resync-provider-statuses', input),
     // Generic provider-dispatched
-    listProviderGroups: (connectionId) => ipcRenderer.invoke('integrations:list-provider-groups', connectionId),
-    listProviderScopes: (connectionId, groupId) => ipcRenderer.invoke('integrations:list-provider-scopes', connectionId, groupId),
+    listProviderGroups: (connectionId) =>
+      ipcRenderer.invoke('integrations:list-provider-groups', connectionId),
+    listProviderScopes: (connectionId, groupId) =>
+      ipcRenderer.invoke('integrations:list-provider-scopes', connectionId, groupId),
     listProviderIssues: (input) => ipcRenderer.invoke('integrations:list-provider-issues', input),
-    importProviderIssues: (input) => ipcRenderer.invoke('integrations:import-provider-issues', input)
+    importProviderIssues: (input) =>
+      ipcRenderer.invoke('integrations:import-provider-issues', input)
   },
   backup: {
     list: () => ipcRenderer.invoke('backup:list'),
@@ -1130,7 +1354,8 @@ const api: ElectronAPI = {
     delete: (filename: string) => ipcRenderer.invoke('backup:delete', filename),
     restore: (filename: string) => ipcRenderer.invoke('backup:restore', filename),
     getSettings: () => ipcRenderer.invoke('backup:getSettings'),
-    setSettings: (settings: Partial<import('@slayzone/types').BackupSettings>) => ipcRenderer.invoke('backup:setSettings', settings),
+    setSettings: (settings: Partial<import('@slayzone/types').BackupSettings>) =>
+      ipcRenderer.invoke('backup:setSettings', settings),
     revealInFinder: () => ipcRenderer.invoke('backup:revealInFinder')
   },
   testPanel: {
@@ -1142,16 +1367,20 @@ const api: ElectronAPI = {
     getProfiles: () => ipcRenderer.invoke('db:testPanel:getProfiles'),
     saveProfile: (profile) => ipcRenderer.invoke('db:testPanel:saveProfile', profile),
     deleteProfile: (id) => ipcRenderer.invoke('db:testPanel:deleteProfile', id),
-    applyProfile: (projectId, profileId) => ipcRenderer.invoke('db:testPanel:applyProfile', projectId, profileId),
-    scanFiles: (projectPath, projectId) => ipcRenderer.invoke('db:testPanel:scanFiles', projectPath, projectId),
+    applyProfile: (projectId, profileId) =>
+      ipcRenderer.invoke('db:testPanel:applyProfile', projectId, profileId),
+    scanFiles: (projectPath, projectId) =>
+      ipcRenderer.invoke('db:testPanel:scanFiles', projectPath, projectId),
     getLabels: (projectId) => ipcRenderer.invoke('db:testPanel:getLabels', projectId),
     createLabel: (data) => ipcRenderer.invoke('db:testPanel:createLabel', data),
     updateLabel: (data) => ipcRenderer.invoke('db:testPanel:updateLabel', data),
     deleteLabel: (id) => ipcRenderer.invoke('db:testPanel:deleteLabel', id),
     getFileLabels: (projectId) => ipcRenderer.invoke('db:testPanel:getFileLabels', projectId),
-    toggleFileLabel: (projectId, filePath, labelId) => ipcRenderer.invoke('db:testPanel:toggleFileLabel', projectId, filePath, labelId),
+    toggleFileLabel: (projectId, filePath, labelId) =>
+      ipcRenderer.invoke('db:testPanel:toggleFileLabel', projectId, filePath, labelId),
     getFileNotes: (projectId) => ipcRenderer.invoke('db:testPanel:getFileNotes', projectId),
-    setFileNote: (projectId, filePath, note) => ipcRenderer.invoke('db:testPanel:setFileNote', projectId, filePath, note)
+    setFileNote: (projectId, filePath, note) =>
+      ipcRenderer.invoke('db:testPanel:setFileNote', projectId, filePath, note)
   },
 
   automations: {
@@ -1162,7 +1391,8 @@ const api: ElectronAPI = {
     delete: (id) => ipcRenderer.invoke('db:automations:delete', id),
     toggle: (id, enabled) => ipcRenderer.invoke('db:automations:toggle', id, enabled),
     reorder: (ids) => ipcRenderer.invoke('db:automations:reorder', ids),
-    getRuns: (automationId, limit) => ipcRenderer.invoke('db:automations:getRuns', automationId, limit),
+    getRuns: (automationId, limit) =>
+      ipcRenderer.invoke('db:automations:getRuns', automationId, limit),
     runManual: (id) => ipcRenderer.invoke('db:automations:runManual', id),
     clearRuns: (automationId) => ipcRenderer.invoke('db:automations:clearRuns', automationId),
     onChanged: (callback) => {

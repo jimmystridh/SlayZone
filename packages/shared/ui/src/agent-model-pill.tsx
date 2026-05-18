@@ -4,7 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from './dropdown-menu'
 
 export type AgentModel = 'opus' | 'sonnet' | 'haiku'
@@ -19,18 +19,18 @@ const MODEL_META: Record<AgentModel, ModelMeta> = {
   opus: {
     label: 'Opus',
     short: 'Opus',
-    description: 'Maximum capability. Slower, higher cost.',
+    description: 'Maximum capability. Slower, higher cost.'
   },
   sonnet: {
     label: 'Sonnet',
     short: 'Sonnet',
-    description: 'Balanced speed + capability. Recommended for most chats.',
+    description: 'Balanced speed + capability. Recommended for most chats.'
   },
   haiku: {
     label: 'Haiku',
     short: 'Haiku',
-    description: 'Fastest + cheapest. Best for simple tasks.',
-  },
+    description: 'Fastest + cheapest. Best for simple tasks.'
+  }
 }
 
 const MODEL_ORDER: AgentModel[] = ['opus', 'sonnet', 'haiku']
@@ -45,7 +45,14 @@ export interface AgentModelPillProps {
   className?: string
 }
 
-export function AgentModelPill({ model, onChange, disabled, compact, variant = 'pill', className }: AgentModelPillProps) {
+export function AgentModelPill({
+  model,
+  onChange,
+  disabled,
+  compact,
+  variant = 'pill',
+  className
+}: AgentModelPillProps) {
   const meta = MODEL_META[model]
   return (
     <DropdownMenu>
@@ -57,7 +64,7 @@ export function AgentModelPill({ model, onChange, disabled, compact, variant = '
             ? 'gap-1.5 rounded-full ring-1 px-2 py-0.5 text-[11px] font-medium bg-muted/40 text-muted-foreground ring-border hover:bg-muted/60 hover:text-foreground'
             : 'gap-1 rounded px-1 py-0.5 text-[10px] text-muted-foreground/80 hover:bg-muted/60 hover:text-foreground',
           disabled && 'opacity-50 cursor-not-allowed',
-          className,
+          className
         )}
         title={meta.description}
         aria-label={`Chat model: ${meta.label}`}

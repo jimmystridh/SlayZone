@@ -1,14 +1,11 @@
 ---
-const {
-  verdict,
-  compact = false,
-} = Astro.props
+const { verdict, compact = false } = Astro.props
 
 const labels = {
   yes: 'Yes',
   partial: 'Partial',
   no: 'No',
-  unknown: 'Unknown',
+  unknown: 'Unknown'
 }
 
 const verdictClass = `verdict verdict-${verdict} ${compact ? 'compact' : ''}`.trim()

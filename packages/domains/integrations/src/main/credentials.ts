@@ -11,10 +11,7 @@ const safeStorage = (electron as unknown as { safeStorage?: SafeStorageApi }).sa
 const PLAINTEXT_PREFIX = 'plain:'
 
 function allowPlaintextFallback(): boolean {
-  return (
-    process.env.SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS === '1' ||
-    process.env.NODE_ENV === 'test'
-  )
+  return process.env.SLAYZONE_ALLOW_PLAINTEXT_CREDENTIALS === '1' || process.env.NODE_ENV === 'test'
 }
 
 function toSettingKey(ref: string): string {

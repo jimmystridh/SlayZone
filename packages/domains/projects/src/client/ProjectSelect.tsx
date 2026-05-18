@@ -1,12 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Project } from '@slayzone/projects/shared'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@slayzone/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@slayzone/ui'
 
 interface ProjectSelectProps {
   value: string | undefined
@@ -31,14 +25,16 @@ export function ProjectSelect({
         <SelectValue placeholder="Select project" />
       </SelectTrigger>
       <SelectContent>
-        {[...projects].sort((a, b) => a.name.localeCompare(b.name)).map((project) => (
-          <SelectItem key={project.id} value={project.id}>
-            <span className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: project.color }} />
-              {project.name}
-            </span>
-          </SelectItem>
-        ))}
+        {[...projects]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((project) => (
+            <SelectItem key={project.id} value={project.id}>
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: project.color }} />
+                {project.name}
+              </span>
+            </SelectItem>
+          ))}
       </SelectContent>
     </Select>
   )

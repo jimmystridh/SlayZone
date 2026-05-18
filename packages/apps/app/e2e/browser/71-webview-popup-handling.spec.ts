@@ -16,7 +16,7 @@ import {
   getActiveViewId,
   testInvoke,
   tabEntries,
-  urlInput,
+  urlInput
 } from '../fixtures/browser-view'
 
 // ---------------------------------------------------------------------------
@@ -158,7 +158,7 @@ const patchOpenExternal = async (electronApp: ElectronApp) => {
         writable: true,
         value: async (url: string) => {
           g.__popupTestOpenExternalCalls?.push({ url })
-        },
+        }
       })
       return { ok: true as const, error: null }
     } catch (error) {
@@ -179,7 +179,7 @@ const restoreOpenExternal = async (electronApp: ElectronApp) => {
       Object.defineProperty(shell, 'openExternal', {
         configurable: true,
         writable: true,
-        value: g.__popupTestOriginalOpenExternal,
+        value: g.__popupTestOriginalOpenExternal
       })
     }
     delete g.__popupTestOriginalOpenExternal
@@ -204,104 +204,126 @@ const openWebPanel = async (
   const titleEl = mainWindow.locator('h1, [data-testid="task-title"]').first()
   if (await titleEl.isVisible().catch(() => false)) await titleEl.click()
   await mainWindow.keyboard.press(`Meta+${panelShortcut}`)
-  await expect(
-    mainWindow.locator('span').filter({ hasText: panelName }).last()
-  ).toBeVisible({ timeout: 5_000 })
+  await expect(mainWindow.locator('span').filter({ hasText: panelName }).last()).toBeVisible({
+    timeout: 5_000
+  })
   // Initial WebContentsView URL may be empty before first navigation completes.
-  await expect.poll(() => getWebPanelUrl(mainWindow), { timeout: 5_000 }).toMatch(/^(about:blank|)$/)
+  await expect
+    .poll(() => getWebPanelUrl(mainWindow), { timeout: 5_000 })
+    .toMatch(/^(about:blank|)$/)
 }
 
 // ===========================================================================
 // Group 1: Browser Panel — popup disposition handling
 // ===========================================================================
 
-test.describe.serial('Webview popup handling — Browser panel', () => {
-  let taskId: string
-  let baselineWindowIds: number[]
+test.describe
+  .serial('Webview popup handling — Browser panel', () => {
+    let taskId: string
+    let baselineWindowIds: number[]
 
-  test.beforeAll(async ({ electronApp, mainWindow }) => {
-    await resetApp(mainWindow)
-    const s = seed(mainWindow)
-    const p = await s.createProject({
-      name: 'PopupTest',
-      color: '#8b5cf6',
-      path: TEST_PROJECT_PATH,
+    test.beforeAll(async ({ electronApp, mainWindow }) => {
+      await resetApp(mainWindow)
+      const s = seed(mainWindow)
+      const p = await s.createProject({
+        name: 'PopupTest',
+        color: '#8b5cf6',
+        path: TEST_PROJECT_PATH
+      })
+      const task = await s.createTask({
+        projectId: p.id,
+        title: 'Popup handling task',
+        status: 'todo'
+      })
+      taskId = task.id
+      await s.refreshData()
+
+      await openTaskViaSearch(mainWindow, 'Popup handling task')
+      await ensureBrowserPanel(mainWindow)
+
+      const viewId = await getActiveViewId(mainWindow, taskId)
+      await testInvoke(mainWindow, 'browser:navigate', viewId, 'https://example.com')
+      await expect
+        .poll(
+          async () => {
+            return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+          },
+          { timeout: 10_000 }
+        )
+        .toContain('example.com')
+      await expect
+        .poll(
+          async () => {
+            return (await testInvoke(
+              mainWindow,
+              'browser:execute-js',
+              viewId,
+              'document.readyState'
+            )) as string
+          },
+          { timeout: 10_000 }
+        )
+        .toBe('complete')
+
+      baselineWindowIds = await getWindowIds(electronApp)
     })
-    const task = await s.createTask({ projectId: p.id, title: 'Popup handling task', status: 'todo' })
-    taskId = task.id
-    await s.refreshData()
 
-    await openTaskViaSearch(mainWindow, 'Popup handling task')
-    await ensureBrowserPanel(mainWindow)
+    test.afterEach(async ({ electronApp }) => {
+      await closeNewWindows(electronApp, baselineWindowIds)
+    })
 
-    const viewId = await getActiveViewId(mainWindow, taskId)
-    await testInvoke(mainWindow, 'browser:navigate', viewId, 'https://example.com')
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 10_000 }).toContain('example.com')
-    await expect.poll(async () => {
-      return await testInvoke(mainWindow, 'browser:execute-js', viewId, 'document.readyState') as string
-    }, { timeout: 10_000 }).toBe('complete')
-
-    baselineWindowIds = await getWindowIds(electronApp)
-  })
-
-  test.afterEach(async ({ electronApp }) => {
-    await closeNewWindows(electronApp, baselineWindowIds)
-  })
-
-  test('window.open() with features creates real BrowserWindow', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    const result = await execInBrowserWebview(
-      mainWindow,
-      taskId,
-      `new Promise((resolve) => {
+    test('window.open() with features creates real BrowserWindow', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      const result = await execInBrowserWebview(
+        mainWindow,
+        taskId,
+        `new Promise((resolve) => {
         const popup = window.open('https://example.com/oauth', 'auth', 'width=500,height=600')
         resolve(JSON.stringify({ popupIsNull: popup === null }))
       })`
-    )
-    const parsed = JSON.parse(result as string)
-    expect(parsed.popupIsNull).toBe(false)
+      )
+      const parsed = JSON.parse(result as string)
+      expect(parsed.popupIsNull).toBe(false)
 
-    await expect
-      .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
-      .toHaveLength(1)
-  })
+      await expect
+        .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
+        .toHaveLength(1)
+    })
 
-  test('window.open() with features does NOT create new browser tab', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    const baselineTabs = await getBrowserTabCount(mainWindow)
+    test('window.open() with features does NOT create new browser tab', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      const baselineTabs = await getBrowserTabCount(mainWindow)
 
-    await execInBrowserWebview(
-      mainWindow,
-      taskId,
-      `window.open('https://example.com/oauth2', 'auth2', 'width=500,height=600')`
-    )
+      await execInBrowserWebview(
+        mainWindow,
+        taskId,
+        `window.open('https://example.com/oauth2', 'auth2', 'width=500,height=600')`
+      )
 
-    // Wait for popup window to confirm the open completed
-    await expect
-      .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
-      .toHaveLength(1)
+      // Wait for popup window to confirm the open completed
+      await expect
+        .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
+        .toHaveLength(1)
 
-    // Tab count should NOT have changed
-    const tabsAfter = await getBrowserTabCount(mainWindow)
-    expect(tabsAfter).toBe(baselineTabs)
-  })
+      // Tab count should NOT have changed
+      const tabsAfter = await getBrowserTabCount(mainWindow)
+      expect(tabsAfter).toBe(baselineTabs)
+    })
 
-  test('target="_blank" link creates tab, not BrowserWindow', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    const baselineTabs = await getBrowserTabCount(mainWindow)
+    test('target="_blank" link creates tab, not BrowserWindow', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      const baselineTabs = await getBrowserTabCount(mainWindow)
 
-    await execInBrowserWebview(
-      mainWindow,
-      taskId,
-      `new Promise((resolve) => {
+      await execInBrowserWebview(
+        mainWindow,
+        taskId,
+        `new Promise((resolve) => {
         const a = document.createElement('a')
         a.href = 'https://example.com/linked-page'
         a.target = '_blank'
@@ -310,68 +332,71 @@ test.describe.serial('Webview popup handling — Browser panel', () => {
         document.body.removeChild(a)
         setTimeout(() => resolve('done'), 500)
       })`
-    )
+      )
 
-    // Wait for tab to appear
-    await expect
-      .poll(() => getBrowserTabCount(mainWindow), { timeout: 5_000 })
-      .toBe(baselineTabs + 1)
+      // Wait for tab to appear
+      await expect
+        .poll(() => getBrowserTabCount(mainWindow), { timeout: 5_000 })
+        .toBe(baselineTabs + 1)
 
-    // No popup window should have been created
-    const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
-    expect(newWindows).toHaveLength(0)
-  })
+      // No popup window should have been created
+      const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
+      expect(newWindows).toHaveLength(0)
+    })
 
-  test('window.open() without features creates tab, not BrowserWindow', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    const baselineTabs = await getBrowserTabCount(mainWindow)
+    test('window.open() without features creates tab, not BrowserWindow', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      const baselineTabs = await getBrowserTabCount(mainWindow)
 
-    await execInBrowserWebview(mainWindow, taskId, `window.open('https://example.com/no-features')`)
+      await execInBrowserWebview(
+        mainWindow,
+        taskId,
+        `window.open('https://example.com/no-features')`
+      )
 
-    await expect
-      .poll(() => getBrowserTabCount(mainWindow), { timeout: 5_000 })
-      .toBe(baselineTabs + 1)
+      await expect
+        .poll(() => getBrowserTabCount(mainWindow), { timeout: 5_000 })
+        .toBe(baselineTabs + 1)
 
-    const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
-    expect(newWindows).toHaveLength(0)
-  })
+      const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
+      expect(newWindows).toHaveLength(0)
+    })
 
-  test('window.open() with blocked scheme returns null', async ({ electronApp, mainWindow }) => {
-    const result = await execInBrowserWebview(
-      mainWindow,
-      taskId,
-      `new Promise((resolve) => {
+    test('window.open() with blocked scheme returns null', async ({ electronApp, mainWindow }) => {
+      const result = await execInBrowserWebview(
+        mainWindow,
+        taskId,
+        `new Promise((resolve) => {
         const popup = window.open('figma://blocked-test', 'x', 'width=500,height=600')
         resolve(JSON.stringify({ popupIsNull: popup === null }))
       })`
-    )
+      )
 
-    const parsed = JSON.parse(result as string)
-    expect(parsed.popupIsNull).toBe(true)
+      const parsed = JSON.parse(result as string)
+      expect(parsed.popupIsNull).toBe(true)
 
-    const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
-    expect(newWindows).toHaveLength(0)
-  })
+      const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
+      expect(newWindows).toHaveLength(0)
+    })
 
-  test('child popup cannot open grandchild (chain prevention)', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    await execInBrowserWebview(
-      mainWindow,
-      taskId,
-      `window.open('https://example.com/parent-popup', 'parent', 'width=500,height=600')`
-    )
-    await expect
-      .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
-      .toHaveLength(1)
-    const newIds = await getNewWindowIds(electronApp, baselineWindowIds)
+    test('child popup cannot open grandchild (chain prevention)', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      await execInBrowserWebview(
+        mainWindow,
+        taskId,
+        `window.open('https://example.com/parent-popup', 'parent', 'width=500,height=600')`
+      )
+      await expect
+        .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
+        .toHaveLength(1)
+      const newIds = await getNewWindowIds(electronApp, baselineWindowIds)
 
-    // From main process: find the child window and try to open a grandchild
-    const grandchildResult = await electronApp.evaluate(
-      ({ BrowserWindow }, childId: number) => {
+      // From main process: find the child window and try to open a grandchild
+      const grandchildResult = await electronApp.evaluate(({ BrowserWindow }, childId: number) => {
         const child = BrowserWindow.fromId(childId)
         if (!child || child.isDestroyed()) return { error: 'no-child-window' }
 
@@ -381,76 +406,69 @@ test.describe.serial('Webview popup handling — Browser panel', () => {
           )
           .then((r: string) => JSON.parse(r))
           .catch((e: Error) => ({ error: e.message }))
-      },
-      newIds[0]
-    )
+      }, newIds[0])
 
-    expect(grandchildResult.popupIsNull ?? grandchildResult.error).toBeTruthy()
+      expect(grandchildResult.popupIsNull ?? grandchildResult.error).toBeTruthy()
 
-    // Should still be exactly 1 new window (the parent), no grandchild
-    const finalNewWindows = await getNewWindowIds(electronApp, baselineWindowIds)
-    expect(finalNewWindows).toHaveLength(1)
-  })
+      // Should still be exactly 1 new window (the parent), no grandchild
+      const finalNewWindows = await getNewWindowIds(electronApp, baselineWindowIds)
+      expect(finalNewWindows).toHaveLength(1)
+    })
 
-  test('popup shares session with parent webview (persist:browser-tabs)', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    await execInBrowserWebview(
-      mainWindow,
-      taskId,
-      `window.open('https://example.com/session-test', 'sess', 'width=500,height=600')`
-    )
-    await expect
-      .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
-      .toHaveLength(1)
-    const newIds = await getNewWindowIds(electronApp, baselineWindowIds)
+    test('popup shares session with parent webview (persist:browser-tabs)', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      await execInBrowserWebview(
+        mainWindow,
+        taskId,
+        `window.open('https://example.com/session-test', 'sess', 'width=500,height=600')`
+      )
+      await expect
+        .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
+        .toHaveLength(1)
+      const newIds = await getNewWindowIds(electronApp, baselineWindowIds)
 
-    const storagePath = await electronApp.evaluate(
-      ({ BrowserWindow }, childId: number) => {
+      const storagePath = await electronApp.evaluate(({ BrowserWindow }, childId: number) => {
         const child = BrowserWindow.fromId(childId)
         if (!child || child.isDestroyed()) return 'no-child'
         return child.webContents.session.storagePath ?? 'no-storage-path'
-      },
-      newIds[0]
-    )
+      }, newIds[0])
 
-    expect(storagePath).toContain('browser-tabs')
+      expect(storagePath).toContain('browser-tabs')
+    })
+
+    // This test toggles the browser panel off which destroys the webview — keep it last.
+    test('popup windows closed when parent webview destroyed (panel toggle)', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      await ensureBrowserPanel(mainWindow)
+
+      await execInBrowserWebview(
+        mainWindow,
+        taskId,
+        `window.open('https://example.com/destroy-test', 'dest', 'width=500,height=600')`
+      )
+      await expect
+        .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
+        .toHaveLength(1)
+
+      // Toggle browser panel OFF → webview destroyed → child cleanup fires
+      await focusForAppShortcut(mainWindow)
+      await mainWindow.keyboard.press('Meta+b')
+
+      // Popup should be closed
+      await expect
+        .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
+        .toHaveLength(0)
+
+      // Re-open browser panel for any tests that follow
+      await focusForAppShortcut(mainWindow)
+      await mainWindow.keyboard.press('Meta+b')
+      await expect(urlInput(mainWindow)).toBeVisible({ timeout: 5_000 })
+    })
   })
-
-  // This test toggles the browser panel off which destroys the webview — keep it last.
-  test('popup windows closed when parent webview destroyed (panel toggle)', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    await ensureBrowserPanel(mainWindow)
-
-    await execInBrowserWebview(
-      mainWindow,
-      taskId,
-      `window.open('https://example.com/destroy-test', 'dest', 'width=500,height=600')`
-    )
-    await expect
-      .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
-      .toHaveLength(1)
-
-    // Toggle browser panel OFF → webview destroyed → child cleanup fires
-    await focusForAppShortcut(mainWindow)
-    await mainWindow.keyboard.press('Meta+b')
-
-    // Popup should be closed
-    await expect
-      .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
-      .toHaveLength(0)
-
-    // Re-open browser panel for any tests that follow
-    await focusForAppShortcut(mainWindow)
-    await mainWindow.keyboard.press('Meta+b')
-    await expect(
-      urlInput(mainWindow)
-    ).toBeVisible({ timeout: 5_000 })
-  })
-})
 
 // ===========================================================================
 // Group 2: Web Panel WITH handoff policy (Figma)
@@ -459,305 +477,303 @@ test.describe.serial('Webview popup handling — Browser panel', () => {
 // QUARANTINED 2026-05-16: web panels migrated from <webview> to WebContentsView.
 // openWebPanel helper queries DOM webview which no longer exists. Same root
 // cause as 61-web-panel-handoff-routing. Feature works in app.
-test.describe.skip('Webview popup handling — Web panel with handoff policy', () => {
-  const PANEL_ID = 'web:popup-handoff'
-  const PANEL_NAME = 'Popup Handoff'
-  const PANEL_SHORTCUT = 'y'
-  let baselineWindowIds: number[]
+test.describe
+  .skip('Webview popup handling — Web panel with handoff policy', () => {
+    const PANEL_ID = 'web:popup-handoff'
+    const PANEL_NAME = 'Popup Handoff'
+    const PANEL_SHORTCUT = 'y'
+    let baselineWindowIds: number[]
 
-  test.beforeAll(async ({ electronApp, mainWindow }) => {
-    await resetApp(mainWindow)
+    test.beforeAll(async ({ electronApp, mainWindow }) => {
+      await resetApp(mainWindow)
 
-    const patchResult = await patchOpenExternal(electronApp)
-    expect(patchResult.ok, patchResult.error ?? 'Failed to patch shell.openExternal').toBe(true)
+      const patchResult = await patchOpenExternal(electronApp)
+      expect(patchResult.ok, patchResult.error ?? 'Failed to patch shell.openExternal').toBe(true)
 
-    const panelConfig = {
-      viewEnabled: {
-        task: {
-          terminal: true,
-          browser: true,
-          editor: true,
-          diff: true,
-          settings: true,
-          processes: true,
-          [PANEL_ID]: true,
+      const panelConfig = {
+        viewEnabled: {
+          task: {
+            terminal: true,
+            browser: true,
+            editor: true,
+            diff: true,
+            settings: true,
+            processes: true,
+            [PANEL_ID]: true
+          }
         },
-      },
-      webPanels: [
-        {
-          id: PANEL_ID,
-          name: PANEL_NAME,
-          baseUrl: 'https://figma.com',
-          shortcut: PANEL_SHORTCUT,
-          blockDesktopHandoff: true,
-          handoffProtocol: 'figma',
-          handoffHostScope: 'figma.com',
-        },
-      ],
-    }
+        webPanels: [
+          {
+            id: PANEL_ID,
+            name: PANEL_NAME,
+            baseUrl: 'https://figma.com',
+            shortcut: PANEL_SHORTCUT,
+            blockDesktopHandoff: true,
+            handoffProtocol: 'figma',
+            handoffHostScope: 'figma.com'
+          }
+        ]
+      }
 
-    const s = seed(mainWindow)
-    await s.setSetting('panel_config', JSON.stringify(panelConfig))
+      const s = seed(mainWindow)
+      await s.setSetting('panel_config', JSON.stringify(panelConfig))
 
-    const project = await s.createProject({
-      name: 'PopupHandoff',
-      color: '#14b8a6',
-      path: TEST_PROJECT_PATH,
+      const project = await s.createProject({
+        name: 'PopupHandoff',
+        color: '#14b8a6',
+        path: TEST_PROJECT_PATH
+      })
+      const task = await s.createTask({
+        projectId: project.id,
+        title: 'Popup handoff task',
+        status: 'todo'
+      })
+
+      await mainWindow.evaluate(
+        ({ taskId, panelId }) =>
+          window.api.db.updateTask({
+            id: taskId,
+            webPanelUrls: { [panelId]: 'about:blank' }
+          }),
+        { taskId: task.id, panelId: PANEL_ID }
+      )
+      await s.refreshData()
+
+      await openWebPanel(mainWindow, 'Popup handoff task', PANEL_NAME, PANEL_SHORTCUT)
+      baselineWindowIds = await getWindowIds(electronApp)
     })
-    const task = await s.createTask({
-      projectId: project.id,
-      title: 'Popup handoff task',
-      status: 'todo',
+
+    test.afterAll(async ({ electronApp }) => {
+      await restoreOpenExternal(electronApp)
     })
 
-    await mainWindow.evaluate(
-      ({ taskId, panelId }) =>
-        window.api.db.updateTask({
-          id: taskId,
-          webPanelUrls: { [panelId]: 'about:blank' },
-        }),
-      { taskId: task.id, panelId: PANEL_ID }
-    )
-    await s.refreshData()
+    test.afterEach(async ({ electronApp }) => {
+      await closeNewWindows(electronApp, baselineWindowIds)
+    })
 
-    await openWebPanel(mainWindow, 'Popup handoff task', PANEL_NAME, PANEL_SHORTCUT)
-    baselineWindowIds = await getWindowIds(electronApp)
-  })
+    test.beforeEach(async ({ electronApp, mainWindow }) => {
+      await clearOpenExternalCalls(electronApp)
+      await expect
+        .poll(() => resetWebPanelToAboutBlank(mainWindow), { timeout: 5_000 })
+        .toBe('about:blank')
+    })
 
-  test.afterAll(async ({ electronApp }) => {
-    await restoreOpenExternal(electronApp)
-  })
+    // --- Main process tests (real window.open via executeJavaScript) ---
 
-  test.afterEach(async ({ electronApp }) => {
-    await closeNewWindows(electronApp, baselineWindowIds)
-  })
-
-  test.beforeEach(async ({ electronApp, mainWindow }) => {
-    await clearOpenExternalCalls(electronApp)
-    await expect
-      .poll(() => resetWebPanelToAboutBlank(mainWindow), { timeout: 5_000 })
-      .toBe('about:blank')
-  })
-
-  // --- Main process tests (real window.open via executeJavaScript) ---
-
-  test('window.open() with features denied in handoff webview (main process)', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    const result = await execInWebPanelWebview(
-      mainWindow,
-      `new Promise((resolve) => {
+    test('window.open() with features denied in handoff webview (main process)', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      const result = await execInWebPanelWebview(
+        mainWindow,
+        `new Promise((resolve) => {
         const popup = window.open('https://accounts.google.com/oauth', 'auth', 'width=500,height=600')
         resolve(JSON.stringify({ popupIsNull: popup === null }))
       })`
-    )
-    const parsed = JSON.parse(result as string)
-    expect(parsed.popupIsNull).toBe(true)
+      )
+      const parsed = JSON.parse(result as string)
+      expect(parsed.popupIsNull).toBe(true)
 
-    const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
-    expect(newWindows).toHaveLength(0)
-  })
+      const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
+      expect(newWindows).toHaveLength(0)
+    })
 
-  test('window.open() without features denied in handoff webview (main process)', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    const result = await execInWebPanelWebview(
-      mainWindow,
-      `new Promise((resolve) => {
+    test('window.open() without features denied in handoff webview (main process)', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      const result = await execInWebPanelWebview(
+        mainWindow,
+        `new Promise((resolve) => {
         const popup = window.open('https://example.com/nofeatures')
         resolve(JSON.stringify({ popupIsNull: popup === null }))
       })`
-    )
-    const parsed = JSON.parse(result as string)
-    expect(parsed.popupIsNull).toBe(true)
+      )
+      const parsed = JSON.parse(result as string)
+      expect(parsed.popupIsNull).toBe(true)
 
-    const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
-    expect(newWindows).toHaveLength(0)
+      const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
+      expect(newWindows).toHaveLength(0)
+    })
+
+    // --- Renderer tests (synthetic new-window events) ---
+
+    test('same-host popup loads in-panel (renderer)', async ({ electronApp, mainWindow }) => {
+      const currentUrl = await dispatchWebPanelNewWindow(
+        mainWindow,
+        'https://www.figma.com/oauth/authorize?client_id=popup-test'
+      )
+
+      expect(currentUrl).not.toBe('about:blank')
+      expect(currentUrl).toContain('figma.com')
+
+      const calls = await getOpenExternalCalls(electronApp)
+      expect(calls).toHaveLength(0)
+    })
+
+    test('cross-host popup opens externally (renderer)', async ({ electronApp, mainWindow }) => {
+      const targetUrl = 'https://example.com/popup-cross-host'
+      const currentUrl = await dispatchWebPanelNewWindow(mainWindow, targetUrl)
+
+      expect(currentUrl).toBe('about:blank')
+
+      const calls = await getOpenExternalCalls(electronApp)
+      expect(calls).toHaveLength(1)
+      expect(calls[0]?.url).toBe(targetUrl)
+    })
+
+    test('loopback popup suppressed (renderer)', async ({ electronApp, mainWindow }) => {
+      const currentUrl = await dispatchWebPanelNewWindow(
+        mainWindow,
+        'http://127.0.0.1:38495/handoff-popup'
+      )
+
+      expect(currentUrl).toBe('about:blank')
+
+      const calls = await getOpenExternalCalls(electronApp)
+      expect(calls).toHaveLength(0)
+    })
   })
-
-  // --- Renderer tests (synthetic new-window events) ---
-
-  test('same-host popup loads in-panel (renderer)', async ({ electronApp, mainWindow }) => {
-    const currentUrl = await dispatchWebPanelNewWindow(
-      mainWindow,
-      'https://www.figma.com/oauth/authorize?client_id=popup-test'
-    )
-
-    expect(currentUrl).not.toBe('about:blank')
-    expect(currentUrl).toContain('figma.com')
-
-    const calls = await getOpenExternalCalls(electronApp)
-    expect(calls).toHaveLength(0)
-  })
-
-  test('cross-host popup opens externally (renderer)', async ({ electronApp, mainWindow }) => {
-    const targetUrl = 'https://example.com/popup-cross-host'
-    const currentUrl = await dispatchWebPanelNewWindow(mainWindow, targetUrl)
-
-    expect(currentUrl).toBe('about:blank')
-
-    const calls = await getOpenExternalCalls(electronApp)
-    expect(calls).toHaveLength(1)
-    expect(calls[0]?.url).toBe(targetUrl)
-  })
-
-  test('loopback popup suppressed (renderer)', async ({ electronApp, mainWindow }) => {
-    const currentUrl = await dispatchWebPanelNewWindow(
-      mainWindow,
-      'http://127.0.0.1:38495/handoff-popup'
-    )
-
-    expect(currentUrl).toBe('about:blank')
-
-    const calls = await getOpenExternalCalls(electronApp)
-    expect(calls).toHaveLength(0)
-  })
-})
 
 // ===========================================================================
 // Group 3: Web Panel WITHOUT handoff policy
 // ===========================================================================
 
 // QUARANTINED 2026-05-16: see above — web panel migration to WebContentsView.
-test.describe.skip('Webview popup handling — Web panel without handoff policy', () => {
-  const PANEL_ID = 'web:popup-nohandoff'
-  const PANEL_NAME = 'NoHandoff Panel'
-  const PANEL_SHORTCUT = 'y'
-  let baselineWindowIds: number[]
+test.describe
+  .skip('Webview popup handling — Web panel without handoff policy', () => {
+    const PANEL_ID = 'web:popup-nohandoff'
+    const PANEL_NAME = 'NoHandoff Panel'
+    const PANEL_SHORTCUT = 'y'
+    let baselineWindowIds: number[]
 
-  test.beforeAll(async ({ electronApp, mainWindow }) => {
-    await resetApp(mainWindow)
+    test.beforeAll(async ({ electronApp, mainWindow }) => {
+      await resetApp(mainWindow)
 
-    const patchResult = await patchOpenExternal(electronApp)
-    expect(patchResult.ok, patchResult.error ?? 'Failed to patch').toBe(true)
+      const patchResult = await patchOpenExternal(electronApp)
+      expect(patchResult.ok, patchResult.error ?? 'Failed to patch').toBe(true)
 
-    const panelConfig = {
-      viewEnabled: {
-        task: {
-          terminal: true,
-          browser: true,
-          editor: true,
-          diff: true,
-          settings: true,
-          processes: true,
-          [PANEL_ID]: true,
+      const panelConfig = {
+        viewEnabled: {
+          task: {
+            terminal: true,
+            browser: true,
+            editor: true,
+            diff: true,
+            settings: true,
+            processes: true,
+            [PANEL_ID]: true
+          }
         },
-      },
-      webPanels: [
-        {
-          id: PANEL_ID,
-          name: PANEL_NAME,
-          baseUrl: 'https://example.com',
-          shortcut: PANEL_SHORTCUT,
-          // No blockDesktopHandoff, no handoffProtocol — no handoff policy
-        },
-      ],
-    }
+        webPanels: [
+          {
+            id: PANEL_ID,
+            name: PANEL_NAME,
+            baseUrl: 'https://example.com',
+            shortcut: PANEL_SHORTCUT
+            // No blockDesktopHandoff, no handoffProtocol — no handoff policy
+          }
+        ]
+      }
 
-    const s = seed(mainWindow)
-    await s.setSetting('panel_config', JSON.stringify(panelConfig))
+      const s = seed(mainWindow)
+      await s.setSetting('panel_config', JSON.stringify(panelConfig))
 
-    const project = await s.createProject({
-      name: 'PopupNoHandoff',
-      color: '#f59e0b',
-      path: TEST_PROJECT_PATH,
+      const project = await s.createProject({
+        name: 'PopupNoHandoff',
+        color: '#f59e0b',
+        path: TEST_PROJECT_PATH
+      })
+      const task = await s.createTask({
+        projectId: project.id,
+        title: 'No-handoff popup task',
+        status: 'todo'
+      })
+
+      await mainWindow.evaluate(
+        ({ taskId, panelId }) =>
+          window.api.db.updateTask({
+            id: taskId,
+            webPanelUrls: { [panelId]: 'about:blank' }
+          }),
+        { taskId: task.id, panelId: PANEL_ID }
+      )
+      await s.refreshData()
+
+      await openWebPanel(mainWindow, 'No-handoff popup task', PANEL_NAME, PANEL_SHORTCUT)
+      baselineWindowIds = await getWindowIds(electronApp)
     })
-    const task = await s.createTask({
-      projectId: project.id,
-      title: 'No-handoff popup task',
-      status: 'todo',
+
+    test.afterAll(async ({ electronApp }) => {
+      await restoreOpenExternal(electronApp)
     })
 
-    await mainWindow.evaluate(
-      ({ taskId, panelId }) =>
-        window.api.db.updateTask({
-          id: taskId,
-          webPanelUrls: { [panelId]: 'about:blank' },
-        }),
-      { taskId: task.id, panelId: PANEL_ID }
-    )
-    await s.refreshData()
+    test.afterEach(async ({ electronApp }) => {
+      await closeNewWindows(electronApp, baselineWindowIds)
+    })
 
-    await openWebPanel(mainWindow, 'No-handoff popup task', PANEL_NAME, PANEL_SHORTCUT)
-    baselineWindowIds = await getWindowIds(electronApp)
-  })
+    test.beforeEach(async ({ electronApp }) => {
+      await clearOpenExternalCalls(electronApp)
+    })
 
-  test.afterAll(async ({ electronApp }) => {
-    await restoreOpenExternal(electronApp)
-  })
+    // --- Main process test (real window.open via executeJavaScript) ---
 
-  test.afterEach(async ({ electronApp }) => {
-    await closeNewWindows(electronApp, baselineWindowIds)
-  })
-
-  test.beforeEach(async ({ electronApp }) => {
-    await clearOpenExternalCalls(electronApp)
-  })
-
-  // --- Main process test (real window.open via executeJavaScript) ---
-
-  test('window.open() with features creates real BrowserWindow (no handoff)', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    const result = await execInWebPanelWebview(
-      mainWindow,
-      `new Promise((resolve) => {
+    test('window.open() with features creates real BrowserWindow (no handoff)', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      const result = await execInWebPanelWebview(
+        mainWindow,
+        `new Promise((resolve) => {
         const popup = window.open('https://example.com/oauth-no-handoff', 'auth', 'width=500,height=600')
         resolve(JSON.stringify({ popupIsNull: popup === null }))
       })`
-    )
-    const parsed = JSON.parse(result as string)
-    expect(parsed.popupIsNull).toBe(false)
+      )
+      const parsed = JSON.parse(result as string)
+      expect(parsed.popupIsNull).toBe(false)
 
-    await expect
-      .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
-      .toHaveLength(1)
-  })
+      await expect
+        .poll(() => getNewWindowIds(electronApp, baselineWindowIds), { timeout: 5_000 })
+        .toHaveLength(1)
+    })
 
-  test('window.open() without features denied (no handoff, foreground-tab disposition)', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    const result = await execInWebPanelWebview(
-      mainWindow,
-      `new Promise((resolve) => {
+    test('window.open() without features denied (no handoff, foreground-tab disposition)', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      const result = await execInWebPanelWebview(
+        mainWindow,
+        `new Promise((resolve) => {
         const popup = window.open('https://example.com/no-features-no-handoff')
         resolve(JSON.stringify({ popupIsNull: popup === null }))
       })`
-    )
-    const parsed = JSON.parse(result as string)
-    // Without features → disposition 'foreground-tab' → denied by main process
-    expect(parsed.popupIsNull).toBe(true)
+      )
+      const parsed = JSON.parse(result as string)
+      // Without features → disposition 'foreground-tab' → denied by main process
+      expect(parsed.popupIsNull).toBe(true)
 
-    const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
-    expect(newWindows).toHaveLength(0)
+      const newWindows = await getNewWindowIds(electronApp, baselineWindowIds)
+      expect(newWindows).toHaveLength(0)
+    })
+
+    // --- Renderer tests (synthetic new-window events) ---
+
+    test('disposition new-window skips renderer handler (no openExternal)', async ({
+      electronApp,
+      mainWindow
+    }) => {
+      await dispatchWebPanelNewWindow(mainWindow, 'https://example.com/auth-popup', 'new-window')
+
+      const calls = await getOpenExternalCalls(electronApp)
+      expect(calls).toHaveLength(0)
+    })
+
+    test('disposition foreground-tab opens externally', async ({ electronApp, mainWindow }) => {
+      const targetUrl = 'https://example.com/foreground-tab-link'
+      await dispatchWebPanelNewWindow(mainWindow, targetUrl, 'foreground-tab')
+
+      const calls = await getOpenExternalCalls(electronApp)
+      expect(calls).toHaveLength(1)
+      expect(calls[0]?.url).toBe(targetUrl)
+    })
   })
-
-  // --- Renderer tests (synthetic new-window events) ---
-
-  test('disposition new-window skips renderer handler (no openExternal)', async ({
-    electronApp,
-    mainWindow,
-  }) => {
-    await dispatchWebPanelNewWindow(
-      mainWindow,
-      'https://example.com/auth-popup',
-      'new-window'
-    )
-
-    const calls = await getOpenExternalCalls(electronApp)
-    expect(calls).toHaveLength(0)
-  })
-
-  test('disposition foreground-tab opens externally', async ({ electronApp, mainWindow }) => {
-    const targetUrl = 'https://example.com/foreground-tab-link'
-    await dispatchWebPanelNewWindow(mainWindow, targetUrl, 'foreground-tab')
-
-    const calls = await getOpenExternalCalls(electronApp)
-    expect(calls).toHaveLength(1)
-    expect(calls[0]?.url).toBe(targetUrl)
-  })
-})

@@ -15,21 +15,30 @@ export type ChatMode = 'plan' | 'auto-accept' | 'auto' | 'bypass'
  */
 export function rawPermissionModeToChatMode(raw: string | null | undefined): ChatMode | null {
   switch (raw) {
-    case 'plan': return 'plan'
-    case 'acceptEdits': return 'auto-accept'
-    case 'auto': return 'auto'
-    case 'bypassPermissions': return 'bypass'
-    default: return null
+    case 'plan':
+      return 'plan'
+    case 'acceptEdits':
+      return 'auto-accept'
+    case 'auto':
+      return 'auto'
+    case 'bypassPermissions':
+      return 'bypass'
+    default:
+      return null
   }
 }
 
 /** Inverse: produce CLI flags for a given ChatMode. */
 export function chatModeToFlags(mode: ChatMode): string[] {
   switch (mode) {
-    case 'plan': return ['--permission-mode', 'plan']
-    case 'auto-accept': return ['--permission-mode', 'acceptEdits']
-    case 'auto': return ['--permission-mode', 'auto']
-    case 'bypass': return ['--allow-dangerously-skip-permissions']
+    case 'plan':
+      return ['--permission-mode', 'plan']
+    case 'auto-accept':
+      return ['--permission-mode', 'acceptEdits']
+    case 'auto':
+      return ['--permission-mode', 'auto']
+    case 'bypass':
+      return ['--allow-dangerously-skip-permissions']
   }
 }
 
@@ -42,9 +51,13 @@ export function chatModeToFlags(mode: ChatMode): string[] {
  */
 export function chatModeToCliPermissionMode(mode: ChatMode): string | null {
   switch (mode) {
-    case 'plan': return 'plan'
-    case 'auto-accept': return 'acceptEdits'
-    case 'auto': return 'auto'
-    case 'bypass': return null
+    case 'plan':
+      return 'plan'
+    case 'auto-accept':
+      return 'acceptEdits'
+    case 'auto':
+      return 'auto'
+    case 'bypass':
+      return null
   }
 }

@@ -41,7 +41,11 @@ test.describe('CLI: PTY start + auto-spawn on submit', () => {
     expect(mcpPort).toBeTruthy()
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'CLI PTY Start', color: '#10b981', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'CLI PTY Start',
+      color: '#10b981',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     await s.refreshData()
   })
@@ -49,20 +53,33 @@ test.describe('CLI: PTY start + auto-spawn on submit', () => {
   const runCli = (...args: string[]) =>
     spawnSync('node', [SLAY_JS, ...args], {
       env: { ...process.env, SLAYZONE_DB_PATH: dbPath, SLAYZONE_MCP_PORT: String(mcpPort) },
-      encoding: 'utf8',
+      encoding: 'utf8'
     })
 
-  const ptyExists = async (electronApp: import('playwright').ElectronApplication, sessionId: string) =>
-    electronApp.evaluate(async (_, { port, sid }) => {
-      const r = await fetch(`http://127.0.0.1:${port}/api/pty`)
-      const list = (await r.json()) as { sessionId: string }[]
-      return list.some((s) => s.sessionId === sid)
-    }, { port: mcpPort, sid: sessionId })
+  const ptyExists = async (
+    electronApp: import('playwright').ElectronApplication,
+    sessionId: string
+  ) =>
+    electronApp.evaluate(
+      async (_, { port, sid }) => {
+        const r = await fetch(`http://127.0.0.1:${port}/api/pty`)
+        const list = (await r.json()) as { sessionId: string }[]
+        return list.some((s) => s.sessionId === sid)
+      },
+      { port: mcpPort, sid: sessionId }
+    )
 
   test('slay tasks open --start cold-spawns main PTY', async ({ electronApp, mainWindow }) => {
     const s = seed(mainWindow)
-    const task = await s.createTask({ projectId, title: 'Cold start via open --start', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    const task = await s.createTask({
+      projectId,
+      title: 'Cold start via open --start',
+      status: 'in_progress'
+    })
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     expect(await ptyExists(electronApp, `${task.id}:${task.id}`)).toBe(false)
@@ -71,13 +88,18 @@ test.describe('CLI: PTY start + auto-spawn on submit', () => {
     expect(r.status).toBe(0)
     expect(r.stdout).toMatch(/Opening \+ (started|already alive)/)
 
-    await expect.poll(() => ptyExists(electronApp, `${task.id}:${task.id}`), { timeout: 10_000 }).toBe(true)
+    await expect
+      .poll(() => ptyExists(electronApp, `${task.id}:${task.id}`), { timeout: 10_000 })
+      .toBe(true)
   })
 
   test('slay pty start is idempotent', async ({ electronApp, mainWindow }) => {
     const s = seed(mainWindow)
     const task = await s.createTask({ projectId, title: 'Idempotent start', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     // First open the task so the tab page can mount.
@@ -88,7 +110,9 @@ test.describe('CLI: PTY start + auto-spawn on submit', () => {
     expect(first.status).toBe(0)
     expect(first.stdout).toMatch(/Started|Already alive/)
 
-    await expect.poll(() => ptyExists(electronApp, `${task.id}:${task.id}`), { timeout: 10_000 }).toBe(true)
+    await expect
+      .poll(() => ptyExists(electronApp, `${task.id}:${task.id}`), { timeout: 10_000 })
+      .toBe(true)
 
     const second = runCli('pty', 'start', task.id.slice(0, 8))
     expect(second.status).toBe(0)
@@ -97,8 +121,15 @@ test.describe('CLI: PTY start + auto-spawn on submit', () => {
 
   test('slay pty submit auto-spawns cold main PTY', async ({ electronApp, mainWindow }) => {
     const s = seed(mainWindow)
-    const task = await s.createTask({ projectId, title: 'Auto-spawn on submit', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    const task = await s.createTask({
+      projectId,
+      title: 'Auto-spawn on submit',
+      status: 'in_progress'
+    })
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     runCli('tasks', 'open', task.id)
@@ -107,7 +138,9 @@ test.describe('CLI: PTY start + auto-spawn on submit', () => {
     // Use --no-wait so submit doesn't block on AI idle check (mode=terminal).
     const r = runCli('pty', 'submit', task.id.slice(0, 8), 'echo hi', '--no-wait')
     expect(r.status).toBe(0)
-    await expect.poll(() => ptyExists(electronApp, `${task.id}:${task.id}`), { timeout: 10_000 }).toBe(true)
+    await expect
+      .poll(() => ptyExists(electronApp, `${task.id}:${task.id}`), { timeout: 10_000 })
+      .toBe(true)
   })
 
   test('slay pty submit against unknown id still 404s (no auto-spawn)', async () => {

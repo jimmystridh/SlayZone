@@ -73,15 +73,50 @@ const KIND_WEIGHT: Record<SearchItem['kind'], number> = {
 
 const BASENAME_BOOST = 1.5
 
-const ACTION_DEFS: { id: ActionId; label: string; sublabel: string; shortcutId?: string; featured?: boolean }[] = [
-  { id: 'new-task', label: 'New task', sublabel: 'Create a task', shortcutId: 'new-task', featured: true },
-  { id: 'new-temp-task', label: 'New temporary task', sublabel: 'Open a scratch terminal', shortcutId: 'new-temp-task', featured: true },
-  { id: 'reopen-closed-tab', label: 'Reopen last closed tab', sublabel: 'Restore the most recently closed task', shortcutId: 'reopen-closed-tab', featured: true },
+const ACTION_DEFS: {
+  id: ActionId
+  label: string
+  sublabel: string
+  shortcutId?: string
+  featured?: boolean
+}[] = [
+  {
+    id: 'new-task',
+    label: 'New task',
+    sublabel: 'Create a task',
+    shortcutId: 'new-task',
+    featured: true
+  },
+  {
+    id: 'new-temp-task',
+    label: 'New temporary task',
+    sublabel: 'Open a scratch terminal',
+    shortcutId: 'new-temp-task',
+    featured: true
+  },
+  {
+    id: 'reopen-closed-tab',
+    label: 'Reopen last closed tab',
+    sublabel: 'Restore the most recently closed task',
+    shortcutId: 'reopen-closed-tab',
+    featured: true
+  },
   { id: 'add-project', label: 'Add project', sublabel: 'Add a project folder' },
   { id: 'go-home', label: 'Go to home', sublabel: 'Switch to the home tab', shortcutId: 'go-home' },
-  { id: 'toggle-global-agent-panel', label: 'Toggle global agent panel', sublabel: 'Show or hide the global agent side panel', shortcutId: 'global-agent-panel' },
+  {
+    id: 'toggle-global-agent-panel',
+    label: 'Toggle global agent panel',
+    sublabel: 'Show or hide the global agent side panel',
+    shortcutId: 'global-agent-panel'
+  },
   { id: 'open-changelog', label: 'Open changelog', sublabel: "What's new in SlayZone" },
-  { id: 'open-settings', label: 'Open settings', sublabel: 'App settings', shortcutId: 'global-settings', featured: true }
+  {
+    id: 'open-settings',
+    label: 'Open settings',
+    sublabel: 'App settings',
+    shortcutId: 'global-settings',
+    featured: true
+  }
 ]
 
 const ACTION_ICONS: Record<ActionId, LucideIcon> = {
@@ -114,14 +149,30 @@ function Highlight({ text, positions }: { text: string; positions: Set<number> }
   for (let i = 0; i < text.length; i++) {
     const matched = positions.has(i)
     if (matched !== inMatch && run) {
-      parts.push(inMatch ? <mark key={i} className="bg-transparent text-foreground font-semibold">{run}</mark> : run)
+      parts.push(
+        inMatch ? (
+          <mark key={i} className="bg-transparent text-foreground font-semibold">
+            {run}
+          </mark>
+        ) : (
+          run
+        )
+      )
       run = ''
     }
     inMatch = matched
     run += text[i]
   }
   if (run) {
-    parts.push(inMatch ? <mark key={text.length} className="bg-transparent text-foreground font-semibold">{run}</mark> : run)
+    parts.push(
+      inMatch ? (
+        <mark key={text.length} className="bg-transparent text-foreground font-semibold">
+          {run}
+        </mark>
+      ) : (
+        run
+      )
+    )
   }
   return <>{parts}</>
 }
@@ -231,7 +282,13 @@ export function SearchDialog({
 
     if (showActions) {
       for (const a of ACTION_DEFS) {
-        list.push({ kind: 'action', id: a.id, label: a.label, sublabel: a.sublabel, shortcutId: a.shortcutId })
+        list.push({
+          kind: 'action',
+          id: a.id,
+          label: a.label,
+          sublabel: a.sublabel,
+          shortcutId: a.shortcutId
+        })
       }
     }
     if (showFiles && fileContext) {
@@ -244,7 +301,14 @@ export function SearchDialog({
     if (showTasks) {
       for (const t of tasks) {
         const projectName = projects.find((p) => p.id === t.project_id)?.name ?? ''
-        list.push({ kind: 'task', id: t.id, label: t.title, sublabel: projectName, status: t.status, priority: t.priority })
+        list.push({
+          kind: 'task',
+          id: t.id,
+          label: t.title,
+          sublabel: projectName,
+          status: t.status,
+          priority: t.priority
+        })
       }
     }
     if (showProjects) {
@@ -255,8 +319,24 @@ export function SearchDialog({
     return list
   }, [allFiles, tasks, projects, filter, fileContext])
 
-  const fzfLabel = useMemo(() => new Fzf(items, { selector: (i) => i.label, limit: MAX_RESULTS * 2, casing: 'case-insensitive' }), [items])
-  const fzfPath = useMemo(() => new Fzf(items, { selector: selectorForItem, limit: MAX_RESULTS * 2, casing: 'case-insensitive' }), [items])
+  const fzfLabel = useMemo(
+    () =>
+      new Fzf(items, {
+        selector: (i) => i.label,
+        limit: MAX_RESULTS * 2,
+        casing: 'case-insensitive'
+      }),
+    [items]
+  )
+  const fzfPath = useMemo(
+    () =>
+      new Fzf(items, {
+        selector: selectorForItem,
+        limit: MAX_RESULTS * 2,
+        casing: 'case-insensitive'
+      }),
+    [items]
+  )
 
   const results = useMemo(() => {
     if (!search) return []
@@ -265,14 +345,20 @@ export function SearchDialog({
 
     const pathMap = new Map(pathHits.map((r) => [r.item.id, r]))
     const seenIds = new Set<string>()
-    const merged: { item: SearchItem; score: number; positions: Set<number>; usedPath: boolean }[] = []
+    const merged: { item: SearchItem; score: number; positions: Set<number>; usedPath: boolean }[] =
+      []
 
     for (const r of labelHits) {
       seenIds.add(r.item.id)
       const boosted = r.score * BASENAME_BOOST
       const pathHit = r.item.kind === 'file' ? pathMap.get(r.item.id) : undefined
       if (pathHit && pathHit.score > boosted) {
-        merged.push({ item: r.item, score: pathHit.score, positions: pathHit.positions, usedPath: true })
+        merged.push({
+          item: r.item,
+          score: pathHit.score,
+          positions: pathHit.positions,
+          usedPath: true
+        })
       } else {
         merged.push({ item: r.item, score: boosted, positions: r.positions, usedPath: false })
       }
@@ -289,7 +375,11 @@ export function SearchDialog({
       ...r,
       weightedScore: r.score * KIND_WEIGHT[r.item.kind]
     }))
-    weighted.sort((a, b) => b.weightedScore - a.weightedScore || selectorForItem(a.item).length - selectorForItem(b.item).length)
+    weighted.sort(
+      (a, b) =>
+        b.weightedScore - a.weightedScore ||
+        selectorForItem(a.item).length - selectorForItem(b.item).length
+    )
     return weighted.slice(0, MAX_RESULTS)
   }, [fzfLabel, fzfPath, search])
 
@@ -366,22 +456,33 @@ export function SearchDialog({
     fn()
   }
 
-  const handlerFor = (id: ActionId): () => void => {
+  const handlerFor = (id: ActionId): (() => void) => {
     switch (id) {
-      case 'new-task': return () => runAction(onNewTask)
-      case 'new-temp-task': return () => runAction(onNewTemporaryTask)
-      case 'reopen-closed-tab': return () => runAction(onReopenClosedTab)
-      case 'add-project': return () => runAction(onAddProject)
-      case 'go-home': return () => runAction(onGoHome)
-      case 'toggle-global-agent-panel': return () => runAction(onToggleGlobalAgentPanel)
-      case 'open-changelog': return () => runAction(onOpenChangelog)
-      case 'open-settings': return () => runAction(onOpenSettings)
+      case 'new-task':
+        return () => runAction(onNewTask)
+      case 'new-temp-task':
+        return () => runAction(onNewTemporaryTask)
+      case 'reopen-closed-tab':
+        return () => runAction(onReopenClosedTab)
+      case 'add-project':
+        return () => runAction(onAddProject)
+      case 'go-home':
+        return () => runAction(onGoHome)
+      case 'toggle-global-agent-panel':
+        return () => runAction(onToggleGlobalAgentPanel)
+      case 'open-changelog':
+        return () => runAction(onOpenChangelog)
+      case 'open-settings':
+        return () => runAction(onOpenSettings)
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden p-0 max-w-2xl !bg-surface-0 !rounded-3xl !border-0 shadow-2xl" showCloseButton={false}>
+      <DialogContent
+        className="overflow-hidden p-0 max-w-2xl !bg-surface-0 !rounded-3xl !border-0 shadow-2xl"
+        showCloseButton={false}
+      >
         <Command
           shouldFilter={false}
           value={selected}
@@ -395,182 +496,201 @@ export function SearchDialog({
             onValueChange={setSearch}
           />
           <div className="bg-card rounded-t-3xl">
-          {isSearching && (
-            <div className="flex items-center gap-1 px-2 py-1.5">
-              {FILTERS.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  tabIndex={-1}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => setFilter(f.id)}
-                  className={cn(
-                    'rounded-md px-2 py-1 text-xs transition-colors',
-                    filter === f.id
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
-                  )}
-                >
-                  {f.label}
-                </button>
-              ))}
-              <span className="ml-auto text-[10px] text-muted-foreground/70">Tab to switch</span>
-            </div>
-          )}
-          <CommandList className="max-h-[480px]">
-            {!isSearching && (
-              <>
-                <CommandGroup heading="Actions">
-                  {ACTION_DEFS.filter((a) => a.featured).map((a) => renderActionItem(a.id))}
-                </CommandGroup>
-                {recentItems.length > 0 && (
-                  <CommandGroup heading="Recent Tasks">
-                    {recentItems.map(({ tab, projectName, updatedAt }) => {
-                      const statusStyle = tab.status ? getTaskStatusStyle(tab.status) : null
-                      const subtitle = projectName
-                      const ago = formatRelative(updatedAt)
-                      return (
-                        <CommandItem
-                          key={`recent:${tab.taskId}`}
-                          value={`recent:${tab.taskId}`}
-                          className="!items-start"
-                          onSelect={() => {
-                            onSelectTask(tab.taskId)
-                            onOpenChange(false)
-                          }}
-                        >
-                          {statusStyle ? (
-                            <statusStyle.icon className={cn('size-4 mt-0.5', statusStyle.iconClass)} />
-                          ) : (
-                            <CheckSquare className="text-muted-foreground mt-0.5" />
-                          )}
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <span className="truncate font-medium">{tab.title}</span>
-                            {subtitle && (
-                              <span className="truncate text-[11px] text-muted-foreground">{subtitle}</span>
-                            )}
-                          </div>
-                          {ago && (
-                            <span className="ml-auto shrink-0 text-[11px] text-muted-foreground mt-0.5">{ago}</span>
-                          )}
-                        </CommandItem>
-                      )
-                    })}
+            {isSearching && (
+              <div className="flex items-center gap-1 px-2 py-1.5">
+                {FILTERS.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    tabIndex={-1}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setFilter(f.id)}
+                    className={cn(
+                      'rounded-md px-2 py-1 text-xs transition-colors',
+                      filter === f.id
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/40'
+                    )}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+                <span className="ml-auto text-[10px] text-muted-foreground/70">Tab to switch</span>
+              </div>
+            )}
+            <CommandList className="max-h-[480px]">
+              {!isSearching && (
+                <>
+                  <CommandGroup heading="Actions">
+                    {ACTION_DEFS.filter((a) => a.featured).map((a) => renderActionItem(a.id))}
                   </CommandGroup>
-                )}
-              </>
-            )}
+                  {recentItems.length > 0 && (
+                    <CommandGroup heading="Recent Tasks">
+                      {recentItems.map(({ tab, projectName, updatedAt }) => {
+                        const statusStyle = tab.status ? getTaskStatusStyle(tab.status) : null
+                        const subtitle = projectName
+                        const ago = formatRelative(updatedAt)
+                        return (
+                          <CommandItem
+                            key={`recent:${tab.taskId}`}
+                            value={`recent:${tab.taskId}`}
+                            className="!items-start"
+                            onSelect={() => {
+                              onSelectTask(tab.taskId)
+                              onOpenChange(false)
+                            }}
+                          >
+                            {statusStyle ? (
+                              <statusStyle.icon
+                                className={cn('size-4 mt-0.5', statusStyle.iconClass)}
+                              />
+                            ) : (
+                              <CheckSquare className="text-muted-foreground mt-0.5" />
+                            )}
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className="truncate font-medium">{tab.title}</span>
+                              {subtitle && (
+                                <span className="truncate text-[11px] text-muted-foreground">
+                                  {subtitle}
+                                </span>
+                              )}
+                            </div>
+                            {ago && (
+                              <span className="ml-auto shrink-0 text-[11px] text-muted-foreground mt-0.5">
+                                {ago}
+                              </span>
+                            )}
+                          </CommandItem>
+                        )
+                      })}
+                    </CommandGroup>
+                  )}
+                </>
+              )}
 
-            {isSearching && results.length === 0 && <CommandEmpty>No results found.</CommandEmpty>}
+              {isSearching && results.length === 0 && (
+                <CommandEmpty>No results found.</CommandEmpty>
+              )}
 
-            {isSearching && groupedResults.actions.length > 0 && (
-              <CommandGroup heading="Actions">
-                {groupedResults.actions.map((r) => {
-                  const item = r.item as Extract<SearchItem, { kind: 'action' }>
-                  const Icon = ACTION_ICONS[item.id]
-                  return (
-                    <CommandItem
-                      key={`action:${item.id}`}
-                      value={`action:${item.id}`}
-                      onSelect={handlerFor(item.id)}
-                    >
-                      <Icon className="text-muted-foreground" />
-                      <span><Highlight text={item.label} positions={r.positions} /></span>
-                      <ActionShortcut shortcutId={item.shortcutId} />
-                    </CommandItem>
-                  )
-                })}
-              </CommandGroup>
-            )}
-
-            {isSearching && groupedResults.files.length > 0 && (
-              <CommandGroup heading="Files">
-                {groupedResults.files.map((r) => {
-                  const item = r.item as Extract<SearchItem, { kind: 'file' }>
-                  const namePositions = r.usedPath
-                    ? offsetPositions(r.positions, item.filePath.length - item.label.length)
-                    : r.positions
-                  return (
-                    <CommandItem
-                      key={item.id}
-                      value={item.id}
-                      onSelect={() => {
-                        track('quick_open_used')
-                        fileContext?.openFile(item.filePath)
-                        onOpenChange(false)
-                      }}
-                    >
-                      <FileIcon fileName={item.label} className="size-4 shrink-0 flex items-center [&>svg]:size-full" />
-                      <span className="truncate font-mono text-xs">
-                        <Highlight text={item.label} positions={namePositions} />
-                      </span>
-                      {item.sublabel && (
-                        <span className="ml-auto text-[11px] text-muted-foreground truncate max-w-[200px]">
-                          {item.sublabel}
+              {isSearching && groupedResults.actions.length > 0 && (
+                <CommandGroup heading="Actions">
+                  {groupedResults.actions.map((r) => {
+                    const item = r.item as Extract<SearchItem, { kind: 'action' }>
+                    const Icon = ACTION_ICONS[item.id]
+                    return (
+                      <CommandItem
+                        key={`action:${item.id}`}
+                        value={`action:${item.id}`}
+                        onSelect={handlerFor(item.id)}
+                      >
+                        <Icon className="text-muted-foreground" />
+                        <span>
+                          <Highlight text={item.label} positions={r.positions} />
                         </span>
-                      )}
-                    </CommandItem>
-                  )
-                })}
-              </CommandGroup>
-            )}
+                        <ActionShortcut shortcutId={item.shortcutId} />
+                      </CommandItem>
+                    )
+                  })}
+                </CommandGroup>
+              )}
 
-            {isSearching && groupedResults.tasks.length > 0 && (
-              <CommandGroup heading="Tasks">
-                {groupedResults.tasks.map((r) => {
-                  const item = r.item as Extract<SearchItem, { kind: 'task' }>
-                  const statusStyle = getTaskStatusStyle(item.status)
-                  const priorityLabel = priorityOptions.find((o) => o.value === item.priority)?.label
-                  return (
-                    <CommandItem
-                      key={`task:${item.id}`}
-                      value={`task:${item.id}`}
-                      onSelect={() => {
-                        onSelectTask(item.id)
-                        onOpenChange(false)
-                      }}
-                    >
-                      <CheckSquare className="mr-2" />
-                      <span className="truncate"><Highlight text={item.label} positions={r.positions} /></span>
-                      <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                        {statusStyle && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border border-border/60 text-muted-foreground">
-                            <statusStyle.icon className={cn('size-3!', statusStyle.iconClass)} />
-                            {statusStyle.label}
+              {isSearching && groupedResults.files.length > 0 && (
+                <CommandGroup heading="Files">
+                  {groupedResults.files.map((r) => {
+                    const item = r.item as Extract<SearchItem, { kind: 'file' }>
+                    const namePositions = r.usedPath
+                      ? offsetPositions(r.positions, item.filePath.length - item.label.length)
+                      : r.positions
+                    return (
+                      <CommandItem
+                        key={item.id}
+                        value={item.id}
+                        onSelect={() => {
+                          track('quick_open_used')
+                          fileContext?.openFile(item.filePath)
+                          onOpenChange(false)
+                        }}
+                      >
+                        <FileIcon
+                          fileName={item.label}
+                          className="size-4 shrink-0 flex items-center [&>svg]:size-full"
+                        />
+                        <span className="truncate font-mono text-xs">
+                          <Highlight text={item.label} positions={namePositions} />
+                        </span>
+                        {item.sublabel && (
+                          <span className="ml-auto text-[11px] text-muted-foreground truncate max-w-[200px]">
+                            {item.sublabel}
                           </span>
                         )}
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border border-border/60 text-muted-foreground">
-                          <PriorityIcon priority={item.priority} className="size-3!" />
-                          {priorityLabel}
-                        </span>
-                      </div>
-                    </CommandItem>
-                  )
-                })}
-              </CommandGroup>
-            )}
+                      </CommandItem>
+                    )
+                  })}
+                </CommandGroup>
+              )}
 
-            {isSearching && groupedResults.projects.length > 0 && (
-              <CommandGroup heading="Projects">
-                {groupedResults.projects.map((r) => {
-                  const item = r.item as Extract<SearchItem, { kind: 'project' }>
-                  return (
-                    <CommandItem
-                      key={`project:${item.id}`}
-                      value={`project:${item.id}`}
-                      onSelect={() => {
-                        onSelectProject(item.id)
-                        onOpenChange(false)
-                      }}
-                    >
-                      <Folder className="mr-2" />
-                      <span><Highlight text={item.label} positions={r.positions} /></span>
-                    </CommandItem>
-                  )
-                })}
-              </CommandGroup>
-            )}
-          </CommandList>
+              {isSearching && groupedResults.tasks.length > 0 && (
+                <CommandGroup heading="Tasks">
+                  {groupedResults.tasks.map((r) => {
+                    const item = r.item as Extract<SearchItem, { kind: 'task' }>
+                    const statusStyle = getTaskStatusStyle(item.status)
+                    const priorityLabel = priorityOptions.find(
+                      (o) => o.value === item.priority
+                    )?.label
+                    return (
+                      <CommandItem
+                        key={`task:${item.id}`}
+                        value={`task:${item.id}`}
+                        onSelect={() => {
+                          onSelectTask(item.id)
+                          onOpenChange(false)
+                        }}
+                      >
+                        <CheckSquare className="mr-2" />
+                        <span className="truncate">
+                          <Highlight text={item.label} positions={r.positions} />
+                        </span>
+                        <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                          {statusStyle && (
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border border-border/60 text-muted-foreground">
+                              <statusStyle.icon className={cn('size-3!', statusStyle.iconClass)} />
+                              {statusStyle.label}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium border border-border/60 text-muted-foreground">
+                            <PriorityIcon priority={item.priority} className="size-3!" />
+                            {priorityLabel}
+                          </span>
+                        </div>
+                      </CommandItem>
+                    )
+                  })}
+                </CommandGroup>
+              )}
+
+              {isSearching && groupedResults.projects.length > 0 && (
+                <CommandGroup heading="Projects">
+                  {groupedResults.projects.map((r) => {
+                    const item = r.item as Extract<SearchItem, { kind: 'project' }>
+                    return (
+                      <CommandItem
+                        key={`project:${item.id}`}
+                        value={`project:${item.id}`}
+                        onSelect={() => {
+                          onSelectProject(item.id)
+                          onOpenChange(false)
+                        }}
+                      >
+                        <Folder className="mr-2" />
+                        <span>
+                          <Highlight text={item.label} positions={r.positions} />
+                        </span>
+                      </CommandItem>
+                    )
+                  })}
+                </CommandGroup>
+              )}
+            </CommandList>
           </div>
         </Command>
       </DialogContent>

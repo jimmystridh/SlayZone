@@ -209,6 +209,6 @@ export function useWatchedFile(options: UseWatchedFileOptions): UseWatchedFileRe
     diskChanged,
     reloadFromDisk,
     flushNow,
-    onBlur,
+    onBlur
   }
 }

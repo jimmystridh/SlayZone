@@ -7,7 +7,20 @@ import type { ColumnConfig } from '@slayzone/projects/shared'
 import { isCompletedStatus, isTerminalStatus } from '@slayzone/projects/shared'
 import { TaskProgressPopover } from '@slayzone/task/client'
 import type { TerminalState } from '@slayzone/terminal/shared'
-import { Card, CardContent, Tooltip, TooltipContent, TooltipTrigger, Popover, PopoverContent, PopoverTrigger, TerminalProgressDot, cn, getTerminalStateStyle, PriorityIcon } from '@slayzone/ui'
+import {
+  Card,
+  CardContent,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  TerminalProgressDot,
+  cn,
+  getTerminalStateStyle,
+  PriorityIcon
+} from '@slayzone/ui'
 import { useAppearance } from '@slayzone/settings/client'
 import { todayISO } from './kanban'
 import { priorityOptions } from '@slayzone/task/shared'
@@ -43,7 +56,6 @@ interface KanbanCardProps {
   onTaskTagsChange?: (taskId: string, tagIds: string[]) => void
 }
 
-
 export function KanbanCard({
   task,
   columns,
@@ -60,13 +72,13 @@ export function KanbanCard({
   onUpdateTask,
   onTaskTagsChange
 }: KanbanCardProps): React.JSX.Element {
-  const resolvedTags = (cp?.tags ?? true) && tags && taskTagIds
-    ? tags.filter((t) => taskTagIds.includes(t.id))
-    : []
+  const resolvedTags =
+    (cp?.tags ?? true) && tags && taskTagIds ? tags.filter((t) => taskTagIds.includes(t.id)) : []
   const [prioOpen, setPrioOpen] = useState(false)
   const { reduceMotion } = useAppearance()
   const today = todayISO()
-  const isOverdue = task.due_date && task.due_date < today && !isTerminalStatus(task.status, columns)
+  const isOverdue =
+    task.due_date && task.due_date < today && !isTerminalStatus(task.status, columns)
   const prevStatusRef = useRef(task.status)
   const [justCompleted, setJustCompleted] = useState(false)
 
@@ -81,7 +93,10 @@ export function KanbanCard({
   }, [mainSessionId, getState, subscribeState])
 
   useEffect(() => {
-    if (!isTerminalStatus(prevStatusRef.current, columns) && isTerminalStatus(task.status, columns)) {
+    if (
+      !isTerminalStatus(prevStatusRef.current, columns) &&
+      isTerminalStatus(task.status, columns)
+    ) {
       setJustCompleted(true)
       setTimeout(() => setJustCompleted(false), 1000)
     }
@@ -117,199 +132,289 @@ export function KanbanCard({
         data-task-id={task.id}
         onClick={(e) => onClick?.(e)}
       >
-      <CardContent className={cn("px-2.5 pt-5", resolvedTags.length > 0 || (subTaskCount && subTaskCount.total > 0) || ((cp?.dueDate ?? true) && task.due_date) || ((cp?.blocked ?? true) && isBlocked) ? "pb-3" : "pb-5")}>
-        <div className="flex items-start gap-3">
-          <div className="flex-1 min-w-0">
-            {/* Title row */}
-            <div className="flex items-start gap-1.5">
-              {(cp?.priority ?? true) && (
-                <Popover open={prioOpen} onOpenChange={setPrioOpen}>
-                  <PopoverTrigger asChild>
-                    <button type="button" className="shrink-0 leading-tight text-xs inline-flex items-center h-[1em]" onClick={(e) => e.stopPropagation()}>
-                      <PriorityIcon priority={task.priority} className="h-4 w-4" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[140px] p-1" align="start" onClick={(e) => e.stopPropagation()}>
-                    {priorityOptions.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        className={cn(
-                          'flex items-center gap-2 w-full rounded px-2 py-1 text-xs hover:bg-muted/50',
-                          task.priority === opt.value && 'bg-muted'
-                        )}
-                        onClick={() => { onUpdateTask?.(task.id, { priority: opt.value }); setPrioOpen(false) }}
-                      >
-                        <PriorityIcon priority={opt.value} className="h-3.5 w-3.5" />
-                        {opt.label}
-                      </button>
-                    ))}
-                  </PopoverContent>
-                </Popover>
-              )}
-              <p className="text-xs font-medium line-clamp-3 flex-1 leading-tight whitespace-pre-wrap break-words">{task.title}</p>
-              <div className="flex items-start gap-1.5 shrink-0">
-              {(() => {
-                const terminalOn = cp?.terminal ?? true
-                const stateForBlob = terminalOn && terminalState !== 'starting' ? terminalState : undefined
-                const stateStyle = getTerminalStateStyle(stateForBlob)
-                const progress = task.progress ?? 0
-                const isDone = isCompletedStatus(task.status, columns)
-                const showProgress = progress > 0 && !isDone
-                if (!stateStyle && !showProgress) return null
-                const tooltipText = [stateStyle?.label, showProgress ? `${Math.round(progress)}%` : null].filter(Boolean).join(' · ')
-                return (
-                  <TaskProgressPopover
-                    value={progress}
-                    onCommit={(next) => onUpdateTask?.(task.id, { progress: next })}
-                    tooltip={tooltipText}
-                  >
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center shrink-0 ml-0.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <TerminalProgressDot state={stateForBlob} progress={progress} isDone={isDone} alwaysShow noTooltip />
-                    </button>
-                  </TaskProgressPopover>
-                )
-              })()}
-              {(cp?.merge ?? true) && task.merge_state && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="shrink-0">
-                      <GitMerge className="h-2.5 w-2.5 text-purple-400" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>Merging</TooltipContent>
-                </Tooltip>
-              )}
-              {(cp?.linear ?? true) && task.linear_url && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="shrink-0 h-2 w-2 rounded-full bg-indigo-500" />
-                  </TooltipTrigger>
-                  <TooltipContent>Linked to Linear</TooltipContent>
-                </Tooltip>
-              )}
-              {task.snoozed_until && new Date(task.snoozed_until) > new Date() && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="flex items-center gap-0.5 text-orange-500 shrink-0">
-                      <AlarmClockOff className="h-2.5 w-2.5" />
-                      <span className="text-[9px] font-medium">{formatTimeLeft(task.snoozed_until)}</span>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>Snoozed until {new Date(task.snoozed_until).toLocaleString()}</TooltipContent>
-                </Tooltip>
-              )}
-              </div>
-            </div>
-            {/* Bottom row: subtasks + tags + blocked + due date */}
-            {(() => {
-              const showRow = resolvedTags.length > 0 || (subTaskCount && subTaskCount.total > 0) || ((cp?.dueDate ?? true) && task.due_date) || ((cp?.blocked ?? true) && isBlocked)
-              if (!showRow) return null
-              return (
-              <div className="flex items-center gap-3 mt-3">
-                {(cp?.subtasks ?? true) && subTaskCount && subTaskCount.total > 0 && (() => {
-                  const pct = subTaskCount.done / subTaskCount.total
-                  const r = 8
-                  const circ = 2 * Math.PI * r
-                  const isDone = subTaskCount.done === subTaskCount.total
-                  return (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="h-5 shrink-0 flex items-center gap-1">
-                          <svg viewBox="0 0 20 20" className="h-5 w-5">
-                            <circle cx="10" cy="10" r={r} fill="none" strokeWidth="2"
-                              className="stroke-muted-foreground/20" />
-                            <circle cx="10" cy="10" r={r} fill="none" strokeWidth="2"
-                              strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)}
-                              strokeLinecap="round"
-                              className={isDone ? 'stroke-green-500' : 'stroke-current'}
-                              transform="rotate(-90 10 10)" />
-                          </svg>
-                          <span className={cn(
-                            "text-[9px] shrink-0",
-                            isDone ? "text-green-500" : "text-muted-foreground"
-                          )}>
-                            {subTaskCount.done}/{subTaskCount.total}
-                          </span>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>{subTaskCount.done} of {subTaskCount.total} subtasks done</TooltipContent>
-                    </Tooltip>
-                  )
-                })()}
-                {resolvedTags.length > 0 && (
-                  <Popover>
+        <CardContent
+          className={cn(
+            'px-2.5 pt-5',
+            resolvedTags.length > 0 ||
+              (subTaskCount && subTaskCount.total > 0) ||
+              ((cp?.dueDate ?? true) && task.due_date) ||
+              ((cp?.blocked ?? true) && isBlocked)
+              ? 'pb-3'
+              : 'pb-5'
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+              {/* Title row */}
+              <div className="flex items-start gap-1.5">
+                {(cp?.priority ?? true) && (
+                  <Popover open={prioOpen} onOpenChange={setPrioOpen}>
                     <PopoverTrigger asChild>
-                      <button type="button" className="flex items-center h-5" onClick={(e) => e.stopPropagation()}>
-                        {resolvedTags.length === 1 ? (
-                          <span
-                            className="h-5 rounded-full px-2 text-[10px] leading-none flex items-center truncate max-w-[80px]"
-                            style={{ backgroundColor: resolvedTags[0].color, color: resolvedTags[0].text_color }}
-                          >
-                            {resolvedTags[0].name}
-                          </span>
-                        ) : (
-                          <>
-                            <span
-                              className="h-5 rounded-full px-2 text-[10px] leading-none flex items-center truncate max-w-[70px] z-10"
-                              style={{ backgroundColor: resolvedTags[0].color, color: resolvedTags[0].text_color }}
-                            >
-                              {resolvedTags[0].name}
-                            </span>
-                            {resolvedTags.slice(1).map((tag, i) => (
-                              <span
-                                key={tag.id}
-                                className="h-5 w-5 rounded-full border-2 border-background shrink-0"
-                                style={{ backgroundColor: tag.color, marginLeft: -10, zIndex: 9 - i }}
-                              />
-                            ))}
-                          </>
-                        )}
+                      <button
+                        type="button"
+                        className="shrink-0 leading-tight text-xs inline-flex items-center h-[1em]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <PriorityIcon priority={task.priority} className="h-4 w-4" />
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-1.5" align="start" onClick={(e) => e.stopPropagation()}>
-                      <TagSelector
-                        tags={tags ?? []}
-                        selectedTagIds={taskTagIds ?? []}
-                        projectId={task.project_id}
-                        onToggle={(tagId, checked) => {
-                          const current = taskTagIds ?? []
-                          const next = checked ? [...current, tagId] : current.filter((id) => id !== tagId)
-                          onTaskTagsChange?.(task.id, next)
-                        }}
-                        onTagCreated={(tag) => {
-                          window.dispatchEvent(new CustomEvent('slayzone:tag-created', { detail: tag }))
-                        }}
-                      />
+                    <PopoverContent
+                      className="w-[140px] p-1"
+                      align="start"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {priorityOptions.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          className={cn(
+                            'flex items-center gap-2 w-full rounded px-2 py-1 text-xs hover:bg-muted/50',
+                            task.priority === opt.value && 'bg-muted'
+                          )}
+                          onClick={() => {
+                            onUpdateTask?.(task.id, { priority: opt.value })
+                            setPrioOpen(false)
+                          }}
+                        >
+                          <PriorityIcon priority={opt.value} className="h-3.5 w-3.5" />
+                          {opt.label}
+                        </button>
+                      ))}
                     </PopoverContent>
                   </Popover>
                 )}
-                {(cp?.blocked ?? true) && isBlocked && (
-                  <span className="shrink-0 h-5 rounded-full ring-1 ring-amber-500 px-2 text-[10px] font-medium leading-none flex items-center text-amber-500" title="Blocked">
-                    Blocked
-                  </span>
-                )}
-                {(cp?.dueDate ?? true) && task.due_date && (
-                  <span className={cn(
-                    "shrink-0 h-5 rounded-full ring-1 px-2 text-[10px] font-medium leading-none flex items-center",
-                    isOverdue
-                      ? "text-destructive ring-destructive"
-                      : "text-muted-foreground ring-border"
-                  )}>
-                    {task.due_date}
-                  </span>
-                )}
+                <p className="text-xs font-medium line-clamp-3 flex-1 leading-tight whitespace-pre-wrap break-words">
+                  {task.title}
+                </p>
+                <div className="flex items-start gap-1.5 shrink-0">
+                  {(() => {
+                    const terminalOn = cp?.terminal ?? true
+                    const stateForBlob =
+                      terminalOn && terminalState !== 'starting' ? terminalState : undefined
+                    const stateStyle = getTerminalStateStyle(stateForBlob)
+                    const progress = task.progress ?? 0
+                    const isDone = isCompletedStatus(task.status, columns)
+                    const showProgress = progress > 0 && !isDone
+                    if (!stateStyle && !showProgress) return null
+                    const tooltipText = [
+                      stateStyle?.label,
+                      showProgress ? `${Math.round(progress)}%` : null
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                    return (
+                      <TaskProgressPopover
+                        value={progress}
+                        onCommit={(next) => onUpdateTask?.(task.id, { progress: next })}
+                        tooltip={tooltipText}
+                      >
+                        <button
+                          type="button"
+                          className="inline-flex items-center justify-center shrink-0 ml-0.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <TerminalProgressDot
+                            state={stateForBlob}
+                            progress={progress}
+                            isDone={isDone}
+                            alwaysShow
+                            noTooltip
+                          />
+                        </button>
+                      </TaskProgressPopover>
+                    )
+                  })()}
+                  {(cp?.merge ?? true) && task.merge_state && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="shrink-0">
+                          <GitMerge className="h-2.5 w-2.5 text-purple-400" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>Merging</TooltipContent>
+                    </Tooltip>
+                  )}
+                  {(cp?.linear ?? true) && task.linear_url && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="shrink-0 h-2 w-2 rounded-full bg-indigo-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>Linked to Linear</TooltipContent>
+                    </Tooltip>
+                  )}
+                  {task.snoozed_until && new Date(task.snoozed_until) > new Date() && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex items-center gap-0.5 text-orange-500 shrink-0">
+                          <AlarmClockOff className="h-2.5 w-2.5" />
+                          <span className="text-[9px] font-medium">
+                            {formatTimeLeft(task.snoozed_until)}
+                          </span>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Snoozed until {new Date(task.snoozed_until).toLocaleString()}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
-              )
-            })()}
+              {/* Bottom row: subtasks + tags + blocked + due date */}
+              {(() => {
+                const showRow =
+                  resolvedTags.length > 0 ||
+                  (subTaskCount && subTaskCount.total > 0) ||
+                  ((cp?.dueDate ?? true) && task.due_date) ||
+                  ((cp?.blocked ?? true) && isBlocked)
+                if (!showRow) return null
+                return (
+                  <div className="flex items-center gap-3 mt-3">
+                    {(cp?.subtasks ?? true) &&
+                      subTaskCount &&
+                      subTaskCount.total > 0 &&
+                      (() => {
+                        const pct = subTaskCount.done / subTaskCount.total
+                        const r = 8
+                        const circ = 2 * Math.PI * r
+                        const isDone = subTaskCount.done === subTaskCount.total
+                        return (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="h-5 shrink-0 flex items-center gap-1">
+                                <svg viewBox="0 0 20 20" className="h-5 w-5">
+                                  <circle
+                                    cx="10"
+                                    cy="10"
+                                    r={r}
+                                    fill="none"
+                                    strokeWidth="2"
+                                    className="stroke-muted-foreground/20"
+                                  />
+                                  <circle
+                                    cx="10"
+                                    cy="10"
+                                    r={r}
+                                    fill="none"
+                                    strokeWidth="2"
+                                    strokeDasharray={circ}
+                                    strokeDashoffset={circ * (1 - pct)}
+                                    strokeLinecap="round"
+                                    className={isDone ? 'stroke-green-500' : 'stroke-current'}
+                                    transform="rotate(-90 10 10)"
+                                  />
+                                </svg>
+                                <span
+                                  className={cn(
+                                    'text-[9px] shrink-0',
+                                    isDone ? 'text-green-500' : 'text-muted-foreground'
+                                  )}
+                                >
+                                  {subTaskCount.done}/{subTaskCount.total}
+                                </span>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {subTaskCount.done} of {subTaskCount.total} subtasks done
+                            </TooltipContent>
+                          </Tooltip>
+                        )
+                      })()}
+                    {resolvedTags.length > 0 && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="flex items-center h-5"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {resolvedTags.length === 1 ? (
+                              <span
+                                className="h-5 rounded-full px-2 text-[10px] leading-none flex items-center truncate max-w-[80px]"
+                                style={{
+                                  backgroundColor: resolvedTags[0].color,
+                                  color: resolvedTags[0].text_color
+                                }}
+                              >
+                                {resolvedTags[0].name}
+                              </span>
+                            ) : (
+                              <>
+                                <span
+                                  className="h-5 rounded-full px-2 text-[10px] leading-none flex items-center truncate max-w-[70px] z-10"
+                                  style={{
+                                    backgroundColor: resolvedTags[0].color,
+                                    color: resolvedTags[0].text_color
+                                  }}
+                                >
+                                  {resolvedTags[0].name}
+                                </span>
+                                {resolvedTags.slice(1).map((tag, i) => (
+                                  <span
+                                    key={tag.id}
+                                    className="h-5 w-5 rounded-full border-2 border-background shrink-0"
+                                    style={{
+                                      backgroundColor: tag.color,
+                                      marginLeft: -10,
+                                      zIndex: 9 - i
+                                    }}
+                                  />
+                                ))}
+                              </>
+                            )}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-[200px] p-1.5"
+                          align="start"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <TagSelector
+                            tags={tags ?? []}
+                            selectedTagIds={taskTagIds ?? []}
+                            projectId={task.project_id}
+                            onToggle={(tagId, checked) => {
+                              const current = taskTagIds ?? []
+                              const next = checked
+                                ? [...current, tagId]
+                                : current.filter((id) => id !== tagId)
+                              onTaskTagsChange?.(task.id, next)
+                            }}
+                            onTagCreated={(tag) => {
+                              window.dispatchEvent(
+                                new CustomEvent('slayzone:tag-created', { detail: tag })
+                              )
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                    {(cp?.blocked ?? true) && isBlocked && (
+                      <span
+                        className="shrink-0 h-5 rounded-full ring-1 ring-amber-500 px-2 text-[10px] font-medium leading-none flex items-center text-amber-500"
+                        title="Blocked"
+                      >
+                        Blocked
+                      </span>
+                    )}
+                    {(cp?.dueDate ?? true) && task.due_date && (
+                      <span
+                        className={cn(
+                          'shrink-0 h-5 rounded-full ring-1 px-2 text-[10px] font-medium leading-none flex items-center',
+                          isOverdue
+                            ? 'text-destructive ring-destructive'
+                            : 'text-muted-foreground ring-border'
+                        )}
+                      >
+                        {task.due_date}
+                      </span>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
     </motion.div>
   )
 }

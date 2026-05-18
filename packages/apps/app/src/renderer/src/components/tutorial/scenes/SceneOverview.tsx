@@ -4,7 +4,7 @@ import { Home, Settings, HelpCircle, Map, Keyboard, Plus, X } from 'lucide-react
 const PROJECTS = [
   { abbr: 'SZ', color: '#3b82f6' },
   { abbr: 'BE', color: '#10b981' },
-  { abbr: 'MB', color: '#8b5cf6' },
+  { abbr: 'MB', color: '#8b5cf6' }
 ]
 
 interface MockTask {
@@ -25,24 +25,22 @@ const COLUMNS: MockColumn[] = [
     tasks: [
       { title: 'Set up authentication', priority: 1 },
       { title: 'Design system tokens', priority: 3 },
-      { title: 'Write integration tests', priority: 5 },
-    ],
+      { title: 'Write integration tests', priority: 5 }
+    ]
   },
   {
     id: 'in_progress',
     title: 'In Progress',
     tasks: [
       { title: 'Build kanban board', priority: 1 },
-      { title: 'REST API routes', priority: 2 },
-    ],
+      { title: 'REST API routes', priority: 2 }
+    ]
   },
   {
     id: 'done',
     title: 'Done',
-    tasks: [
-      { title: 'Landing page', priority: 4 },
-    ],
-  },
+    tasks: [{ title: 'Landing page', priority: 4 }]
+  }
 ]
 
 const PRIORITY_COLORS: Record<number, string> = {
@@ -50,7 +48,7 @@ const PRIORITY_COLORS: Record<number, string> = {
   2: 'bg-orange-500',
   3: 'bg-yellow-500',
   4: 'bg-blue-400',
-  5: 'bg-muted-foreground/30',
+  5: 'bg-muted-foreground/30'
 }
 
 function PriorityBars({ priority }: { priority: number }): React.JSX.Element {
@@ -152,7 +150,10 @@ export function SceneOverview(): React.JSX.Element {
 
         {/* Footer icons */}
         {[Map, HelpCircle, Keyboard, Settings].map((Icon, i) => (
-          <div key={i} className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60">
+          <div
+            key={i}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground/60"
+          >
             <Icon className="size-3" />
           </div>
         ))}
@@ -193,10 +194,16 @@ export function SceneOverview(): React.JSX.Element {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <div className="h-4 px-1.5 rounded bg-muted/60 text-[7px] text-muted-foreground flex items-center">All priorities</div>
-          <div className="h-4 px-1.5 rounded bg-muted/60 text-[7px] text-muted-foreground flex items-center">Sort: Priority</div>
+          <div className="h-4 px-1.5 rounded bg-muted/60 text-[7px] text-muted-foreground flex items-center">
+            All priorities
+          </div>
+          <div className="h-4 px-1.5 rounded bg-muted/60 text-[7px] text-muted-foreground flex items-center">
+            Sort: Priority
+          </div>
           <div className="flex-1" />
-          <div className="h-4 px-1.5 rounded bg-muted/60 text-[7px] text-muted-foreground flex items-center">Group: Status</div>
+          <div className="h-4 px-1.5 rounded bg-muted/60 text-[7px] text-muted-foreground flex items-center">
+            Group: Status
+          </div>
         </motion.div>
 
         {/* Kanban */}

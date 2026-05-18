@@ -1,14 +1,28 @@
-import { test, expect, seed, goHome, clickProject, resetApp, TEST_PROJECT_PATH } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  resetApp,
+  TEST_PROJECT_PATH
+} from '../fixtures/electron'
 import type { Page } from '@playwright/test'
 
 const artifactsPanel = (page: Page) => page.locator('[data-panel-id="artifacts"]:visible')
 const sidebar = (page: Page) => artifactsPanel(page).locator('[data-testid="artifacts-sidebar"]')
 const artifactRow = (page: Page, title: string) =>
   sidebar(page).locator('[data-testid^="artifact-row-"]').filter({ hasText: title }).first()
-const previewFrame = (page: Page) => artifactsPanel(page).locator('iframe[title="HTML preview"]').contentFrame()
+const previewFrame = (page: Page) =>
+  artifactsPanel(page).locator('iframe[title="HTML preview"]').contentFrame()
 
 async function openArtifactsPanel(page: Page) {
-  if (await artifactsPanel(page).isVisible().catch(() => false)) return
+  if (
+    await artifactsPanel(page)
+      .isVisible()
+      .catch(() => false)
+  )
+    return
   await page.keyboard.press('Meta+Shift+A')
   await expect(artifactsPanel(page)).toBeVisible({ timeout: 5_000 })
 }
@@ -20,7 +34,11 @@ test.describe('HTML artifact preview executes scripts', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'HTML Preview Test', color: '#3b82f6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'HTML Preview Test',
+      color: '#3b82f6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'HTML preview task', status: 'todo' })
     taskId = t.id
@@ -30,7 +48,9 @@ test.describe('HTML artifact preview executes scripts', () => {
     await clickProject(mainWindow, projectAbbrev)
     await expect(mainWindow.getByText('HTML preview task').first()).toBeVisible({ timeout: 5_000 })
     await mainWindow.getByText('HTML preview task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
   })
 
   test('inline <script> in .html artifact runs and DOM mutations work', async ({ mainWindow }) => {

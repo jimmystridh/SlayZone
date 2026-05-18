@@ -5,8 +5,8 @@
  */
 
 interface JiraCredential {
-  token: string   // base64(email:apiToken)
-  domain: string  // e.g. "company.atlassian.net"
+  token: string // base64(email:apiToken)
+  domain: string // e.g. "company.atlassian.net"
 }
 
 export function parseJiraCredential(credential: string): JiraCredential {
@@ -20,9 +20,7 @@ export function parseJiraCredential(credential: string): JiraCredential {
 export function buildJiraCredential(email: string, apiToken: string, domain: string): string {
   const token = Buffer.from(`${email}:${apiToken}`).toString('base64')
   // Strip protocol, trailing slashes, and paths so only the hostname remains
-  const cleanDomain = domain
-    .replace(/^https?:\/\//, '')
-    .replace(/\/.*$/, '')
+  const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '')
   return JSON.stringify({ token, domain: cleanDomain })
 }
 
@@ -56,13 +54,15 @@ async function requestJira<T>(
     })
   } catch (err) {
     const cause = err instanceof Error ? err.message : String(err)
-    throw new Error(`Could not reach ${domain} — check that the domain is correct and you're online (${cause})`)
+    throw new Error(
+      `Could not reach ${domain} — check that the domain is correct and you're online (${cause})`
+    )
   }
 
   if (!res.ok) {
     let detail = ''
     try {
-      const body = await res.json() as { errorMessages?: string[]; message?: string }
+      const body = (await res.json()) as { errorMessages?: string[]; message?: string }
       detail = body.errorMessages?.join('; ') ?? body.message ?? ''
     } catch {
       // ignore
@@ -71,7 +71,7 @@ async function requestJira<T>(
   }
 
   if (res.status === 204) return undefined as T
-  return await res.json() as T
+  return (await res.json()) as T
 }
 
 // --- Types ---
@@ -214,7 +214,10 @@ function mapIssue(issue: JiraIssue): JiraIssueSummary {
     },
     updatedAt: issue.fields.updated,
     assignee: issue.fields.assignee
-      ? { accountId: issue.fields.assignee.accountId, displayName: issue.fields.assignee.displayName }
+      ? {
+          accountId: issue.fields.assignee.accountId,
+          displayName: issue.fields.assignee.displayName
+        }
       : null,
     issueType: issue.fields.issuetype.name,
     projectKey: issue.fields.project.key
@@ -247,7 +250,10 @@ export async function searchIssues(
   }
 }
 
-export async function getIssue(credential: string, issueKey: string): Promise<JiraIssueSummary | null> {
+export async function getIssue(
+  credential: string,
+  issueKey: string
+): Promise<JiraIssueSummary | null> {
   try {
     const issue = await requestJira<JiraIssue>(
       credential,
@@ -300,17 +306,19 @@ export async function updateIssue(
   if (input.description !== undefined) fields.description = input.description
 
   if (Object.keys(fields).length > 0) {
-    await requestJira<void>(
-      credential,
-      `/rest/api/3/issue/${encodeURIComponent(issueKey)}`,
-      { method: 'PUT', body: { fields } }
-    )
+    await requestJira<void>(credential, `/rest/api/3/issue/${encodeURIComponent(issueKey)}`, {
+      method: 'PUT',
+      body: { fields }
+    })
   }
 
   return getIssue(credential, issueKey)
 }
 
-export async function getTransitions(credential: string, issueKey: string): Promise<JiraTransitionInfo[]> {
+export async function getTransitions(
+  credential: string,
+  issueKey: string
+): Promise<JiraTransitionInfo[]> {
   const data = await requestJira<JiraTransitionResponse>(
     credential,
     `/rest/api/3/issue/${encodeURIComponent(issueKey)}/transitions`

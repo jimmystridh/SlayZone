@@ -47,7 +47,7 @@ export interface HtmlRenderOptions {
 
 const SANITIZE_CONFIG: DOMPurifyConfig = {
   ADD_ATTR: ['align', 'target'],
-  FORBID_TAGS: ['script', 'style'],
+  FORBID_TAGS: ['script', 'style']
 }
 
 function sanitize(html: string): string {
@@ -108,12 +108,7 @@ function attachLinkClick(dom: HTMLElement, opts: HtmlRenderOptions): () => void 
 // 1. Remark plugin — retype mdast `html` nodes by parent context
 // ---------------------------------------------------------------------------
 
-const BLOCK_PARENTS = new Set([
-  'root',
-  'blockquote',
-  'listItem',
-  'footnoteDefinition',
-])
+const BLOCK_PARENTS = new Set(['root', 'blockquote', 'listItem', 'footnoteDefinition'])
 
 const splitHtmlNodes: UnifiedPlugin<[], Root> = () => (tree) => {
   visit(tree, 'html', (node, _index, parent: Parent | undefined) => {
@@ -124,11 +119,10 @@ const splitHtmlNodes: UnifiedPlugin<[], Root> = () => (tree) => {
   })
 }
 
-const remarkHtmlSplitPlugin = $remark(
-  'remarkHtmlSplit',
-  () => splitHtmlNodes,
-  ['htmlBlock', 'htmlInline']
-)
+const remarkHtmlSplitPlugin = $remark('remarkHtmlSplit', () => splitHtmlNodes, [
+  'htmlBlock',
+  'htmlInline'
+])
 
 // ---------------------------------------------------------------------------
 // 2. Block HTML schema
@@ -140,32 +134,29 @@ const htmlBlockSchema = $nodeSchema('htmlBlock', () => ({
   isolating: true,
   selectable: true,
   attrs: {
-    value: { default: '' },
+    value: { default: '' }
   },
   parseMarkdown: {
     match: (node) => node.type === 'htmlBlock',
     runner: (state, node, type) => {
       state.addNode(type, { value: (node.value as string) ?? '' })
-    },
+    }
   },
   toMarkdown: {
     match: (node) => node.type.name === 'htmlBlock',
     runner: (state, node) => {
       state.addNode('html', undefined, node.attrs.value as string)
-    },
+    }
   },
   parseDOM: [
     {
       tag: 'div[data-type="html-block"]',
       getAttrs: (dom) => ({
-        value: (dom as HTMLElement).dataset.value ?? '',
-      }),
-    },
+        value: (dom as HTMLElement).dataset.value ?? ''
+      })
+    }
   ],
-  toDOM: (node) => [
-    'div',
-    { 'data-type': 'html-block', 'data-value': node.attrs.value as string },
-  ],
+  toDOM: (node) => ['div', { 'data-type': 'html-block', 'data-value': node.attrs.value as string }]
 }))
 
 // ---------------------------------------------------------------------------
@@ -178,32 +169,32 @@ const htmlInlineSchema = $nodeSchema('htmlInline', () => ({
   atom: true,
   selectable: false,
   attrs: {
-    value: { default: '' },
+    value: { default: '' }
   },
   parseMarkdown: {
     match: (node) => node.type === 'htmlInline',
     runner: (state, node, type) => {
       state.addNode(type, { value: (node.value as string) ?? '' })
-    },
+    }
   },
   toMarkdown: {
     match: (node) => node.type.name === 'htmlInline',
     runner: (state, node) => {
       state.addNode('html', undefined, node.attrs.value as string)
-    },
+    }
   },
   parseDOM: [
     {
       tag: 'span[data-type="html-inline"]',
       getAttrs: (dom) => ({
-        value: (dom as HTMLElement).dataset.value ?? '',
-      }),
-    },
+        value: (dom as HTMLElement).dataset.value ?? ''
+      })
+    }
   ],
   toDOM: (node) => [
     'span',
-    { 'data-type': 'html-inline', 'data-value': node.attrs.value as string },
-  ],
+    { 'data-type': 'html-inline', 'data-value': node.attrs.value as string }
+  ]
 }))
 
 // ---------------------------------------------------------------------------
@@ -242,7 +233,7 @@ export function htmlRenderPlugin(opts: HtmlRenderOptions = {}): MilkdownPlugin[]
         },
         destroy() {
           detachClick()
-        },
+        }
       }
     }
   })
@@ -270,7 +261,7 @@ export function htmlRenderPlugin(opts: HtmlRenderOptions = {}): MilkdownPlugin[]
         },
         destroy() {
           detachClick()
-        },
+        }
       }
     }
   })
@@ -280,6 +271,6 @@ export function htmlRenderPlugin(opts: HtmlRenderOptions = {}): MilkdownPlugin[]
     ...htmlBlockSchema,
     htmlBlockView,
     ...htmlInlineSchema,
-    htmlInlineView,
+    htmlInlineView
   ]
 }

@@ -1,6 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { formatDistanceToNowStrict, parseISO } from 'date-fns'
-import { cn, Switch, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@slayzone/ui'
+import {
+  cn,
+  Switch,
+  Button,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem
+} from '@slayzone/ui'
 import {
   CheckCircle2,
   ChevronDown,
@@ -12,7 +20,7 @@ import {
   Play,
   TimerReset,
   Trash2,
-  XCircle,
+  XCircle
 } from 'lucide-react'
 import type { Automation, AutomationRun } from '@slayzone/automations/shared'
 import type { AutomationActionRun } from '@slayzone/history/shared'
@@ -46,10 +54,9 @@ function formatRelativeTime(value: string | null): string | null {
   }
 }
 
-
 function getStatusMeta(
   status: AutomationRun['status'] | AutomationActionRun['status'],
-  testIdPrefix: 'automation-run-marker' | 'automation-step-marker',
+  testIdPrefix: 'automation-run-marker' | 'automation-step-marker'
 ): {
   label: string
   icon: React.ReactNode
@@ -66,7 +73,7 @@ function getStatusMeta(
         badgeClassName: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
         markerClassName: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
         labelClassName: 'text-emerald-500',
-        testId: `${testIdPrefix}-success`,
+        testId: `${testIdPrefix}-success`
       }
     case 'error':
       return {
@@ -75,7 +82,7 @@ function getStatusMeta(
         badgeClassName: 'text-destructive bg-destructive/10 border-destructive/20',
         markerClassName: 'text-destructive bg-destructive/10 border-destructive/20',
         labelClassName: 'text-destructive',
-        testId: `${testIdPrefix}-error`,
+        testId: `${testIdPrefix}-error`
       }
     case 'running':
       return {
@@ -84,7 +91,7 @@ function getStatusMeta(
         badgeClassName: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
         markerClassName: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
         labelClassName: 'text-amber-400',
-        testId: `${testIdPrefix}-running`,
+        testId: `${testIdPrefix}-running`
       }
     case 'skipped':
       return {
@@ -93,7 +100,7 @@ function getStatusMeta(
         badgeClassName: 'text-muted-foreground bg-muted/60 border-border',
         markerClassName: 'text-muted-foreground bg-muted/60 border-border',
         labelClassName: 'text-muted-foreground',
-        testId: `${testIdPrefix}-skipped`,
+        testId: `${testIdPrefix}-skipped`
       }
   }
 }
@@ -102,11 +109,14 @@ function getOutputMarkerMeta(): Pick<RunDetailEntry, 'markerClassName' | 'marker
   return {
     markerClassName: 'text-muted-foreground bg-muted/40 border-border',
     markerIcon: <div className="size-1.5 rounded-full bg-current" />,
-    testId: 'automation-step-marker-output',
+    testId: 'automation-step-marker-output'
   }
 }
 
-function buildRunDetailEntries(run: AutomationRun, actionRuns: AutomationActionRun[]): RunDetailEntry[] {
+function buildRunDetailEntries(
+  run: AutomationRun,
+  actionRuns: AutomationActionRun[]
+): RunDetailEntry[] {
   const entries: RunDetailEntry[] = []
 
   for (const actionRun of actionRuns) {
@@ -120,7 +130,7 @@ function buildRunDetailEntries(run: AutomationRun, actionRuns: AutomationActionR
       meta: metaParts.join(' · '),
       markerClassName: statusMeta.markerClassName,
       markerIcon: statusMeta.icon,
-      testId: statusMeta.testId,
+      testId: statusMeta.testId
     })
 
     if (actionRun.outputTail) {
@@ -130,7 +140,7 @@ function buildRunDetailEntries(run: AutomationRun, actionRuns: AutomationActionR
         body: actionRun.outputTail,
         markerClassName: outputMeta.markerClassName,
         markerIcon: outputMeta.markerIcon,
-        testId: outputMeta.testId,
+        testId: outputMeta.testId
       })
     }
 
@@ -140,7 +150,7 @@ function buildRunDetailEntries(run: AutomationRun, actionRuns: AutomationActionR
         body: actionRun.error,
         markerClassName: 'text-destructive bg-destructive/10 border-destructive/20',
         markerIcon: <XCircle className="size-3" />,
-        testId: 'automation-step-marker-error',
+        testId: 'automation-step-marker-error'
       })
     }
   }
@@ -151,13 +161,12 @@ function buildRunDetailEntries(run: AutomationRun, actionRuns: AutomationActionR
       body: run.error,
       markerClassName: 'text-destructive bg-destructive/10 border-destructive/20',
       markerIcon: <XCircle className="size-3" />,
-      testId: 'automation-step-marker-error',
+      testId: 'automation-step-marker-error'
     })
   }
 
   return entries
 }
-
 
 function RunTimeline({ children }: { children: React.ReactNode }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -169,8 +178,11 @@ function RunTimeline({ children }: { children: React.ReactNode }) {
     if (!wrapper || !line) return
     const start = wrapper.querySelector('[data-timeline-start]') as HTMLElement | null
     const dots = wrapper.querySelectorAll('[data-timeline-dot]')
-    const last = dots.length > 0 ? dots[dots.length - 1] as HTMLElement : null
-    if (!start || !last) { line.style.display = 'none'; return }
+    const last = dots.length > 0 ? (dots[dots.length - 1] as HTMLElement) : null
+    if (!start || !last) {
+      line.style.display = 'none'
+      return
+    }
     const base = wrapper.getBoundingClientRect().top
     const top = start.getBoundingClientRect().top + start.offsetHeight / 2 - base
     const end = last.getBoundingClientRect().top + last.offsetHeight / 2 - base
@@ -181,7 +193,11 @@ function RunTimeline({ children }: { children: React.ReactNode }) {
 
   return (
     <div ref={wrapperRef} className="relative">
-      <div ref={lineRef} className="absolute w-px bg-border" style={{ left: 12, transform: 'translateX(-50%)', display: 'none' }} />
+      <div
+        ref={lineRef}
+        className="absolute w-px bg-border"
+        style={{ left: 12, transform: 'translateX(-50%)', display: 'none' }}
+      />
       {children}
     </div>
   )
@@ -204,15 +220,16 @@ export function AutomationCard({
   onDelete,
   onDuplicate,
   onRunManual,
-  onLoadRuns,
+  onLoadRuns
 }: AutomationCardProps) {
   const [expanded, setExpanded] = useState(false)
   const [runs, setRuns] = useState<AutomationRun[]>([])
   const [runsLoaded, setRunsLoaded] = useState(false)
-  const [actionRunsByRunId, setActionRunsByRunId] = useState<Record<string, AutomationActionRun[]>>({})
+  const [actionRunsByRunId, setActionRunsByRunId] = useState<Record<string, AutomationActionRun[]>>(
+    {}
+  )
   const [expandedRunIds, setExpandedRunIds] = useState<Record<string, boolean>>({})
   const [loadingRunIds, setLoadingRunIds] = useState<Record<string, boolean>>({})
-
 
   useEffect(() => {
     if (runsLoaded) {
@@ -260,13 +277,22 @@ export function AutomationCard({
           {expanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
         </button>
 
-        <button type="button" onClick={() => onEdit(automation)} className="min-w-0 flex-1 truncate text-left text-sm font-medium hover:underline">
+        <button
+          type="button"
+          onClick={() => onEdit(automation)}
+          className="min-w-0 flex-1 truncate text-left text-sm font-medium hover:underline"
+        >
           {automation.name}
         </button>
 
         <div className="flex items-center gap-1.5 shrink-0">
           {automation.trigger_config.type === 'manual' && (
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => onRunManual(automation.id)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => onRunManual(automation.id)}
+            >
               <Play className="size-3.5" />
             </Button>
           )}
@@ -289,7 +315,10 @@ export function AutomationCard({
                 <Copy className="mr-2 size-3.5" />
                 Duplicate
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(automation.id)} className="text-destructive">
+              <DropdownMenuItem
+                onClick={() => onDelete(automation.id)}
+                className="text-destructive"
+              >
                 <Trash2 className="mr-2 size-3.5" />
                 Delete
               </DropdownMenuItem>
@@ -304,99 +333,128 @@ export function AutomationCard({
             <div className="rounded-lg border border-dashed border-border bg-background/50 px-3 py-4 text-sm text-muted-foreground">
               No runs yet.
             </div>
-          ) : runs.slice(0, 10).map((run) => {
-            const runStatus = getStatusMeta(run.status, 'automation-run-marker')
-            const isRunExpanded = expandedRunIds[run.id] === true
-            const actionRuns = actionRunsByRunId[run.id] ?? []
-            const loadingActions = loadingRunIds[run.id] === true
-            const detailEntries = buildRunDetailEntries(run, actionRuns)
+          ) : (
+            runs.slice(0, 10).map((run) => {
+              const runStatus = getStatusMeta(run.status, 'automation-run-marker')
+              const isRunExpanded = expandedRunIds[run.id] === true
+              const actionRuns = actionRunsByRunId[run.id] ?? []
+              const loadingActions = loadingRunIds[run.id] === true
+              const detailEntries = buildRunDetailEntries(run, actionRuns)
 
-            return (
-              <RunTimeline key={run.id}>
-                {/* Run row */}
-                <div className="grid grid-cols-[24px_minmax(0,1fr)] items-center gap-x-4">
-                  <div className="flex justify-center">
-                    <div
-                      data-testid={runStatus.testId}
-                      data-timeline-start
-                      className={cn('relative z-10', runStatus.labelClassName)}
-                    >
-                      {runStatus.icon}
+              return (
+                <RunTimeline key={run.id}>
+                  {/* Run row */}
+                  <div className="grid grid-cols-[24px_minmax(0,1fr)] items-center gap-x-4">
+                    <div className="flex justify-center">
+                      <div
+                        data-testid={runStatus.testId}
+                        data-timeline-start
+                        className={cn('relative z-10', runStatus.labelClassName)}
+                      >
+                        {runStatus.icon}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-baseline gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                        <div className={cn('text-sm font-medium', runStatus.labelClassName)}>{runStatus.label}</div>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                          <span>{formatRelativeTime(run.started_at) ?? run.started_at}</span>
-                          {run.duration_ms !== null && (
-                            <>
-                              <span aria-hidden="true" className="text-muted-foreground/40">·</span>
-                              <span>{run.duration_ms} ms</span>
-                            </>
-                          )}
-                          {isCatchupRun(run) && (
-                            <>
-                              <span aria-hidden="true" className="text-muted-foreground/40">·</span>
-                              <span title="Coalesced replay of one or more missed cron fires">catchup</span>
-                            </>
-                          )}
+                    <div className="flex items-baseline gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                          <div className={cn('text-sm font-medium', runStatus.labelClassName)}>
+                            {runStatus.label}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                            <span>{formatRelativeTime(run.started_at) ?? run.started_at}</span>
+                            {run.duration_ms !== null && (
+                              <>
+                                <span aria-hidden="true" className="text-muted-foreground/40">
+                                  ·
+                                </span>
+                                <span>{run.duration_ms} ms</span>
+                              </>
+                            )}
+                            {isCatchupRun(run) && (
+                              <>
+                                <span aria-hidden="true" className="text-muted-foreground/40">
+                                  ·
+                                </span>
+                                <span title="Coalesced replay of one or more missed cron fires">
+                                  catchup
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
+                      <button
+                        type="button"
+                        aria-label={
+                          isRunExpanded ? 'Hide run action details' : 'Show run action details'
+                        }
+                        className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                        onClick={() => void toggleRunDetails(run.id)}
+                      >
+                        {isRunExpanded ? 'Hide details' : 'Show details'}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      aria-label={isRunExpanded ? 'Hide run action details' : 'Show run action details'}
-                      className="shrink-0 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                      onClick={() => void toggleRunDetails(run.id)}
-                    >
-                      {isRunExpanded ? 'Hide details' : 'Show details'}
-                    </button>
                   </div>
-                </div>
 
-                {/* Detail rows */}
-                {isRunExpanded && (
-                  loadingActions ? (
-                    <div className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-4 mt-3">
-                      <div />
-                      <div className="text-xs text-muted-foreground">Loading action details...</div>
-                    </div>
-                  ) : detailEntries.length === 0 ? (
-                    <div className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-4 mt-3">
-                      <div />
-                      <div className="text-xs text-muted-foreground">No action details.</div>
-                    </div>
-                  ) : detailEntries.map((entry, entryIndex) => (
-                    <div key={entry.key} className="grid grid-cols-[24px_minmax(0,1fr)] items-center gap-x-4" style={{ marginTop: entryIndex === 0 ? 8 : 16 }}>
-                      <div className="flex justify-center">
-                        <div data-testid={entry.testId} data-timeline-dot className="relative z-10 size-2 shrink-0 rounded-full bg-foreground" />
+                  {/* Detail rows */}
+                  {isRunExpanded &&
+                    (loadingActions ? (
+                      <div className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-4 mt-3">
+                        <div />
+                        <div className="text-xs text-muted-foreground">
+                          Loading action details...
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        {entry.title && (
-                          <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-muted/25 px-3 py-2 text-[11px] leading-5 text-foreground">
-                            <div>{entry.title}</div>
-                            {entry.meta && <div className="text-muted-foreground">{entry.meta}</div>}
-                          </pre>
-                        )}
-                        {!entry.title && entry.body && entry.testId === 'automation-step-marker-output' && (
-                          <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-muted/25 px-3 py-2 text-[11px] leading-5 text-foreground">
-                            {entry.body}
-                          </pre>
-                        )}
-                        {!entry.title && entry.body && entry.testId === 'automation-step-marker-error' && (
-                          <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-muted/25 px-3 py-2 text-[11px] leading-5 text-destructive">
-                            {entry.body}
-                          </pre>
-                        )}
+                    ) : detailEntries.length === 0 ? (
+                      <div className="grid grid-cols-[24px_minmax(0,1fr)] gap-x-4 mt-3">
+                        <div />
+                        <div className="text-xs text-muted-foreground">No action details.</div>
                       </div>
-                    </div>
-                  ))
-                )}
-              </RunTimeline>
-            )
-          })}
+                    ) : (
+                      detailEntries.map((entry, entryIndex) => (
+                        <div
+                          key={entry.key}
+                          className="grid grid-cols-[24px_minmax(0,1fr)] items-center gap-x-4"
+                          style={{ marginTop: entryIndex === 0 ? 8 : 16 }}
+                        >
+                          <div className="flex justify-center">
+                            <div
+                              data-testid={entry.testId}
+                              data-timeline-dot
+                              className="relative z-10 size-2 shrink-0 rounded-full bg-foreground"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            {entry.title && (
+                              <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-muted/25 px-3 py-2 text-[11px] leading-5 text-foreground">
+                                <div>{entry.title}</div>
+                                {entry.meta && (
+                                  <div className="text-muted-foreground">{entry.meta}</div>
+                                )}
+                              </pre>
+                            )}
+                            {!entry.title &&
+                              entry.body &&
+                              entry.testId === 'automation-step-marker-output' && (
+                                <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-muted/25 px-3 py-2 text-[11px] leading-5 text-foreground">
+                                  {entry.body}
+                                </pre>
+                              )}
+                            {!entry.title &&
+                              entry.body &&
+                              entry.testId === 'automation-step-marker-error' && (
+                                <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-muted/25 px-3 py-2 text-[11px] leading-5 text-destructive">
+                                  {entry.body}
+                                </pre>
+                              )}
+                          </div>
+                        </div>
+                      ))
+                    ))}
+                </RunTimeline>
+              )
+            })
+          )}
         </div>
       )}
     </div>

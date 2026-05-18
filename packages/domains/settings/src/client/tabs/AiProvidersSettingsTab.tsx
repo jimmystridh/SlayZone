@@ -1,8 +1,45 @@
 import { useState, useEffect, useRef, type ComponentProps } from 'react'
-import { ChevronRight, Copy, HelpCircle, Plus, RefreshCw, Trash2, CheckCircle2, AlertCircle } from 'lucide-react'
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, IconButton, Input, Label, Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue, Switch, Tooltip, TooltipTrigger, TooltipContent, toast } from '@slayzone/ui'
+import {
+  ChevronRight,
+  Copy,
+  HelpCircle,
+  Plus,
+  RefreshCw,
+  Trash2,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react'
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  IconButton,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+  Switch,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  toast
+} from '@slayzone/ui'
 import { getVisibleModes, getModeLabel, groupTerminalModes } from '@slayzone/terminal'
-import type { TerminalMode, TerminalModeInfo, CreateTerminalModeInput, UpdateTerminalModeInput, UsageProviderConfig, UsageWindow } from '@slayzone/terminal/shared'
+import type {
+  TerminalMode,
+  TerminalModeInfo,
+  CreateTerminalModeInput,
+  UpdateTerminalModeInput,
+  UsageProviderConfig,
+  UsageWindow
+} from '@slayzone/terminal/shared'
 import { DETECTION_ENGINES, isChatSupported } from '@slayzone/terminal/shared'
 import { SettingsTabIntro } from './SettingsTabIntro'
 import { PanelBreadcrumb } from './PanelBreadcrumb'
@@ -34,27 +71,35 @@ const EMPTY_USAGE_CONFIG: UsageProviderConfig = {
   url: '',
   method: 'GET',
   authType: 'none',
-  windowMapping: { label: 'name', utilization: 'utilization', resetsAt: 'resets_at' },
+  windowMapping: { label: 'name', utilization: 'utilization', resetsAt: 'resets_at' }
 }
 
 function UsageConfigSection({
   mode,
-  onUpdate,
+  onUpdate
 }: {
   mode: TerminalModeInfo
   onUpdate: (id: string, updates: UpdateTerminalModeInput) => Promise<TerminalModeInfo | null>
 }) {
   const config: UsageProviderConfig = mode.usageConfig ?? EMPTY_USAGE_CONFIG
   const [testing, setTesting] = useState(false)
-  const [testResult, setTestResult] = useState<{ ok: boolean; windows?: UsageWindow[]; error?: string } | null>(null)
+  const [testResult, setTestResult] = useState<{
+    ok: boolean
+    windows?: UsageWindow[]
+    error?: string
+  } | null>(null)
 
-  const update = (patch: Partial<Omit<UsageProviderConfig, 'windowMapping'>> & { windowMapping?: Partial<UsageProviderConfig['windowMapping']> }) => {
+  const update = (
+    patch: Partial<Omit<UsageProviderConfig, 'windowMapping'>> & {
+      windowMapping?: Partial<UsageProviderConfig['windowMapping']>
+    }
+  ) => {
     onUpdate(mode.id, {
       usageConfig: {
         ...config,
         ...patch,
-        windowMapping: { ...config.windowMapping, ...patch.windowMapping },
-      },
+        windowMapping: { ...config.windowMapping, ...patch.windowMapping }
+      }
     })
   }
 
@@ -107,9 +152,15 @@ function UsageConfigSection({
           <div className="space-y-4 pt-2">
             {/* URL + Method */}
             <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-              <FieldLabel label="URL" tip="The API endpoint that returns rate-limit or quota data. Must return JSON." />
+              <FieldLabel
+                label="URL"
+                tip="The API endpoint that returns rate-limit or quota data. Must return JSON."
+              />
               <div className="flex items-center gap-2">
-                <Select value={config.method || 'GET'} onValueChange={(v) => update({ method: v as 'GET' | 'POST' })}>
+                <Select
+                  value={config.method || 'GET'}
+                  onValueChange={(v) => update({ method: v as 'GET' | 'POST' })}
+                >
                   <SelectTrigger size="sm" className="w-20 shrink-0">
                     <SelectValue />
                   </SelectTrigger>
@@ -129,8 +180,26 @@ function UsageConfigSection({
 
             {/* Auth Type */}
             <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-              <FieldLabel label="Auth Type" tip={<><strong>None</strong> — no auth header sent.<br /><strong>Env Variable</strong> — reads a token from an environment variable.<br /><strong>JSON File</strong> — reads a token from a JSON file on disk (e.g. ~/.my-cli/auth.json).<br /><strong>Keychain</strong> — reads a token from the macOS Keychain (e.g. CCS profiles).</>} />
-              <Select value={config.authType} onValueChange={(v) => update({ authType: v as UsageProviderConfig['authType'] })}>
+              <FieldLabel
+                label="Auth Type"
+                tip={
+                  <>
+                    <strong>None</strong> — no auth header sent.
+                    <br />
+                    <strong>Env Variable</strong> — reads a token from an environment variable.
+                    <br />
+                    <strong>JSON File</strong> — reads a token from a JSON file on disk (e.g.
+                    ~/.my-cli/auth.json).
+                    <br />
+                    <strong>Keychain</strong> — reads a token from the macOS Keychain (e.g. CCS
+                    profiles).
+                  </>
+                }
+              />
+              <Select
+                value={config.authType}
+                onValueChange={(v) => update({ authType: v as UsageProviderConfig['authType'] })}
+              >
                 <SelectTrigger size="sm" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -146,7 +215,10 @@ function UsageConfigSection({
             {/* Auth: Env Variable */}
             {config.authType === 'bearer-env' && (
               <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                <FieldLabel label="Env Var Name" tip="Name of the environment variable that holds your API token. The app reads it from its own process environment." />
+                <FieldLabel
+                  label="Env Var Name"
+                  tip="Name of the environment variable that holds your API token. The app reads it from its own process environment."
+                />
                 <DebouncedInput
                   className="font-mono text-xs"
                   placeholder="MY_API_TOKEN"
@@ -160,7 +232,10 @@ function UsageConfigSection({
             {config.authType === 'file-json' && (
               <>
                 <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                  <FieldLabel label="File Path" tip="Absolute path to a JSON file containing your auth token. Use ~ for your home directory." />
+                  <FieldLabel
+                    label="File Path"
+                    tip="Absolute path to a JSON file containing your auth token. Use ~ for your home directory."
+                  />
                   <DebouncedInput
                     className="font-mono text-xs"
                     placeholder="~/.my-cli/auth.json"
@@ -169,14 +244,38 @@ function UsageConfigSection({
                   />
                 </div>
                 <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                  <FieldLabel label="Token Path" tip={<>Dot-path to the token inside the JSON file. For example, if the file is <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">{'{"tokens":{"key":"abc"}}'}</code>, use <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">tokens.key</code>.<br /><br />Comma-separate multiple paths to try them in order (first match wins).</>} />
+                  <FieldLabel
+                    label="Token Path"
+                    tip={
+                      <>
+                        Dot-path to the token inside the JSON file. For example, if the file is{' '}
+                        <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                          {'{"tokens":{"key":"abc"}}'}
+                        </code>
+                        , use{' '}
+                        <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                          tokens.key
+                        </code>
+                        .<br />
+                        <br />
+                        Comma-separate multiple paths to try them in order (first match wins).
+                      </>
+                    }
+                  />
                   <DebouncedInput
                     className="font-mono text-xs"
                     placeholder="tokens.access_token"
-                    value={Array.isArray(config.authFileTokenPath) ? config.authFileTokenPath.join(', ') : (config.authFileTokenPath ?? '')}
+                    value={
+                      Array.isArray(config.authFileTokenPath)
+                        ? config.authFileTokenPath.join(', ')
+                        : (config.authFileTokenPath ?? '')
+                    }
                     onValueCommit={(v) => {
-                      const paths = v.split(',').map(s => s.trim()).filter(Boolean)
-                      update({ authFileTokenPath: paths.length > 1 ? paths : paths[0] ?? '' })
+                      const paths = v
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                      update({ authFileTokenPath: paths.length > 1 ? paths : (paths[0] ?? '') })
                     }}
                   />
                 </div>
@@ -187,7 +286,10 @@ function UsageConfigSection({
             {config.authType === 'keychain' && (
               <>
                 <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                  <FieldLabel label="Service Name" tip="The macOS Keychain service name. For CCS profiles, use Claude Code-credentials-<suffix> where <suffix> is the SHA-256 hash prefix of the instance path." />
+                  <FieldLabel
+                    label="Service Name"
+                    tip="The macOS Keychain service name. For CCS profiles, use Claude Code-credentials-<suffix> where <suffix> is the SHA-256 hash prefix of the instance path."
+                  />
                   <DebouncedInput
                     className="font-mono text-xs"
                     placeholder="Claude Code-credentials-9f09856a"
@@ -196,7 +298,18 @@ function UsageConfigSection({
                   />
                 </div>
                 <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                  <FieldLabel label="Token Path" tip={<>Dot-path to the token inside the Keychain JSON value. For Claude OAuth, use <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">claudeAiOauth.accessToken</code>. Leave empty if the value is the token itself.</>} />
+                  <FieldLabel
+                    label="Token Path"
+                    tip={
+                      <>
+                        Dot-path to the token inside the Keychain JSON value. For Claude OAuth, use{' '}
+                        <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                          claudeAiOauth.accessToken
+                        </code>
+                        . Leave empty if the value is the token itself.
+                      </>
+                    }
+                  />
                   <DebouncedInput
                     className="font-mono text-xs"
                     placeholder="claudeAiOauth.accessToken"
@@ -211,7 +324,10 @@ function UsageConfigSection({
             {config.authType !== 'none' && (
               <>
                 <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                  <FieldLabel label="Header Name" tip="The HTTP header name used to send the token. Defaults to Authorization if left empty." />
+                  <FieldLabel
+                    label="Header Name"
+                    tip="The HTTP header name used to send the token. Defaults to Authorization if left empty."
+                  />
                   <DebouncedInput
                     className="font-mono text-xs"
                     placeholder="Authorization"
@@ -220,7 +336,22 @@ function UsageConfigSection({
                   />
                 </div>
                 <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                  <FieldLabel label="Header Template" tip={<>Template for the header value. <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">{'{token}'}</code> is replaced with the resolved token. Defaults to <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">Bearer {'{token}'}</code>.</>} />
+                  <FieldLabel
+                    label="Header Template"
+                    tip={
+                      <>
+                        Template for the header value.{' '}
+                        <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                          {'{token}'}
+                        </code>{' '}
+                        is replaced with the resolved token. Defaults to{' '}
+                        <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                          Bearer {'{token}'}
+                        </code>
+                        .
+                      </>
+                    }
+                  />
                   <DebouncedInput
                     className="font-mono text-xs"
                     placeholder="Bearer {token}"
@@ -234,11 +365,31 @@ function UsageConfigSection({
             {/* Extra Headers */}
             {config.authType !== 'none' && (
               <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                <FieldLabel label="Extra Headers" tip={<>Additional HTTP headers as <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">key: value</code> pairs, one per line. Example: <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">anthropic-beta: oauth-2025-04-20</code></>} />
+                <FieldLabel
+                  label="Extra Headers"
+                  tip={
+                    <>
+                      Additional HTTP headers as{' '}
+                      <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                        key: value
+                      </code>{' '}
+                      pairs, one per line. Example:{' '}
+                      <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                        anthropic-beta: oauth-2025-04-20
+                      </code>
+                    </>
+                  }
+                />
                 <DebouncedInput
                   className="font-mono text-xs"
                   placeholder="anthropic-beta: oauth-2025-04-20"
-                  value={config.extraHeaders ? Object.entries(config.extraHeaders).map(([k, v]) => `${k}: ${v}`).join('\n') : ''}
+                  value={
+                    config.extraHeaders
+                      ? Object.entries(config.extraHeaders)
+                          .map(([k, v]) => `${k}: ${v}`)
+                          .join('\n')
+                      : ''
+                  }
                   onValueCommit={(v) => {
                     const headers: Record<string, string> = {}
                     for (const line of v.split('\n')) {
@@ -254,12 +405,20 @@ function UsageConfigSection({
             {/* Response Mapping */}
             <div className="pt-3 border-t border-border dark:border-border space-y-3">
               <div className="flex items-center gap-1.5">
-                <h5 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Response Mapping</h5>
-                <HelpTip>Configure how to extract rate-limit windows from the API's JSON response. Each window becomes a usage bar.</HelpTip>
+                <h5 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Response Mapping
+                </h5>
+                <HelpTip>
+                  Configure how to extract rate-limit windows from the API's JSON response. Each
+                  window becomes a usage bar.
+                </HelpTip>
               </div>
 
               <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                <FieldLabel label="Single Window" tip="Enable if the API returns a single rate-limit object instead of an array of windows." />
+                <FieldLabel
+                  label="Single Window"
+                  tip="Enable if the API returns a single rate-limit object instead of an array of windows."
+                />
                 <Switch
                   checked={config.singleWindow ?? false}
                   onCheckedChange={(checked) => update({ singleWindow: checked })}
@@ -268,7 +427,23 @@ function UsageConfigSection({
 
               {!config.singleWindow && (
                 <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                  <FieldLabel label="Windows Path" tip={<>Dot-path to the array of rate-limit windows in the JSON response. For example, if the response is <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">{'{"data":{"limits":[...]}}'}</code>, use <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">data.limits</code>.</>} />
+                  <FieldLabel
+                    label="Windows Path"
+                    tip={
+                      <>
+                        Dot-path to the array of rate-limit windows in the JSON response. For
+                        example, if the response is{' '}
+                        <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                          {'{"data":{"limits":[...]}}'}
+                        </code>
+                        , use{' '}
+                        <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                          data.limits
+                        </code>
+                        .
+                      </>
+                    }
+                  />
                   <DebouncedInput
                     className="font-mono text-xs"
                     placeholder="rate_limit.windows"
@@ -279,7 +454,22 @@ function UsageConfigSection({
               )}
 
               <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                <FieldLabel label="Label Field" tip={<>Dot-path to the field used as the display label for each window (e.g. <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">name</code> or <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">type</code>). Prefix with <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">=</code> for a literal value (e.g. <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">=5h</code>).</>} />
+                <FieldLabel
+                  label="Label Field"
+                  tip={
+                    <>
+                      Dot-path to the field used as the display label for each window (e.g.{' '}
+                      <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">name</code>{' '}
+                      or{' '}
+                      <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">type</code>
+                      ). Prefix with{' '}
+                      <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">=</code>{' '}
+                      for a literal value (e.g.{' '}
+                      <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">=5h</code>
+                      ).
+                    </>
+                  }
+                />
                 <DebouncedInput
                   className="font-mono text-xs"
                   placeholder="name or =5h"
@@ -289,27 +479,53 @@ function UsageConfigSection({
               </div>
 
               <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                <FieldLabel label="Label Renames" tip={<>Optional. Renames raw label values to friendlier display names. Format: <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">raw:display</code>, comma-separated. Example: <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">TIME_LIMIT:30d, TOKENS_LIMIT:5h</code></>} />
+                <FieldLabel
+                  label="Label Renames"
+                  tip={
+                    <>
+                      Optional. Renames raw label values to friendlier display names. Format:{' '}
+                      <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                        raw:display
+                      </code>
+                      , comma-separated. Example:{' '}
+                      <code className="text-[10px] px-0.5 bg-white/20 rounded font-mono">
+                        TIME_LIMIT:30d, TOKENS_LIMIT:5h
+                      </code>
+                    </>
+                  }
+                />
                 <DebouncedInput
                   className="font-mono text-xs"
                   placeholder="TIME_LIMIT:30d, TOKENS_LIMIT:5h"
-                  value={config.windowMapping.labelMap
-                    ? Object.entries(config.windowMapping.labelMap).map(([k, v]) => `${k}:${v}`).join(', ')
-                    : ''}
+                  value={
+                    config.windowMapping.labelMap
+                      ? Object.entries(config.windowMapping.labelMap)
+                          .map(([k, v]) => `${k}:${v}`)
+                          .join(', ')
+                      : ''
+                  }
                   onValueCommit={(v) => {
-                    if (!v.trim()) { update({ windowMapping: { labelMap: undefined } }); return }
+                    if (!v.trim()) {
+                      update({ windowMapping: { labelMap: undefined } })
+                      return
+                    }
                     const map: Record<string, string> = {}
                     for (const pair of v.split(',')) {
                       const [key, ...rest] = pair.split(':')
                       if (key?.trim() && rest.length) map[key.trim()] = rest.join(':').trim()
                     }
-                    update({ windowMapping: { labelMap: Object.keys(map).length ? map : undefined } })
+                    update({
+                      windowMapping: { labelMap: Object.keys(map).length ? map : undefined }
+                    })
                   }}
                 />
               </div>
 
               <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                <FieldLabel label="Utilization Field" tip="Dot-path to the percentage field (0-100) representing how much of the rate limit has been used." />
+                <FieldLabel
+                  label="Utilization Field"
+                  tip="Dot-path to the percentage field (0-100) representing how much of the rate limit has been used."
+                />
                 <DebouncedInput
                   className="font-mono text-xs"
                   placeholder="utilization or used_percent"
@@ -319,7 +535,10 @@ function UsageConfigSection({
               </div>
 
               <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                <FieldLabel label="Reset Time Field" tip="Dot-path to the timestamp when the rate-limit window resets. Select the matching format below." />
+                <FieldLabel
+                  label="Reset Time Field"
+                  tip="Dot-path to the timestamp when the rate-limit window resets. Select the matching format below."
+                />
                 <DebouncedInput
                   className="font-mono text-xs"
                   placeholder="resets_at or reset_at"
@@ -329,10 +548,23 @@ function UsageConfigSection({
               </div>
 
               <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                <FieldLabel label="Time Format" tip={<><strong>ISO 8601</strong> — string like 2025-01-01T00:00:00Z.<br /><strong>Unix (seconds)</strong> — number like 1735689600.<br /><strong>Unix (ms)</strong> — number like 1735689600000.</>} />
+                <FieldLabel
+                  label="Time Format"
+                  tip={
+                    <>
+                      <strong>ISO 8601</strong> — string like 2025-01-01T00:00:00Z.
+                      <br />
+                      <strong>Unix (seconds)</strong> — number like 1735689600.
+                      <br />
+                      <strong>Unix (ms)</strong> — number like 1735689600000.
+                    </>
+                  }
+                />
                 <Select
                   value={config.windowMapping.resetsAtFormat ?? 'iso'}
-                  onValueChange={(v) => update({ windowMapping: { resetsAtFormat: v as 'iso' | 'unix-s' | 'unix-ms' } })}
+                  onValueChange={(v) =>
+                    update({ windowMapping: { resetsAtFormat: v as 'iso' | 'unix-s' | 'unix-ms' } })
+                  }
                 >
                   <SelectTrigger size="sm" className="w-full">
                     <SelectValue />
@@ -366,7 +598,9 @@ function UsageConfigSection({
                 Test Connection
               </Button>
               {testResult && (
-                <span className={`text-xs ${testResult.ok ? 'text-green-500' : 'text-destructive'}`}>
+                <span
+                  className={`text-xs ${testResult.ok ? 'text-green-500' : 'text-destructive'}`}
+                >
                   {testResult.ok
                     ? `Found ${testResult.windows?.length ?? 0} window(s)`
                     : testResult.error}
@@ -381,7 +615,14 @@ function UsageConfigSection({
 }
 
 /** Input that holds local state while typing and commits on blur. */
-function DebouncedInput({ value: propValue, onValueCommit, ...props }: Omit<ComponentProps<typeof Input>, 'value' | 'onChange'> & { value: string; onValueCommit: (value: string) => void }) {
+function DebouncedInput({
+  value: propValue,
+  onValueCommit,
+  ...props
+}: Omit<ComponentProps<typeof Input>, 'value' | 'onChange'> & {
+  value: string
+  onValueCommit: (value: string) => void
+}) {
   const [localValue, setLocalValue] = useState(propValue)
   const committedRef = useRef(propValue)
 
@@ -424,10 +665,22 @@ interface AiProvidersSettingsTabProps {
 
 export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
   const {
-    activeTab, navigateTo, modes, createMode, updateMode, deleteMode, testMode, restoreDefaults, resetToDefaultState, defaultTerminalMode, onDefaultTerminalModeChange,
+    activeTab,
+    navigateTo,
+    modes,
+    createMode,
+    updateMode,
+    deleteMode,
+    testMode,
+    restoreDefaults,
+    resetToDefaultState,
+    defaultTerminalMode,
+    onDefaultTerminalModeChange
   } = props
 
-  const [testResults, setTestResults] = useState<Record<string, { ok: boolean; error?: string; detail?: string }>>({})
+  const [testResults, setTestResults] = useState<
+    Record<string, { ok: boolean; error?: string; detail?: string }>
+  >({})
   const [testingId, setTestingId] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
 
@@ -440,7 +693,11 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
   const [newPatternWorking, setNewPatternWorking] = useState('')
   const [newPatternError, setNewPatternError] = useState('')
 
-  const slugify = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  const slugify = (text: string) =>
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
 
   const duplicateMode = (mode: TerminalModeInfo) => {
     setNewModeLabel(`${mode.label} (Copy)`)
@@ -470,7 +727,7 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
     setTestingId(id)
     try {
       const res = await testMode(command)
-      setTestResults(prev => ({ ...prev, [id]: res }))
+      setTestResults((prev) => ({ ...prev, [id]: res }))
       if (res.ok) {
         toast.success(`Command "${command}" is valid`)
       } else {
@@ -492,17 +749,34 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
         <div className="space-y-6">
           <div className="space-y-3">
             <Label className="text-sm font-medium">Default provider</Label>
-            <Select value={defaultTerminalMode} onValueChange={(v) => onDefaultTerminalModeChange(v as TerminalMode)}>
-              <SelectTrigger className="max-w-sm"><SelectValue /></SelectTrigger>
-              <SelectContent position="popper" align="start" className="min-w-[var(--radix-select-trigger-width)] max-h-none">
+            <Select
+              value={defaultTerminalMode}
+              onValueChange={(v) => onDefaultTerminalModeChange(v as TerminalMode)}
+            >
+              <SelectTrigger className="max-w-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent
+                position="popper"
+                align="start"
+                className="min-w-[var(--radix-select-trigger-width)] max-h-none"
+              >
                 {(() => {
                   const visibleModes = getVisibleModes(modes, defaultTerminalMode)
                   const { builtin, custom } = groupTerminalModes(visibleModes)
                   return (
                     <>
-                      {builtin.map(m => <SelectItem key={m.id} value={m.id}>{getModeLabel(m)}</SelectItem>)}
+                      {builtin.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {getModeLabel(m)}
+                        </SelectItem>
+                      ))}
                       {custom.length > 0 && builtin.length > 0 && <SelectSeparator />}
-                      {custom.map(m => <SelectItem key={m.id} value={m.id}>{getModeLabel(m)}</SelectItem>)}
+                      {custom.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {getModeLabel(m)}
+                        </SelectItem>
+                      ))}
                     </>
                   )
                 })()}
@@ -516,7 +790,12 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
               <Button variant="outline" size="sm" onClick={restoreDefaults}>
                 Restore defaults
               </Button>
-              <Button variant="outline" size="sm" onClick={resetToDefaultState} className="text-destructive hover:text-destructive">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetToDefaultState}
+                className="text-destructive hover:text-destructive"
+              >
                 Reset all
               </Button>
             </div>
@@ -529,7 +808,9 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
                 <>
                   {builtin.length > 0 && (
                     <div className="space-y-3">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Built-in</h4>
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Built-in
+                      </h4>
                       <div className="space-y-2">
                         {builtin.map((mode) => (
                           <button
@@ -539,16 +820,28 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
                             onClick={() => navigateTo(`ai-providers/${mode.id}`)}
                           >
                             <div className="size-4 flex items-center justify-center shrink-0">
-                               <div className="size-2 rounded-full bg-blue-500" />
+                              <div className="size-2 rounded-full bg-blue-500" />
                             </div>
                             <span className="text-sm font-medium flex-1">{mode.label}</span>
-                            <span className="text-xs text-muted-foreground truncate max-w-[200px] font-mono">{mode.initialCommand}</span>
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <Label htmlFor={`list-enable-${mode.id}`} className="text-[10px] uppercase text-muted-foreground font-semibold cursor-pointer">Enabled</Label>
+                            <span className="text-xs text-muted-foreground truncate max-w-[200px] font-mono">
+                              {mode.initialCommand}
+                            </span>
+                            <div
+                              className="flex items-center gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Label
+                                htmlFor={`list-enable-${mode.id}`}
+                                className="text-[10px] uppercase text-muted-foreground font-semibold cursor-pointer"
+                              >
+                                Enabled
+                              </Label>
                               <Switch
                                 id={`list-enable-${mode.id}`}
                                 checked={mode.enabled}
-                                onCheckedChange={(checked) => updateMode(mode.id, { enabled: checked })}
+                                onCheckedChange={(checked) =>
+                                  updateMode(mode.id, { enabled: checked })
+                                }
                               />
                             </div>
                             <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
@@ -560,7 +853,9 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
 
                   {custom.length > 0 && (
                     <div className="space-y-3 pt-4 border-t border-border dark:border-border">
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Custom</h4>
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Custom
+                      </h4>
                       <div className="space-y-2">
                         {custom.map((mode) => (
                           <button
@@ -570,16 +865,28 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
                             onClick={() => navigateTo(`ai-providers/${mode.id}`)}
                           >
                             <div className="size-4 flex items-center justify-center shrink-0">
-                               <div className="size-2 rounded-full bg-blue-500" />
+                              <div className="size-2 rounded-full bg-blue-500" />
                             </div>
                             <span className="text-sm font-medium flex-1">{mode.label}</span>
-                            <span className="text-xs text-muted-foreground truncate max-w-[200px] font-mono">{mode.initialCommand}</span>
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <Label htmlFor={`list-enable-${mode.id}`} className="text-[10px] uppercase text-muted-foreground font-semibold cursor-pointer">Enabled</Label>
+                            <span className="text-xs text-muted-foreground truncate max-w-[200px] font-mono">
+                              {mode.initialCommand}
+                            </span>
+                            <div
+                              className="flex items-center gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Label
+                                htmlFor={`list-enable-${mode.id}`}
+                                className="text-[10px] uppercase text-muted-foreground font-semibold cursor-pointer"
+                              >
+                                Enabled
+                              </Label>
                               <Switch
                                 id={`list-enable-${mode.id}`}
                                 checked={mode.enabled}
-                                onCheckedChange={(checked) => updateMode(mode.id, { enabled: checked })}
+                                onCheckedChange={(checked) =>
+                                  updateMode(mode.id, { enabled: checked })
+                                }
                               />
                             </div>
                             <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
@@ -612,20 +919,24 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   {(() => {
-                    const builtin = modes.filter(m => m.isBuiltin && m.id !== 'terminal')
-                    const custom = modes.filter(m => !m.isBuiltin)
+                    const builtin = modes.filter((m) => m.isBuiltin && m.id !== 'terminal')
+                    const custom = modes.filter((m) => !m.isBuiltin)
                     return (
                       <>
-                        <DropdownMenuLabel className="text-xs text-muted-foreground">Built-in</DropdownMenuLabel>
-                        {builtin.map(mode => (
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">
+                          Built-in
+                        </DropdownMenuLabel>
+                        {builtin.map((mode) => (
                           <DropdownMenuItem key={mode.id} onClick={() => duplicateMode(mode)}>
                             {mode.label}
                           </DropdownMenuItem>
                         ))}
                         {custom.length > 0 && (
                           <>
-                            <DropdownMenuLabel className="text-xs text-muted-foreground mt-4">Custom</DropdownMenuLabel>
-                            {custom.map(mode => (
+                            <DropdownMenuLabel className="text-xs text-muted-foreground mt-4">
+                              Custom
+                            </DropdownMenuLabel>
+                            {custom.map((mode) => (
                               <DropdownMenuItem key={mode.id} onClick={() => duplicateMode(mode)}>
                                 {mode.label}
                               </DropdownMenuItem>
@@ -642,7 +953,9 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
             <div className="p-4 rounded-lg border border-dashed space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold">Add Custom Provider</h4>
-                <Button variant="ghost" size="sm" onClick={() => setShowAddForm(false)}>Cancel</Button>
+                <Button variant="ghost" size="sm" onClick={() => setShowAddForm(false)}>
+                  Cancel
+                </Button>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs uppercase text-muted-foreground">Label</Label>
@@ -661,7 +974,12 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
                     value={newInitialCommand}
                     onChange={(e) => {
                       setNewInitialCommand(e.target.value)
-                      if (testResults['__new__']) setTestResults(prev => { const n = { ...prev }; delete n['__new__']; return n })
+                      if (testResults['__new__'])
+                        setTestResults((prev) => {
+                          const n = { ...prev }
+                          delete n['__new__']
+                          return n
+                        })
                     }}
                   />
                   <Button
@@ -684,7 +1002,8 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
                   </Button>
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Use <code className="px-1 bg-muted rounded">{'{flags}'}</code> for task flags and <code className="px-1 bg-muted rounded">{'{id}'}</code> for session ID.
+                  Use <code className="px-1 bg-muted rounded">{'{flags}'}</code> for task flags and{' '}
+                  <code className="px-1 bg-muted rounded">{'{id}'}</code> for session ID.
                 </p>
               </div>
 
@@ -710,21 +1029,28 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
                   onChange={(e) => setNewDefaultFlags(e.target.value)}
                 />
                 <p className="text-[10px] text-muted-foreground">
-                  Default value for <code className="px-1 bg-muted rounded">{'{flags}'}</code>. Editable per task.
+                  Default value for <code className="px-1 bg-muted rounded">{'{flags}'}</code>.
+                  Editable per task.
                 </p>
               </div>
 
               <div className="pt-2 border-t border-dashed border-border dark:border-border space-y-3">
-                <h5 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status Detection</h5>
+                <h5 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Status Detection
+                </h5>
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase text-muted-foreground">Detection Engine</Label>
+                  <Label className="text-[10px] uppercase text-muted-foreground">
+                    Detection Engine
+                  </Label>
                   <Select value={newDetectionEngine} onValueChange={setNewDetectionEngine}>
                     <SelectTrigger size="sm" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {DETECTION_ENGINES.map(e => (
-                        <SelectItem key={e.type} value={e.type}>{e.label}</SelectItem>
+                      {DETECTION_ENGINES.map((e) => (
+                        <SelectItem key={e.type} value={e.type}>
+                          {e.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -768,20 +1094,22 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
                     defaultFlags: newDefaultFlags || null,
                     enabled: true,
                     patternWorking: newPatternWorking || null,
-                    patternError: newPatternError || null,
-                  }).then(() => {
-                    setNewModeLabel('')
-                    setNewInitialCommand('')
-                    setNewResumeCommand('')
-                    setNewDefaultFlags('')
-                    setNewDetectionEngine('terminal')
-                    setNewPatternWorking('')
-                    setNewPatternError('')
-                    setShowAddForm(false)
-                    toast.success(`Provider "${newModeLabel}" added`)
-                  }).catch(err => {
-                    toast.error(err.message)
+                    patternError: newPatternError || null
                   })
+                    .then(() => {
+                      setNewModeLabel('')
+                      setNewInitialCommand('')
+                      setNewResumeCommand('')
+                      setNewDefaultFlags('')
+                      setNewDetectionEngine('terminal')
+                      setNewPatternWorking('')
+                      setNewPatternError('')
+                      setShowAddForm(false)
+                      toast.success(`Provider "${newModeLabel}" added`)
+                    })
+                    .catch((err) => {
+                      toast.error(err.message)
+                    })
                 }}
               >
                 <Plus className="size-3.5 mr-1" />
@@ -792,229 +1120,282 @@ export function AiProvidersSettingsTab(props: AiProvidersSettingsTabProps) {
         </div>
       )}
 
-      {activeTab.startsWith('ai-providers/') && (() => {
-        const modeId = activeTab.split('/')[1]
-        const mode = modes.find(m => m.id === modeId)
-        if (!mode) return null
-        return (
-          <div className="space-y-6">
-            <PanelBreadcrumb label={mode.label} onBack={() => navigateTo('ai-providers')} parentLabel="Providers" />
-            <div className="rounded-lg border p-5 space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-base font-semibold">{mode.label}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {mode.isBuiltin 
-                      ? 'This is a built-in provider. You can only customize its default flags and enabled state.'
-                      : 'Configure settings for this custom provider.'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor={`enable-${mode.id}`} className="text-xs font-medium cursor-pointer">Enabled</Label>
-                    <Switch
-                      id={`enable-${mode.id}`}
-                      checked={mode.enabled}
-                      onCheckedChange={(checked) => updateMode(mode.id, { enabled: checked })}
-                    />
+      {activeTab.startsWith('ai-providers/') &&
+        (() => {
+          const modeId = activeTab.split('/')[1]
+          const mode = modes.find((m) => m.id === modeId)
+          if (!mode) return null
+          return (
+            <div className="space-y-6">
+              <PanelBreadcrumb
+                label={mode.label}
+                onBack={() => navigateTo('ai-providers')}
+                parentLabel="Providers"
+              />
+              <div className="rounded-lg border p-5 space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h3 className="text-base font-semibold">{mode.label}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {mode.isBuiltin
+                        ? 'This is a built-in provider. You can only customize its default flags and enabled state.'
+                        : 'Configure settings for this custom provider.'}
+                    </p>
                   </div>
-                  {!mode.isBuiltin && (
-                    <IconButton
-                      variant="ghost"
-                      aria-label="Delete provider"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={() => {
-                        if (window.confirm(`Are you sure you want to remove "${mode.label}"?`)) {
-                          deleteMode(mode.id).then(() => navigateTo('ai-providers'))
-                        }
-                      }}
-                    >
-                      <Trash2 className="size-4" />
-                    </IconButton>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {!mode.isBuiltin && (
-                  <>
-                    <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                      <Label className="text-sm">Label</Label>
-                      <DebouncedInput
-                        value={mode.label}
-                        onValueCommit={(v) => updateMode(mode.id, { label: v })}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Label
+                        htmlFor={`enable-${mode.id}`}
+                        className="text-xs font-medium cursor-pointer"
+                      >
+                        Enabled
+                      </Label>
+                      <Switch
+                        id={`enable-${mode.id}`}
+                        checked={mode.enabled}
+                        onCheckedChange={(checked) => updateMode(mode.id, { enabled: checked })}
                       />
                     </div>
-                    <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
-                      <div className="space-y-0.5 pt-2">
-                        <Label className="text-sm">Initial Command</Label>
-                        <p className="text-[10px] text-muted-foreground">Run on first launch</p>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <DebouncedInput
-                            className="font-mono text-xs flex-1"
-                            value={mode.initialCommand ?? ''}
-                            onValueCommit={(v) => {
-                              updateMode(mode.id, { initialCommand: v })
-                              if (testResults[mode.id]) setTestResults(prev => { const n = { ...prev }; delete n[mode.id]; return n })
-                            }}
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9"
-                            aria-label="Test command"
-                            disabled={testingId === mode.id || !mode.initialCommand}
-                            onClick={() => handleTest(mode.id, (mode.initialCommand ?? '').split(/\s+/)[0] || '')}
-                          >
-                            {testingId === mode.id ? (
-                              <RefreshCw className="size-3.5 mr-1.5 animate-spin" />
-                            ) : testResults[mode.id]?.ok ? (
-                              <CheckCircle2 className="size-3.5 mr-1.5 text-green-500" />
-                            ) : testResults[mode.id]?.error ? (
-                              <AlertCircle className="size-3.5 mr-1.5 text-destructive" />
-                            ) : (
-                              <RefreshCw className="size-3.5 mr-1.5" />
-                            )}
-                            Test
-                          </Button>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground">
-                          Use <code className="px-1 bg-muted rounded">{'{flags}'}</code> for task flags and <code className="px-1 bg-muted rounded">{'{id}'}</code> for session ID.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
-                      <div className="space-y-0.5 pt-2">
-                        <Label className="text-sm">Resume Command</Label>
-                        <p className="text-[10px] text-muted-foreground">Run when session exists</p>
-                      </div>
-                      <div className="space-y-1">
-                        <DebouncedInput
-                          className="font-mono text-xs"
-                          placeholder="e.g. my-cli {flags} --resume {id}"
-                          value={mode.resumeCommand ?? ''}
-                          onValueCommit={(v) => updateMode(mode.id, { resumeCommand: v || null })}
-                        />
-                        <p className="text-[10px] text-muted-foreground">
-                          Optional. Same variables as initial command.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
-                      <div className="space-y-0.5 pt-2">
-                        <Label className="text-sm">Headless Command</Label>
-                        <p className="text-[10px] text-muted-foreground">Run for one-shot AI actions</p>
-                      </div>
-                      <div className="space-y-1">
-                        <DebouncedInput
-                          className="font-mono text-xs"
-                          placeholder="e.g. my-cli -p {prompt} {flags}"
-                          value={mode.headlessCommand ?? ''}
-                          onValueCommit={(v) => updateMode(mode.id, { headlessCommand: v || null })}
-                        />
-                        <p className="text-[10px] text-muted-foreground">
-                          Optional. Use <code className="px-1 bg-muted rounded">{'{prompt}'}</code> (auto-quoted) and <code className="px-1 bg-muted rounded">{'{flags}'}</code>. Required to use this provider in automation AI actions.
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                )}
-                <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                  <Label className="text-sm">Default Flags</Label>
-                  <div className="space-y-1">
-                    <DebouncedInput
-                      className="font-mono text-xs"
-                      value={mode.defaultFlags ?? ''}
-                      onValueCommit={(v) => updateMode(mode.id, { defaultFlags: v })}
-                    />
-                    <p className="text-[10px] text-muted-foreground">
-                      Default value for <code className="px-1 bg-muted rounded">{'{flags}'}</code>. Editable per task.
-                    </p>
-                    {isChatSupported(mode.id) && (
-                      <p className="text-[10px] text-muted-foreground">
-                        Note: chat sessions ignore this — applies only to automation runs (headless command). Chat permissions are controlled via the per-session permission mode.
-                      </p>
+                    {!mode.isBuiltin && (
+                      <IconButton
+                        variant="ghost"
+                        aria-label="Delete provider"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => {
+                          if (window.confirm(`Are you sure you want to remove "${mode.label}"?`)) {
+                            deleteMode(mode.id).then(() => navigateTo('ai-providers'))
+                          }
+                        }}
+                      >
+                        <Trash2 className="size-4" />
+                      </IconButton>
                     )}
                   </div>
                 </div>
 
-                {!mode.isBuiltin && (
-                  <div className="pt-4 border-t border-border dark:border-border">
-                    <div className="rounded-xl border bg-surface-2/50 dark:bg-surface-0/30 p-5 space-y-4">
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-semibold">Status Detection</h4>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          Controls how the terminal state (working, error) is detected from output.
-                        </p>
+                <div className="space-y-4">
+                  {!mode.isBuiltin && (
+                    <>
+                      <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
+                        <Label className="text-sm">Label</Label>
+                        <DebouncedInput
+                          value={mode.label}
+                          onValueCommit={(v) => updateMode(mode.id, { label: v })}
+                        />
                       </div>
-
-                      <div className="space-y-4 pt-2">
-                        <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                          <Label className="text-xs font-medium">Detection Engine</Label>
-                          <Select value={mode.type} onValueChange={(v) => updateMode(mode.id, { type: v })}>
-                            <SelectTrigger size="sm" className="w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {DETECTION_ENGINES.map(e => (
-                                <SelectItem key={e.type} value={e.type}>{e.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                      <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
+                        <div className="space-y-0.5 pt-2">
+                          <Label className="text-sm">Initial Command</Label>
+                          <p className="text-[10px] text-muted-foreground">Run on first launch</p>
                         </div>
-
-                        {mode.type === 'terminal' && (
-                          <>
-                            <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                              <div className="space-y-0.5">
-                                <Label className="text-xs font-medium">Working Pattern</Label>
-                                <p className="text-[10px] text-muted-foreground">Thinking/Processing</p>
-                              </div>
-                              <div className="space-y-1">
-                                <DebouncedInput
-                                  className="font-mono text-xs"
-                                  placeholder="e.g. ⠋|⠙|⠹"
-                                  value={mode.patternWorking ?? ''}
-                                  onValueCommit={(v) => updateMode(mode.id, { patternWorking: v || null })}
-                                />
-                                {mode.patternWorking && !isValidRegex(mode.patternWorking) && (
-                                  <p className="text-[10px] text-destructive">Invalid regular expression</p>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
-                              <div className="space-y-0.5">
-                                <Label className="text-xs font-medium">Error Pattern</Label>
-                                <p className="text-[10px] text-muted-foreground">Fatal/CLI errors</p>
-                              </div>
-                              <div className="space-y-1">
-                                <DebouncedInput
-                                  className="font-mono text-xs"
-                                  placeholder="e.g. ^Error:.*"
-                                  value={mode.patternError ?? ''}
-                                  onValueCommit={(v) => updateMode(mode.id, { patternError: v || null })}
-                                />
-                                {mode.patternError && !isValidRegex(mode.patternError) && (
-                                  <p className="text-[10px] text-destructive">Invalid regular expression</p>
-                                )}
-                              </div>
-                            </div>
-                          </>
-                        )}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <DebouncedInput
+                              className="font-mono text-xs flex-1"
+                              value={mode.initialCommand ?? ''}
+                              onValueCommit={(v) => {
+                                updateMode(mode.id, { initialCommand: v })
+                                if (testResults[mode.id])
+                                  setTestResults((prev) => {
+                                    const n = { ...prev }
+                                    delete n[mode.id]
+                                    return n
+                                  })
+                              }}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-9"
+                              aria-label="Test command"
+                              disabled={testingId === mode.id || !mode.initialCommand}
+                              onClick={() =>
+                                handleTest(
+                                  mode.id,
+                                  (mode.initialCommand ?? '').split(/\s+/)[0] || ''
+                                )
+                              }
+                            >
+                              {testingId === mode.id ? (
+                                <RefreshCw className="size-3.5 mr-1.5 animate-spin" />
+                              ) : testResults[mode.id]?.ok ? (
+                                <CheckCircle2 className="size-3.5 mr-1.5 text-green-500" />
+                              ) : testResults[mode.id]?.error ? (
+                                <AlertCircle className="size-3.5 mr-1.5 text-destructive" />
+                              ) : (
+                                <RefreshCw className="size-3.5 mr-1.5" />
+                              )}
+                              Test
+                            </Button>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            Use <code className="px-1 bg-muted rounded">{'{flags}'}</code> for task
+                            flags and <code className="px-1 bg-muted rounded">{'{id}'}</code> for
+                            session ID.
+                          </p>
+                        </div>
                       </div>
+                      <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
+                        <div className="space-y-0.5 pt-2">
+                          <Label className="text-sm">Resume Command</Label>
+                          <p className="text-[10px] text-muted-foreground">
+                            Run when session exists
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <DebouncedInput
+                            className="font-mono text-xs"
+                            placeholder="e.g. my-cli {flags} --resume {id}"
+                            value={mode.resumeCommand ?? ''}
+                            onValueCommit={(v) => updateMode(mode.id, { resumeCommand: v || null })}
+                          />
+                          <p className="text-[10px] text-muted-foreground">
+                            Optional. Same variables as initial command.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-[140px_minmax(0,1fr)] items-start gap-4">
+                        <div className="space-y-0.5 pt-2">
+                          <Label className="text-sm">Headless Command</Label>
+                          <p className="text-[10px] text-muted-foreground">
+                            Run for one-shot AI actions
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <DebouncedInput
+                            className="font-mono text-xs"
+                            placeholder="e.g. my-cli -p {prompt} {flags}"
+                            value={mode.headlessCommand ?? ''}
+                            onValueCommit={(v) =>
+                              updateMode(mode.id, { headlessCommand: v || null })
+                            }
+                          />
+                          <p className="text-[10px] text-muted-foreground">
+                            Optional. Use{' '}
+                            <code className="px-1 bg-muted rounded">{'{prompt}'}</code>{' '}
+                            (auto-quoted) and{' '}
+                            <code className="px-1 bg-muted rounded">{'{flags}'}</code>. Required to
+                            use this provider in automation AI actions.
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
+                    <Label className="text-sm">Default Flags</Label>
+                    <div className="space-y-1">
+                      <DebouncedInput
+                        className="font-mono text-xs"
+                        value={mode.defaultFlags ?? ''}
+                        onValueCommit={(v) => updateMode(mode.id, { defaultFlags: v })}
+                      />
+                      <p className="text-[10px] text-muted-foreground">
+                        Default value for <code className="px-1 bg-muted rounded">{'{flags}'}</code>
+                        . Editable per task.
+                      </p>
+                      {isChatSupported(mode.id) && (
+                        <p className="text-[10px] text-muted-foreground">
+                          Note: chat sessions ignore this — applies only to automation runs
+                          (headless command). Chat permissions are controlled via the per-session
+                          permission mode.
+                        </p>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
 
-              <UsageConfigSection mode={mode} onUpdate={updateMode} />
+                  {!mode.isBuiltin && (
+                    <div className="pt-4 border-t border-border dark:border-border">
+                      <div className="rounded-xl border bg-surface-2/50 dark:bg-surface-0/30 p-5 space-y-4">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-semibold">Status Detection</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            Controls how the terminal state (working, error) is detected from
+                            output.
+                          </p>
+                        </div>
+
+                        <div className="space-y-4 pt-2">
+                          <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
+                            <Label className="text-xs font-medium">Detection Engine</Label>
+                            <Select
+                              value={mode.type}
+                              onValueChange={(v) => updateMode(mode.id, { type: v })}
+                            >
+                              <SelectTrigger size="sm" className="w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DETECTION_ENGINES.map((e) => (
+                                  <SelectItem key={e.type} value={e.type}>
+                                    {e.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {mode.type === 'terminal' && (
+                            <>
+                              <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
+                                <div className="space-y-0.5">
+                                  <Label className="text-xs font-medium">Working Pattern</Label>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    Thinking/Processing
+                                  </p>
+                                </div>
+                                <div className="space-y-1">
+                                  <DebouncedInput
+                                    className="font-mono text-xs"
+                                    placeholder="e.g. ⠋|⠙|⠹"
+                                    value={mode.patternWorking ?? ''}
+                                    onValueCommit={(v) =>
+                                      updateMode(mode.id, { patternWorking: v || null })
+                                    }
+                                  />
+                                  {mode.patternWorking && !isValidRegex(mode.patternWorking) && (
+                                    <p className="text-[10px] text-destructive">
+                                      Invalid regular expression
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-[140px_minmax(0,1fr)] items-center gap-4">
+                                <div className="space-y-0.5">
+                                  <Label className="text-xs font-medium">Error Pattern</Label>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    Fatal/CLI errors
+                                  </p>
+                                </div>
+                                <div className="space-y-1">
+                                  <DebouncedInput
+                                    className="font-mono text-xs"
+                                    placeholder="e.g. ^Error:.*"
+                                    value={mode.patternError ?? ''}
+                                    onValueCommit={(v) =>
+                                      updateMode(mode.id, { patternError: v || null })
+                                    }
+                                  />
+                                  {mode.patternError && !isValidRegex(mode.patternError) && (
+                                    <p className="text-[10px] text-destructive">
+                                      Invalid regular expression
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <UsageConfigSection mode={mode} onUpdate={updateMode} />
+              </div>
             </div>
-          </div>
-        )
-      })()}
+          )
+        })()}
     </>
   )
 }

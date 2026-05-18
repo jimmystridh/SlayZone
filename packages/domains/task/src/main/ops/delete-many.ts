@@ -9,7 +9,11 @@ export interface DeleteManyTasksResult {
   blockedIds: string[]
 }
 
-export function deleteManyTasksOp(db: Database, ids: string[], deps: OpDeps): DeleteManyTasksResult {
+export function deleteManyTasksOp(
+  db: Database,
+  ids: string[],
+  deps: OpDeps
+): DeleteManyTasksResult {
   const { ipcMain, onMutation } = deps
   if (ids.length === 0) return { deletedIds: [], blockedIds: [] }
 
@@ -17,9 +21,15 @@ export function deleteManyTasksOp(db: Database, ids: string[], deps: OpDeps): De
   const deletable: { id: string; previous: ReturnType<typeof parseTask> }[] = []
 
   for (const id of ids) {
-    const previousRow = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as Record<string, unknown> | undefined
+    const previousRow = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as
+      | Record<string, unknown>
+      | undefined
     const previousTask = parseTask(previousRow)
-    const linkCount = (db.prepare('SELECT COUNT(*) as count FROM external_links WHERE task_id = ?').get(id) as { count: number }).count
+    const linkCount = (
+      db.prepare('SELECT COUNT(*) as count FROM external_links WHERE task_id = ?').get(id) as {
+        count: number
+      }
+    ).count
     if (linkCount > 0) {
       blockedIds.push(id)
       continue
@@ -34,9 +44,11 @@ export function deleteManyTasksOp(db: Database, ids: string[], deps: OpDeps): De
   const deletedIds: string[] = []
   db.transaction(() => {
     for (const { id, previous } of deletable) {
-      const updateResult = db.prepare(`
+      const updateResult = db
+        .prepare(`
         UPDATE tasks SET deleted_at = datetime('now'), updated_at = datetime('now') WHERE id = ?
-      `).run(id)
+      `)
+        .run(id)
       if (updateResult.changes > 0) {
         if (previous) recordActivityEvents(db, buildTaskDeletedEvents(previous))
         deletedIds.push(id)

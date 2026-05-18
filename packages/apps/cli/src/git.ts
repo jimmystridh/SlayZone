@@ -3,7 +3,11 @@ import { existsSync, readdirSync, realpathSync } from 'fs'
 import path from 'path'
 
 function canonical(p: string): string {
-  try { return realpathSync(p) } catch { return path.resolve(p) }
+  try {
+    return realpathSync(p)
+  } catch {
+    return path.resolve(p)
+  }
 }
 
 function git(args: string[], cwd: string): { stdout: string; status: number } {
@@ -22,7 +26,9 @@ export function getCurrentBranch(repoPath: string): string | null {
   return r.stdout || null
 }
 
-export interface WorktreeEntry { path: string }
+export interface WorktreeEntry {
+  path: string
+}
 
 export function listWorktrees(repoPath: string): WorktreeEntry[] {
   const r = git(['worktree', 'list', '--porcelain'], repoPath)

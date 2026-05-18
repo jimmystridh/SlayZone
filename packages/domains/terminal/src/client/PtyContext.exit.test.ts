@@ -31,7 +31,10 @@ function expect<T>(actual: T) {
 }
 
 test('transitions state to dead and notifies state + exit subscribers', () => {
-  const stateSubs = new Map<string, Set<(newState: TerminalState, oldState: TerminalState) => void>>()
+  const stateSubs = new Map<
+    string,
+    Set<(newState: TerminalState, oldState: TerminalState) => void>
+  >()
   const exitSubs = new Map<string, Set<(exitCode: number) => void>>()
   const stateChanges: Array<{ newState: TerminalState; oldState: TerminalState }> = []
   const exits: number[] = []
@@ -59,7 +62,10 @@ test('transitions state to dead and notifies state + exit subscribers', () => {
 })
 
 test('notifies exit subscribers even if local state is missing', () => {
-  const stateSubs = new Map<string, Set<(newState: TerminalState, oldState: TerminalState) => void>>()
+  const stateSubs = new Map<
+    string,
+    Set<(newState: TerminalState, oldState: TerminalState) => void>
+  >()
   const exitSubs = new Map<string, Set<(exitCode: number) => void>>()
   const exits: number[] = []
 
@@ -76,7 +82,10 @@ test('programmatic kill (PTY_EXIT_KILLED_BY_HOST = -2) produces dead state + exi
   // pty:exit with the host-kill sentinel, the same code path runs as a natural exit —
   // state flips to 'dead' and Retry overlay gates open.
   const PTY_EXIT_KILLED_BY_HOST = -2
-  const stateSubs = new Map<string, Set<(newState: TerminalState, oldState: TerminalState) => void>>()
+  const stateSubs = new Map<
+    string,
+    Set<(newState: TerminalState, oldState: TerminalState) => void>
+  >()
   const exitSubs = new Map<string, Set<(exitCode: number) => void>>()
   const stateChanges: Array<{ newState: TerminalState; oldState: TerminalState }> = []
   const exits: number[] = []
@@ -106,7 +115,10 @@ test('double exit is idempotent — second call does not re-notify state subscri
   // The renderer-side applyExitEvent only transitions to 'dead' once; a subsequent
   // pty:exit (e.g. if the 500ms watchdog races with the real onExit) must not
   // re-emit state changes.
-  const stateSubs = new Map<string, Set<(newState: TerminalState, oldState: TerminalState) => void>>()
+  const stateSubs = new Map<
+    string,
+    Set<(newState: TerminalState, oldState: TerminalState) => void>
+  >()
   const exitSubs = new Map<string, Set<(exitCode: number) => void>>()
   const stateChanges: Array<{ newState: TerminalState; oldState: TerminalState }> = []
   const exits: number[] = []

@@ -31,18 +31,14 @@ export function ProjectItem({
   const customLetters = project.icon_letters?.trim().toUpperCase()
   const fallbackLetters = project.name.slice(0, 2).toUpperCase()
   const letters = customLetters && customLetters.length > 0 ? customLetters : fallbackLetters
-  const lettersClass = letters.length >= 5 ? 'text-[8px]' : letters.length > 2 ? 'text-[9px]' : 'text-xs'
+  const lettersClass =
+    letters.length >= 5 ? 'text-[8px]' : letters.length > 2 ? 'text-[9px]' : 'text-xs'
   const iconSrc = project.icon_image_path
     ? `slz-file://${project.icon_image_path}?v=${encodeURIComponent(project.updated_at)}`
     : null
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({ id: project.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: project.id
+  })
 
   const style = {
     transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
@@ -69,7 +65,12 @@ export function ProjectItem({
                 {...listeners}
               >
                 {iconSrc ? (
-                  <img src={iconSrc} alt="" className="w-full h-full object-cover" draggable={false} />
+                  <img
+                    src={iconSrc}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    draggable={false}
+                  />
                 ) : (
                   letters
                 )}

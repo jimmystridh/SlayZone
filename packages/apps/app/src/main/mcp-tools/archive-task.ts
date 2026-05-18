@@ -30,10 +30,12 @@ export function registerArchiveTaskTool(server: McpServer, deps: McpToolsDeps): 
       }
       deps.notifyRenderer()
       return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify(archived, null, 2)
-        }]
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(archived, null, 2)
+          }
+        ]
       }
     }
   )

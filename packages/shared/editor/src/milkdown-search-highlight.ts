@@ -22,7 +22,12 @@ export interface SetSearchMeta {
 
 export const searchHighlightKey = new PluginKey<SearchHighlightState>('slayzoneArtifactSearch')
 
-function findMatches(doc: ProseNode, query: string, matchCase: boolean, regex: boolean): Array<{ from: number; to: number }> {
+function findMatches(
+  doc: ProseNode,
+  query: string,
+  matchCase: boolean,
+  regex: boolean
+): Array<{ from: number; to: number }> {
   if (!query.trim()) return []
   let re: RegExp
   const flags = matchCase ? 'g' : 'gi'
@@ -39,19 +44,29 @@ function findMatches(doc: ProseNode, query: string, matchCase: boolean, regex: b
     let m: RegExpExecArray | null
     re.lastIndex = 0
     while ((m = re.exec(text)) !== null) {
-      if (m[0].length === 0) { re.lastIndex++; continue }
+      if (m[0].length === 0) {
+        re.lastIndex++
+        continue
+      }
       out.push({ from: pos + m.index, to: pos + m.index + m[0].length })
     }
   })
   return out
 }
 
-function buildDecorations(doc: ProseNode, matches: Array<{ from: number; to: number }>, activeIndex: number): DecorationSet {
+function buildDecorations(
+  doc: ProseNode,
+  matches: Array<{ from: number; to: number }>,
+  activeIndex: number
+): DecorationSet {
   if (matches.length === 0) return DecorationSet.empty
   const mod = ((activeIndex % matches.length) + matches.length) % matches.length
-  const decos = matches.map((m, i) => Decoration.inline(m.from, m.to, {
-    class: i === mod ? 'artifact-search-match artifact-search-match-active' : 'artifact-search-match',
-  }))
+  const decos = matches.map((m, i) =>
+    Decoration.inline(m.from, m.to, {
+      class:
+        i === mod ? 'artifact-search-match artifact-search-match-active' : 'artifact-search-match'
+    })
+  )
   return DecorationSet.create(doc, decos)
 }
 
@@ -69,7 +84,14 @@ export function createSearchHighlightPlugin(options?: {
     return new Plugin<SearchHighlightState>({
       key: searchHighlightKey,
       state: {
-        init: () => ({ query: '', activeIndex: 0, matchCase: false, regex: false, matches: [], decorations: DecorationSet.empty }),
+        init: () => ({
+          query: '',
+          activeIndex: 0,
+          matchCase: false,
+          regex: false,
+          matches: [],
+          decorations: DecorationSet.empty
+        }),
         apply(tr, value, _old, newState) {
           const meta = tr.getMeta(searchHighlightKey) as SetSearchMeta | undefined
           if (!meta && !tr.docChanged) {
@@ -83,12 +105,12 @@ export function createSearchHighlightPlugin(options?: {
           const matches = findMatches(newState.doc, query, matchCase, regex)
           const decorations = buildDecorations(newState.doc, matches, activeIndex)
           return { query, activeIndex, matchCase, regex, matches, decorations }
-        },
+        }
       },
       props: {
         decorations(state) {
           return this.getState(state)?.decorations ?? DecorationSet.empty
-        },
+        }
       },
       view(_view: EditorView) {
         let lastCount = 0
@@ -113,22 +135,41 @@ export function createSearchHighlightPlugin(options?: {
               const m = s.matches[mod]
               try {
                 const dom = view.domAtPos(m.from)
-                const el = dom.node.nodeType === 1 ? (dom.node as HTMLElement) : (dom.node.parentElement as HTMLElement | null)
+                const el =
+                  dom.node.nodeType === 1
+                    ? (dom.node as HTMLElement)
+                    : (dom.node.parentElement as HTMLElement | null)
                 el?.scrollIntoView({ block: 'center', behavior: 'auto' })
-              } catch { /* pos may be invalid mid-transition */ }
+              } catch {
+                /* pos may be invalid mid-transition */
+              }
             }
             lastActive = s.activeIndex
             lastQuery = s.query
           },
-          destroy() { /* noop */ },
+          destroy() {
+            /* noop */
+          }
         }
-      },
+      }
     })
   })
 }
 
 /** Dispatch a search update against a Milkdown-managed ProseMirror view. */
-export function setSearch(view: EditorView, query: string, activeIndex: number, matchCase = false, regex = false): void {
-  const tr = view.state.tr.setMeta(searchHighlightKey, { type: 'setSearch', query, activeIndex, matchCase, regex } satisfies SetSearchMeta)
+export function setSearch(
+  view: EditorView,
+  query: string,
+  activeIndex: number,
+  matchCase = false,
+  regex = false
+): void {
+  const tr = view.state.tr.setMeta(searchHighlightKey, {
+    type: 'setSearch',
+    query,
+    activeIndex,
+    matchCase,
+    regex
+  } satisfies SetSearchMeta)
   view.dispatch(tr)
 }

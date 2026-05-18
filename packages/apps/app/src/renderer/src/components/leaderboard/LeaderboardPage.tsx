@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, CheckCheck, Github, Lock, LogOut, RefreshCw, Sparkles } from 'lucide-react'
-import { Button, IconButton, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@slayzone/ui'
+import {
+  Button,
+  IconButton,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@slayzone/ui'
 import { useMutation, useQuery } from 'convex/react'
 import { useLeaderboardAuth } from '@/lib/convexAuth'
 import { track } from '@slayzone/telemetry/client'
@@ -74,7 +83,12 @@ function hasResolvedGithubIdentity(viewer: ViewerProfile | null): boolean {
 
 export function LeaderboardPage(): React.JSX.Element {
   const tracked = useRef(false)
-  useEffect(() => { if (!tracked.current) { tracked.current = true; track('leaderboard_viewed') } }, [])
+  useEffect(() => {
+    if (!tracked.current) {
+      tracked.current = true
+      track('leaderboard_viewed')
+    }
+  }, [])
   const auth = useLeaderboardAuth()
   if (!auth.configured) {
     return (
@@ -86,7 +100,11 @@ export function LeaderboardPage(): React.JSX.Element {
   return <LeaderboardPageInner auth={auth} />
 }
 
-function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboardAuth> }): React.JSX.Element {
+function LeaderboardPageInner({
+  auth
+}: {
+  auth: ReturnType<typeof useLeaderboardAuth>
+}): React.JSX.Element {
   const [period, setPeriod] = useState<Period>('all-time')
   const [authBusy, setAuthBusy] = useState(false)
 
@@ -99,8 +117,14 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
   const forgetMeMutation = useMutation(api.leaderboard.forgetMe)
   const [syncing, setSyncing] = useState(false)
   const myTotals = useQuery(api.leaderboard.getMyTotals, auth.isAuthenticated ? {} : 'skip')
-  const topTokens = useQuery(api.leaderboard.topByTotalTokens, auth.configured ? { period, limit: 25 } : 'skip')
-  const topTasks = useQuery(api.leaderboard.topByCompletedTasks, auth.configured ? { period, limit: 25 } : 'skip')
+  const topTokens = useQuery(
+    api.leaderboard.topByTotalTokens,
+    auth.configured ? { period, limit: 25 } : 'skip'
+  )
+  const topTasks = useQuery(
+    api.leaderboard.topByCompletedTasks,
+    auth.configured ? { period, limit: 25 } : 'skip'
+  )
 
   const viewer = myTotals?.user ?? null
   const resolvedViewer = viewer
@@ -138,7 +162,11 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
       try {
         const res = await fetch(`https://api.github.com/user/${numericId}`)
         if (!res.ok) return
-        const data = (await res.json()) as { login?: string; avatar_url?: string; html_url?: string }
+        const data = (await res.json()) as {
+          login?: string
+          avatar_url?: string
+          html_url?: string
+        }
         if (cancelled) return
         if (data.login) setResolvedGithubLogin(data.login)
         if (data.avatar_url) setResolvedGithubAvatar(data.avatar_url)
@@ -148,7 +176,9 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
       }
     }
     void resolveGithubProfile()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [viewer, auth.isAuthenticated])
 
   useEffect(() => {
@@ -165,7 +195,9 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
           return
         }
         if (status.reason === 'registration-failed') {
-          setDevProtocolBanner(`OAuth deep-link callback handler registration failed for ${status.scheme}://.`)
+          setDevProtocolBanner(
+            `OAuth deep-link callback handler registration failed for ${status.scheme}://.`
+          )
           return
         }
         setDevProtocolBanner(null)
@@ -181,7 +213,9 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
     try {
       const stats = await window.api.leaderboard?.getLocalStats()
       if (stats?.days.length) await syncDailyStats({ days: stats.days })
-    } catch { /* best-effort */ } finally {
+    } catch {
+      /* best-effort */
+    } finally {
       setSyncing(false)
     }
   }
@@ -250,9 +284,15 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
                       {authBusy || auth.isLoading ? (
                         <span className="text-[11px] font-medium">...</span>
                       ) : auth.isAuthenticated && avatarSrc ? (
-                        <img src={avatarSrc} alt={viewerName} className="h-full w-full object-cover" />
+                        <img
+                          src={avatarSrc}
+                          alt={viewerName}
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
-                        <span className="text-[11px] font-semibold uppercase">{avatarFallback}</span>
+                        <span className="text-[11px] font-semibold uppercase">
+                          {avatarFallback}
+                        </span>
                       )}
                     </IconButton>
                   </DropdownMenuTrigger>
@@ -283,11 +323,17 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
                           Refresh profile
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive" onClick={() => void runAuthAction('signout')}>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => void runAuthAction('signout')}
+                        >
                           <LogOut className="size-4" />
                           Sign out
                         </DropdownMenuItem>
-                        <DropdownMenuItem variant="destructive" onClick={() => void runAuthAction('forget')}>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => void runAuthAction('forget')}
+                        >
                           <Lock className="size-4" />
                           Forget me
                         </DropdownMenuItem>
@@ -334,7 +380,8 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
                     Sign in with GitHub to join the leaderboard
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    You can browse the rankings now, but your tokens and completed tasks only count after sign-in.
+                    You can browse the rankings now, but your tokens and completed tasks only count
+                    after sign-in.
                   </p>
                 </div>
                 {auth.configured ? (
@@ -347,15 +394,21 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
                     {authBusy || auth.isLoading ? 'Connecting...' : 'Sign in with GitHub'}
                   </Button>
                 ) : (
-                  <span className="text-xs text-muted-foreground">Auth unavailable in this environment</span>
+                  <span className="text-xs text-muted-foreground">
+                    Auth unavailable in this environment
+                  </span>
                 )}
               </div>
             </div>
           )}
-          {auth.lastError && <p className="text-xs text-destructive mt-2">Auth error: {auth.lastError}</p>}
+          {auth.lastError && (
+            <p className="text-xs text-destructive mt-2">Auth error: {auth.lastError}</p>
+          )}
         </section>
 
-        <section className={`grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0 ${canParticipate ? '' : 'opacity-80'}`}>
+        <section
+          className={`grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0 ${canParticipate ? '' : 'opacity-80'}`}
+        >
           <LeaderboardTable
             icon={<Sparkles className="size-4" />}
             title="Most AI Tokens Used"
@@ -365,13 +418,17 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
               image: r.image,
               value: formatTokens(r.totalTokens)
             }))}
-            viewerRow={topTokens?.viewer ? {
-              key: topTokens.viewer.userId,
-              name: topTokens.viewer.displayName,
-              image: topTokens.viewer.image,
-              value: formatTokens(topTokens.viewer.totalTokens),
-              rank: topTokens.viewer.rank
-            } : null}
+            viewerRow={
+              topTokens?.viewer
+                ? {
+                    key: topTokens.viewer.userId,
+                    name: topTokens.viewer.displayName,
+                    image: topTokens.viewer.image,
+                    value: formatTokens(topTokens.viewer.totalTokens),
+                    rank: topTokens.viewer.rank
+                  }
+                : null
+            }
           />
           <LeaderboardTable
             icon={<CheckCheck className="size-4" />}
@@ -382,13 +439,17 @@ function LeaderboardPageInner({ auth }: { auth: ReturnType<typeof useLeaderboard
               image: r.image,
               value: String(r.totalCompletedTasks)
             }))}
-            viewerRow={topTasks?.viewer ? {
-              key: topTasks.viewer.userId,
-              name: topTasks.viewer.displayName,
-              image: topTasks.viewer.image,
-              value: String(topTasks.viewer.totalCompletedTasks),
-              rank: topTasks.viewer.rank
-            } : null}
+            viewerRow={
+              topTasks?.viewer
+                ? {
+                    key: topTasks.viewer.userId,
+                    name: topTasks.viewer.displayName,
+                    image: topTasks.viewer.image,
+                    value: String(topTasks.viewer.totalCompletedTasks),
+                    rank: topTasks.viewer.rank
+                  }
+                : null
+            }
           />
         </section>
       </div>
@@ -425,9 +486,13 @@ function LeaderboardTable({
       </div>
       <div className="flex-1 min-h-0 overflow-auto">
         {rows === undefined ? (
-          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Loading…</div>
+          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+            Loading…
+          </div>
         ) : rows.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">No data yet</div>
+          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+            No data yet
+          </div>
         ) : (
           <>
             {rows.map((row, index) => (
@@ -448,10 +513,22 @@ function LeaderboardTable({
   )
 }
 
-function LeaderboardRow({ row, rank, isViewer = false }: { row: TableRow; rank: number; isViewer?: boolean }): React.JSX.Element {
+function LeaderboardRow({
+  row,
+  rank,
+  isViewer = false
+}: {
+  row: TableRow
+  rank: number
+  isViewer?: boolean
+}): React.JSX.Element {
   return (
-    <div className={`flex items-center gap-3 px-3 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors ${isViewer ? 'bg-primary/5' : ''}`}>
-      <span className="inline-flex w-8 text-xs font-medium tabular-nums text-muted-foreground/70">#{rank}</span>
+    <div
+      className={`flex items-center gap-3 px-3 py-3 border-b last:border-b-0 hover:bg-muted/30 transition-colors ${isViewer ? 'bg-primary/5' : ''}`}
+    >
+      <span className="inline-flex w-8 text-xs font-medium tabular-nums text-muted-foreground/70">
+        #{rank}
+      </span>
       {row.image ? (
         <img src={row.image} alt={row.name} className="h-8 w-8 rounded-full object-cover" />
       ) : (

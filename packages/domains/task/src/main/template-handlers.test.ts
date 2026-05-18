@@ -2,7 +2,12 @@
  * Template handler contract tests
  * Run with: ELECTRON_RUN_AS_NODE=1 pnpm electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/task/src/main/template-handlers.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerTaskHandlers } from './handlers.js'
 import { registerTaskTemplateHandlers } from './template-handlers.js'
 import type { Task } from '../shared/types.js'
@@ -14,18 +19,23 @@ registerTaskTemplateHandlers(h.ipcMain as never, h.db)
 
 // Seed project
 const projectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)').run(
-  projectId, 'TemplateProject', '#000', '/tmp/template-test',
-  JSON.stringify([
-    { id: 'todo', label: 'To Do', color: 'gray', position: 0, category: 'unstarted' },
-    { id: 'in_progress', label: 'In Progress', color: 'blue', position: 1, category: 'started' },
-    { id: 'done', label: 'Done', color: 'green', position: 2, category: 'completed' },
-  ])
-)
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)')
+  .run(
+    projectId,
+    'TemplateProject',
+    '#000',
+    '/tmp/template-test',
+    JSON.stringify([
+      { id: 'todo', label: 'To Do', color: 'gray', position: 0, category: 'unstarted' },
+      { id: 'in_progress', label: 'In Progress', color: 'blue', position: 1, category: 'started' },
+      { id: 'done', label: 'Done', color: 'green', position: 2, category: 'completed' }
+    ])
+  )
 
 // Async helpers (task handlers are async)
 async function createTask(title: string, extra?: Record<string, unknown>): Promise<Task> {
-  return await h.invoke('db:tasks:create', { projectId, title, ...extra }) as Task
+  return (await h.invoke('db:tasks:create', { projectId, title, ...extra })) as Task
 }
 
 function createTemplate(name: string, extra?: Record<string, unknown>): TaskTemplate {
@@ -56,13 +66,24 @@ await describe('db:taskTemplates:create', () => {
       description: 'A full template',
       terminalMode: 'codex',
       providerConfig: { codex: { flags: '--sandbox workspace-write' } },
-      panelVisibility: { terminal: true, browser: true, diff: false, settings: false, editor: false, artifacts: false, processes: false },
-      browserTabs: { tabs: [{ id: 't1', url: 'http://localhost:3000', title: 'Dev' }], activeTabId: 't1' },
+      panelVisibility: {
+        terminal: true,
+        browser: true,
+        diff: false,
+        settings: false,
+        editor: false,
+        artifacts: false,
+        processes: false
+      },
+      browserTabs: {
+        tabs: [{ id: 't1', url: 'http://localhost:3000', title: 'Dev' }],
+        activeTabId: 't1'
+      },
       webPanelUrls: { grafana: 'http://grafana.local' },
       dangerouslySkipPermissions: true,
       ccsProfile: 'fast',
       defaultStatus: 'todo',
-      defaultPriority: 1,
+      defaultPriority: 1
     })
     expect(t.description).toBe('A full template')
     expect(t.terminal_mode).toBe('codex')
@@ -80,15 +101,27 @@ await describe('db:taskTemplates:create', () => {
 
   test('creates as default', () => {
     const pid = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(pid, 'DefProj', '#111', '/tmp/def')
-    const t = h.invoke('db:taskTemplates:create', { projectId: pid, name: 'Default', isDefault: true }) as TaskTemplate
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(pid, 'DefProj', '#111', '/tmp/def')
+    const t = h.invoke('db:taskTemplates:create', {
+      projectId: pid,
+      name: 'Default',
+      isDefault: true
+    }) as TaskTemplate
     expect(t.is_default).toBe(true)
   })
 
   test('new default replaces previous default', () => {
     const pid = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(pid, 'ReplProj', '#222', '/tmp/repl')
-    const first = h.invoke('db:taskTemplates:create', { projectId: pid, name: 'First', isDefault: true }) as TaskTemplate
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(pid, 'ReplProj', '#222', '/tmp/repl')
+    const first = h.invoke('db:taskTemplates:create', {
+      projectId: pid,
+      name: 'First',
+      isDefault: true
+    }) as TaskTemplate
     h.invoke('db:taskTemplates:create', { projectId: pid, name: 'Second', isDefault: true })
     const firstReloaded = h.invoke('db:taskTemplates:get', first.id) as TaskTemplate
     expect(firstReloaded.is_default).toBe(false)
@@ -98,7 +131,9 @@ await describe('db:taskTemplates:create', () => {
 await describe('db:taskTemplates:getByProject', () => {
   test('returns templates for project', () => {
     const pid = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(pid, 'ListProj', '#333', '/tmp/list')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(pid, 'ListProj', '#333', '/tmp/list')
     h.invoke('db:taskTemplates:create', { projectId: pid, name: 'A' })
     h.invoke('db:taskTemplates:create', { projectId: pid, name: 'B' })
     const templates = h.invoke('db:taskTemplates:getByProject', pid) as TaskTemplate[]
@@ -107,7 +142,9 @@ await describe('db:taskTemplates:getByProject', () => {
 
   test('returns empty for project with no templates', () => {
     const pid = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(pid, 'EmptyProj', '#444', '/tmp/empty')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(pid, 'EmptyProj', '#444', '/tmp/empty')
     const templates = h.invoke('db:taskTemplates:getByProject', pid) as TaskTemplate[]
     expect(templates).toHaveLength(0)
   })
@@ -128,7 +165,10 @@ await describe('db:taskTemplates:get', () => {
 await describe('db:taskTemplates:update', () => {
   test('updates name', () => {
     const t = createTemplate('OldName')
-    const updated = h.invoke('db:taskTemplates:update', { id: t.id, name: 'NewName' }) as TaskTemplate
+    const updated = h.invoke('db:taskTemplates:update', {
+      id: t.id,
+      name: 'NewName'
+    }) as TaskTemplate
     expect(updated.name).toBe('NewName')
   })
 
@@ -137,7 +177,15 @@ await describe('db:taskTemplates:update', () => {
     const updated = h.invoke('db:taskTemplates:update', {
       id: t.id,
       terminalMode: 'codex',
-      panelVisibility: { terminal: true, browser: true, diff: false, settings: false, editor: false, artifacts: false, processes: false },
+      panelVisibility: {
+        terminal: true,
+        browser: true,
+        diff: false,
+        settings: false,
+        editor: false,
+        artifacts: false,
+        processes: false
+      }
     }) as TaskTemplate
     expect(updated.terminal_mode).toBe('codex')
     expect(updated.panel_visibility?.browser).toBe(true)
@@ -145,7 +193,10 @@ await describe('db:taskTemplates:update', () => {
 
   test('partial update preserves other fields', () => {
     const t = createTemplate('Partial', { terminalMode: 'codex', defaultPriority: 2 })
-    const updated = h.invoke('db:taskTemplates:update', { id: t.id, defaultPriority: 5 }) as TaskTemplate
+    const updated = h.invoke('db:taskTemplates:update', {
+      id: t.id,
+      defaultPriority: 5
+    }) as TaskTemplate
     expect(updated.terminal_mode).toBe('codex')
     expect(updated.default_priority).toBe(5)
   })
@@ -170,7 +221,9 @@ await describe('db:taskTemplates:delete', () => {
 await describe('db:taskTemplates:setDefault', () => {
   test('sets default', () => {
     const pid = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(pid, 'SetDef', '#555', '/tmp/setdef')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(pid, 'SetDef', '#555', '/tmp/setdef')
     const t = h.invoke('db:taskTemplates:create', { projectId: pid, name: 'SetMe' }) as TaskTemplate
     expect(t.is_default).toBe(false)
     h.invoke('db:taskTemplates:setDefault', pid, t.id)
@@ -180,8 +233,14 @@ await describe('db:taskTemplates:setDefault', () => {
 
   test('clears default with null', () => {
     const pid = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(pid, 'ClrDef', '#666', '/tmp/clrdef')
-    const t = h.invoke('db:taskTemplates:create', { projectId: pid, name: 'ClearMe', isDefault: true }) as TaskTemplate
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(pid, 'ClrDef', '#666', '/tmp/clrdef')
+    const t = h.invoke('db:taskTemplates:create', {
+      projectId: pid,
+      name: 'ClearMe',
+      isDefault: true
+    }) as TaskTemplate
     h.invoke('db:taskTemplates:setDefault', pid, null)
     const reloaded = h.invoke('db:taskTemplates:get', t.id) as TaskTemplate
     expect(reloaded.is_default).toBe(false)
@@ -195,13 +254,23 @@ await describe('template application on task creation', () => {
     const tmpl = createTemplate('ApplyAll', {
       terminalMode: 'codex',
       providerConfig: { codex: { flags: '--test-flag' } },
-      panelVisibility: { terminal: true, browser: true, diff: false, settings: false, editor: true, processes: false },
-      browserTabs: { tabs: [{ id: 'b1', url: 'http://localhost', title: 'Local' }], activeTabId: 'b1' },
+      panelVisibility: {
+        terminal: true,
+        browser: true,
+        diff: false,
+        settings: false,
+        editor: true,
+        processes: false
+      },
+      browserTabs: {
+        tabs: [{ id: 'b1', url: 'http://localhost', title: 'Local' }],
+        activeTabId: 'b1'
+      },
       webPanelUrls: { docs: 'http://docs.local' },
       dangerouslySkipPermissions: true,
       ccsProfile: 'turbo',
       defaultStatus: 'todo',
-      defaultPriority: 1,
+      defaultPriority: 1
     })
     const task = await createTask('FromTemplate', { templateId: tmpl.id })
     expect(task.terminal_mode).toBe('codex')
@@ -219,18 +288,29 @@ await describe('template application on task creation', () => {
 
   test('project default template auto-applies when no templateId', async () => {
     const pid = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)').run(
-      pid, 'AutoDefault', '#777', '/tmp/autodef',
-      JSON.stringify([
-        { id: 'backlog', label: 'Backlog', color: 'gray', position: 0, category: 'unstarted' },
-        { id: 'done', label: 'Done', color: 'green', position: 1, category: 'completed' },
-      ])
-    )
+    h.db
+      .prepare(
+        'INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)'
+      )
+      .run(
+        pid,
+        'AutoDefault',
+        '#777',
+        '/tmp/autodef',
+        JSON.stringify([
+          { id: 'backlog', label: 'Backlog', color: 'gray', position: 0, category: 'unstarted' },
+          { id: 'done', label: 'Done', color: 'green', position: 1, category: 'completed' }
+        ])
+      )
     h.invoke('db:taskTemplates:create', {
-      projectId: pid, name: 'ProjectDefault', isDefault: true,
-      terminalMode: 'codex', defaultStatus: 'backlog', defaultPriority: 5,
+      projectId: pid,
+      name: 'ProjectDefault',
+      isDefault: true,
+      terminalMode: 'codex',
+      defaultStatus: 'backlog',
+      defaultPriority: 5
     })
-    const task = await h.invoke('db:tasks:create', { projectId: pid, title: 'Auto' }) as Task
+    const task = (await h.invoke('db:tasks:create', { projectId: pid, title: 'Auto' })) as Task
     expect(task.terminal_mode).toBe('codex')
     expect(task.status).toBe('backlog')
     expect(task.priority).toBe(5)
@@ -238,13 +318,15 @@ await describe('template application on task creation', () => {
 
   test('explicit input overrides template values', async () => {
     const tmpl = createTemplate('Overridable', {
-      terminalMode: 'codex', defaultStatus: 'todo', defaultPriority: 1,
+      terminalMode: 'codex',
+      defaultStatus: 'todo',
+      defaultPriority: 1
     })
     const task = await createTask('Override', {
       templateId: tmpl.id,
       terminalMode: 'claude-code',
       status: 'in_progress',
-      priority: 4,
+      priority: 4
     })
     expect(task.terminal_mode).toBe('claude-code')
     expect(task.status).toBe('in_progress')
@@ -253,8 +335,10 @@ await describe('template application on task creation', () => {
 
   test('no template uses defaults', async () => {
     const pid = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(pid, 'NoTmpl', '#888', '/tmp/notmpl')
-    const task = await h.invoke('db:tasks:create', { projectId: pid, title: 'Plain' }) as Task
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(pid, 'NoTmpl', '#888', '/tmp/notmpl')
+    const task = (await h.invoke('db:tasks:create', { projectId: pid, title: 'Plain' })) as Task
     expect(task.terminal_mode).toBe('claude-code')
     expect(task.priority).toBe(3)
     expect(task.panel_visibility).toBeNull()
@@ -263,8 +347,17 @@ await describe('template application on task creation', () => {
 
   test('temporary task with templateId gets template applied', async () => {
     const tmpl = createTemplate('TempTemplate', {
-      terminalMode: 'codex', defaultPriority: 2,
-      panelVisibility: { terminal: true, browser: true, diff: false, settings: false, editor: false, artifacts: false, processes: false },
+      terminalMode: 'codex',
+      defaultPriority: 2,
+      panelVisibility: {
+        terminal: true,
+        browser: true,
+        diff: false,
+        settings: false,
+        editor: false,
+        artifacts: false,
+        processes: false
+      }
     })
     const task = await createTask('Temp', { isTemporary: true, templateId: tmpl.id })
     expect(task.is_temporary).toBe(true)
@@ -279,7 +372,14 @@ await describe('template application on task creation', () => {
 await describe('updateTask persists template-like fields', () => {
   test('panelVisibility round-trips', async () => {
     const task = await createTask('PanelRT')
-    const vis = { terminal: true, browser: true, diff: false, settings: false, editor: true, processes: false }
+    const vis = {
+      terminal: true,
+      browser: true,
+      diff: false,
+      settings: false,
+      editor: true,
+      processes: false
+    }
     const updated = h.invoke('db:tasks:update', { id: task.id, panelVisibility: vis }) as Task
     expect(updated.panel_visibility?.terminal).toBe(true)
     expect(updated.panel_visibility?.browser).toBe(true)
@@ -317,9 +417,17 @@ await describe('updateTask persists template-like fields', () => {
       id: task.id,
       terminalMode: 'codex',
       providerConfig: { codex: { flags: '--custom' } },
-      panelVisibility: { terminal: true, browser: true, diff: false, settings: false, editor: false, artifacts: false, processes: false },
+      panelVisibility: {
+        terminal: true,
+        browser: true,
+        diff: false,
+        settings: false,
+        editor: false,
+        artifacts: false,
+        processes: false
+      },
       browserTabs: { tabs: [{ id: 'b', url: 'http://app', title: 'App' }], activeTabId: 'b' },
-      webPanelUrls: { panel1: 'http://panel.local' },
+      webPanelUrls: { panel1: 'http://panel.local' }
     }) as Task
     expect(updated.terminal_mode).toBe('codex')
     // terminalMode change seeds default flags on top of providerConfig merge

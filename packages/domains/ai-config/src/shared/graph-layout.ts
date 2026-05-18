@@ -13,7 +13,7 @@ const DEFAULTS: Required<LayoutOptions> = {
   nodeWidth: 220,
   nodeHeight: 100,
   rankSep: 80,
-  nodeSep: 40,
+  nodeSep: 40
 }
 
 export function computeGraphLayout(

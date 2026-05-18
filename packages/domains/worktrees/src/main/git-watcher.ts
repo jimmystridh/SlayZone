@@ -34,7 +34,7 @@ const EXCLUDED_TOP_DIRS = new Set([
   '.next',
   '.turbo',
   '.cache',
-  'out',
+  'out'
 ])
 
 // Paths relative to the worktree root whose deepest segments we care about.
@@ -133,7 +133,11 @@ export function createGitWatcher(): GitWatcher {
       entry.debounceTimer = null
     }
     for (const w of entry.watchers) {
-      try { w.close() } catch { /* best-effort */ }
+      try {
+        w.close()
+      } catch {
+        /* best-effort */
+      }
     }
     entry.watchers = []
   }
@@ -216,7 +220,7 @@ export function createGitWatcher(): GitWatcher {
       refCount: 1,
       watchers: [],
       debounceTimer: null,
-      closed: false,
+      closed: false
     }
     entries.set(worktreePath, entry)
 

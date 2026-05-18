@@ -1,9 +1,9 @@
 import type { TerminalMode } from '@slayzone/terminal/shared'
 
 export interface TerminalTab {
-  id: string           // UUID or "main"
+  id: string // UUID or "main"
   taskId: string
-  groupId: string      // tabs with same groupId render side-by-side
+  groupId: string // tabs with same groupId render side-by-side
   label: string | null
   mode: TerminalMode
   isMain: boolean
@@ -18,9 +18,9 @@ export interface TerminalTab {
 }
 
 export interface TerminalGroup {
-  id: string           // = groupId
-  tabs: TerminalTab[]  // sorted by position
-  isMain: boolean      // true if contains the main tab
+  id: string // = groupId
+  tabs: TerminalTab[] // sorted by position
+  isMain: boolean // true if contains the main tab
 }
 
 export interface CreateTerminalTabInput {

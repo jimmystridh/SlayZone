@@ -200,7 +200,6 @@ export function PtyProvider({ children }: { children: ReactNode }) {
             // Best-effort; ignore errors
           }
         }
-
       }
 
       applyExitEvent(sessionId, exitCode, state, stateSubsRef.current, exitSubsRef.current)
@@ -251,7 +250,10 @@ export function PtyProvider({ children }: { children: ReactNode }) {
       if (wasAlive !== isAlive) refreshActiveTaskIds()
 
       // Clear pending prompt when state leaves the alive set (e.g. dead/error)
-      if (ALIVE_STATES.has(oldState as TerminalState) && !ALIVE_STATES.has(newState as TerminalState)) {
+      if (
+        ALIVE_STATES.has(oldState as TerminalState) &&
+        !ALIVE_STATES.has(newState as TerminalState)
+      ) {
         state.pendingPrompt = undefined
         setPendingPromptTaskIds((prev) => {
           const next = new Set(prev)
@@ -309,20 +311,23 @@ export function PtyProvider({ children }: { children: ReactNode }) {
     }
   }, [getOrCreateState, refreshActiveTaskIds])
 
-  const subscribe = useCallback((sessionId: string, cb: DataCallback): (() => void) => {
-    // Ensure state exists so onData doesn't drop data
-    getOrCreateState(sessionId)
+  const subscribe = useCallback(
+    (sessionId: string, cb: DataCallback): (() => void) => {
+      // Ensure state exists so onData doesn't drop data
+      getOrCreateState(sessionId)
 
-    let subs = dataSubsRef.current.get(sessionId)
-    if (!subs) {
-      subs = new Set()
-      dataSubsRef.current.set(sessionId, subs)
-    }
-    subs.add(cb)
-    return () => {
-      subs!.delete(cb)
-    }
-  }, [getOrCreateState])
+      let subs = dataSubsRef.current.get(sessionId)
+      if (!subs) {
+        subs = new Set()
+        dataSubsRef.current.set(sessionId, subs)
+      }
+      subs.add(cb)
+      return () => {
+        subs!.delete(cb)
+      }
+    },
+    [getOrCreateState]
+  )
 
   const subscribeExit = useCallback((sessionId: string, cb: ExitCallback): (() => void) => {
     let subs = exitSubsRef.current.get(sessionId)
@@ -351,44 +356,47 @@ export function PtyProvider({ children }: { children: ReactNode }) {
     []
   )
 
-  const subscribeState = useCallback((sessionId: string, cb: StateChangeCallback): (() => void) => {
-    // Ensure state exists so onStateChange doesn't drop events
-    getOrCreateState(sessionId)
+  const subscribeState = useCallback(
+    (sessionId: string, cb: StateChangeCallback): (() => void) => {
+      // Ensure state exists so onStateChange doesn't drop events
+      getOrCreateState(sessionId)
 
-    let subs = stateSubsRef.current.get(sessionId)
-    if (!subs) {
-      subs = new Set()
-      stateSubsRef.current.set(sessionId, subs)
-    }
-    subs.add(cb)
+      let subs = stateSubsRef.current.get(sessionId)
+      if (!subs) {
+        subs = new Set()
+        stateSubsRef.current.set(sessionId, subs)
+      }
+      subs.add(cb)
 
-    // Fetch initial state from backend if we don't have it yet. Goes through
-    // the session registry so chat-transport sessions resolve too — bare
-    // `pty.getState` returns null for chat tabs and leaves them stuck.
-    const state = statesRef.current.get(sessionId)
-    if (!state || state.state === 'starting') {
-      window.api.session.getState(sessionId).then((backendState) => {
-        if (backendState) {
-          const localState = getOrCreateState(sessionId)
-          if (localState.state !== backendState) {
-            const oldState = localState.state
-            localState.state = backendState
-            // Notify all subscribers of the initial state
-            const currentSubs = stateSubsRef.current.get(sessionId)
-            if (currentSubs) {
-              currentSubs.forEach((sub) => sub(backendState, oldState))
+      // Fetch initial state from backend if we don't have it yet. Goes through
+      // the session registry so chat-transport sessions resolve too — bare
+      // `pty.getState` returns null for chat tabs and leaves them stuck.
+      const state = statesRef.current.get(sessionId)
+      if (!state || state.state === 'starting') {
+        window.api.session.getState(sessionId).then((backendState) => {
+          if (backendState) {
+            const localState = getOrCreateState(sessionId)
+            if (localState.state !== backendState) {
+              const oldState = localState.state
+              localState.state = backendState
+              // Notify all subscribers of the initial state
+              const currentSubs = stateSubsRef.current.get(sessionId)
+              if (currentSubs) {
+                currentSubs.forEach((sub) => sub(backendState, oldState))
+              }
+              // Update active task tracking
+              if (ALIVE_STATES.has(backendState)) refreshActiveTaskIds()
             }
-            // Update active task tracking
-            if (ALIVE_STATES.has(backendState)) refreshActiveTaskIds()
           }
-        }
-      })
-    }
+        })
+      }
 
-    return () => {
-      subs!.delete(cb)
-    }
-  }, [getOrCreateState])
+      return () => {
+        subs!.delete(cb)
+      }
+    },
+    [getOrCreateState]
+  )
 
   const subscribePrompt = useCallback((sessionId: string, cb: PromptCallback): (() => void) => {
     let subs = promptSubsRef.current.get(sessionId)
@@ -432,20 +440,17 @@ export function PtyProvider({ children }: { children: ReactNode }) {
     []
   )
 
-  const subscribeTitle = useCallback(
-    (sessionId: string, cb: TitleChangeCallback): (() => void) => {
-      let subs = titleSubsRef.current.get(sessionId)
-      if (!subs) {
-        subs = new Set()
-        titleSubsRef.current.set(sessionId, subs)
-      }
-      subs.add(cb)
-      return () => {
-        subs!.delete(cb)
-      }
-    },
-    []
-  )
+  const subscribeTitle = useCallback((sessionId: string, cb: TitleChangeCallback): (() => void) => {
+    let subs = titleSubsRef.current.get(sessionId)
+    if (!subs) {
+      subs = new Set()
+      titleSubsRef.current.set(sessionId, subs)
+    }
+    subs.add(cb)
+    return () => {
+      subs!.delete(cb)
+    }
+  }, [])
 
   const getLastSeq = useCallback((sessionId: string): number => {
     return statesRef.current.get(sessionId)?.lastSeq ?? -1
@@ -517,10 +522,13 @@ export function PtyProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // Quick run prompt - for auto-sending prompt when task opens
-  const setQuickRunPrompt = useCallback((sessionId: string, prompt: string): void => {
-    const state = getOrCreateState(sessionId)
-    state.quickRunPrompt = prompt
-  }, [getOrCreateState])
+  const setQuickRunPrompt = useCallback(
+    (sessionId: string, prompt: string): void => {
+      const state = getOrCreateState(sessionId)
+      state.quickRunPrompt = prompt
+    },
+    [getOrCreateState]
+  )
 
   const getQuickRunPrompt = useCallback((sessionId: string): string | undefined => {
     return statesRef.current.get(sessionId)?.quickRunPrompt
@@ -533,51 +541,54 @@ export function PtyProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const value = useMemo<PtyContextValue>(() => ({
-    subscribe,
-    subscribeExit,
-    subscribeSessionInvalid,
-    subscribeState,
-    subscribePrompt,
-    subscribeSessionDetected,
-    subscribeDevServer,
-    subscribeTitle,
-    getLastSeq,
-    getExitCode,
-    getCrashOutput,
-    isSessionInvalid,
-    getState,
-    getPendingPrompt,
-    clearPendingPrompt,
-    resetTaskState,
-    cleanupTask,
-    getPendingPromptTaskIds,
-    setQuickRunPrompt,
-    getQuickRunPrompt,
-    clearQuickRunPrompt
-  }), [
-    subscribe,
-    subscribeExit,
-    subscribeSessionInvalid,
-    subscribeState,
-    subscribePrompt,
-    subscribeSessionDetected,
-    subscribeDevServer,
-    subscribeTitle,
-    getLastSeq,
-    getExitCode,
-    getCrashOutput,
-    isSessionInvalid,
-    getState,
-    getPendingPrompt,
-    clearPendingPrompt,
-    resetTaskState,
-    cleanupTask,
-    getPendingPromptTaskIds,
-    setQuickRunPrompt,
-    getQuickRunPrompt,
-    clearQuickRunPrompt
-  ])
+  const value = useMemo<PtyContextValue>(
+    () => ({
+      subscribe,
+      subscribeExit,
+      subscribeSessionInvalid,
+      subscribeState,
+      subscribePrompt,
+      subscribeSessionDetected,
+      subscribeDevServer,
+      subscribeTitle,
+      getLastSeq,
+      getExitCode,
+      getCrashOutput,
+      isSessionInvalid,
+      getState,
+      getPendingPrompt,
+      clearPendingPrompt,
+      resetTaskState,
+      cleanupTask,
+      getPendingPromptTaskIds,
+      setQuickRunPrompt,
+      getQuickRunPrompt,
+      clearQuickRunPrompt
+    }),
+    [
+      subscribe,
+      subscribeExit,
+      subscribeSessionInvalid,
+      subscribeState,
+      subscribePrompt,
+      subscribeSessionDetected,
+      subscribeDevServer,
+      subscribeTitle,
+      getLastSeq,
+      getExitCode,
+      getCrashOutput,
+      isSessionInvalid,
+      getState,
+      getPendingPrompt,
+      clearPendingPrompt,
+      resetTaskState,
+      cleanupTask,
+      getPendingPromptTaskIds,
+      setQuickRunPrompt,
+      getQuickRunPrompt,
+      clearQuickRunPrompt
+    ]
+  )
 
   return (
     <PtyContext.Provider value={value}>

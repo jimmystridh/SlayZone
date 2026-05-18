@@ -142,7 +142,11 @@ export interface TelemetryEventProps {
   onboarding_skipped: { from_step: number; from_step_name: string }
   onboarding_provider_selected: { provider: string }
   // Navigation
-  $pageview: { $current_url: string; page: 'home' | 'task' | 'leaderboard' | 'usage-analytics'; task_id?: string }
+  $pageview: {
+    $current_url: string
+    page: 'home' | 'task' | 'leaderboard' | 'usage-analytics'
+    task_id?: string
+  }
   search_used: { had_results: boolean }
   keyboard_shortcut_used: { key: string }
   tab_reopened: Record<string, never>

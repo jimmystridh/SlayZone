@@ -79,7 +79,7 @@ export function tagsCommand(): Command {
           ':name': name,
           ':color': opts.color,
           ':textColor': opts.textColor,
-          ':sortOrder': nextOrder,
+          ':sortOrder': nextOrder
         }
       )
 
@@ -100,9 +100,14 @@ export function tagsCommand(): Command {
         { ':prefix': idPrefix }
       )
 
-      if (tags.length === 0) { console.error(`Tag not found: ${idPrefix}`); process.exit(1) }
+      if (tags.length === 0) {
+        console.error(`Tag not found: ${idPrefix}`)
+        process.exit(1)
+      }
       if (tags.length > 1) {
-        console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${tags.map((t) => t.id.slice(0, 8)).join(', ')}`)
+        console.error(
+          `Ambiguous id prefix "${idPrefix}". Matches: ${tags.map((t) => t.id.slice(0, 8)).join(', ')}`
+        )
         process.exit(1)
       }
 

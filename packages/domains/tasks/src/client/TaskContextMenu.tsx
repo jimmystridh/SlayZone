@@ -25,19 +25,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@slayzone/ui'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@slayzone/ui'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@slayzone/ui'
 import { Button, Textarea } from '@slayzone/ui'
 import type { Task, TaskStatus } from '@slayzone/task/shared'
 import type { Project } from '@slayzone/projects/shared'
 import type { ColumnConfig } from '@slayzone/projects/shared'
 import type { Tag } from '@slayzone/tags/shared'
 import { CreateTagDialog } from '@slayzone/tags/client'
-import { Plus, AlarmClock, X, CircleDot, Signal, Tag as TagIcon, FolderInput, Copy, Archive, Trash2, ShieldAlert, ListChecks, MessageSquare, Check, Power, Pin, PinOff } from 'lucide-react'
+import {
+  Plus,
+  AlarmClock,
+  X,
+  CircleDot,
+  Signal,
+  Tag as TagIcon,
+  FolderInput,
+  Copy,
+  Archive,
+  Trash2,
+  ShieldAlert,
+  ListChecks,
+  MessageSquare,
+  Check,
+  Power,
+  Pin,
+  PinOff
+} from 'lucide-react'
 import { track } from '@slayzone/telemetry/client'
 import { format } from 'date-fns'
 import { getSnoozePresets, CustomSnoozeDialog } from '@slayzone/task/client'
@@ -167,7 +180,10 @@ export function TaskContextMenu({
 
   const handleSetBlockedWithComment = async (): Promise<void> => {
     track('task_blocked', { hasComment: 'true' })
-    onUpdateTask(task.id, { is_blocked: true, blocked_comment: blockedComment.trim() || null } as Partial<Task>)
+    onUpdateTask(task.id, {
+      is_blocked: true,
+      blocked_comment: blockedComment.trim() || null
+    } as Partial<Task>)
     setCommentDialogOpen(false)
     setBlockedComment('')
   }
@@ -179,7 +195,11 @@ export function TaskContextMenu({
         <ContextMenuContent className="w-60">
           {/* Status submenu */}
           <ContextMenuSub>
-            <ContextMenuSubTrigger><CircleDot className="mr-2 size-3.5" /><span className="flex-1">Status</span><span className="text-muted-foreground text-xs mr-1.5">S</span></ContextMenuSubTrigger>
+            <ContextMenuSubTrigger>
+              <CircleDot className="mr-2 size-3.5" />
+              <span className="flex-1">Status</span>
+              <span className="text-muted-foreground text-xs mr-1.5">S</span>
+            </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuRadioGroup value={task.status} onValueChange={handleStatusChange}>
                 {statusOptions.map((s) => {
@@ -198,7 +218,11 @@ export function TaskContextMenu({
 
           {/* Priority submenu */}
           <ContextMenuSub>
-            <ContextMenuSubTrigger><Signal className="mr-2 size-3.5" /><span className="flex-1">Priority</span><span className="text-muted-foreground text-xs mr-1.5">P</span></ContextMenuSubTrigger>
+            <ContextMenuSubTrigger>
+              <Signal className="mr-2 size-3.5" />
+              <span className="flex-1">Priority</span>
+              <span className="text-muted-foreground text-xs mr-1.5">P</span>
+            </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuRadioGroup
                 value={String(task.priority)}
@@ -217,7 +241,10 @@ export function TaskContextMenu({
           {/* Tags submenu */}
           {tags && onTaskTagsChange && (
             <ContextMenuSub>
-              <ContextMenuSubTrigger><TagIcon className="mr-2 size-3.5" />Tags</ContextMenuSubTrigger>
+              <ContextMenuSubTrigger>
+                <TagIcon className="mr-2 size-3.5" />
+                Tags
+              </ContextMenuSubTrigger>
               <ContextMenuSubContent>
                 {tags.map((tag) => (
                   <ContextMenuCheckboxItem
@@ -255,16 +282,22 @@ export function TaskContextMenu({
 
           {/* Blocked by submenu */}
           <ContextMenuSub>
-            <ContextMenuSubTrigger><ShieldAlert className="mr-2 size-3.5" /><span className="flex-1">Blocked by</span><span className="text-muted-foreground text-xs mr-1.5">&#8679;B</span></ContextMenuSubTrigger>
+            <ContextMenuSubTrigger>
+              <ShieldAlert className="mr-2 size-3.5" />
+              <span className="flex-1">Blocked by</span>
+              <span className="text-muted-foreground text-xs mr-1.5">&#8679;B</span>
+            </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={() => setBlockerDialogOpen(true)}>
                 <ListChecks className="mr-2 size-3.5" />
                 Set blocking task
               </ContextMenuItem>
-              <ContextMenuItem onSelect={() => {
-                setBlockedComment(task.blocked_comment ?? '')
-                setCommentDialogOpen(true)
-              }}>
+              <ContextMenuItem
+                onSelect={() => {
+                  setBlockedComment(task.blocked_comment ?? '')
+                  setCommentDialogOpen(true)
+                }}
+              >
                 <MessageSquare className="mr-2 size-3.5" />
                 Set blocked with comment
               </ContextMenuItem>
@@ -294,7 +327,9 @@ export function TaskContextMenu({
                   <ContextMenuItem key={preset.label} onSelect={() => handleSnooze(date)}>
                     <Icon className="mr-2 size-3.5" />
                     <span className="flex-1">{preset.label}</span>
-                    <span className="ml-4 text-xs text-muted-foreground">{format(date, 'EEE, MMM d')}</span>
+                    <span className="ml-4 text-xs text-muted-foreground">
+                      {format(date, 'EEE, MMM d')}
+                    </span>
                   </ContextMenuItem>
                 )
               })}
@@ -310,7 +345,11 @@ export function TaskContextMenu({
             <>
               <ContextMenuSeparator />
               <ContextMenuItem onSelect={onTogglePin}>
-                {isPinned ? <PinOff className="mr-2 size-3.5" /> : <Pin className="mr-2 size-3.5" />}
+                {isPinned ? (
+                  <PinOff className="mr-2 size-3.5" />
+                ) : (
+                  <Pin className="mr-2 size-3.5" />
+                )}
                 {isPinned ? 'Unpin' : 'Pin'}
               </ContextMenuItem>
             </>
@@ -330,12 +369,12 @@ export function TaskContextMenu({
 
           {/* Move to project */}
           <ContextMenuSub>
-            <ContextMenuSubTrigger><FolderInput className="mr-2 size-3.5" />Move to</ContextMenuSubTrigger>
+            <ContextMenuSubTrigger>
+              <FolderInput className="mr-2 size-3.5" />
+              Move to
+            </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuRadioGroup
-                value={task.project_id}
-                onValueChange={handleProjectChange}
-              >
+              <ContextMenuRadioGroup value={task.project_id} onValueChange={handleProjectChange}>
                 {projects.map((p) => (
                   <ContextMenuRadioItem key={p.id} value={p.id}>
                     <span
@@ -351,7 +390,10 @@ export function TaskContextMenu({
 
           {/* Copy submenu */}
           <ContextMenuSub>
-            <ContextMenuSubTrigger><Copy className="mr-2 size-3.5" />Copy</ContextMenuSubTrigger>
+            <ContextMenuSubTrigger>
+              <Copy className="mr-2 size-3.5" />
+              Copy
+            </ContextMenuSubTrigger>
             <ContextMenuSubContent>
               <ContextMenuItem onSelect={handleCopyTitle}>Title</ContextMenuItem>
               <ContextMenuItem onSelect={handleCopyLink}>Link</ContextMenuItem>
@@ -361,11 +403,15 @@ export function TaskContextMenu({
           <ContextMenuSeparator />
 
           {/* Archive */}
-          <ContextMenuItem onSelect={() => setArchiveDialogOpen(true)}><Archive className="size-3.5" />Archive</ContextMenuItem>
+          <ContextMenuItem onSelect={() => setArchiveDialogOpen(true)}>
+            <Archive className="size-3.5" />
+            Archive
+          </ContextMenuItem>
 
           {/* Delete */}
           <ContextMenuItem variant="destructive" onSelect={() => setDeleteDialogOpen(true)}>
-            <Trash2 className="size-3.5" />Delete
+            <Trash2 className="size-3.5" />
+            Delete
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
@@ -436,7 +482,13 @@ export function TaskContextMenu({
       />
 
       {/* Blocked with comment dialog */}
-      <Dialog open={commentDialogOpen} onOpenChange={(open) => { setCommentDialogOpen(open); if (!open) setBlockedComment('') }}>
+      <Dialog
+        open={commentDialogOpen}
+        onOpenChange={(open) => {
+          setCommentDialogOpen(open)
+          if (!open) setBlockedComment('')
+        }}
+      >
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Set blocked with comment</DialogTitle>
@@ -448,8 +500,12 @@ export function TaskContextMenu({
             rows={3}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => setCommentDialogOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleSetBlockedWithComment}>Set blocked</Button>
+            <Button variant="outline" size="sm" onClick={() => setCommentDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSetBlockedWithComment}>
+              Set blocked
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

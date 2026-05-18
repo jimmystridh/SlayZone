@@ -1,12 +1,23 @@
 import { useEffect, useCallback, useMemo } from 'react'
 import { create } from 'zustand'
-import { type FilterState, type ViewConfig, defaultFilterState, defaultCardProperties, defaultBoardConfig, defaultListConfig } from './FilterState'
+import {
+  type FilterState,
+  type ViewConfig,
+  defaultFilterState,
+  defaultCardProperties,
+  defaultBoardConfig,
+  defaultListConfig
+} from './FilterState'
 
 function getFilterKey(projectId: string): string {
   return projectId ? `filter:${projectId}` : 'filter:none'
 }
 
-function migrateViewConfig(raw: Record<string, unknown>, defaults: ViewConfig, allowListOnly: boolean): ViewConfig {
+function migrateViewConfig(
+  raw: Record<string, unknown>,
+  defaults: ViewConfig,
+  allowListOnly: boolean
+): ViewConfig {
   const config = { ...defaults }
   const groupBy = raw.groupBy as string | undefined
   if (groupBy === 'status' || groupBy === 'priority' || groupBy === 'due_date') {
@@ -14,17 +25,22 @@ function migrateViewConfig(raw: Record<string, unknown>, defaults: ViewConfig, a
   } else if (allowListOnly && (groupBy === 'none' || groupBy === 'active')) {
     config.groupBy = groupBy
   }
-  if (['manual', 'priority', 'due_date', 'title', 'created'].includes(raw.sortBy as string)) config.sortBy = raw.sortBy as ViewConfig['sortBy']
+  if (['manual', 'priority', 'due_date', 'title', 'created'].includes(raw.sortBy as string))
+    config.sortBy = raw.sortBy as ViewConfig['sortBy']
   if (typeof raw.showEmptyColumns === 'boolean') config.showEmptyColumns = raw.showEmptyColumns
-  if (raw.completedFilter === 'none' || raw.completedFilter === 'all') config.completedFilter = raw.completedFilter
-  else if (raw.completedFilter === 'day' || raw.completedFilter === 'week') config.completedFilter = 'all'
+  if (raw.completedFilter === 'none' || raw.completedFilter === 'all')
+    config.completedFilter = raw.completedFilter
+  else if (raw.completedFilter === 'day' || raw.completedFilter === 'week')
+    config.completedFilter = 'all'
   else if ('showDone' in raw) config.completedFilter = raw.showDone ? 'all' : 'none'
   if (typeof raw.showArchived === 'boolean') config.showArchived = raw.showArchived
   if (typeof raw.showSubTasks === 'boolean') config.showSubTasks = raw.showSubTasks
   if (typeof raw.showBlockedColumn === 'boolean') config.showBlockedColumn = raw.showBlockedColumn
-  if (typeof raw.blockedColumnAfter === 'string' || raw.blockedColumnAfter === null) config.blockedColumnAfter = raw.blockedColumnAfter as string | null
+  if (typeof raw.blockedColumnAfter === 'string' || raw.blockedColumnAfter === null)
+    config.blockedColumnAfter = raw.blockedColumnAfter as string | null
   if (typeof raw.showSnoozedColumn === 'boolean') config.showSnoozedColumn = raw.showSnoozedColumn
-  if (typeof raw.snoozedColumnAfter === 'string' || raw.snoozedColumnAfter === null) config.snoozedColumnAfter = raw.snoozedColumnAfter as string | null
+  if (typeof raw.snoozedColumnAfter === 'string' || raw.snoozedColumnAfter === null)
+    config.snoozedColumnAfter = raw.snoozedColumnAfter as string | null
   return config
 }
 
@@ -50,14 +66,22 @@ function migrateFilterState(raw: Record<string, unknown>): FilterState {
 
   if (raw.groupActiveTasks === true && state.list.groupBy === 'none') state.list.groupBy = 'active'
 
-  if (raw.priority === null || (typeof raw.priority === 'number' && raw.priority >= 1 && raw.priority <= 5)) state.priority = raw.priority as number | null
-  if (['all', 'overdue', 'today', 'week', 'later'].includes(raw.dueDateRange as string)) state.dueDateRange = raw.dueDateRange as FilterState['dueDateRange']
-  if (Array.isArray(raw.tagIds)) state.tagIds = raw.tagIds.filter((id): id is string => typeof id === 'string')
+  if (
+    raw.priority === null ||
+    (typeof raw.priority === 'number' && raw.priority >= 1 && raw.priority <= 5)
+  )
+    state.priority = raw.priority as number | null
+  if (['all', 'overdue', 'today', 'week', 'later'].includes(raw.dueDateRange as string))
+    state.dueDateRange = raw.dueDateRange as FilterState['dueDateRange']
+  if (Array.isArray(raw.tagIds))
+    state.tagIds = raw.tagIds.filter((id): id is string => typeof id === 'string')
 
   if (raw.cardProperties && typeof raw.cardProperties === 'object') {
     const cp = raw.cardProperties as Record<string, unknown>
     state.cardProperties = { ...defaultCardProperties }
-    for (const key of Object.keys(defaultCardProperties) as (keyof typeof defaultCardProperties)[]) {
+    for (const key of Object.keys(
+      defaultCardProperties
+    ) as (keyof typeof defaultCardProperties)[]) {
       if (typeof cp[key] === 'boolean') state.cardProperties[key] = cp[key] as boolean
     }
   }
@@ -99,14 +123,18 @@ export const useFilterStore = create<FilterStore>((set, get) => ({
     window.api.settings.get(getFilterKey(projectId)).then((value) => {
       let next: FilterState = defaultFilterState
       if (value) {
-        try { next = migrateFilterState(JSON.parse(value)) } catch { /* keep default */ }
+        try {
+          next = migrateFilterState(JSON.parse(value))
+        } catch {
+          /* keep default */
+        }
       }
       set((s2) => {
         const { [projectId]: _omit, ...restLoading } = s2.loading
         return {
           filters: { ...s2.filters, [projectId]: next },
           loaded: { ...s2.loaded, [projectId]: true },
-          loading: restLoading,
+          loading: restLoading
         }
       })
     })
@@ -114,30 +142,33 @@ export const useFilterStore = create<FilterStore>((set, get) => ({
   setFilter: (projectId, filter) => {
     set((s) => ({
       filters: { ...s.filters, [projectId]: filter },
-      loaded: { ...s.loaded, [projectId]: true },
+      loaded: { ...s.loaded, [projectId]: true }
     }))
     pendingSaves.set(projectId, filter)
     const existing = saveTimers.get(projectId)
     if (existing) clearTimeout(existing)
-    saveTimers.set(projectId, setTimeout(() => flushOne(projectId), 500))
+    saveTimers.set(
+      projectId,
+      setTimeout(() => flushOne(projectId), 500)
+    )
   },
   flushPending: () => {
     for (const id of Array.from(saveTimers.keys())) flushOne(id)
-  },
+  }
 }))
 
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => useFilterStore.getState().flushPending())
 }
 
-export function useFilterState(
-  projectId: string
-): [FilterState, (filter: FilterState) => void] {
+export function useFilterState(projectId: string): [FilterState, (filter: FilterState) => void] {
   const ensureLoaded = useFilterStore((s) => s.ensureLoaded)
   const setStoreFilter = useFilterStore((s) => s.setFilter)
   const filter = useFilterStore((s) => s.filters[projectId] ?? defaultFilterState)
 
-  useEffect(() => { ensureLoaded(projectId) }, [projectId, ensureLoaded])
+  useEffect(() => {
+    ensureLoaded(projectId)
+  }, [projectId, ensureLoaded])
 
   const setFilter = useCallback(
     (next: FilterState) => setStoreFilter(projectId, next),

@@ -1,8 +1,10 @@
 import { test, expect, seed, resetApp, TEST_PROJECT_PATH } from '../fixtures/electron'
 import {
-  testInvoke, urlInput,
+  testInvoke,
+  urlInput,
   ensureBrowserPanelVisible,
-  openTaskViaSearch, getActiveViewId,
+  openTaskViaSearch,
+  getActiveViewId
 } from '../fixtures/browser-view'
 import { getTestUrl } from '../fixtures/test-server'
 
@@ -26,9 +28,14 @@ test.describe('Browser view events (WebContentsView)', () => {
     // Navigate via IPC — manager's getUrl will reflect the event
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/title-Example'))
 
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15000 }).toContain('/title-Example')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15000 }
+      )
+      .toContain('/title-Example')
   })
 
   test('did-navigate event propagates canGoBack/canGoForward', async ({ mainWindow }) => {
@@ -37,21 +44,36 @@ test.describe('Browser view events (WebContentsView)', () => {
 
     // First navigation
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/title-Example'))
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15000 }).toContain('/title-Example')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15000 }
+      )
+      .toContain('/title-Example')
 
     // Second navigation — should enable goBack
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/title-Other'))
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15000 }).toContain('/title-Other')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15000 }
+      )
+      .toContain('/title-Other')
 
     // goBack should work (proves canGoBack was true)
     await testInvoke(mainWindow, 'browser:go-back', viewId)
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15000 }).toContain('/title-Example')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15000 }
+      )
+      .toContain('/title-Example')
   })
 
   test('page title can be set and read via executeJs', async ({ mainWindow }) => {
@@ -72,9 +94,14 @@ test.describe('Browser view events (WebContentsView)', () => {
     const viewId = await getActiveViewId(mainWindow, taskId)
 
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/title-Example'))
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15000 }).toContain('/title-Example')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15000 }
+      )
+      .toContain('/title-Example')
 
     // Wait for dom-ready (implicitly proven by successful JS execution)
     const result = await testInvoke(mainWindow, 'browser:execute-js', viewId, 'document.readyState')
@@ -86,14 +113,19 @@ test.describe('Browser view events (WebContentsView)', () => {
     const viewId = await getActiveViewId(mainWindow, taskId)
 
     // Navigate to non-existent domain — this should cause a load error
-    await testInvoke(mainWindow, 'browser:navigate', viewId, 'https://this-domain-does-not-exist-12345.invalid')
+    await testInvoke(
+      mainWindow,
+      'browser:navigate',
+      viewId,
+      'https://this-domain-does-not-exist-12345.invalid'
+    )
 
     // The URL should eventually reflect the attempted navigation
     // (the view keeps the last successful URL or the failed URL)
     await mainWindow.waitForTimeout(5000)
 
     // The view should still be queryable (not crashed)
-    const url = await testInvoke(mainWindow, 'browser:get-url', viewId) as string
+    const url = (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
     expect(typeof url).toBe('string')
   })
 
@@ -104,12 +136,22 @@ test.describe('Browser view events (WebContentsView)', () => {
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/title-Example'))
 
     // Wait for loading to stop (did-stop-loading event)
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15000 }).toContain('/title-Example')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15000 }
+      )
+      .toContain('/title-Example')
 
     // After navigation completes, the page should be fully loaded
-    const readyState = await testInvoke(mainWindow, 'browser:execute-js', viewId, 'document.readyState')
+    const readyState = await testInvoke(
+      mainWindow,
+      'browser:execute-js',
+      viewId,
+      'document.readyState'
+    )
     expect(['complete', 'interactive']).toContain(readyState)
   })
 
@@ -118,13 +160,22 @@ test.describe('Browser view events (WebContentsView)', () => {
     const viewId = await getActiveViewId(mainWindow, taskId)
 
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/title-Example'))
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 15000 }).toContain('/title-Example')
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 15000 }
+      )
+      .toContain('/title-Example')
 
     // Check if favicon link exists in the page (proves page-favicon-updated event path works)
-    const faviconHref = await testInvoke(mainWindow, 'browser:execute-js', viewId,
-      'document.querySelector("link[rel*=icon]")?.href || ""')
+    const faviconHref = await testInvoke(
+      mainWindow,
+      'browser:execute-js',
+      viewId,
+      'document.querySelector("link[rel*=icon]")?.href || ""'
+    )
     // example.com may or may not have a favicon, but the query shouldn't throw
     expect(typeof faviconHref).toBe('string')
   })

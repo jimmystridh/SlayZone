@@ -50,18 +50,12 @@ export function claudeEditResultToFileDiff(structured: unknown): FileDiff | null
       newStart: h.newStart,
       newLen: h.newLines,
       label: '',
-      lines,
+      lines
     }
   })
 
-  const additions = hunks.reduce(
-    (n, h) => n + h.lines.filter((l) => l.type === 'add').length,
-    0
-  )
-  const deletions = hunks.reduce(
-    (n, h) => n + h.lines.filter((l) => l.type === 'delete').length,
-    0
-  )
+  const additions = hunks.reduce((n, h) => n + h.lines.filter((l) => l.type === 'add').length, 0)
+  const deletions = hunks.reduce((n, h) => n + h.lines.filter((l) => l.type === 'delete').length, 0)
 
   return {
     path: s.filePath,
@@ -71,6 +65,6 @@ export function claudeEditResultToFileDiff(structured: unknown): FileDiff | null
     isNew: false,
     isDeleted: false,
     additions,
-    deletions,
+    deletions
   }
 }

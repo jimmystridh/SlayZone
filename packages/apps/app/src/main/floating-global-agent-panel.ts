@@ -15,7 +15,14 @@ import {
 
 // --- Types ---
 
-type AnchorPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'center-bottom' | 'center-left' | 'center-right'
+type AnchorPosition =
+  | 'bottom-right'
+  | 'bottom-left'
+  | 'top-right'
+  | 'top-left'
+  | 'center-bottom'
+  | 'center-left'
+  | 'center-right'
 type WidgetStyle = 'widget' | 'icon'
 
 interface FloatingGlobalAgentPanelConfig {
@@ -91,7 +98,9 @@ function executeAction(action: Action): void {
         if (ok) {
           currentFloatingSession = readSessionMeta(action.sessionId)
           if (!floatingGlobalAgentPanelWindow.isDestroyed()) {
-            floatingGlobalAgentPanelWindow.webContents.send('floating-global-agent-panel:session-changed')
+            floatingGlobalAgentPanelWindow.webContents.send(
+              'floating-global-agent-panel:session-changed'
+            )
           }
         }
       }
@@ -162,7 +171,10 @@ function executeAction(action: Action): void {
 
     case 'send-collapse-changed':
       if (floatingGlobalAgentPanelWindow && !floatingGlobalAgentPanelWindow.isDestroyed()) {
-        floatingGlobalAgentPanelWindow.webContents.send('floating-global-agent-panel:collapse-changed', action.collapsed)
+        floatingGlobalAgentPanelWindow.webContents.send(
+          'floating-global-agent-panel:collapse-changed',
+          action.collapsed
+        )
       }
       return
 
@@ -190,7 +202,9 @@ function executeAction(action: Action): void {
         clearTimeout(saveExpandedSizeTimer)
         saveExpandedSizeTimer = null
       }
-      getDatabase().prepare("DELETE FROM settings WHERE key = 'floatingGlobalAgentPanelExpandedSize'").run()
+      getDatabase()
+        .prepare("DELETE FROM settings WHERE key = 'floatingGlobalAgentPanelExpandedSize'")
+        .run()
       broadcastState()
       return
   }
@@ -213,14 +227,18 @@ function broadcastState(): void {
 
 function readSessionMeta(sessionId: string): { sessionId: string; cwd: string; mode: string } {
   const db = getDatabase()
-  const row = db.prepare("SELECT value FROM settings WHERE key = 'globalAgentPanelState'").get() as { value: string } | undefined
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'globalAgentPanelState'").get() as
+    | { value: string }
+    | undefined
   let cwd = ''
   let mode = 'claude-code'
   try {
     const s = row?.value ? JSON.parse(row.value) : {}
     cwd = s.cwd ?? ''
     mode = s.mode ?? 'claude-code'
-  } catch { /* defaults */ }
+  } catch {
+    /* defaults */
+  }
   return { sessionId, cwd, mode }
 }
 
@@ -235,13 +253,40 @@ function calcBounds(
   const { x, y, width: w, height: h } = workArea
   const m = MARGIN
   switch (position) {
-    case 'bottom-right':  return { x: x + w - widgetWidth - m, y: y + h - widgetHeight - m, width: widgetWidth, height: widgetHeight }
-    case 'bottom-left':   return { x: x + m, y: y + h - widgetHeight - m, width: widgetWidth, height: widgetHeight }
-    case 'top-right':     return { x: x + w - widgetWidth - m, y: y + m, width: widgetWidth, height: widgetHeight }
-    case 'top-left':      return { x: x + m, y: y + m, width: widgetWidth, height: widgetHeight }
-    case 'center-bottom': return { x: x + Math.round((w - widgetWidth) / 2), y: y + h - widgetHeight - m, width: widgetWidth, height: widgetHeight }
-    case 'center-left':   return { x: x + m, y: y + Math.round((h - widgetHeight) / 2), width: widgetWidth, height: widgetHeight }
-    case 'center-right':  return { x: x + w - widgetWidth - m, y: y + Math.round((h - widgetHeight) / 2), width: widgetWidth, height: widgetHeight }
+    case 'bottom-right':
+      return {
+        x: x + w - widgetWidth - m,
+        y: y + h - widgetHeight - m,
+        width: widgetWidth,
+        height: widgetHeight
+      }
+    case 'bottom-left':
+      return { x: x + m, y: y + h - widgetHeight - m, width: widgetWidth, height: widgetHeight }
+    case 'top-right':
+      return { x: x + w - widgetWidth - m, y: y + m, width: widgetWidth, height: widgetHeight }
+    case 'top-left':
+      return { x: x + m, y: y + m, width: widgetWidth, height: widgetHeight }
+    case 'center-bottom':
+      return {
+        x: x + Math.round((w - widgetWidth) / 2),
+        y: y + h - widgetHeight - m,
+        width: widgetWidth,
+        height: widgetHeight
+      }
+    case 'center-left':
+      return {
+        x: x + m,
+        y: y + Math.round((h - widgetHeight) / 2),
+        width: widgetWidth,
+        height: widgetHeight
+      }
+    case 'center-right':
+      return {
+        x: x + w - widgetWidth - m,
+        y: y + Math.round((h - widgetHeight) / 2),
+        width: widgetWidth,
+        height: widgetHeight
+      }
   }
 }
 
@@ -268,14 +313,19 @@ function applyBounds(animate: boolean): void {
   const display = getActiveDisplay()
   const size = ctx.collapsed
     ? getCollapsedSize()
-    : (expandedSize ?? { width: EXPANDED_WIDTH, height: Math.round(display.workArea.height * EXPANDED_HEIGHT_RATIO) })
+    : (expandedSize ?? {
+        width: EXPANDED_WIDTH,
+        height: Math.round(display.workArea.height * EXPANDED_HEIGHT_RATIO)
+      })
   const bounds = calcBounds(display.workArea, currentConfig.position, size.width, size.height)
   floatingGlobalAgentPanelWindow.setBounds(bounds, animate)
 }
 
 function readExpandedSize(): void {
   const db = getDatabase()
-  const row = db.prepare("SELECT value FROM settings WHERE key = 'floatingGlobalAgentPanelExpandedSize'").get() as { value: string } | undefined
+  const row = db
+    .prepare("SELECT value FROM settings WHERE key = 'floatingGlobalAgentPanelExpandedSize'")
+    .get() as { value: string } | undefined
   try {
     if (row?.value) {
       const parsed = JSON.parse(row.value)
@@ -284,7 +334,9 @@ function readExpandedSize(): void {
         return
       }
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   expandedSize = null
 }
 
@@ -300,24 +352,31 @@ function persistExpandedSize(width: number, height: number): void {
   saveExpandedSizeTimer = setTimeout(() => {
     saveExpandedSizeTimer = null
     const db = getDatabase()
-    db.prepare("INSERT INTO settings (key, value) VALUES ('floatingGlobalAgentPanelExpandedSize', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
-      .run(JSON.stringify({ width, height }))
+    db.prepare(
+      "INSERT INTO settings (key, value) VALUES ('floatingGlobalAgentPanelExpandedSize', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+    ).run(JSON.stringify({ width, height }))
   }, 200)
 }
 
 function readConfig(): void {
   const db = getDatabase()
-  const row = db.prepare("SELECT value FROM settings WHERE key = 'floatingGlobalAgentPanelConfig'").get() as { value: string } | undefined
+  const row = db
+    .prepare("SELECT value FROM settings WHERE key = 'floatingGlobalAgentPanelConfig'")
+    .get() as { value: string } | undefined
   try {
     currentConfig = row?.value ? { ...DEFAULT_CONFIG, ...JSON.parse(row.value) } : DEFAULT_CONFIG
-  } catch { currentConfig = DEFAULT_CONFIG }
+  } catch {
+    currentConfig = DEFAULT_CONFIG
+  }
 }
 
 // --- Shortcut ---
 
 function getGlobalAgentPanelAccelerator(): string | null {
   const overrides = getShortcutOverrides()
-  const keys = overrides['global-agent-panel'] ?? shortcutDefinitions.find(d => d.id === 'global-agent-panel')?.defaultKeys
+  const keys =
+    overrides['global-agent-panel'] ??
+    shortcutDefinitions.find((d) => d.id === 'global-agent-panel')?.defaultKeys
   if (!keys) return null
   return toElectronAccelerator(keys)
 }
@@ -362,9 +421,10 @@ function createFloatingGlobalAgentPanelWindow(): BrowserWindow {
     }
   })
 
-  const url = is.dev && process.env['ELECTRON_RENDERER_URL']
-    ? `${process.env['ELECTRON_RENDERER_URL']}?floating=global-agent-panel`
-    : `file://${join(__dirname, '../renderer/index.html')}?floating=global-agent-panel`
+  const url =
+    is.dev && process.env['ELECTRON_RENDERER_URL']
+      ? `${process.env['ELECTRON_RENDERER_URL']}?floating=global-agent-panel`
+      : `file://${join(__dirname, '../renderer/index.html')}?floating=global-agent-panel`
   win.setAlwaysOnTop(true, 'pop-up-menu')
   win.loadURL(url)
 
@@ -401,14 +461,17 @@ function setupFloatingGlobalAgentPanelIpc(): void {
     return { kind: state.kind }
   })
 
-  ipcMain.handle('floating-global-agent-panel:set-session-id', (_event, sessionId: string | null) => {
-    const previous = ctx.sessionId
-    ctx = { ...ctx, sessionId }
-    if (previous !== sessionId) {
-      dispatch({ kind: 'session-id-changed', sessionId })
+  ipcMain.handle(
+    'floating-global-agent-panel:set-session-id',
+    (_event, sessionId: string | null) => {
+      const previous = ctx.sessionId
+      ctx = { ...ctx, sessionId }
+      if (previous !== sessionId) {
+        dispatch({ kind: 'session-id-changed', sessionId })
+      }
+      return { kind: state.kind }
     }
-    return { kind: state.kind }
-  })
+  )
 
   ipcMain.handle('floating-global-agent-panel:set-panel-open', (_event, isOpen: boolean) => {
     ctx = { ...ctx, panelOpen: isOpen }
@@ -441,7 +504,12 @@ function setupFloatingGlobalAgentPanelIpc(): void {
   ipcMain.handle('floating-global-agent-panel:get-config', () => currentConfig)
 }
 
-function currentStatePayload(): { kind: string; sessionId: string | null; mode: 'auto' | 'manual' | null; hasCustomSize: boolean } {
+function currentStatePayload(): {
+  kind: string
+  sessionId: string | null
+  mode: 'auto' | 'manual' | null
+  hasCustomSize: boolean
+} {
   return {
     kind: state.kind,
     sessionId: state.kind === 'detached' ? state.sessionId : null,
@@ -459,7 +527,9 @@ export function attachFloatingGlobalAgentPanel(win: BrowserWindow): void {
   win.on('focus', () => dispatch({ kind: 'main-focus' }))
 }
 
-export function setupFloatingGlobalAgentPanel(overridesGetter?: () => Record<string, string | null>): void {
+export function setupFloatingGlobalAgentPanel(
+  overridesGetter?: () => Record<string, string | null>
+): void {
   if (overridesGetter) getShortcutOverrides = overridesGetter
   setupFloatingGlobalAgentPanelIpc()
 

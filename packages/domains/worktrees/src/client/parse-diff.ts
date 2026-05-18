@@ -197,16 +197,35 @@ function parseUnifiedDiffImpl(patch: string): FileDiff[] {
       let newLine = hunk.newStart
       i++
 
-      while (i < lines.length && !lines[i].startsWith('@@') && !lines[i].startsWith('diff --git ')) {
+      while (
+        i < lines.length &&
+        !lines[i].startsWith('@@') &&
+        !lines[i].startsWith('diff --git ')
+      ) {
         const raw = lines[i]
         if (raw.startsWith('+')) {
-          hunk.lines.push({ type: 'add', content: raw.slice(1), oldLineNo: null, newLineNo: newLine++ })
+          hunk.lines.push({
+            type: 'add',
+            content: raw.slice(1),
+            oldLineNo: null,
+            newLineNo: newLine++
+          })
           fileDiff.additions++
         } else if (raw.startsWith('-')) {
-          hunk.lines.push({ type: 'delete', content: raw.slice(1), oldLineNo: oldLine++, newLineNo: null })
+          hunk.lines.push({
+            type: 'delete',
+            content: raw.slice(1),
+            oldLineNo: oldLine++,
+            newLineNo: null
+          })
           fileDiff.deletions++
         } else if (raw.startsWith(' ')) {
-          hunk.lines.push({ type: 'context', content: raw.slice(1), oldLineNo: oldLine++, newLineNo: newLine++ })
+          hunk.lines.push({
+            type: 'context',
+            content: raw.slice(1),
+            oldLineNo: oldLine++,
+            newLineNo: newLine++
+          })
         } else if (raw.startsWith('\\')) {
           // "\ No newline at end of file" — skip
         }

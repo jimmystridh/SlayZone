@@ -19,9 +19,14 @@ export async function openAction(idPrefix: string | undefined, opts: OpenOpts = 
     { ':prefix': idPrefix }
   )
 
-  if (tasks.length === 0) { console.error(`Task not found: ${idPrefix}`); process.exit(1) }
+  if (tasks.length === 0) {
+    console.error(`Task not found: ${idPrefix}`)
+    process.exit(1)
+  }
   if (tasks.length > 1) {
-    console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${idPrefix}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
 
@@ -39,15 +44,19 @@ export async function openAction(idPrefix: string | undefined, opts: OpenOpts = 
     : `/api/open-task/${task.id}`
 
   await new Promise<void>((resolve) => {
-    const req = http.request(
-      { hostname: '127.0.0.1', port, path, method: 'POST' },
-      (res) => { res.resume(); res.on('end', resolve) },
-    )
+    const req = http.request({ hostname: '127.0.0.1', port, path, method: 'POST' }, (res) => {
+      res.resume()
+      res.on('end', resolve)
+    })
     req.on('error', () => {
       console.error('Failed to reach SlayZone app. Is it running?')
       process.exit(1)
     })
-    req.setTimeout(3000, () => { req.destroy(); console.error('Timed out reaching SlayZone app'); process.exit(1) })
+    req.setTimeout(3000, () => {
+      req.destroy()
+      console.error('Timed out reaching SlayZone app')
+      process.exit(1)
+    })
     req.end()
   })
 
@@ -58,8 +67,12 @@ export async function openAction(idPrefix: string | undefined, opts: OpenOpts = 
       { taskId: task.id, timeoutMs }
     )
     const startLabel = r.alreadyAlive ? 'already alive' : 'started'
-    console.log(`${opts.background ? 'Opening (bg)' : 'Opening'} + ${startLabel}: ${task.id.slice(0, 8)}  ${task.title}`)
+    console.log(
+      `${opts.background ? 'Opening (bg)' : 'Opening'} + ${startLabel}: ${task.id.slice(0, 8)}  ${task.title}`
+    )
     return
   }
-  console.log(`${opts.background ? 'Opening (bg)' : 'Opening'}: ${task.id.slice(0, 8)}  ${task.title}`)
+  console.log(
+    `${opts.background ? 'Opening (bg)' : 'Opening'}: ${task.id.slice(0, 8)}  ${task.title}`
+  )
 }

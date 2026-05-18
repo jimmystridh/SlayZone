@@ -14,9 +14,7 @@ export type ReparentError =
   | 'missing-parent'
   | 'missing-task'
 
-export type ReparentValidation =
-  | { ok: true }
-  | { ok: false; error: ReparentError }
+export type ReparentValidation = { ok: true } | { ok: false; error: ReparentError }
 
 export interface ValidateReparentOptions {
   taskId: string
@@ -56,13 +54,22 @@ export function validateReparent(opts: ValidateReparentOptions): ReparentValidat
   return { ok: true }
 }
 
-export function reparentErrorMessage(error: ReparentError, ids: { taskId: string; parentId: string | null }): string {
+export function reparentErrorMessage(
+  error: ReparentError,
+  ids: { taskId: string; parentId: string | null }
+): string {
   switch (error) {
-    case 'self': return `Cannot make task its own parent (${ids.taskId.slice(0, 8)})`
-    case 'cycle': return `Reparent would create a cycle`
-    case 'cross-project': return `Parent task is in a different project`
-    case 'archived-parent': return `Parent task is archived or deleted`
-    case 'missing-parent': return `Parent task not found: ${ids.parentId?.slice(0, 8) ?? '(null)'}`
-    case 'missing-task': return `Task not found: ${ids.taskId.slice(0, 8)}`
+    case 'self':
+      return `Cannot make task its own parent (${ids.taskId.slice(0, 8)})`
+    case 'cycle':
+      return `Reparent would create a cycle`
+    case 'cross-project':
+      return `Parent task is in a different project`
+    case 'archived-parent':
+      return `Parent task is archived or deleted`
+    case 'missing-parent':
+      return `Parent task not found: ${ids.parentId?.slice(0, 8) ?? '(null)'}`
+    case 'missing-task':
+      return `Task not found: ${ids.taskId.slice(0, 8)}`
   }
 }

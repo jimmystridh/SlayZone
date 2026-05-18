@@ -1,6 +1,30 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Play, Square, RotateCcw, Plus, Trash2, Cpu, Pencil, FileText, MoreHorizontal, CornerDownLeft, Info, Loader2, Globe } from 'lucide-react'
-import { cn, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, Tooltip, TooltipTrigger, TooltipContent } from '@slayzone/ui'
+import {
+  Play,
+  Square,
+  RotateCcw,
+  Plus,
+  Trash2,
+  Cpu,
+  Pencil,
+  FileText,
+  MoreHorizontal,
+  CornerDownLeft,
+  Info,
+  Loader2,
+  Globe
+} from 'lucide-react'
+import {
+  cn,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent
+} from '@slayzone/ui'
 import { ProcessDialog } from './ProcessDialog'
 type ProcessStatus = 'running' | 'stopped' | 'completed' | 'error'
 
@@ -33,15 +57,32 @@ export interface ProcessEntry {
 }
 
 const STATUS_CONFIG: Record<ProcessStatus, { label: string; dot: string; badge: string }> = {
-  running:   { label: 'Running',   dot: 'bg-green-500',              badge: 'text-green-500 bg-green-500/10 border-green-500/20' },
-  stopped:   { label: 'Idle',      dot: 'bg-muted-foreground/30',    badge: 'text-muted-foreground bg-muted/60 border-border' },
-  completed: { label: 'Completed', dot: 'bg-blue-400',               badge: 'text-blue-400 bg-blue-400/10 border-blue-400/20' },
-  error:     { label: 'Failed',    dot: 'bg-red-500',                badge: 'text-red-500 bg-red-500/10 border-red-500/20' },
+  running: {
+    label: 'Running',
+    dot: 'bg-green-500',
+    badge: 'text-green-500 bg-green-500/10 border-green-500/20'
+  },
+  stopped: {
+    label: 'Idle',
+    dot: 'bg-muted-foreground/30',
+    badge: 'text-muted-foreground bg-muted/60 border-border'
+  },
+  completed: {
+    label: 'Completed',
+    dot: 'bg-blue-400',
+    badge: 'text-blue-400 bg-blue-400/10 border-blue-400/20'
+  },
+  error: {
+    label: 'Failed',
+    dot: 'bg-red-500',
+    badge: 'text-red-500 bg-red-500/10 border-red-500/20'
+  }
 }
 
 // eslint-disable-next-line no-control-regex
 const ANSI_RX = /\x1b\[[0-9;]*m/g
-const URL_RX = /(https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|\d+\.\d+\.\d+\.\d+)(?::\d+)?(?:\/[^\s"')]*)?)/i
+const URL_RX =
+  /(https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|\d+\.\d+\.\d+\.\d+)(?::\d+)?(?:\/[^\s"')]*)?)/i
 
 function extractUrlFromLine(line: string): string | null {
   const m = line.replace(ANSI_RX, '').match(URL_RX)
@@ -51,10 +92,20 @@ function extractUrlFromLine(line: string): string | null {
 function StatusBadge({ status }: { status: ProcessStatus }) {
   const { label, dot, badge } = STATUS_CONFIG[status]
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0', badge)}>
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0',
+        badge
+      )}
+    >
       <span className="relative flex size-1.5">
         {status === 'running' && (
-          <span className={cn('animate-ping absolute inline-flex h-full w-full rounded-full opacity-60', dot)} />
+          <span
+            className={cn(
+              'animate-ping absolute inline-flex h-full w-full rounded-full opacity-60',
+              dot
+            )}
+          />
         )}
         <span className={cn('relative inline-flex rounded-full size-1.5', dot)} />
       </span>
@@ -74,7 +125,7 @@ function ProcessRow({
   onEdit,
   onInject,
   onOpenUrl,
-  logEndRef,
+  logEndRef
 }: {
   proc: ProcessEntry
   expanded: boolean
@@ -88,7 +139,7 @@ function ProcessRow({
   onOpenUrl?: (url: string) => void
   logEndRef: (el: HTMLDivElement | null) => void
 }) {
-  const serverUrl = proc.status === 'running' ? proc.serverUrl ?? null : null
+  const serverUrl = proc.status === 'running' ? (proc.serverUrl ?? null) : null
   return (
     <div className="rounded-lg border border-border bg-surface-3 overflow-hidden group/row">
       <div className="flex items-center gap-3 px-3.5 py-3">
@@ -97,10 +148,17 @@ function ProcessRow({
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-medium leading-tight truncate">{proc.label}</span>
             {proc.autoRestart && (
-              <span className="text-[10px] text-muted-foreground/40 shrink-0" title="Auto-restart enabled">↺</span>
+              <span
+                className="text-[10px] text-muted-foreground/40 shrink-0"
+                title="Auto-restart enabled"
+              >
+                ↺
+              </span>
             )}
           </div>
-          <span className="text-[11px] font-mono text-muted-foreground/55 truncate">{proc.command}</span>
+          <span className="text-[11px] font-mono text-muted-foreground/55 truncate">
+            {proc.command}
+          </span>
         </div>
 
         {/* Stop + Restart — visible when running */}
@@ -141,7 +199,9 @@ function ProcessRow({
               onClick={onToggleLog}
               className={cn(
                 'p-1.5 rounded-md transition-colors',
-                expanded ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                expanded
+                  ? 'bg-muted text-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >
               <FileText className="size-3.5" />
@@ -158,7 +218,10 @@ function ProcessRow({
           </Tip>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button title="More" className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <button
+                title="More"
+                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <MoreHorizontal className="size-3.5" />
               </button>
             </DropdownMenuTrigger>
@@ -211,11 +274,16 @@ function ProcessRow({
               <>
                 <span>{stats.cpu.toFixed(1)}%</span>
                 <span className="text-muted-foreground/15">·</span>
-                <span>{stats.rss >= 1024 ? `${(stats.rss / 1024).toFixed(0)} MB` : `${stats.rss} KB`}</span>
+                <span>
+                  {stats.rss >= 1024 ? `${(stats.rss / 1024).toFixed(0)} MB` : `${stats.rss} KB`}
+                </span>
               </>
             )}
             {proc.restartCount > 0 && (
-              <><span className="text-muted-foreground/15">·</span><span>↺{proc.restartCount}</span></>
+              <>
+                <span className="text-muted-foreground/15">·</span>
+                <span>↺{proc.restartCount}</span>
+              </>
             )}
           </span>
         )}
@@ -231,9 +299,11 @@ function ProcessRow({
           </div>
           <div className="max-h-52 overflow-y-auto">
             <pre className="text-[10px] font-mono text-foreground px-4 py-3 whitespace-pre-wrap break-all leading-relaxed">
-              {proc.logBuffer.length === 0
-                ? <span className="text-muted-foreground italic">Waiting for output…</span>
-                : proc.logBuffer.join('\n')}
+              {proc.logBuffer.length === 0 ? (
+                <span className="text-muted-foreground italic">Waiting for output…</span>
+              ) : (
+                proc.logBuffer.join('\n')
+              )}
             </pre>
             <div ref={logEndRef} />
           </div>
@@ -251,7 +321,19 @@ function SectionHeader({ label }: { label: string }) {
   )
 }
 
-export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOpenUrl }: { taskId: string | null; projectId: string | null; cwd?: string | null; terminalSessionId?: string; onOpenUrl?: (url: string) => void }) {
+export function ProcessesPanel({
+  taskId,
+  projectId,
+  cwd,
+  terminalSessionId,
+  onOpenUrl
+}: {
+  taskId: string | null
+  projectId: string | null
+  cwd?: string | null
+  terminalSessionId?: string
+  onOpenUrl?: (url: string) => void
+}) {
   const [processes, setProcesses] = useState<ProcessEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set())
@@ -263,7 +345,7 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
   useEffect(() => {
     setLoading(true)
     window.api.processes.listForTask(taskId, projectId).then((list) => {
-      const entries = (list as ProcessEntry[]).map(p => {
+      const entries = (list as ProcessEntry[]).map((p) => {
         if (p.serverUrl || p.status !== 'running') return p
         for (let i = p.logBuffer.length - 1; i >= 0; i--) {
           const url = extractUrlFromLine(p.logBuffer[i])
@@ -279,10 +361,12 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
   useEffect(() => {
     const unsub = window.api.processes.onLog((processId, line) => {
       const url = extractUrlFromLine(line)
-      setProcesses(prev =>
-        prev.map(p => p.id === processId
-          ? { ...p, logBuffer: [...p.logBuffer.slice(-499), line], serverUrl: url ?? p.serverUrl }
-          : p)
+      setProcesses((prev) =>
+        prev.map((p) =>
+          p.id === processId
+            ? { ...p, logBuffer: [...p.logBuffer.slice(-499), line], serverUrl: url ?? p.serverUrl }
+            : p
+        )
       )
     })
     return unsub
@@ -290,9 +374,13 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
 
   useEffect(() => {
     const unsub = window.api.processes.onStatus((processId, status) => {
-      setProcesses(prev => prev.map(p => p.id === processId
-        ? { ...p, status, serverUrl: status === 'running' ? p.serverUrl : null }
-        : p))
+      setProcesses((prev) =>
+        prev.map((p) =>
+          p.id === processId
+            ? { ...p, status, serverUrl: status === 'running' ? p.serverUrl : null }
+            : p
+        )
+      )
     })
     return unsub
   }, [])
@@ -304,7 +392,9 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
 
   useEffect(() => {
     const unsub = window.api.processes.onTitle((processId, title) => {
-      setProcesses(prev => prev.map(p => p.id === processId ? { ...p, processTitle: title } : p))
+      setProcesses((prev) =>
+        prev.map((p) => (p.id === processId ? { ...p, processTitle: title } : p))
+      )
     })
     return unsub
   }, [])
@@ -328,7 +418,7 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
   }, [taskId, projectId])
 
   const toggleLog = useCallback((id: string) => {
-    setExpandedLogs(prev => {
+    setExpandedLogs((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -338,8 +428,12 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
 
   const handleKill = useCallback(async (id: string) => {
     await window.api.processes.kill(id)
-    setProcesses(prev => prev.filter(p => p.id !== id))
-    setExpandedLogs(prev => { const next = new Set(prev); next.delete(id); return next })
+    setProcesses((prev) => prev.filter((p) => p.id !== id))
+    setExpandedLogs((prev) => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
   }, [])
 
   const handleStop = useCallback(async (id: string) => {
@@ -350,11 +444,14 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
     await window.api.processes.restart(id)
   }, [])
 
-  const handleInject = useCallback((proc: ProcessEntry) => {
-    if (proc.logBuffer.length === 0) return
-    const output = `\r\n--- ${proc.label} output ---\r\n${proc.logBuffer.join('\r\n')}\r\n---\r\n`
-    void window.api.pty.write(terminalSessionId ?? `${taskId}:${taskId}`, output)
-  }, [taskId, terminalSessionId])
+  const handleInject = useCallback(
+    (proc: ProcessEntry) => {
+      if (proc.logBuffer.length === 0) return
+      const output = `\r\n--- ${proc.label} output ---\r\n${proc.logBuffer.join('\r\n')}\r\n---\r\n`
+      void window.api.pty.write(terminalSessionId ?? `${taskId}:${taskId}`, output)
+    },
+    [taskId, terminalSessionId]
+  )
 
   const openNewDialog = useCallback(() => {
     setEditingProcess(null)
@@ -370,13 +467,19 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
     void refreshList()
   }, [refreshList])
 
-  const handleDialogSpawned = useCallback((id: string) => {
-    void refreshList()
-    setExpandedLogs(prev => new Set(prev).add(id))
-  }, [refreshList])
+  const handleDialogSpawned = useCallback(
+    (id: string) => {
+      void refreshList()
+      setExpandedLogs((prev) => new Set(prev).add(id))
+    },
+    [refreshList]
+  )
 
-  const projectProcesses = useMemo(() => processes.filter(p => p.taskId === null), [processes])
-  const taskProcesses = useMemo(() => taskId ? processes.filter(p => p.taskId === taskId) : [], [processes, taskId])
+  const projectProcesses = useMemo(() => processes.filter((p) => p.taskId === null), [processes])
+  const taskProcesses = useMemo(
+    () => (taskId ? processes.filter((p) => p.taskId === taskId) : []),
+    [processes, taskId]
+  )
 
   const isEmpty = processes.length === 0
 
@@ -390,7 +493,9 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
             <Info className="size-3 text-muted-foreground/50 hover:text-muted-foreground transition-colors cursor-default shrink-0" />
           </TooltipTrigger>
           <TooltipContent side="bottom" className="max-w-64">
-            Background processes (dev servers, watchers, etc.) that run alongside your task. Task-scoped processes stop with the task; project processes are shared across all tasks in the project.
+            Background processes (dev servers, watchers, etc.) that run alongside your task.
+            Task-scoped processes stop with the task; project processes are shared across all tasks
+            in the project.
           </TooltipContent>
         </Tooltip>
         <div className="flex-1" />
@@ -417,7 +522,10 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
               </div>
               <div className="flex flex-col items-center gap-1.5">
                 <p className="text-sm font-semibold">No processes</p>
-                <p className="text-xs text-foreground/60 text-center leading-relaxed max-w-72" style={{ textWrap: 'balance' }}>
+                <p
+                  className="text-xs text-foreground/60 text-center leading-relaxed max-w-72"
+                  style={{ textWrap: 'balance' }}
+                >
                   Run dev servers, watchers, or any background command alongside your task
                 </p>
               </div>
@@ -435,7 +543,7 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
             {projectProcesses.length > 0 && (
               <>
                 <SectionHeader label="Project" />
-                {projectProcesses.map(proc => (
+                {projectProcesses.map((proc) => (
                   <ProcessRow
                     key={proc.id}
                     proc={proc}
@@ -448,7 +556,9 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
                     onEdit={() => openEditDialog(proc)}
                     onInject={() => handleInject(proc)}
                     onOpenUrl={onOpenUrl}
-                    logEndRef={el => { logEndRefs.current[proc.id] = el }}
+                    logEndRef={(el) => {
+                      logEndRefs.current[proc.id] = el
+                    }}
                   />
                 ))}
               </>
@@ -456,7 +566,7 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
             {taskProcesses.length > 0 && (
               <>
                 <SectionHeader label="This task" />
-                {taskProcesses.map(proc => (
+                {taskProcesses.map((proc) => (
                   <ProcessRow
                     key={proc.id}
                     proc={proc}
@@ -469,7 +579,9 @@ export function ProcessesPanel({ taskId, projectId, cwd, terminalSessionId, onOp
                     onEdit={() => openEditDialog(proc)}
                     onInject={() => handleInject(proc)}
                     onOpenUrl={onOpenUrl}
-                    logEndRef={el => { logEndRefs.current[proc.id] = el }}
+                    logEndRef={(el) => {
+                      logEndRefs.current[proc.id] = el
+                    }}
                   />
                 ))}
               </>

@@ -1,4 +1,3 @@
-
 // Raise RLIMIT_NOFILE before anything else can spawn a child so every
 // descendant (PTYs, ripgrep, git, renderer helpers) inherits a high soft
 // limit. Best-effort: logs and continues on failure — the per-PTY sh wrapper
@@ -8,14 +7,33 @@ import { raiseFdLimit } from './raise-fd-limit'
 const fdLimitResult = raiseFdLimit()
 console.log('[fd-limit]', JSON.stringify(fdLimitResult))
 
-import { app, shell, BrowserWindow, ipcMain, nativeTheme, session, webContents, dialog, Menu, protocol, screen, powerMonitor, crashReporter } from 'electron'
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  nativeTheme,
+  session,
+  webContents,
+  dialog,
+  Menu,
+  protocol,
+  screen,
+  powerMonitor,
+  crashReporter
+} from 'electron'
 import { join, extname, normalize, sep, resolve } from 'path'
 import { homedir } from 'os'
 import { readFileSync, promises as fsp, mkdirSync, appendFileSync } from 'fs'
 import { electronApp, is } from '@electron-toolkit/utils'
 import { ElectronChromeExtensions } from 'electron-chrome-extensions'
 import { installChromeWebStore } from 'electron-chrome-web-store'
-import { registerBrowserTab, unregisterBrowserTab, setActiveBrowserTab, clearBrowserRegistry } from './browser-registry'
+import {
+  registerBrowserTab,
+  unregisterBrowserTab,
+  setActiveBrowserTab,
+  clearBrowserRegistry
+} from './browser-registry'
 import { BrowserViewManager, type CreateViewOpts, type ViewBounds } from './browser-view-manager'
 import {
   BLOCKED_EXTERNAL_PROTOCOLS,
@@ -28,9 +46,15 @@ import {
   isUrlWithinHostScope,
   normalizeDesktopHostScope,
   normalizeDesktopProtocol,
-  type DesktopHandoffPolicy,
+  type DesktopHandoffPolicy
 } from '@slayzone/task/shared'
-import { toElectronAccelerator, matchesElectronInput, shortcutDefinitions, MENU_SHORTCUT_DEFAULTS, type ElectronInput } from '@slayzone/shortcuts'
+import {
+  toElectronAccelerator,
+  matchesElectronInput,
+  shortcutDefinitions,
+  MENU_SHORTCUT_DEFAULTS,
+  type ElectronInput
+} from '@slayzone/shortcuts'
 
 // Mutable shortcut overrides — updated from DB when shortcuts change.
 // Module-scope so both createMainWindow (before-input-event) and app.whenReady (menu) can access.
@@ -39,7 +63,7 @@ let currentOverrides: Record<string, string | null> = {}
 /** Resolve effective keys for a shortcut ID, checking overrides then defaults. */
 function getEffectiveKeys(id: string, overrides: Record<string, string | null>): string | null {
   if (id in overrides) return overrides[id]
-  const def = shortcutDefinitions.find(d => d.id === id)
+  const def = shortcutDefinitions.find((d) => d.id === id)
   return def?.defaultKeys ?? null
 }
 
@@ -48,8 +72,20 @@ function getEffectiveKeys(id: string, overrides: Record<string, string | null>):
 // External app protocols registered here so Chromium routes them through our session handler
 // instead of passing them to the OS (which would launch desktop apps like Figma, Slack, etc.)
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'slz-file', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, bypassCSP: true } },
-  ...BLOCKED_EXTERNAL_PROTOCOLS.map(scheme => ({ scheme, privileges: { standard: true, secure: true } })),
+  {
+    scheme: 'slz-file',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      stream: true,
+      bypassCSP: true
+    }
+  },
+  ...BLOCKED_EXTERNAL_PROTOCOLS.map((scheme) => ({
+    scheme,
+    privileges: { standard: true, secure: true }
+  }))
 ])
 
 // Use consistent app name for userData path (paired with legacy DB migration)
@@ -94,7 +130,16 @@ if (is.dev) {
 }
 
 // Linux XDG Base Directory compliance: move state data from ~/.config to ~/.local/state
-import { migrateXdgIfNeeded, migrateCliBinIfNeeded, getStateDir, ensureDataRoot, installCli, checkCliInstalled, getCliBinTarget, getManualInstallHint } from '@slayzone/platform'
+import {
+  migrateXdgIfNeeded,
+  migrateCliBinIfNeeded,
+  getStateDir,
+  ensureDataRoot,
+  installCli,
+  checkCliInstalled,
+  getCliBinTarget,
+  getManualInstallHint
+} from '@slayzone/platform'
 if (process.platform === 'linux') {
   const result = migrateXdgIfNeeded()
   if (!result.failed) {
@@ -119,28 +164,106 @@ import { getDatabase, closeDatabase, getDiagnosticsDatabase, closeDiagnosticsDat
 import { runMigrations, LATEST_MIGRATION_VERSION } from './db/migrations'
 import { normalizeProjectStatusData } from './db/status-normalization'
 import { migrateV127DiskDir } from './db/v127-disk-migration'
-import { registerBackupHandlers, startAutoBackup, stopAutoBackup, createPreMigrationBackup } from './backup'
+import {
+  registerBackupHandlers,
+  startAutoBackup,
+  stopAutoBackup,
+  createPreMigrationBackup
+} from './backup'
 // Domain handlers
 import { registerProjectHandlers, handleTerminalStateChange } from '@slayzone/projects/main'
-import { configureTaskRuntimeAdapters, registerTaskHandlers, registerTaskTemplateHandlers, registerFilesHandlers, closeArtifactWatcher, handleAttentionTransition } from '@slayzone/task/main'
+import {
+  configureTaskRuntimeAdapters,
+  registerTaskHandlers,
+  registerTaskTemplateHandlers,
+  registerFilesHandlers,
+  closeArtifactWatcher,
+  handleAttentionTransition
+} from '@slayzone/task/main'
 import { BlobStore, betterSqliteTxn, seedInitialVersions } from '@slayzone/task-artifacts/main'
 import { getExtensionFromTitle } from '@slayzone/task/shared'
 import { registerTagHandlers } from '@slayzone/tags/main'
 import { registerFeedbackHandlers } from '@slayzone/feedback/main'
-import { registerSettingsHandlers, registerThemeHandlers, SettingsService } from '@slayzone/settings/main'
-import { registerPtyHandlers, registerUsageHandlers, killAllPtys, killPtysByTaskId, onTaskReachedTerminal, startIdleChecker, stopIdleChecker, syncTerminalModes, getPtyPids, onSessionChange, onGlobalStateChange, onPtyInputSubmit, registerChatHandlers, shutdownChatTransports, setOnHostKillHandler, broadcastRespawnRequest, backfillChatModes, hasSessionUserInput, markSessionUserInput, clearSessionUserInputMark, notifyGlobalStateListeners, setPtyEnricher, setPtySpawnedTabRecorder, setChatSpawnedTabRecorder, beginTerminalShutdown } from '@slayzone/terminal/main'
+import {
+  registerSettingsHandlers,
+  registerThemeHandlers,
+  SettingsService
+} from '@slayzone/settings/main'
+import {
+  registerPtyHandlers,
+  registerUsageHandlers,
+  killAllPtys,
+  killPtysByTaskId,
+  onTaskReachedTerminal,
+  startIdleChecker,
+  stopIdleChecker,
+  syncTerminalModes,
+  getPtyPids,
+  onSessionChange,
+  onGlobalStateChange,
+  onPtyInputSubmit,
+  registerChatHandlers,
+  shutdownChatTransports,
+  setOnHostKillHandler,
+  broadcastRespawnRequest,
+  backfillChatModes,
+  hasSessionUserInput,
+  markSessionUserInput,
+  clearSessionUserInputMark,
+  notifyGlobalStateListeners,
+  setPtyEnricher,
+  setPtySpawnedTabRecorder,
+  setChatSpawnedTabRecorder,
+  beginTerminalShutdown
+} from '@slayzone/terminal/main'
 import { setProviderLastKilledAt, type ProviderConfig } from '@slayzone/task/shared'
-import { attachFloatingGlobalAgentPanel, setupFloatingGlobalAgentPanel } from './floating-global-agent-panel'
+import {
+  attachFloatingGlobalAgentPanel,
+  setupFloatingGlobalAgentPanel
+} from './floating-global-agent-panel'
 import { attachTaskWindows, setupTaskWindows } from './task-windows'
-import { registerTerminalTabsHandlers, createPtyEnricher, markTabSpawned } from '@slayzone/task-terminals/main'
+import {
+  registerTerminalTabsHandlers,
+  createPtyEnricher,
+  markTabSpawned
+} from '@slayzone/task-terminals/main'
 import { registerWorktreeHandlers, closeGitWatcher } from '@slayzone/worktrees/main'
-import { registerAgentTurnsHandlers, initChatTurnSubscriber, initPtyTurnSubscriber } from '@slayzone/agent-turns/main'
-import { registerDiagnosticsHandlers, registerProcessDiagnostics, recordDiagnosticEvent, stopDiagnostics, setIpcSuccessHook } from '@slayzone/diagnostics/main'
-import { detectPreviousCrash, writeBootStub, writeCleanShutdownSentinel, scanCrashDumps } from './lifecycle/sentinel'
-import { acquireLockWithSelfHeal, lockOutcomeIsAcquired, type LockOutcome } from './lifecycle/single-instance'
+import {
+  registerAgentTurnsHandlers,
+  initChatTurnSubscriber,
+  initPtyTurnSubscriber
+} from '@slayzone/agent-turns/main'
+import {
+  registerDiagnosticsHandlers,
+  registerProcessDiagnostics,
+  recordDiagnosticEvent,
+  stopDiagnostics,
+  setIpcSuccessHook
+} from '@slayzone/diagnostics/main'
+import {
+  detectPreviousCrash,
+  writeBootStub,
+  writeCleanShutdownSentinel,
+  scanCrashDumps
+} from './lifecycle/sentinel'
+import {
+  acquireLockWithSelfHeal,
+  lockOutcomeIsAcquired,
+  type LockOutcome
+} from './lifecycle/single-instance'
 import { IPC_TELEMETRY_MAP } from '@slayzone/telemetry/shared'
 import { registerAiConfigHandlers } from '@slayzone/ai-config/main'
-import { registerIntegrationHandlers, ensureIntegrationSchema, startSyncPoller, pushTaskAfterEdit, pushNewTaskToProviders, pushArchiveToProviders, pushUnarchiveToProviders, startDiscoveryPoller, resetSyncFlags } from '@slayzone/integrations/main'
+import {
+  registerIntegrationHandlers,
+  ensureIntegrationSchema,
+  startSyncPoller,
+  pushTaskAfterEdit,
+  pushNewTaskToProviders,
+  pushArchiveToProviders,
+  pushUnarchiveToProviders,
+  startDiscoveryPoller,
+  resetSyncFlags
+} from '@slayzone/integrations/main'
 import { registerFileEditorHandlers, closeAllWatchers } from '@slayzone/file-editor/main'
 import { registerHistoryHandlers } from '@slayzone/history/main'
 import { registerTestPanelHandlers } from '@slayzone/test-panel/main'
@@ -148,7 +271,20 @@ import { registerAutomationHandlers, AutomationEngine } from '@slayzone/automati
 import { registerUsageAnalyticsHandlers } from '@slayzone/usage-analytics/main'
 import { registerScreenshotHandlers } from './screenshot'
 import { registerClipboardHandlers } from './clipboard-handlers'
-import { setProcessManagerWindow, initProcessManager, createProcess, spawnProcess, updateProcess, stopProcess, killProcess, restartProcess, listForTask, listAllProcesses, killTaskProcesses, killAllProcesses } from './process-manager'
+import {
+  setProcessManagerWindow,
+  initProcessManager,
+  createProcess,
+  spawnProcess,
+  updateProcess,
+  stopProcess,
+  killProcess,
+  restartProcess,
+  listForTask,
+  listAllProcesses,
+  killTaskProcesses,
+  killAllProcesses
+} from './process-manager'
 import { createStatsPoller } from './pid-stats'
 import { registerExportImportHandlers } from './export-import'
 import { registerLeaderboardHandlers } from './leaderboard'
@@ -296,7 +432,8 @@ let rendererDataReady = false
 let rendererReloading = false
 const APP_PROTOCOL_SCHEME = 'slayzone'
 // Avoid stealing the global slayzone:// handler from packaged builds during local dev.
-const SHOULD_REGISTER_PROTOCOL_CLIENT = !is.dev || process.env.SLAYZONE_REGISTER_DEV_PROTOCOL === '1'
+const SHOULD_REGISTER_PROTOCOL_CLIENT =
+  !is.dev || process.env.SLAYZONE_REGISTER_DEV_PROTOCOL === '1'
 type ProtocolClientStatusReason = 'registered' | 'dev-skipped' | 'registration-failed'
 type ProtocolClientStatus = {
   scheme: string
@@ -341,7 +478,11 @@ function logBoot(step: string): void {
   console.log(line)
   const file = bootLogFilePath()
   if (file) {
-    try { appendFileSync(file, line + '\n') } catch { /* best effort */ }
+    try {
+      appendFileSync(file, line + '\n')
+    } catch {
+      /* best effort */
+    }
   }
 }
 
@@ -353,12 +494,18 @@ function dumpBootSummary(label: string): void {
   lines.push(`[boot] ── summary @ ${label} ── total=${last.t}ms steps=${bootSteps.length}`)
   lines.push(`[boot] top gaps:`)
   for (const s of sorted) {
-    lines.push(`[boot]   Δ=${String(s.delta).padStart(5)}ms  t=${String(s.t).padStart(5)}ms  ${s.step}`)
+    lines.push(
+      `[boot]   Δ=${String(s.delta).padStart(5)}ms  t=${String(s.t).padStart(5)}ms  ${s.step}`
+    )
   }
   for (const l of lines) console.log(l)
   const file = bootLogFilePath()
   if (file) {
-    try { appendFileSync(file, lines.join('\n') + '\n') } catch { /* best effort */ }
+    try {
+      appendFileSync(file, lines.join('\n') + '\n')
+    } catch {
+      /* best effort */
+    }
   }
 }
 
@@ -366,15 +513,16 @@ function applyAppZoom(command: AppZoomCommand): number {
   if (!mainWindow || mainWindow.isDestroyed()) return 1
 
   const wc = mainWindow.webContents
-  const nextLevel = command === 'reset'
-    ? 0
-    : Math.max(
-        APP_ZOOM_LEVEL_MIN,
-        Math.min(
-          APP_ZOOM_LEVEL_MAX,
-          wc.zoomLevel + (command === 'in' ? APP_ZOOM_LEVEL_STEP : -APP_ZOOM_LEVEL_STEP)
+  const nextLevel =
+    command === 'reset'
+      ? 0
+      : Math.max(
+          APP_ZOOM_LEVEL_MIN,
+          Math.min(
+            APP_ZOOM_LEVEL_MAX,
+            wc.zoomLevel + (command === 'in' ? APP_ZOOM_LEVEL_STEP : -APP_ZOOM_LEVEL_STEP)
+          )
         )
-      )
 
   wc.zoomLevel = nextLevel
   const zoomFactor = wc.zoomFactor
@@ -408,7 +556,9 @@ function emitOAuthCallback(payload: { code?: string; error?: string }): void {
     mainWindow.focus()
   }
 
-  const waiter = oauthCallbackWaiters.values().next().value as ((p: OAuthCallbackPayload) => void) | undefined
+  const waiter = oauthCallbackWaiters.values().next().value as
+    | ((p: OAuthCallbackPayload) => void)
+    | undefined
   if (waiter) {
     oauthCallbackWaiters.delete(waiter)
     waiter(payload)
@@ -533,7 +683,9 @@ function handleOAuthDeepLink(url: string): void {
     (parsed.hostname === '' && normalizedPath === '/auth/callback')
   if (!isAuthCallback) return
 
-  const hashParams = new URLSearchParams(parsed.hash.startsWith('#') ? parsed.hash.slice(1) : parsed.hash)
+  const hashParams = new URLSearchParams(
+    parsed.hash.startsWith('#') ? parsed.hash.slice(1) : parsed.hash
+  )
   const code = parsed.searchParams.get('code') ?? hashParams.get('code') ?? undefined
   const error =
     parsed.searchParams.get('error_description') ??
@@ -560,7 +712,10 @@ if (shouldEnforceSingleInstanceLock) {
 }
 const gotSingleInstanceLock = !shouldEnforceSingleInstanceLock || lockOutcomeIsAcquired(lockOutcome)
 if (!gotSingleInstanceLock) {
-  console.error('[app] Failed to acquire single-instance lock; quitting duplicate instance', lockOutcome)
+  console.error(
+    '[app] Failed to acquire single-instance lock; quitting duplicate instance',
+    lockOutcome
+  )
   app.quit()
 } else if (shouldEnforceSingleInstanceLock) {
   app.on('second-instance', (_event, argv) => {
@@ -602,7 +757,8 @@ async function installSlayCli(): Promise<void> {
   const result = await installCli(getCliSrc())
   if (result.ok) {
     let msg = `'slay' installed to ${result.path}`
-    if (result.pathNotInPATH) msg += `\n\nNote: ${getCliBinTarget()} dir is not in your PATH. Add it to use 'slay' from any terminal.`
+    if (result.pathNotInPATH)
+      msg += `\n\nNote: ${getCliBinTarget()} dir is not in your PATH. Add it to use 'slay' from any terminal.`
     dialog.showMessageBox({ message: msg })
   } else if (result.elevationCancelled) {
     // User dismissed OS password dialog — no additional dialog needed
@@ -626,7 +782,9 @@ function closeSplash(): void {
         if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close()
       }, 300)
     })
-    .catch(() => { splashWindow?.close() })
+    .catch(() => {
+      splashWindow?.close()
+    })
 }
 
 function createSplashWindow(): void {
@@ -646,7 +804,9 @@ function createSplashWindow(): void {
     }
   })
 
-  splashWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(splashHTML(app.getVersion()))}`)
+  splashWindow.loadURL(
+    `data:text/html;charset=utf-8,${encodeURIComponent(splashHTML(app.getVersion()))}`
+  )
 
   splashWindow.once('ready-to-show', () => {
     splashWindow?.show()
@@ -837,7 +997,11 @@ app.on('browser-window-created', (_event, win) => {
     if (rendererReloading) return
     // Check frame is alive before calling — avoids Electron's internal console warning
     // that fires even when the thrown error is caught in JS.
-    try { if (win.isDestroyed() || !win.webContents.mainFrame) return } catch { return }
+    try {
+      if (win.isDestroyed() || !win.webContents.mainFrame) return
+    } catch {
+      return
+    }
     try {
       originalSend(channel, ...args)
     } catch (err) {
@@ -846,1637 +1010,1963 @@ app.on('browser-window-created', (_event, win) => {
   }
 })
 
-app.whenReady().then(async () => {
-  logBoot('whenReady begin')
-  if (SHOULD_REGISTER_PROTOCOL_CLIENT) {
-    let registered = false
-    if (process.defaultApp) {
-      const entry = process.argv[1] ? [resolve(process.argv[1])] : []
-      registered = app.setAsDefaultProtocolClient(APP_PROTOCOL_SCHEME, process.execPath, entry)
+app
+  .whenReady()
+  .then(async () => {
+    logBoot('whenReady begin')
+    if (SHOULD_REGISTER_PROTOCOL_CLIENT) {
+      let registered = false
+      if (process.defaultApp) {
+        const entry = process.argv[1] ? [resolve(process.argv[1])] : []
+        registered = app.setAsDefaultProtocolClient(APP_PROTOCOL_SCHEME, process.execPath, entry)
+      } else {
+        registered = app.setAsDefaultProtocolClient(APP_PROTOCOL_SCHEME)
+      }
+      protocolClientStatus = {
+        scheme: APP_PROTOCOL_SCHEME,
+        attempted: true,
+        registered,
+        reason: registered ? 'registered' : 'registration-failed'
+      }
+      if (!registered) {
+        console.warn(
+          `[auth][protocol] Failed to register ${APP_PROTOCOL_SCHEME}:// as default protocol handler. OAuth deep-link callbacks may not open this app.`
+        )
+      }
+      logBoot('protocol client configured')
     } else {
-      registered = app.setAsDefaultProtocolClient(APP_PROTOCOL_SCHEME)
-    }
-    protocolClientStatus = {
-      scheme: APP_PROTOCOL_SCHEME,
-      attempted: true,
-      registered,
-      reason: registered ? 'registered' : 'registration-failed'
-    }
-    if (!registered) {
       console.warn(
-        `[auth][protocol] Failed to register ${APP_PROTOCOL_SCHEME}:// as default protocol handler. OAuth deep-link callbacks may not open this app.`
+        `[auth][protocol] Dev protocol registration skipped for ${APP_PROTOCOL_SCHEME}://. Set SLAYZONE_REGISTER_DEV_PROTOCOL=1 to test OAuth deep-link callbacks in dev.`
       )
+      logBoot('protocol client registration skipped in dev')
     }
-    logBoot('protocol client configured')
-  } else {
-    console.warn(
-      `[auth][protocol] Dev protocol registration skipped for ${APP_PROTOCOL_SCHEME}://. Set SLAYZONE_REGISTER_DEV_PROTOCOL=1 to test OAuth deep-link callbacks in dev.`
-    )
-    logBoot('protocol client registration skipped in dev')
-  }
-  handleOAuthDeepLinkFromArgv(process.argv)
-  logBoot('oauth deep-link handlers initialized')
+    handleOAuthDeepLinkFromArgv(process.argv)
+    logBoot('oauth deep-link handlers initialized')
 
-  // Initialize databases
-  logBoot('database init start')
-  const db = getDatabase()
-  const settings = new SettingsService(db)
-  logBoot('db opened')
-  await createPreMigrationBackup(db, LATEST_MIGRATION_VERSION)
-  logBoot('pre-migration backup done')
-  runMigrations(db)
-  // Pre-warm keys used by synchronous IPC handlers (event.returnValue).
-  // Must run after migrations have seeded defaults.
-  await settings.warmCache(['labs_tests_panel', 'labs_jira_integration', 'labs_loop_mode'])
-  logBoot('migrations applied')
-  normalizeProjectStatusData(db)
+    // Initialize databases
+    logBoot('database init start')
+    const db = getDatabase()
+    const settings = new SettingsService(db)
+    logBoot('db opened')
+    await createPreMigrationBackup(db, LATEST_MIGRATION_VERSION)
+    logBoot('pre-migration backup done')
+    runMigrations(db)
+    // Pre-warm keys used by synchronous IPC handlers (event.returnValue).
+    // Must run after migrations have seeded defaults.
+    await settings.warmCache(['labs_tests_panel', 'labs_jira_integration', 'labs_loop_mode'])
+    logBoot('migrations applied')
+    normalizeProjectStatusData(db)
 
-  // v127 disk-dir migration: assets/ → artifacts/. Idempotent.
-  // Earlier v127 builds shipped a no-op rename (both vars = 'artifacts') that
-  // left user content orphaned in assets/. This block recovers from that and
-  // also handles fresh upgrades. See db/v127-disk-migration.ts.
-  {
-    const dataDir = process.env.SLAYZONE_DB_DIR || app.getPath('userData')
-    try {
-      const report = migrateV127DiskDir(join(dataDir, 'assets'), join(dataDir, 'artifacts'))
-      if (report.mode !== 'noop') {
-        console.log(`[migration v127] disk: mode=${report.mode} taskDirsMoved=${report.taskDirsMoved} filesMoved=${report.filesMoved} conflicts=${report.conflicts} oldDirRemoved=${report.oldDirRemoved}`)
+    // v127 disk-dir migration: assets/ → artifacts/. Idempotent.
+    // Earlier v127 builds shipped a no-op rename (both vars = 'artifacts') that
+    // left user content orphaned in assets/. This block recovers from that and
+    // also handles fresh upgrades. See db/v127-disk-migration.ts.
+    {
+      const dataDir = process.env.SLAYZONE_DB_DIR || app.getPath('userData')
+      try {
+        const report = migrateV127DiskDir(join(dataDir, 'assets'), join(dataDir, 'artifacts'))
+        if (report.mode !== 'noop') {
+          console.log(
+            `[migration v127] disk: mode=${report.mode} taskDirsMoved=${report.taskDirsMoved} filesMoved=${report.filesMoved} conflicts=${report.conflicts} oldDirRemoved=${report.oldDirRemoved}`
+          )
+        }
+      } catch (e) {
+        console.error('[migration v127] disk dir migration failed', e)
       }
-    } catch (e) {
-      console.error('[migration v127] disk dir migration failed', e)
     }
-  }
-  logBoot('v127 disk migration done')
+    logBoot('v127 disk migration done')
 
-  // Seed initial artifact versions (v1) for any artifacts without history. Idempotent.
-  {
-    const dataDir = process.env.SLAYZONE_DB_DIR || app.getPath('userData')
-    const artifactsDir = join(dataDir, 'artifacts')
-    const blobStore = new BlobStore(dataDir)
-    const txnRunner = betterSqliteTxn(db)
-    const seedReport = seedInitialVersions(db, txnRunner, blobStore, {
-      resolveFilePath: (row) => {
-        const ext = getExtensionFromTitle(row.title) || '.txt'
-        return join(artifactsDir, row.task_id, `${row.id}${ext}`)
+    // Seed initial artifact versions (v1) for any artifacts without history. Idempotent.
+    {
+      const dataDir = process.env.SLAYZONE_DB_DIR || app.getPath('userData')
+      const artifactsDir = join(dataDir, 'artifacts')
+      const blobStore = new BlobStore(dataDir)
+      const txnRunner = betterSqliteTxn(db)
+      const seedReport = seedInitialVersions(db, txnRunner, blobStore, {
+        resolveFilePath: (row) => {
+          const ext = getExtensionFromTitle(row.title) || '.txt'
+          return join(artifactsDir, row.task_id, `${row.id}${ext}`)
+        }
+      })
+      if (seedReport.seeded > 0 || seedReport.skippedMissing > 0) {
+        console.log(
+          `[artifact-versions] seeded=${seedReport.seeded} skippedMissing=${seedReport.skippedMissing}`
+        )
       }
-    })
-    if (seedReport.seeded > 0 || seedReport.skippedMissing > 0) {
-      console.log(`[artifact-versions] seeded=${seedReport.seeded} skippedMissing=${seedReport.skippedMissing}`)
     }
-  }
-  logBoot('artifact versions seeded')
-  const diagDb = getDiagnosticsDatabase()
-  logBoot('diagnostics db opened')
-  const isLabEnabled = (key: string): boolean => {
-    const raw = settings.getCached(key)
-    if (raw === undefined) return is.dev || isPlaywright
-    return raw === '1'
-  }
-  logBoot('database init complete')
+    logBoot('artifact versions seeded')
+    const diagDb = getDiagnosticsDatabase()
+    logBoot('diagnostics db opened')
+    const isLabEnabled = (key: string): boolean => {
+      const raw = settings.getCached(key)
+      if (raw === undefined) return is.dev || isPlaywright
+      return raw === '1'
+    }
+    logBoot('database init complete')
 
-  // Lifecycle: detect prior crash via boot sentinel + arm sentinel for this run.
-  // Pure fs (no DB needed). recordDiagnosticEvent buffers until handlers register.
-  const { crashed: previousCrashed, prevBoot } = detectPreviousCrash()
-  writeBootStub()
-  recordDiagnosticEvent({
-    level: 'info', source: 'main', event: 'app.boot.start',
-    payload: { version: app.getVersion(), pid: process.pid, platform: process.platform }
-  })
-  if (previousCrashed && prevBoot) {
-    const minidumps = scanCrashDumps(prevBoot.ts)
+    // Lifecycle: detect prior crash via boot sentinel + arm sentinel for this run.
+    // Pure fs (no DB needed). recordDiagnosticEvent buffers until handlers register.
+    const { crashed: previousCrashed, prevBoot } = detectPreviousCrash()
+    writeBootStub()
     recordDiagnosticEvent({
-      level: 'error', source: 'main', event: 'app.crash.detected_on_next_boot',
-      payload: {
-        prevBootTs: prevBoot.ts,
-        prevPid: prevBoot.pid,
-        prevVersion: prevBoot.version,
-        currentVersion: app.getVersion(),
-        minidumps
-      }
-    })
-  }
-  if (lockOutcome.kind !== 'acquired') {
-    recordDiagnosticEvent({
-      level: lockOutcome.kind === 'recovered' ? 'warn' : 'info',
+      level: 'info',
       source: 'main',
-      event: `app.singleinstance.${lockOutcome.kind}`,
-      payload: lockOutcome
+      event: 'app.boot.start',
+      payload: { version: app.getVersion(), pid: process.pid, platform: process.platform }
     })
-  }
-
-  // Skip onboarding in Playwright — tested explicitly in 02-onboarding.spec.ts
-  if (isPlaywright) {
-    await settings.seedOnboardingCompleted()
-  }
-
-  registerProcessDiagnostics(app)
-  logBoot('process diagnostics registered')
-
-  // Migrate CLI symlink from /usr/local/bin to ~/.local/bin on Linux
-  if (process.platform === 'linux') {
-    const cliMigration = migrateCliBinIfNeeded(getCliSrc())
-    if (cliMigration.status === 'migrated-old-kept' && (await settings.markCliMigrationDialogShown())) {
-      dialog.showMessageBox({
-        type: 'info',
-        title: 'CLI symlink migrated',
-        message: `The slay CLI was installed at ${cliMigration.newPath}, but the old symlink at ${cliMigration.oldPath} couldn't be removed.`,
-        detail: `Run: sudo rm ${cliMigration.oldPath}`,
+    if (previousCrashed && prevBoot) {
+      const minidumps = scanCrashDumps(prevBoot.ts)
+      recordDiagnosticEvent({
+        level: 'error',
+        source: 'main',
+        event: 'app.crash.detected_on_next_boot',
+        payload: {
+          prevBootTs: prevBoot.ts,
+          prevPid: prevBoot.pid,
+          prevVersion: prevBoot.version,
+          currentVersion: app.getVersion(),
+          minidumps
+        }
       })
     }
-  }
+    if (lockOutcome.kind !== 'acquired') {
+      recordDiagnosticEvent({
+        level: lockOutcome.kind === 'recovered' ? 'warn' : 'info',
+        source: 'main',
+        event: `app.singleinstance.${lockOutcome.kind}`,
+        payload: lockOutcome
+      })
+    }
 
-  // Load and apply persisted theme BEFORE creating window to prevent flash
-  nativeTheme.themeSource = await settings.getTheme()
-  logBoot('theme loaded')
+    // Skip onboarding in Playwright — tested explicitly in 02-onboarding.spec.ts
+    if (isPlaywright) {
+      await settings.seedOnboardingCompleted()
+    }
 
-  function getMenuAccelerator(id: string, overrides: Record<string, string | null>): string | undefined {
-    const keys = id in overrides ? overrides[id] : (MENU_SHORTCUT_DEFAULTS[id] ?? null)
-    return toElectronAccelerator(keys) ?? undefined
-  }
+    registerProcessDiagnostics(app)
+    logBoot('process diagnostics registered')
 
-  function buildAppMenu(overrides: Record<string, string | null>): void {
-    if (process.platform !== 'darwin') return
-
-    // Set custom application menu to show correct app name in menu items
-    const appName = 'SlayZone'
-    const template: Electron.MenuItemConstructorOptions[] = [
-      {
-        label: appName,
-        submenu: [
-          { role: 'about', label: `About ${appName}` },
-          {
-            label: 'Check for Updates...',
-            click: () => checkForUpdates()
-          },
-          {
-            label: 'Settings...',
-            accelerator: getMenuAccelerator('global-settings', overrides),
-            click: () => emitOpenSettings()
-          },
-          {
-            label: 'Project Settings...',
-            accelerator: getMenuAccelerator('project-settings', overrides),
-            click: () => emitOpenProjectSettings()
-          },
-          { type: 'separator' },
-          {
-            label: "Install 'slay' CLI...",
-            click: () => installSlayCli()
-          },
-          { type: 'separator' },
-          { role: 'services' },
-          { type: 'separator' },
-          { role: 'hide', label: `Hide ${appName}` },
-          { role: 'hideOthers' },
-          { role: 'unhide' },
-          { type: 'separator' },
-          { role: 'quit', label: `Quit ${appName}` }
-        ]
-      },
-      {
-        label: 'File',
-        submenu: [
-          {
-            label: 'New Temporary Task',
-            accelerator: getMenuAccelerator('new-temp-task', overrides),
-            click: () => emitNewTemporaryTask()
-          },
-          {
-            label: 'Sync Detected Session ID',
-            accelerator: getMenuAccelerator('sync-session-id', overrides),
-            click: () => mainWindow?.webContents.send('app:sync-session-id')
-          }
-        ]
-      },
-      {
-        label: 'Edit',
-        submenu: [
-          { role: 'undo' },
-          { role: 'redo' },
-          { type: 'separator' },
-          { role: 'cut' },
-          { role: 'copy' },
-          { role: 'paste' },
-          { role: 'pasteAndMatchStyle' },
-          { role: 'delete' },
-          { role: 'selectAll' }
-        ]
-      },
-      {
-        label: 'View',
-        submenu: [
-          {
-            label: 'Reload Browser',
-            accelerator: 'CmdOrCtrl+R',
-            registerAccelerator: false,
-            click: () => mainWindow?.webContents.send('app:reload-browser')
-          },
-          {
-            label: 'Reload App',
-            accelerator: 'CmdOrCtrl+Shift+R',
-            registerAccelerator: false,
-            click: () => mainWindow?.webContents.send('app:reload-app')
-          },
-          { role: 'toggleDevTools' },
-          { type: 'separator' },
-          {
-            label: 'Actual Size',
-            accelerator: 'CmdOrCtrl+0',
-            registerAccelerator: false,
-            click: () => applyAppZoom('reset')
-          },
-          {
-            label: 'Zoom In',
-            accelerator: 'CmdOrCtrl+Plus',
-            registerAccelerator: false,
-            click: () => applyAppZoom('in')
-          },
-          {
-            label: 'Zoom Out',
-            accelerator: 'CmdOrCtrl+-',
-            registerAccelerator: false,
-            click: () => applyAppZoom('out')
-          },
-          { type: 'separator' },
-          { role: 'togglefullscreen' }
-        ]
-      },
-      {
-        label: 'Window',
-        submenu: [
-          { role: 'minimize' },
-          { role: 'zoom' },
-          {
-            label: 'Close Tab',
-            accelerator: getMenuAccelerator('close-tab', overrides),
-            click: () => {
-              const focused = BrowserWindow.getFocusedWindow()
-              // Secondary task windows + floating agent etc: just close the window itself
-              if (focused && focused !== mainWindow) {
-                focused.close()
-                return
-              }
-              mainWindow?.webContents.send('app:close-current-focus')
-            }
-          },
-          {
-            label: 'Close Task',
-            accelerator: getMenuAccelerator('close-task', overrides),
-            click: () => mainWindow?.webContents.send('app:close-active-task')
-          },
-          { type: 'separator' },
-          { role: 'front' },
-          { type: 'separator' },
-          { role: 'window' }
-        ]
+    // Migrate CLI symlink from /usr/local/bin to ~/.local/bin on Linux
+    if (process.platform === 'linux') {
+      const cliMigration = migrateCliBinIfNeeded(getCliSrc())
+      if (
+        cliMigration.status === 'migrated-old-kept' &&
+        (await settings.markCliMigrationDialogShown())
+      ) {
+        dialog.showMessageBox({
+          type: 'info',
+          title: 'CLI symlink migrated',
+          message: `The slay CLI was installed at ${cliMigration.newPath}, but the old symlink at ${cliMigration.oldPath} couldn't be removed.`,
+          detail: `Run: sudo rm ${cliMigration.oldPath}`
+        })
       }
-    ]
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template))
-  }
+    }
 
-  // Set dock icon on macOS (needed for dev mode)
-  if (process.platform === 'darwin') {
-    app.dock?.setIcon(icon)
-  }
+    // Load and apply persisted theme BEFORE creating window to prevent flash
+    nativeTheme.themeSource = await settings.getTheme()
+    logBoot('theme loaded')
 
-  currentOverrides = await settings.getShortcutOverrides()
-  buildAppMenu(currentOverrides)
-  logBoot('app menu built')
+    function getMenuAccelerator(
+      id: string,
+      overrides: Record<string, string | null>
+    ): string | undefined {
+      const keys = id in overrides ? overrides[id] : (MENU_SHORTCUT_DEFAULTS[id] ?? null)
+      return toElectronAccelerator(keys) ?? undefined
+    }
 
-  // Rebuild menu + update overrides cache whenever shortcuts change
-  ipcMain.on('shortcuts:changed', async () => {
+    function buildAppMenu(overrides: Record<string, string | null>): void {
+      if (process.platform !== 'darwin') return
+
+      // Set custom application menu to show correct app name in menu items
+      const appName = 'SlayZone'
+      const template: Electron.MenuItemConstructorOptions[] = [
+        {
+          label: appName,
+          submenu: [
+            { role: 'about', label: `About ${appName}` },
+            {
+              label: 'Check for Updates...',
+              click: () => checkForUpdates()
+            },
+            {
+              label: 'Settings...',
+              accelerator: getMenuAccelerator('global-settings', overrides),
+              click: () => emitOpenSettings()
+            },
+            {
+              label: 'Project Settings...',
+              accelerator: getMenuAccelerator('project-settings', overrides),
+              click: () => emitOpenProjectSettings()
+            },
+            { type: 'separator' },
+            {
+              label: "Install 'slay' CLI...",
+              click: () => installSlayCli()
+            },
+            { type: 'separator' },
+            { role: 'services' },
+            { type: 'separator' },
+            { role: 'hide', label: `Hide ${appName}` },
+            { role: 'hideOthers' },
+            { role: 'unhide' },
+            { type: 'separator' },
+            { role: 'quit', label: `Quit ${appName}` }
+          ]
+        },
+        {
+          label: 'File',
+          submenu: [
+            {
+              label: 'New Temporary Task',
+              accelerator: getMenuAccelerator('new-temp-task', overrides),
+              click: () => emitNewTemporaryTask()
+            },
+            {
+              label: 'Sync Detected Session ID',
+              accelerator: getMenuAccelerator('sync-session-id', overrides),
+              click: () => mainWindow?.webContents.send('app:sync-session-id')
+            }
+          ]
+        },
+        {
+          label: 'Edit',
+          submenu: [
+            { role: 'undo' },
+            { role: 'redo' },
+            { type: 'separator' },
+            { role: 'cut' },
+            { role: 'copy' },
+            { role: 'paste' },
+            { role: 'pasteAndMatchStyle' },
+            { role: 'delete' },
+            { role: 'selectAll' }
+          ]
+        },
+        {
+          label: 'View',
+          submenu: [
+            {
+              label: 'Reload Browser',
+              accelerator: 'CmdOrCtrl+R',
+              registerAccelerator: false,
+              click: () => mainWindow?.webContents.send('app:reload-browser')
+            },
+            {
+              label: 'Reload App',
+              accelerator: 'CmdOrCtrl+Shift+R',
+              registerAccelerator: false,
+              click: () => mainWindow?.webContents.send('app:reload-app')
+            },
+            { role: 'toggleDevTools' },
+            { type: 'separator' },
+            {
+              label: 'Actual Size',
+              accelerator: 'CmdOrCtrl+0',
+              registerAccelerator: false,
+              click: () => applyAppZoom('reset')
+            },
+            {
+              label: 'Zoom In',
+              accelerator: 'CmdOrCtrl+Plus',
+              registerAccelerator: false,
+              click: () => applyAppZoom('in')
+            },
+            {
+              label: 'Zoom Out',
+              accelerator: 'CmdOrCtrl+-',
+              registerAccelerator: false,
+              click: () => applyAppZoom('out')
+            },
+            { type: 'separator' },
+            { role: 'togglefullscreen' }
+          ]
+        },
+        {
+          label: 'Window',
+          submenu: [
+            { role: 'minimize' },
+            { role: 'zoom' },
+            {
+              label: 'Close Tab',
+              accelerator: getMenuAccelerator('close-tab', overrides),
+              click: () => {
+                const focused = BrowserWindow.getFocusedWindow()
+                // Secondary task windows + floating agent etc: just close the window itself
+                if (focused && focused !== mainWindow) {
+                  focused.close()
+                  return
+                }
+                mainWindow?.webContents.send('app:close-current-focus')
+              }
+            },
+            {
+              label: 'Close Task',
+              accelerator: getMenuAccelerator('close-task', overrides),
+              click: () => mainWindow?.webContents.send('app:close-active-task')
+            },
+            { type: 'separator' },
+            { role: 'front' },
+            { type: 'separator' },
+            { role: 'window' }
+          ]
+        }
+      ]
+      Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+    }
+
+    // Set dock icon on macOS (needed for dev mode)
+    if (process.platform === 'darwin') {
+      app.dock?.setIcon(icon)
+    }
+
     currentOverrides = await settings.getShortcutOverrides()
     buildAppMenu(currentOverrides)
-  })
+    logBoot('app menu built')
 
-  // Register diagnostics first so IPC handlers below are instrumented.
-  // Flushes any events buffered before this point (boot.start, crash detect, lock outcome).
-  registerDiagnosticsHandlers(ipcMain, db, diagDb)
-  setIpcSuccessHook((channel, args, result) => {
-    const entry = IPC_TELEMETRY_MAP[channel]
-    if (!entry) return
-    const props = entry.props(args, result)
-    if (props === undefined) return
-    mainWindow?.webContents.send('telemetry:ipc-event', entry.event, props)
-  })
-  logBoot('diagnostics IPC registered')
-
-  configureTaskRuntimeAdapters({
-    killPtysByTaskId,
-    killTaskProcesses,
-    recordDiagnosticEvent,
-    requestPtyRespawn: broadcastRespawnRequest,
-    onReachedTerminal: onTaskReachedTerminal,
-  })
-  logBoot('task runtime adapters configured')
-
-  // Persist the host-kill timestamp into provider_config so the revive flow can
-  // choose between resume (hot) and fresh conversation (cold) — see COLD_RESPAWN_MS.
-  setOnHostKillHandler((taskId, mode) => {
-    try {
-      const row = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as
-        | { provider_config: string | null }
-        | undefined
-      if (!row) return
-      const cfg: ProviderConfig = row.provider_config ? JSON.parse(row.provider_config) : {}
-      const next = setProviderLastKilledAt(cfg, mode, Date.now())
-      db.prepare('UPDATE tasks SET provider_config = ? WHERE id = ?').run(JSON.stringify(next), taskId)
-    } catch (err) {
-      recordDiagnosticEvent({
-        level: 'warn',
-        source: 'pty',
-        event: 'pty.host_kill_persist_failed',
-        taskId,
-        message: (err as Error).message
-      })
-    }
-  })
-
-  // Register domain handlers (inject ipcMain and db)
-  const notifyTasksChanged = (): void => { mainWindow?.webContents.send('tasks:changed') }
-  registerProjectHandlers(ipcMain, db)
-  registerTaskHandlers(ipcMain, db, notifyTasksChanged)
-  registerTaskTemplateHandlers(ipcMain, db)
-  registerTagHandlers(ipcMain, db)
-  registerHistoryHandlers(ipcMain, db)
-  registerSettingsHandlers(ipcMain, db)
-  registerFeedbackHandlers(ipcMain, db)
-  logBoot('core domain handlers registered')
-
-  registerThemeHandlers(ipcMain, db)
-  registerUsageHandlers(ipcMain, db)
-  registerPtyHandlers(ipcMain, db)
-  logBoot('pty handlers registered')
-
-  setupFloatingGlobalAgentPanel(() => currentOverrides)
-  setupTaskWindows()
-  logBoot('floating global agent panel + task windows set up')
-
-  // Task automation: auto-move tasks on terminal state change
-  onGlobalStateChange((sessionId, newState, oldState) => {
-    handleTerminalStateChange(db, sessionId, newState, oldState, notifyTasksChanged, onTaskReachedTerminal)
-
-    // Attention flag: PTY just finished a turn (running → idle|error). Gated
-    // on hasSessionUserInput so that initial spawn/banner settle (which can
-    // trigger running → idle on auto-respawn after task open) does not flag
-    // the task. Renderer clears the flag when the user focuses the task tab.
-    try {
-      if (handleAttentionTransition(db, sessionId, newState, oldState, hasSessionUserInput(sessionId))) {
-        notifyTasksChanged()
-      }
-    } catch (err) {
-      console.error('[attention] failed to set needs_attention:', err)
-    }
-  })
-
-  // Expose test helpers for e2e
-  if (isPlaywright) {
-    ;(globalThis as Record<string, unknown>).__db = db
-    ;(globalThis as Record<string, unknown>).__spawnProcess = spawnProcess
-    ;(globalThis as Record<string, unknown>).__notifyPtyState = notifyGlobalStateListeners
-    ;(globalThis as Record<string, unknown>).__markSessionUserInput = markSessionUserInput
-    ;(globalThis as Record<string, unknown>).__clearSessionUserInputMark = clearSessionUserInputMark
-    ;(globalThis as Record<string, unknown>).__restorePtyHandlers = () => {
-      for (const ch of [
-        'terminalModes:list',
-        'terminalModes:test',
-        'terminalModes:get',
-        'terminalModes:create',
-        'terminalModes:update',
-        'terminalModes:delete',
-        'terminalModes:restoreDefaults',
-        'terminalModes:resetToDefaultState',
-        'pty:create',
-        'pty:testExecutionContext',
-        'pty:ccsListProfiles',
-        'pty:write',
-        'pty:resize',
-        'pty:kill',
-        'pty:exists',
-        'pty:getBuffer',
-        'pty:clearBuffer',
-        'pty:getBufferSince',
-        'pty:list',
-        'pty:getState',
-        'pty:set-theme',
-        'pty:validate',
-        'pty:setShellOverride',
-      ]) {
-        ipcMain.removeHandler(ch)
-      }
-      registerPtyHandlers(ipcMain, db)
-    }
-  }
-
-  registerTerminalTabsHandlers(ipcMain, db)
-  setPtyEnricher(createPtyEnricher(db))
-  // Wire the per-tab `was_spawned` flag so pty + chat spawn/exit handlers
-  // can flip it without importing the task-terminals package (would cycle).
-  // Composition root resolves the dependency direction.
-  const recordSpawned = (tabId: string, wasSpawned: boolean): void => {
-    markTabSpawned(db, tabId, wasSpawned)
-  }
-  setPtySpawnedTabRecorder(recordSpawned)
-  setChatSpawnedTabRecorder(recordSpawned)
-  logBoot('terminal-tabs handlers registered')
-  registerChatHandlers(ipcMain, db, { onChatEvent: initChatTurnSubscriber(db) })
-  // One-shot: backfill `chatMode` for tasks that pre-date the chat-mode UI so
-  // upgraded users keep their current `--allow-dangerously-skip-permissions`
-  // behavior instead of suddenly hitting denials.
-  try {
-    const stats = backfillChatModes(db)
-    if (stats.updated > 0) {
-      console.log(`[chat-handlers] backfillChatModes: ${stats.updated}/${stats.scanned} tasks tagged 'bypass'`)
-    }
-  } catch (err) {
-    console.error('[chat-handlers] backfillChatModes failed:', err)
-  }
-  registerFilesHandlers(ipcMain)
-  registerWorktreeHandlers(ipcMain, db)
-  registerAgentTurnsHandlers(ipcMain, db)
-  logBoot('files+worktree+agent-turns registered')
-  // xterm-mode turn detection: every Enter press in a PTY = turn boundary.
-  onPtyInputSubmit(initPtyTurnSubscriber(db))
-  registerAiConfigHandlers(ipcMain, db)
-  logBoot('ai-config handlers registered')
-  const integrationHandles = registerIntegrationHandlers(ipcMain, db, { enableTestChannels: isPlaywright })
-  logBoot('integration handlers registered')
-  registerFileEditorHandlers(ipcMain)
-  registerClipboardHandlers(ipcMain)
-  registerScreenshotHandlers(browserViewManager)
-  registerExportImportHandlers(ipcMain, db, isPlaywright)
-  registerLeaderboardHandlers(ipcMain, db)
-  registerTestPanelHandlers(ipcMain, db)
-  logBoot('misc handlers registered (file-editor/clipboard/screenshot/export/leaderboard/tests)')
-  const notifyAutomationsChanged = (): void => {
-    mainWindow?.webContents.send('automations:changed')
-    notifyTasksChanged()
-  }
-  const automationEngine = new AutomationEngine(db, notifyAutomationsChanged)
-  registerAutomationHandlers(ipcMain, db, automationEngine)
-  automationEngine.start(ipcMain)
-  powerMonitor.on('resume', () => automationEngine.runCatchup())
-  registerUsageAnalyticsHandlers(ipcMain, db)
-  registerBackupHandlers(ipcMain, db)
-  startAutoBackup(db)
-  logBoot('domain IPC handlers registered')
-
-  // Start MCP server off the boot critical path. The dynamic import resolves
-  // a heavy module graph (~70ms sync work even though it returns a Promise),
-  // and nothing on first paint depends on the server being listening — the
-  // CLI discovers the port via settings and the renderer doesn't talk to it.
-  setImmediate(() => {
-    logBoot('mcp server import dispatched')
-    import('./mcp-server').then((mod) => {
-      mod.startMcpServer(db, { automationEngine })
-      mcpCleanup = () => mod.stopMcpServer()
-      logBoot('mcp server started')
-    }).catch((err) => {
-      console.error('[MCP] Failed to start server:', err)
+    // Rebuild menu + update overrides cache whenever shortcuts change
+    ipcMain.on('shortcuts:changed', async () => {
+      currentOverrides = await settings.getShortcutOverrides()
+      buildAppMenu(currentOverrides)
     })
-  })
 
-  setImmediate(() => {
-    logBoot('trpc server import dispatched')
-    import('@slayzone/transport/server').then((mod) => {
-      mod.startTrpcServer({ db, dataRoot: ensureDataRoot() })
-      trpcCleanup = () => mod.stopTrpcServer()
-      logBoot('trpc server started')
-    }).catch((err) => {
-      console.error('[tRPC] Failed to start server:', err)
+    // Register diagnostics first so IPC handlers below are instrumented.
+    // Flushes any events buffered before this point (boot.start, crash detect, lock outcome).
+    registerDiagnosticsHandlers(ipcMain, db, diagDb)
+    setIpcSuccessHook((channel, args, result) => {
+      const entry = IPC_TELEMETRY_MAP[channel]
+      if (!entry) return
+      const props = entry.props(args, result)
+      if (props === undefined) return
+      mainWindow?.webContents.send('telemetry:ipc-event', entry.event, props)
     })
-  })
+    logBoot('diagnostics IPC registered')
 
-  // Install agent lifecycle hook script + Claude settings.json entries.
-  // Off boot critical path; failures must NOT block app startup (logged only).
-  // Skipped under Playwright unless the spec explicitly opts in — most E2E
-  // tests share one Electron window and would otherwise mutate the dev user's
-  // real ~/.claude/settings.json.
-  if (!process.env.PLAYWRIGHT || process.env.SLAYZONE_E2E_INSTALL_HOOKS === '1') {
-    setImmediate(async () => {
+    configureTaskRuntimeAdapters({
+      killPtysByTaskId,
+      killTaskProcesses,
+      recordDiagnosticEvent,
+      requestPtyRespawn: broadcastRespawnRequest,
+      onReachedTerminal: onTaskReachedTerminal
+    })
+    logBoot('task runtime adapters configured')
+
+    // Persist the host-kill timestamp into provider_config so the revive flow can
+    // choose between resume (hot) and fresh conversation (cold) — see COLD_RESPAWN_MS.
+    setOnHostKillHandler((taskId, mode) => {
       try {
-        const [
-          { installNotifyScript },
-          { installClaudeHooks },
-          { installCodexWrapper },
-          { installGeminiHooks },
-          { installOpencodePlugin },
-        ] = await Promise.all([
-          import('./agent-hooks/notify-script-installer'),
-          import('./agent-hooks/claude-hook-installer'),
-          import('./agent-hooks/codex-wrapper-installer'),
-          import('./agent-hooks/gemini-hook-installer'),
-          import('./agent-hooks/opencode-plugin-installer'),
-        ])
-        const { path: scriptPath } = await installNotifyScript()
-        await installClaudeHooks({ scriptPath })
-        await installCodexWrapper()
-        await installGeminiHooks({ scriptPath })
-        await installOpencodePlugin({ notifyPath: scriptPath })
-        logBoot('agent hooks installed')
+        const row = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as
+          | { provider_config: string | null }
+          | undefined
+        if (!row) return
+        const cfg: ProviderConfig = row.provider_config ? JSON.parse(row.provider_config) : {}
+        const next = setProviderLastKilledAt(cfg, mode, Date.now())
+        db.prepare('UPDATE tasks SET provider_config = ? WHERE id = ?').run(
+          JSON.stringify(next),
+          taskId
+        )
       } catch (err) {
-        console.error('[agent-hooks] install failed:', err)
-      }
-    })
-  }
-
-  linearSyncPoller = startSyncPoller(db, notifyTasksChanged)
-  discoveryPoller = startDiscoveryPoller(db, notifyTasksChanged)
-  logBoot('integration pollers started (sync 10s, discovery 60s)')
-
-  // Push to providers immediately after local task edits (skip in E2E — tests exercise push explicitly)
-  if (!isPlaywright) {
-    ipcMain.on('db:tasks:update:done', (_event, taskId: string) => {
-      void pushTaskAfterEdit(db, taskId, {
-        pushGithubTask: integrationHandles.pushGithubTask
-      })
-    })
-  }
-
-  if (!isPlaywright) {
-    // Push new tasks to providers (two_way sync)
-    ipcMain.on('db:tasks:create:done', (_event, taskId: string, projectId: string) => {
-      void pushNewTaskToProviders(db, taskId, projectId).then(() => {
-        // Only notify if a link was actually created
-        const hasLink = db.prepare('SELECT 1 FROM external_links WHERE task_id = ? LIMIT 1').get(taskId)
-        if (hasLink) notifyTasksChanged()
-      })
-    })
-
-    // Archive/unarchive sync to providers
-    ipcMain.on('db:tasks:archive:done', (_event, taskId: string) => {
-      void pushArchiveToProviders(db, taskId)
-    })
-    ipcMain.on('db:tasks:unarchive:done', (_event, taskId: string) => {
-      void pushUnarchiveToProviders(db, taskId)
-    })
-  }
-
-  initAutoUpdater()
-  logBoot('auto-updater initialized')
-
-  // Configure webview session for WebAuthn/passkey support
-  const browserSession = session.fromPartition('persist:browser-tabs')
-
-  // Strip Electron/app name from user-agent so sites (Figma, etc.) don't detect
-  // Electron and redirect to their desktop app instead of serving the web version.
-  const rawUa = browserSession.getUserAgent()
-  _chromeUa = rawUa
-    .replace(/\s*Electron\/\S+/i, '')
-    .replace(/\s*slayzone\/\S+/i, '')
-  _chromiumVersion = rawUa.match(/Chrome\/(\d+)/)?.[1] || '142'
-  browserSession.setUserAgent(_chromeUa)
-
-  // Serve local files via slz-file:// (Chromium blocks file:// in webviews and cross-origin renderers)
-  const userHome = homedir()
-  const slzFileHandler = async (request: Request) => {
-    // slz-file:///path/to/file → /path/to/file (strip query string used for cache busting)
-    const rawPath = decodeURIComponent(request.url.replace(/^slz-file:\/\//, ''))
-    const filePath = normalize(rawPath.split('?')[0])
-
-    // Block path traversal outside user home directory
-    if (!filePath.startsWith(userHome + sep)) {
-      return new Response(
-        `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Forbidden</title>
-<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui;background:#1a1a1a;color:#888}
-div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:12px;margin:8px 0 0;word-break:break-all;max-width:400px}</style>
-</head><body><div><h1>Access denied</h1><p>Path outside home directory</p></div></body></html>`,
-        { status: 200, headers: { 'content-type': 'text/html' } }
-      )
-    }
-    const mimeTypes: Record<string, string> = {
-      '.html': 'text/html', '.htm': 'text/html', '.css': 'text/css',
-      '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json',
-      '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
-      '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
-      '.webp': 'image/webp', '.avif': 'image/avif', '.bmp': 'image/bmp',
-      '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf',
-      '.pdf': 'application/pdf', '.xml': 'application/xml', '.txt': 'text/plain',
-    }
-    try {
-      const data = await fsp.readFile(filePath)
-      return new Response(data, {
-        headers: { 'content-type': mimeTypes[extname(filePath).toLowerCase()] || 'application/octet-stream', 'cache-control': 'no-cache' }
-      })
-    } catch {
-      const escaped = filePath.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-      return new Response(
-        `<!DOCTYPE html><html><head><meta charset="utf-8"><title>File not found</title>
-<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui;background:#1a1a1a;color:#888}
-div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:12px;margin:8px 0 0;word-break:break-all;max-width:400px}</style>
-</head><body><div><h1>File not found</h1><p>${escaped}</p></div></body></html>`,
-        { status: 200, headers: { 'content-type': 'text/html' } }
-      )
-    }
-  }
-  const webPanelSession = session.fromPartition('persist:web-panels')
-  webPanelSession.setUserAgent(_chromeUa)
-
-  // Block external protocol navigation from inside webview pages (e.g. window.location = 'figma://...')
-  // session.protocol.handle only intercepts loadURL from the main process — page-initiated
-  // navigation bypasses it. A session preload patches window.open/location before page JS runs.
-  // Register preload only for web-panels session (old webview-based panels).
-  // Browser-tabs session (WebContentsView) uses applySpoofing() per-view instead,
-  // which skips Google domains. The preload injects navigator patches that BotGuard detects.
-  const webviewPreload = join(__dirname, '../preload/webview-preload.js')
-  webPanelSession.registerPreloadScript({ type: 'frame', filePath: webviewPreload, id: 'webview-preload-wp' })
-
-  // Strawberry-style: strip Electron from UA header on every request (belt-and-suspenders
-  // alongside session.setUserAgent). No Sec-CH-UA override — let Chromium send native brands.
-  const stripElectronFromHeaders = (details: Electron.OnBeforeSendHeadersListenerDetails, cb: (resp: Electron.BeforeSendResponse) => void) => {
-    const uaKey = Object.keys(details.requestHeaders).find(k => k.toLowerCase() === 'user-agent')
-    if (uaKey) {
-      const ua = details.requestHeaders[uaKey]
-      const cleaned = ua.replace(/\s*Electron\/\S+/i, '').replace(/\s*slayzone\/\S+/i, '')
-      if (ua !== cleaned) details.requestHeaders[uaKey] = cleaned
-    }
-    cb({ requestHeaders: details.requestHeaders })
-  }
-  browserSession.webRequest.onBeforeSendHeaders(stripElectronFromHeaders)
-  webPanelSession.webRequest.onBeforeSendHeaders(stripElectronFromHeaders)
-
-  const shouldCancelLoopbackHandoffRequest = (
-    details: Electron.OnBeforeRequestListenerDetails
-  ): boolean => {
-    const webviewId = details.webContentsId
-    if (typeof webviewId !== 'number') return false
-
-    const desktopHandoffPolicy = webviewDesktopHandoffPolicy.get(webviewId)
-    if (!desktopHandoffPolicy) return false
-    if (!isLoopbackUrl(details.url)) return false
-
-    const hostScope = normalizeDesktopHostScope(desktopHandoffPolicy.hostScope)
-    if (isLoopbackHost(hostScope)) return false
-
-    if (hostScope) {
-      const sourceUrl =
-        (details.frame && details.frame.url) ||
-        (details.referrer && details.referrer !== 'about:blank' ? details.referrer : '') ||
-        details.webContents?.getURL() ||
-        ''
-      if (sourceUrl && !isUrlWithinHostScope(sourceUrl, hostScope)) return false
-    }
-
-    return true
-  }
-
-  const handleBeforeRequest = (
-    details: Electron.OnBeforeRequestListenerDetails,
-    callback: (response: Electron.CallbackResponse) => void
-  ) => {
-    // Redirect file:// → slz-file:// so local files load via our secure handler
-    if (details.url.startsWith('file://')) {
-      callback({ redirectURL: details.url.replace(/^file:\/\//, 'slz-file://') })
-      return
-    }
-    if (shouldCancelLoopbackHandoffRequest(details)) {
-      callback({ cancel: true })
-      return
-    }
-    callback({ cancel: false })
-  }
-  browserSession.webRequest.onBeforeRequest(handleBeforeRequest)
-  webPanelSession.webRequest.onBeforeRequest(handleBeforeRequest)
-
-  browserSession.protocol.handle('slz-file', slzFileHandler)
-  webPanelSession.protocol.handle('slz-file', slzFileHandler)
-  session.defaultSession.protocol.handle('slz-file', slzFileHandler)
-
-  // Block external app protocol launches from webviews by registering no-op handlers.
-  // External protocol URLs (figma://, slack://, etc.) bypass will-navigate entirely —
-  // Chromium passes them straight to the OS. Registering the scheme in the session
-  // routes them through our handler instead, returning 204 so the webview stays put.
-  const blockProtocol = () => new Response('<html></html>', { status: 200, headers: { 'content-type': 'text/html' } })
-  for (const scheme of BLOCKED_EXTERNAL_PROTOCOLS) {
-    browserSession.protocol.handle(scheme, blockProtocol)
-    webPanelSession.protocol.handle(scheme, blockProtocol)
-    // Default session covers popup windows created by allowpopups webviews
-    session.defaultSession.protocol.handle(scheme, blockProtocol)
-  }
-
-  browserSession.setPermissionRequestHandler((_webContents, permission, callback) => {
-    const deniedPermissions = ['geolocation', 'notifications']
-    callback(!deniedPermissions.includes(permission))
-  })
-
-  // Allow all permission checks (Strawberry-style). Without this, Chromium's default
-  // behavior may deny checks that BotGuard relies on to validate the environment.
-  browserSession.setPermissionCheckHandler(() => true)
-
-  browserSession.setDevicePermissionHandler((details) => {
-    if (details.deviceType === 'hid' || details.deviceType === 'usb') {
-      return true
-    }
-    return false
-  })
-
-  // Initialize Chrome Web Store support for service worker lifecycle management.
-  const extensionsPath = join(app.getPath('userData'), 'Extensions')
-  logBoot('chrome-web-store install start')
-  await installChromeWebStore({
-    session: browserSession,
-    extensionsPath,
-    loadExtensions: true,
-    allowUnpackedExtensions: true,
-  })
-  logBoot('chrome-web-store install done')
-
-  // Initialize Chrome extension API support for the browser panel session.
-  const chromeExtensions = new ElectronChromeExtensions({
-    license: 'GPL-3.0',
-    session: browserSession,
-  })
-  ElectronChromeExtensions.handleCRXProtocol(browserSession)
-  browserViewManager.setChromeExtensions(chromeExtensions)
-
-  // When an extension popup is created (e.g. 1Password vault), add it to the main window
-  chromeExtensions.on('browser-action-popup-created', (popup: { browserWindow: Electron.BrowserWindow }) => {
-    if (popup.browserWindow && mainWindow && !mainWindow.isDestroyed()) {
-      popup.browserWindow.setParentWindow(mainWindow)
-    }
-  })
-
-  // Extension persistence — save/restore imported extension paths
-  // (installChromeWebStore handles its own extensions, but we also support
-  // importing from other browsers via loadExtension)
-  const extensionsJsonPath = join(app.getPath('userData'), 'browser-extensions.json')
-  const saveExtensionPaths = () => {
-    try {
-      const exts = browserSession.getAllExtensions().map(e => e.path)
-      fsp.writeFile(extensionsJsonPath, JSON.stringify(exts))
-    } catch { /* best effort */ }
-  }
-  const loadSavedExtensions = async () => {
-    try {
-      const data = await fsp.readFile(extensionsJsonPath, 'utf-8')
-      const paths: string[] = JSON.parse(data)
-      for (const extPath of paths) {
-        try {
-          await browserSession.loadExtension(extPath)
-        } catch (err) {
-          console.warn('[extensions] Failed to reload extension:', extPath, err)
-        }
-      }
-    } catch { /* no saved extensions or file doesn't exist */ }
-  }
-  void loadSavedExtensions()
-  logBoot('extension+session config done')
-
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.slayzone.app')
-
-  // Open DevTools by F12 in development
-  if (is.dev) {
-    app.on('browser-window-created', (_, window) => {
-      window.webContents.on('before-input-event', (event, input) => {
-        if (input.type === 'keyDown' && input.code === 'F12') {
-          const wc = window.webContents
-          if (wc.isDevToolsOpened()) wc.closeDevTools()
-          else wc.openDevTools({ mode: 'undocked' })
-          event.preventDefault()
-        }
-      })
-    })
-  }
-
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
-  // Shell: open external URLs (restrict to safe schemes)
-  ipcMain.handle('shell:open-external', (_event, url: string, options?: {
-    blockDesktopHandoff?: boolean
-    desktopHandoff?: DesktopHandoffPolicy
-  }) => {
-    if (!/^https?:\/\//i.test(url) && !url.startsWith('mailto:')) {
-      throw new Error('Only http, https, and mailto URLs are allowed')
-    }
-    const desktopHandoffPolicy = options?.desktopHandoff ?? (() => {
-      if (!options?.blockDesktopHandoff) return null
-      const protocol = normalizeDesktopProtocol(inferProtocolFromUrl(url))
-      if (!protocol) return null
-      const hostScope = normalizeDesktopHostScope(inferHostScopeFromUrl(url))
-      return hostScope ? { protocol, hostScope } : { protocol }
-    })()
-    const shouldBlockLoopbackDesktopHandoff =
-      desktopHandoffPolicy !== null &&
-      isLoopbackUrl(url) &&
-      !isLoopbackHost(normalizeDesktopHostScope(desktopHandoffPolicy.hostScope))
-    if (
-      desktopHandoffPolicy &&
-      (isEncodedDesktopHandoffUrl(url, desktopHandoffPolicy) || shouldBlockLoopbackDesktopHandoff)
-    ) {
-      throw new Error('Blocked external app handoff URL')
-    }
-    shell.openExternal(url)
-  })
-
-  ipcMain.handle('shell:open-path', async (_event, absPath: string): Promise<string> => {
-    if (typeof absPath !== 'string' || !absPath.startsWith('/')) {
-      throw new Error('absolute path required')
-    }
-    return shell.openPath(absPath)
-  })
-
-  ipcMain.handle('auth:github-system-sign-in', async (_event, input: {
-    convexUrl: string
-    redirectTo: string
-  }) => {
-    try {
-      if (!input?.convexUrl) {
-        return { ok: false, error: 'Convex URL is required' }
-      }
-      if (input.redirectTo !== OAUTH_DEEP_LINK_REDIRECT_URI) {
-        return { ok: false, error: `Unsupported redirect URI: ${input.redirectTo}` }
-      }
-      if (oauthCallbackWaiters.size > 0) {
-        return { ok: false, error: 'An OAuth sign-in flow is already in progress' }
-      }
-
-      // Ignore stale callbacks from prior sign-in attempts.
-      oauthCallbackQueue.length = 0
-
-      const start = await requestGithubSignInStart(input.convexUrl, input.redirectTo)
-      await shell.openExternal(start.redirect)
-
-      const callback = await waitForOAuthCallback(OAUTH_CALLBACK_TIMEOUT_MS)
-      if (callback.error) {
-        return { ok: false, verifier: start.verifier, error: callback.error }
-      }
-      if (!callback.code) {
-        return { ok: false, verifier: start.verifier, error: 'GitHub sign-in failed — no authorization code returned. Try again or use a different browser.' }
-      }
-      return { ok: true, verifier: start.verifier, code: callback.code }
-    } catch (error) {
-      return {
-        ok: false,
-        error: error instanceof Error ? error.message : 'GitHub sign-in failed'
-      }
-    }
-  })
-
-  ipcMain.on('app:data-ready', () => {
-    if (rendererDataReady) return
-    logBoot('renderer data-ready (IPC from useTasksData)')
-    rendererDataReady = true
-    tryShowMainWindow()
-  })
-
-  // Renderer-emitted boot marks routed into main timeline. Renderer measures
-  // are page-relative; we record them with main's clock so the waterfall is
-  // unified. Gated behind SLAYZONE_DEBUG_BOOT.
-  ipcMain.on('boot:mark', (_event, label: string) => {
-    if (typeof label === 'string') logBoot(`renderer: ${label}`)
-  })
-
-  ipcMain.handle('app:getVersion', () => app.getVersion())
-  ipcMain.handle('app:get-trpc-port', async () => {
-    const g = globalThis as Record<string, unknown>
-    if (typeof g.__trpcPort === 'number') return g.__trpcPort as number
-    return new Promise<number>((resolve) => {
-      const start = Date.now()
-      const check = (): void => {
-        const port = (globalThis as Record<string, unknown>).__trpcPort
-        if (typeof port === 'number') resolve(port)
-        else if (Date.now() - start > 5000) resolve(0)
-        else setTimeout(check, 25)
-      }
-      check()
-    })
-  })
-  ipcMain.handle('app:is-tests-panel-enabled', () => isLabEnabled('labs_tests_panel'))
-  ipcMain.on('app:is-tests-panel-enabled-sync', (event) => { event.returnValue = isLabEnabled('labs_tests_panel') })
-  ipcMain.handle('app:is-jira-integration-enabled', () => isLabEnabled('labs_jira_integration'))
-  ipcMain.on('app:is-jira-integration-enabled-sync', (event) => { event.returnValue = isLabEnabled('labs_jira_integration') })
-  ipcMain.handle('app:is-loop-mode-enabled', () => isLabEnabled('labs_loop_mode'))
-  ipcMain.on('app:is-loop-mode-enabled-sync', (event) => { event.returnValue = isLabEnabled('labs_loop_mode') })
-  ipcMain.handle('app:get-protocol-client-status', () => protocolClientStatus)
-  ipcMain.handle('app:get-zoom-factor', () => mainWindow?.webContents.zoomFactor ?? 1)
-  ipcMain.handle('app:adjust-zoom', (_event, command: AppZoomCommand) => applyAppZoom(command))
-  ipcMain.handle('app:focus-renderer', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender)
-    if (!win || win.isDestroyed() || !win.isFocused()) return
-    event.sender.focus()
-  })
-  ipcMain.handle('app:restart-for-update', () => restartForUpdate())
-  ipcMain.handle('app:check-for-updates', () => checkForUpdates())
-  ipcMain.handle('app:cli-status', () => checkCliInstalled())
-  ipcMain.handle('app:install-cli', () => installCli(getCliSrc()))
-
-  // Window close
-  ipcMain.handle('window:close', (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender)
-    if (win) win.close()
-  })
-
-  // Adjust macOS traffic-light position. Pass null to restore default.
-  ipcMain.handle(
-    'window:set-traffic-light-position',
-    (event, pos: { x: number; y: number } | null) => {
-      if (process.platform !== 'darwin') return
-      const win = BrowserWindow.fromWebContents(event.sender)
-      if (!win) return
-      win.setWindowButtonPosition(pos ?? { x: 10, y: 12 })
-    }
-  )
-
-  // Show/hide macOS traffic-light buttons (close/min/max).
-  ipcMain.handle(
-    'window:set-window-button-visibility',
-    (event, visible: boolean) => {
-      if (process.platform !== 'darwin') return
-      const win = BrowserWindow.fromWebContents(event.sender)
-      if (!win) return
-      win.setWindowButtonVisibility(visible)
-    }
-  )
-
-  // Dialog
-  ipcMain.handle(
-    'dialog:showOpenDialog',
-    async (
-      _,
-      options: {
-        title?: string
-        defaultPath?: string
-        properties?: Array<'openFile' | 'openDirectory' | 'multiSelections' | 'showHiddenFiles' | 'createDirectory' | 'promptToCreate' | 'noResolveAliases' | 'treatPackageAsDirectory' | 'dontAddToRecent'>
-        filters?: Array<{ name: string; extensions: string[] }>
-      }
-    ) => {
-      return dialog.showOpenDialog(options)
-    }
-  )
-
-  // Browser panel registry (CLI browser control — per-tab)
-  ipcMain.handle('webview:register-browser-tab', (_, taskId: string, tabId: string, webContentsId: number) => {
-    registerBrowserTab(taskId, tabId, webContentsId)
-  })
-  ipcMain.handle('webview:unregister-browser-tab', (_, taskId: string, tabId: string) => {
-    unregisterBrowserTab(taskId, tabId)
-  })
-  ipcMain.handle('webview:set-active-browser-tab', (_, taskId: string, tabId: string | null) => {
-    setActiveBrowserTab(taskId, tabId)
-  })
-
-  // Webview shortcut interception
-  const registeredWebviews = new Set<number>()
-  const keyboardPassthroughWebviews = new Set<number>()
-
-  ipcMain.handle('webview:register-shortcuts', (event, webviewId: number) => {
-    if (registeredWebviews.has(webviewId)) return
-
-    const wc = webContents.fromId(webviewId)
-    if (!wc) return
-
-    registeredWebviews.add(webviewId)
-
-    wc.on('before-input-event', (e, input) => {
-      if (keyboardPassthroughWebviews.has(webviewId)) return
-      if (input.type !== 'keyDown') return
-      if (!(input.control || input.meta)) return
-
-      // Cmd/Ctrl+1-9 for tab switching, T/A/D/L reserved for panel actions
-      if (/^[1-9tadl]$/i.test(input.key)) {
-        e.preventDefault()
-        event.sender.send('webview:shortcut', {
-          key: input.key.toLowerCase(),
-          shift: Boolean(input.shift),
-          webviewId
+        recordDiagnosticEvent({
+          level: 'warn',
+          source: 'pty',
+          event: 'pty.host_kill_persist_failed',
+          taskId,
+          message: (err as Error).message
         })
       }
     })
 
-    wc.on('destroyed', () => {
-      registeredWebviews.delete(webviewId)
-      keyboardPassthroughWebviews.delete(webviewId)
+    // Register domain handlers (inject ipcMain and db)
+    const notifyTasksChanged = (): void => {
+      mainWindow?.webContents.send('tasks:changed')
+    }
+    registerProjectHandlers(ipcMain, db)
+    registerTaskHandlers(ipcMain, db, notifyTasksChanged)
+    registerTaskTemplateHandlers(ipcMain, db)
+    registerTagHandlers(ipcMain, db)
+    registerHistoryHandlers(ipcMain, db)
+    registerSettingsHandlers(ipcMain, db)
+    registerFeedbackHandlers(ipcMain, db)
+    logBoot('core domain handlers registered')
+
+    registerThemeHandlers(ipcMain, db)
+    registerUsageHandlers(ipcMain, db)
+    registerPtyHandlers(ipcMain, db)
+    logBoot('pty handlers registered')
+
+    setupFloatingGlobalAgentPanel(() => currentOverrides)
+    setupTaskWindows()
+    logBoot('floating global agent panel + task windows set up')
+
+    // Task automation: auto-move tasks on terminal state change
+    onGlobalStateChange((sessionId, newState, oldState) => {
+      handleTerminalStateChange(
+        db,
+        sessionId,
+        newState,
+        oldState,
+        notifyTasksChanged,
+        onTaskReachedTerminal
+      )
+
+      // Attention flag: PTY just finished a turn (running → idle|error). Gated
+      // on hasSessionUserInput so that initial spawn/banner settle (which can
+      // trigger running → idle on auto-respawn after task open) does not flag
+      // the task. Renderer clears the flag when the user focuses the task tab.
+      try {
+        if (
+          handleAttentionTransition(
+            db,
+            sessionId,
+            newState,
+            oldState,
+            hasSessionUserInput(sessionId)
+          )
+        ) {
+          notifyTasksChanged()
+        }
+      } catch (err) {
+        console.error('[attention] failed to set needs_attention:', err)
+      }
     })
-  })
 
-  ipcMain.handle('webview:set-keyboard-passthrough', (_event, webviewId: number, enabled: boolean) => {
-    if (enabled) keyboardPassthroughWebviews.add(webviewId)
-    else keyboardPassthroughWebviews.delete(webviewId)
-  })
+    // Expose test helpers for e2e
+    if (isPlaywright) {
+      ;(globalThis as Record<string, unknown>).__db = db
+      ;(globalThis as Record<string, unknown>).__spawnProcess = spawnProcess
+      ;(globalThis as Record<string, unknown>).__notifyPtyState = notifyGlobalStateListeners
+      ;(globalThis as Record<string, unknown>).__markSessionUserInput = markSessionUserInput
+      ;(globalThis as Record<string, unknown>).__clearSessionUserInputMark =
+        clearSessionUserInputMark
+      ;(globalThis as Record<string, unknown>).__restorePtyHandlers = () => {
+        for (const ch of [
+          'terminalModes:list',
+          'terminalModes:test',
+          'terminalModes:get',
+          'terminalModes:create',
+          'terminalModes:update',
+          'terminalModes:delete',
+          'terminalModes:restoreDefaults',
+          'terminalModes:resetToDefaultState',
+          'pty:create',
+          'pty:testExecutionContext',
+          'pty:ccsListProfiles',
+          'pty:write',
+          'pty:resize',
+          'pty:kill',
+          'pty:exists',
+          'pty:getBuffer',
+          'pty:clearBuffer',
+          'pty:getBufferSince',
+          'pty:list',
+          'pty:getState',
+          'pty:set-theme',
+          'pty:validate',
+          'pty:setShellOverride'
+        ]) {
+          ipcMain.removeHandler(ch)
+        }
+        registerPtyHandlers(ipcMain, db)
+      }
+    }
 
-  ipcMain.handle('webview:set-desktop-handoff-policy', (_, webviewId: number, policy: DesktopHandoffPolicy | null) => {
-    const wc = webContents.fromId(webviewId)
-    if (!wc || wc.isDestroyed() || wc.getType() !== 'webview') return false
+    registerTerminalTabsHandlers(ipcMain, db)
+    setPtyEnricher(createPtyEnricher(db))
+    // Wire the per-tab `was_spawned` flag so pty + chat spawn/exit handlers
+    // can flip it without importing the task-terminals package (would cycle).
+    // Composition root resolves the dependency direction.
+    const recordSpawned = (tabId: string, wasSpawned: boolean): void => {
+      markTabSpawned(db, tabId, wasSpawned)
+    }
+    setPtySpawnedTabRecorder(recordSpawned)
+    setChatSpawnedTabRecorder(recordSpawned)
+    logBoot('terminal-tabs handlers registered')
+    registerChatHandlers(ipcMain, db, { onChatEvent: initChatTurnSubscriber(db) })
+    // One-shot: backfill `chatMode` for tasks that pre-date the chat-mode UI so
+    // upgraded users keep their current `--allow-dangerously-skip-permissions`
+    // behavior instead of suddenly hitting denials.
+    try {
+      const stats = backfillChatModes(db)
+      if (stats.updated > 0) {
+        console.log(
+          `[chat-handlers] backfillChatModes: ${stats.updated}/${stats.scanned} tasks tagged 'bypass'`
+        )
+      }
+    } catch (err) {
+      console.error('[chat-handlers] backfillChatModes failed:', err)
+    }
+    registerFilesHandlers(ipcMain)
+    registerWorktreeHandlers(ipcMain, db)
+    registerAgentTurnsHandlers(ipcMain, db)
+    logBoot('files+worktree+agent-turns registered')
+    // xterm-mode turn detection: every Enter press in a PTY = turn boundary.
+    onPtyInputSubmit(initPtyTurnSubscriber(db))
+    registerAiConfigHandlers(ipcMain, db)
+    logBoot('ai-config handlers registered')
+    const integrationHandles = registerIntegrationHandlers(ipcMain, db, {
+      enableTestChannels: isPlaywright
+    })
+    logBoot('integration handlers registered')
+    registerFileEditorHandlers(ipcMain)
+    registerClipboardHandlers(ipcMain)
+    registerScreenshotHandlers(browserViewManager)
+    registerExportImportHandlers(ipcMain, db, isPlaywright)
+    registerLeaderboardHandlers(ipcMain, db)
+    registerTestPanelHandlers(ipcMain, db)
+    logBoot('misc handlers registered (file-editor/clipboard/screenshot/export/leaderboard/tests)')
+    const notifyAutomationsChanged = (): void => {
+      mainWindow?.webContents.send('automations:changed')
+      notifyTasksChanged()
+    }
+    const automationEngine = new AutomationEngine(db, notifyAutomationsChanged)
+    registerAutomationHandlers(ipcMain, db, automationEngine)
+    automationEngine.start(ipcMain)
+    powerMonitor.on('resume', () => automationEngine.runCatchup())
+    registerUsageAnalyticsHandlers(ipcMain, db)
+    registerBackupHandlers(ipcMain, db)
+    startAutoBackup(db)
+    logBoot('domain IPC handlers registered')
 
-    if (policy === null) {
-      webviewDesktopHandoffPolicy.delete(webviewId)
+    // Start MCP server off the boot critical path. The dynamic import resolves
+    // a heavy module graph (~70ms sync work even though it returns a Promise),
+    // and nothing on first paint depends on the server being listening — the
+    // CLI discovers the port via settings and the renderer doesn't talk to it.
+    setImmediate(() => {
+      logBoot('mcp server import dispatched')
+      import('./mcp-server')
+        .then((mod) => {
+          mod.startMcpServer(db, { automationEngine })
+          mcpCleanup = () => mod.stopMcpServer()
+          logBoot('mcp server started')
+        })
+        .catch((err) => {
+          console.error('[MCP] Failed to start server:', err)
+        })
+    })
+
+    setImmediate(() => {
+      logBoot('trpc server import dispatched')
+      import('@slayzone/transport/server')
+        .then((mod) => {
+          mod.startTrpcServer({ db, dataRoot: ensureDataRoot() })
+          trpcCleanup = () => mod.stopTrpcServer()
+          logBoot('trpc server started')
+        })
+        .catch((err) => {
+          console.error('[tRPC] Failed to start server:', err)
+        })
+    })
+
+    // Install agent lifecycle hook script + Claude settings.json entries.
+    // Off boot critical path; failures must NOT block app startup (logged only).
+    // Skipped under Playwright unless the spec explicitly opts in — most E2E
+    // tests share one Electron window and would otherwise mutate the dev user's
+    // real ~/.claude/settings.json.
+    if (!process.env.PLAYWRIGHT || process.env.SLAYZONE_E2E_INSTALL_HOOKS === '1') {
+      setImmediate(async () => {
+        try {
+          const [
+            { installNotifyScript },
+            { installClaudeHooks },
+            { installCodexWrapper },
+            { installGeminiHooks },
+            { installOpencodePlugin }
+          ] = await Promise.all([
+            import('./agent-hooks/notify-script-installer'),
+            import('./agent-hooks/claude-hook-installer'),
+            import('./agent-hooks/codex-wrapper-installer'),
+            import('./agent-hooks/gemini-hook-installer'),
+            import('./agent-hooks/opencode-plugin-installer')
+          ])
+          const { path: scriptPath } = await installNotifyScript()
+          await installClaudeHooks({ scriptPath })
+          await installCodexWrapper()
+          await installGeminiHooks({ scriptPath })
+          await installOpencodePlugin({ notifyPath: scriptPath })
+          logBoot('agent hooks installed')
+        } catch (err) {
+          console.error('[agent-hooks] install failed:', err)
+        }
+      })
+    }
+
+    linearSyncPoller = startSyncPoller(db, notifyTasksChanged)
+    discoveryPoller = startDiscoveryPoller(db, notifyTasksChanged)
+    logBoot('integration pollers started (sync 10s, discovery 60s)')
+
+    // Push to providers immediately after local task edits (skip in E2E — tests exercise push explicitly)
+    if (!isPlaywright) {
+      ipcMain.on('db:tasks:update:done', (_event, taskId: string) => {
+        void pushTaskAfterEdit(db, taskId, {
+          pushGithubTask: integrationHandles.pushGithubTask
+        })
+      })
+    }
+
+    if (!isPlaywright) {
+      // Push new tasks to providers (two_way sync)
+      ipcMain.on('db:tasks:create:done', (_event, taskId: string, projectId: string) => {
+        void pushNewTaskToProviders(db, taskId, projectId).then(() => {
+          // Only notify if a link was actually created
+          const hasLink = db
+            .prepare('SELECT 1 FROM external_links WHERE task_id = ? LIMIT 1')
+            .get(taskId)
+          if (hasLink) notifyTasksChanged()
+        })
+      })
+
+      // Archive/unarchive sync to providers
+      ipcMain.on('db:tasks:archive:done', (_event, taskId: string) => {
+        void pushArchiveToProviders(db, taskId)
+      })
+      ipcMain.on('db:tasks:unarchive:done', (_event, taskId: string) => {
+        void pushUnarchiveToProviders(db, taskId)
+      })
+    }
+
+    initAutoUpdater()
+    logBoot('auto-updater initialized')
+
+    // Configure webview session for WebAuthn/passkey support
+    const browserSession = session.fromPartition('persist:browser-tabs')
+
+    // Strip Electron/app name from user-agent so sites (Figma, etc.) don't detect
+    // Electron and redirect to their desktop app instead of serving the web version.
+    const rawUa = browserSession.getUserAgent()
+    _chromeUa = rawUa.replace(/\s*Electron\/\S+/i, '').replace(/\s*slayzone\/\S+/i, '')
+    _chromiumVersion = rawUa.match(/Chrome\/(\d+)/)?.[1] || '142'
+    browserSession.setUserAgent(_chromeUa)
+
+    // Serve local files via slz-file:// (Chromium blocks file:// in webviews and cross-origin renderers)
+    const userHome = homedir()
+    const slzFileHandler = async (request: Request) => {
+      // slz-file:///path/to/file → /path/to/file (strip query string used for cache busting)
+      const rawPath = decodeURIComponent(request.url.replace(/^slz-file:\/\//, ''))
+      const filePath = normalize(rawPath.split('?')[0])
+
+      // Block path traversal outside user home directory
+      if (!filePath.startsWith(userHome + sep)) {
+        return new Response(
+          `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Forbidden</title>
+<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui;background:#1a1a1a;color:#888}
+div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:12px;margin:8px 0 0;word-break:break-all;max-width:400px}</style>
+</head><body><div><h1>Access denied</h1><p>Path outside home directory</p></div></body></html>`,
+          { status: 200, headers: { 'content-type': 'text/html' } }
+        )
+      }
+      const mimeTypes: Record<string, string> = {
+        '.html': 'text/html',
+        '.htm': 'text/html',
+        '.css': 'text/css',
+        '.js': 'text/javascript',
+        '.mjs': 'text/javascript',
+        '.json': 'application/json',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+        '.ico': 'image/x-icon',
+        '.webp': 'image/webp',
+        '.avif': 'image/avif',
+        '.bmp': 'image/bmp',
+        '.woff': 'font/woff',
+        '.woff2': 'font/woff2',
+        '.ttf': 'font/ttf',
+        '.pdf': 'application/pdf',
+        '.xml': 'application/xml',
+        '.txt': 'text/plain'
+      }
+      try {
+        const data = await fsp.readFile(filePath)
+        return new Response(data, {
+          headers: {
+            'content-type':
+              mimeTypes[extname(filePath).toLowerCase()] || 'application/octet-stream',
+            'cache-control': 'no-cache'
+          }
+        })
+      } catch {
+        const escaped = filePath.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+        return new Response(
+          `<!DOCTYPE html><html><head><meta charset="utf-8"><title>File not found</title>
+<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui;background:#1a1a1a;color:#888}
+div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:12px;margin:8px 0 0;word-break:break-all;max-width:400px}</style>
+</head><body><div><h1>File not found</h1><p>${escaped}</p></div></body></html>`,
+          { status: 200, headers: { 'content-type': 'text/html' } }
+        )
+      }
+    }
+    const webPanelSession = session.fromPartition('persist:web-panels')
+    webPanelSession.setUserAgent(_chromeUa)
+
+    // Block external protocol navigation from inside webview pages (e.g. window.location = 'figma://...')
+    // session.protocol.handle only intercepts loadURL from the main process — page-initiated
+    // navigation bypasses it. A session preload patches window.open/location before page JS runs.
+    // Register preload only for web-panels session (old webview-based panels).
+    // Browser-tabs session (WebContentsView) uses applySpoofing() per-view instead,
+    // which skips Google domains. The preload injects navigator patches that BotGuard detects.
+    const webviewPreload = join(__dirname, '../preload/webview-preload.js')
+    webPanelSession.registerPreloadScript({
+      type: 'frame',
+      filePath: webviewPreload,
+      id: 'webview-preload-wp'
+    })
+
+    // Strawberry-style: strip Electron from UA header on every request (belt-and-suspenders
+    // alongside session.setUserAgent). No Sec-CH-UA override — let Chromium send native brands.
+    const stripElectronFromHeaders = (
+      details: Electron.OnBeforeSendHeadersListenerDetails,
+      cb: (resp: Electron.BeforeSendResponse) => void
+    ) => {
+      const uaKey = Object.keys(details.requestHeaders).find(
+        (k) => k.toLowerCase() === 'user-agent'
+      )
+      if (uaKey) {
+        const ua = details.requestHeaders[uaKey]
+        const cleaned = ua.replace(/\s*Electron\/\S+/i, '').replace(/\s*slayzone\/\S+/i, '')
+        if (ua !== cleaned) details.requestHeaders[uaKey] = cleaned
+      }
+      cb({ requestHeaders: details.requestHeaders })
+    }
+    browserSession.webRequest.onBeforeSendHeaders(stripElectronFromHeaders)
+    webPanelSession.webRequest.onBeforeSendHeaders(stripElectronFromHeaders)
+
+    const shouldCancelLoopbackHandoffRequest = (
+      details: Electron.OnBeforeRequestListenerDetails
+    ): boolean => {
+      const webviewId = details.webContentsId
+      if (typeof webviewId !== 'number') return false
+
+      const desktopHandoffPolicy = webviewDesktopHandoffPolicy.get(webviewId)
+      if (!desktopHandoffPolicy) return false
+      if (!isLoopbackUrl(details.url)) return false
+
+      const hostScope = normalizeDesktopHostScope(desktopHandoffPolicy.hostScope)
+      if (isLoopbackHost(hostScope)) return false
+
+      if (hostScope) {
+        const sourceUrl =
+          (details.frame && details.frame.url) ||
+          (details.referrer && details.referrer !== 'about:blank' ? details.referrer : '') ||
+          details.webContents?.getURL() ||
+          ''
+        if (sourceUrl && !isUrlWithinHostScope(sourceUrl, hostScope)) return false
+      }
+
       return true
     }
-    const protocol = normalizeDesktopProtocol(policy.protocol)
-    if (!protocol) {
-      webviewDesktopHandoffPolicy.delete(webviewId)
+
+    const handleBeforeRequest = (
+      details: Electron.OnBeforeRequestListenerDetails,
+      callback: (response: Electron.CallbackResponse) => void
+    ) => {
+      // Redirect file:// → slz-file:// so local files load via our secure handler
+      if (details.url.startsWith('file://')) {
+        callback({ redirectURL: details.url.replace(/^file:\/\//, 'slz-file://') })
+        return
+      }
+      if (shouldCancelLoopbackHandoffRequest(details)) {
+        callback({ cancel: true })
+        return
+      }
+      callback({ cancel: false })
+    }
+    browserSession.webRequest.onBeforeRequest(handleBeforeRequest)
+    webPanelSession.webRequest.onBeforeRequest(handleBeforeRequest)
+
+    browserSession.protocol.handle('slz-file', slzFileHandler)
+    webPanelSession.protocol.handle('slz-file', slzFileHandler)
+    session.defaultSession.protocol.handle('slz-file', slzFileHandler)
+
+    // Block external app protocol launches from webviews by registering no-op handlers.
+    // External protocol URLs (figma://, slack://, etc.) bypass will-navigate entirely —
+    // Chromium passes them straight to the OS. Registering the scheme in the session
+    // routes them through our handler instead, returning 204 so the webview stays put.
+    const blockProtocol = () =>
+      new Response('<html></html>', { status: 200, headers: { 'content-type': 'text/html' } })
+    for (const scheme of BLOCKED_EXTERNAL_PROTOCOLS) {
+      browserSession.protocol.handle(scheme, blockProtocol)
+      webPanelSession.protocol.handle(scheme, blockProtocol)
+      // Default session covers popup windows created by allowpopups webviews
+      session.defaultSession.protocol.handle(scheme, blockProtocol)
+    }
+
+    browserSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+      const deniedPermissions = ['geolocation', 'notifications']
+      callback(!deniedPermissions.includes(permission))
+    })
+
+    // Allow all permission checks (Strawberry-style). Without this, Chromium's default
+    // behavior may deny checks that BotGuard relies on to validate the environment.
+    browserSession.setPermissionCheckHandler(() => true)
+
+    browserSession.setDevicePermissionHandler((details) => {
+      if (details.deviceType === 'hid' || details.deviceType === 'usb') {
+        return true
+      }
       return false
-    }
-    const hostScope = normalizeDesktopHostScope(policy.hostScope) ?? undefined
-    webviewDesktopHandoffPolicy.set(webviewId, hostScope ? { protocol, hostScope } : { protocol })
+    })
 
-    if (!webviewDesktopHandoffPolicyCleanupRegistered.has(webviewId)) {
-      webviewDesktopHandoffPolicyCleanupRegistered.add(webviewId)
-      wc.once('destroyed', () => {
-        webviewDesktopHandoffPolicy.delete(webviewId)
-        webviewDesktopHandoffPolicyCleanupRegistered.delete(webviewId)
-      })
-    }
-    return true
-  })
+    // Initialize Chrome Web Store support for service worker lifecycle management.
+    const extensionsPath = join(app.getPath('userData'), 'Extensions')
+    logBoot('chrome-web-store install start')
+    await installChromeWebStore({
+      session: browserSession,
+      extensionsPath,
+      loadExtensions: true,
+      allowUnpackedExtensions: true
+    })
+    logBoot('chrome-web-store install done')
 
-  ipcMain.handle('webview:open-devtools-bottom', async (_, webviewId: number, options?: { probe?: boolean }) => {
-    const wc = webContents.fromId(webviewId)
-    if (!wc || wc.isDestroyed()) {
-      console.warn('[webview:open-devtools-bottom] missing/destroyed webContents', { webviewId })
-      return false
-    }
+    // Initialize Chrome extension API support for the browser panel session.
+    const chromeExtensions = new ElectronChromeExtensions({
+      license: 'GPL-3.0',
+      session: browserSession
+    })
+    ElectronChromeExtensions.handleCRXProtocol(browserSession)
+    browserViewManager.setChromeExtensions(chromeExtensions)
 
-    const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-    const waitForEvent = (event: 'devtools-opened' | 'devtools-closed', timeoutMs = 500) =>
-      new Promise<boolean>((resolve) => {
-        const emitter = wc as unknown as NodeJS.EventEmitter
-        let settled = false
-        const handler = () => {
-          if (settled) return
-          settled = true
-          clearTimeout(timer)
-          resolve(true)
+    // When an extension popup is created (e.g. 1Password vault), add it to the main window
+    chromeExtensions.on(
+      'browser-action-popup-created',
+      (popup: { browserWindow: Electron.BrowserWindow }) => {
+        if (popup.browserWindow && mainWindow && !mainWindow.isDestroyed()) {
+          popup.browserWindow.setParentWindow(mainWindow)
         }
-        const timer = setTimeout(() => {
-          if (settled) return
-          settled = true
-          emitter.removeListener(event, handler)
-          resolve(false)
-        }, timeoutMs)
-        emitter.once(event, handler)
-      })
+      }
+    )
 
-    const attempts: Array<{
-      mode: 'bottom' | 'right' | 'undocked' | 'detach'
-      activate: boolean
-      before: boolean
-      after: boolean
-      openedEvent: boolean
-      elapsedMs: number
-      error?: string
-    }> = []
-
-    const variants: Array<{ mode: 'bottom' | 'right' | 'undocked' | 'detach'; activate: boolean }> = [
-      { mode: 'bottom', activate: false },
-      { mode: 'bottom', activate: true },
-      { mode: 'right', activate: false },
-      { mode: 'right', activate: true },
-      { mode: 'undocked', activate: false },
-      { mode: 'undocked', activate: true },
-      { mode: 'detach', activate: false },
-      { mode: 'detach', activate: true },
-    ]
-
-    for (const variant of variants) {
+    // Extension persistence — save/restore imported extension paths
+    // (installChromeWebStore handles its own extensions, but we also support
+    // importing from other browsers via loadExtension)
+    const extensionsJsonPath = join(app.getPath('userData'), 'browser-extensions.json')
+    const saveExtensionPaths = () => {
       try {
-        if (wc.isDevToolsOpened()) {
-          wc.closeDevTools()
-          await waitForEvent('devtools-closed', 300)
+        const exts = browserSession.getAllExtensions().map((e) => e.path)
+        fsp.writeFile(extensionsJsonPath, JSON.stringify(exts))
+      } catch {
+        /* best effort */
+      }
+    }
+    const loadSavedExtensions = async () => {
+      try {
+        const data = await fsp.readFile(extensionsJsonPath, 'utf-8')
+        const paths: string[] = JSON.parse(data)
+        for (const extPath of paths) {
+          try {
+            await browserSession.loadExtension(extPath)
+          } catch (err) {
+            console.warn('[extensions] Failed to reload extension:', extPath, err)
+          }
         }
       } catch {
-        // continue probing
+        /* no saved extensions or file doesn't exist */
       }
-      await wait(50)
+    }
+    void loadSavedExtensions()
+    logBoot('extension+session config done')
 
-      const before = wc.isDevToolsOpened()
-      let error: string | undefined
-      const startedAt = Date.now()
-      let openedEvent = false
-      try {
-        const openedPromise = waitForEvent('devtools-opened', 700)
-        wc.openDevTools({ mode: variant.mode, activate: variant.activate })
-        openedEvent = await openedPromise
-      } catch (err) {
-        error = err instanceof Error ? err.message : String(err)
-      }
-      await wait(80)
-      const after = wc.isDevToolsOpened()
-      const elapsedMs = Date.now() - startedAt
+    // Set app user model id for windows
+    electronApp.setAppUserModelId('com.slayzone.app')
 
-      attempts.push({
-        mode: variant.mode,
-        activate: variant.activate,
-        before,
-        after,
-        openedEvent,
-        elapsedMs,
-        ...(error ? { error } : {})
+    // Open DevTools by F12 in development
+    if (is.dev) {
+      app.on('browser-window-created', (_, window) => {
+        window.webContents.on('before-input-event', (event, input) => {
+          if (input.type === 'keyDown' && input.code === 'F12') {
+            const wc = window.webContents
+            if (wc.isDevToolsOpened()) wc.closeDevTools()
+            else wc.openDevTools({ mode: 'undocked' })
+            event.preventDefault()
+          }
+        })
       })
-
-      if (!options?.probe && after) {
-        console.log('[webview:open-devtools-bottom] selected variant', { webviewId, mode: variant.mode, activate: variant.activate, openedEvent, elapsedMs })
-        return true
-      }
     }
 
-    if (options?.probe) {
-      return {
-        ok: true,
-        webviewId,
-        type: wc.getType(),
-        attempts
-      }
-    }
+    // IPC test
+    ipcMain.on('ping', () => console.log('pong'))
 
-    console.warn('[webview:open-devtools-bottom] failed to open', { webviewId, attempts })
-    return wc.isDevToolsOpened()
-  })
-
-  ipcMain.handle('webview:close-devtools', (_, webviewId: number) => {
-    const wc = webContents.fromId(webviewId)
-    if (!wc || wc.isDestroyed()) {
-      console.warn('[webview:close-devtools] missing/destroyed webContents', { webviewId })
-      return false
-    }
-    if (wc.isDevToolsOpened()) wc.closeDevTools()
-    console.log('[webview:close-devtools]', { webviewId, opened: wc.isDevToolsOpened() })
-    return true
-  })
-
-  ipcMain.handle('webview:open-devtools-detached', async (_, webviewId: number) => {
-    const wc = webContents.fromId(webviewId)
-    if (!wc || wc.isDestroyed()) {
-      console.warn('[webview:open-devtools-detached] missing/destroyed webContents', { webviewId })
-      return false
-    }
-
-    const emitter = wc as unknown as NodeJS.EventEmitter
-    const waitForOpened = (timeoutMs = 1000) =>
-      new Promise<boolean>((resolve) => {
-        let settled = false
-        const handler = () => {
-          if (settled) return
-          settled = true
-          clearTimeout(timer)
-          resolve(true)
+    // Shell: open external URLs (restrict to safe schemes)
+    ipcMain.handle(
+      'shell:open-external',
+      (
+        _event,
+        url: string,
+        options?: {
+          blockDesktopHandoff?: boolean
+          desktopHandoff?: DesktopHandoffPolicy
         }
-        const timer = setTimeout(() => {
-          if (settled) return
-          settled = true
-          emitter.removeListener('devtools-opened', handler)
-          resolve(false)
-        }, timeoutMs)
-        emitter.once('devtools-opened', handler)
-      })
-
-    try {
-      if (wc.isDevToolsOpened()) wc.closeDevTools()
-      const openedPromise = waitForOpened()
-      wc.openDevTools({ mode: 'detach', activate: true })
-      const opened = await openedPromise
-      if (opened) return true
-      return wc.isDevToolsOpened()
-    } catch (err) {
-      console.warn('[webview:open-devtools-detached] failed', { webviewId, err: err instanceof Error ? err.message : String(err) })
-      return false
-    }
-  })
-
-  // Inline DevTools IPC handlers removed — DevTools now docked natively via browser-view-manager
-
-  ipcMain.handle('webview:is-devtools-opened', (_, webviewId: number) => {
-    const wc = webContents.fromId(webviewId)
-    if (!wc || wc.isDestroyed()) return false
-    return wc.isDevToolsOpened()
-  })
-
-  // Webview device emulation
-  ipcMain.handle(
-    'webview:enable-device-emulation',
-    (_, webviewId: number, params: {
-      screenSize: { width: number; height: number }
-      viewSize: { width: number; height: number }
-      deviceScaleFactor: number
-      screenPosition: 'mobile' | 'desktop'
-      userAgent?: string
-    }) => {
-      const wc = webContents.fromId(webviewId)
-      if (!wc) return false
-      wc.enableDeviceEmulation({
-        screenPosition: params.screenPosition,
-        screenSize: params.screenSize,
-        viewSize: params.viewSize,
-        deviceScaleFactor: params.deviceScaleFactor,
-        viewPosition: { x: 0, y: 0 },
-        scale: 1,
-      })
-      if (params.userAgent) {
-        wc.setUserAgent(params.userAgent)
+      ) => {
+        if (!/^https?:\/\//i.test(url) && !url.startsWith('mailto:')) {
+          throw new Error('Only http, https, and mailto URLs are allowed')
+        }
+        const desktopHandoffPolicy =
+          options?.desktopHandoff ??
+          (() => {
+            if (!options?.blockDesktopHandoff) return null
+            const protocol = normalizeDesktopProtocol(inferProtocolFromUrl(url))
+            if (!protocol) return null
+            const hostScope = normalizeDesktopHostScope(inferHostScopeFromUrl(url))
+            return hostScope ? { protocol, hostScope } : { protocol }
+          })()
+        const shouldBlockLoopbackDesktopHandoff =
+          desktopHandoffPolicy !== null &&
+          isLoopbackUrl(url) &&
+          !isLoopbackHost(normalizeDesktopHostScope(desktopHandoffPolicy.hostScope))
+        if (
+          desktopHandoffPolicy &&
+          (isEncodedDesktopHandoffUrl(url, desktopHandoffPolicy) ||
+            shouldBlockLoopbackDesktopHandoff)
+        ) {
+          throw new Error('Blocked external app handoff URL')
+        }
+        shell.openExternal(url)
       }
-      return true
-    }
-  )
+    )
 
-  ipcMain.handle('webview:disable-device-emulation', (_, webviewId: number) => {
-    const wc = webContents.fromId(webviewId)
-    if (!wc) return false
-    wc.disableDeviceEmulation()
-    wc.setUserAgent(_chromeUa)
-    return true
-  })
-
-  // --- Browser View Manager (WebContentsView) ---
-  // Wire handoff policy mirror so main-process hardening listeners see WCV policies
-  browserViewManager.setHandoffPolicyChangeCallback((wcId, policy) => {
-    if (policy) {
-      webviewDesktopHandoffPolicy.set(wcId, policy)
-    } else {
-      webviewDesktopHandoffPolicy.delete(wcId)
-    }
-  })
-
-  // Lifecycle
-  ipcMain.handle('browser:create-view', (_, opts: CreateViewOpts) => browserViewManager.createView(opts))
-  ipcMain.handle('browser:reparent-to-current-window', (event, viewId: string) => {
-    const win = BrowserWindow.fromWebContents(event.sender)
-    if (!win || win.isDestroyed()) return { ok: false }
-    const ok = browserViewManager.reparentView(viewId, win)
-    return { ok }
-  })
-  ipcMain.handle('browser:destroy-view', (_, viewId: string) => browserViewManager.destroyView(viewId))
-  ipcMain.handle('browser:destroy-all-for-task', (_, taskId: string) => browserViewManager.destroyAllForTask(taskId))
-
-  // Bounds & visibility
-  ipcMain.handle('browser:set-bounds', (_, viewId: string, bounds: ViewBounds) => browserViewManager.setBounds(viewId, bounds))
-  ipcMain.handle('browser:set-visible', (_, viewId: string, visible: boolean) => browserViewManager.setVisible(viewId, visible))
-  ipcMain.handle('browser:set-locked', (_, viewId: string, locked: boolean) => browserViewManager.setLocked(viewId, locked))
-  ipcMain.handle('browser:hide-all', () => browserViewManager.hideAll())
-  ipcMain.handle('browser:show-all', () => browserViewManager.showAll())
-  ipcMain.handle('browser:set-handoff-policy', (_, viewId: string, policy: DesktopHandoffPolicy | null) => browserViewManager.setHandoffPolicy(viewId, policy))
-
-  // Navigation
-  ipcMain.handle('browser:navigate', (_, viewId: string, url: string) => browserViewManager.navigate(viewId, url))
-  ipcMain.handle('browser:go-back', (_, viewId: string) => browserViewManager.goBack(viewId))
-  ipcMain.handle('browser:go-forward', (_, viewId: string) => browserViewManager.goForward(viewId))
-  ipcMain.handle('browser:reload', (_, viewId: string, ignoreCache?: boolean) => browserViewManager.reload(viewId, ignoreCache))
-  ipcMain.handle('browser:stop', (_, viewId: string) => browserViewManager.stop(viewId))
-
-  // Content
-  ipcMain.handle('browser:execute-js', (_, viewId: string, code: string) => browserViewManager.executeJs(viewId, code))
-  ipcMain.handle('browser:insert-css', (_, viewId: string, css: string) => browserViewManager.insertCss(viewId, css))
-  ipcMain.handle('browser:remove-css', (_, viewId: string, key: string) => browserViewManager.removeCss(viewId, key))
-  ipcMain.handle('browser:set-zoom', (_, viewId: string, factor: number) => browserViewManager.setZoom(viewId, factor))
-  ipcMain.handle('browser:focus', (_, viewId: string) => browserViewManager.focus(viewId))
-  ipcMain.handle('browser:find-in-page', (_, viewId: string, text: string, options?: { forward?: boolean; findNext?: boolean; matchCase?: boolean }) => browserViewManager.findInPage(viewId, text, options))
-  ipcMain.handle('browser:stop-find-in-page', (_, viewId: string, action: 'clearSelection' | 'keepSelection' | 'activateSelection') => browserViewManager.stopFindInPage(viewId, action))
-  ipcMain.handle('browser:set-keyboard-passthrough', (_, viewId: string, enabled: boolean) => browserViewManager.setKeyboardPassthrough(viewId, enabled))
-  ipcMain.handle('browser:send-input-event', (_, viewId: string, input: Electron.KeyboardInputEvent) => browserViewManager.sendInputEvent(viewId, input))
-  ipcMain.on('browser:request-create-task-from-link', (event, payload: { url?: unknown; linkText?: unknown }) => {
-    const url = typeof payload?.url === 'string' ? payload.url : ''
-    if (!/^https?:\/\//i.test(url)) return
-    const linkText = typeof payload?.linkText === 'string' ? payload.linkText : undefined
-    browserViewManager.emitCreateTaskFromLinkForWebContents(event.sender.id, { url, linkText, source: 'modified-link-click' })
-  })
-  ipcMain.on('browser:request-open-link-externally', (_event, payload: { url?: unknown }) => {
-    const url = typeof payload?.url === 'string' ? payload.url : ''
-    if (!/^https?:\/\//i.test(url)) return
-    void shell.openExternal(url)
-  })
-
-  // DevTools
-  ipcMain.handle('browser:open-devtools', (_, viewId: string, mode: 'bottom' | 'right' | 'undocked' | 'detach') => browserViewManager.openDevTools(viewId, mode))
-  ipcMain.handle('browser:close-devtools', (_, viewId: string) => browserViewManager.closeDevTools(viewId))
-  ipcMain.handle('browser:is-devtools-open', (_, viewId: string) => browserViewManager.isDevToolsOpen(viewId))
-
-  // Chrome extension management
-  ipcMain.handle('browser:get-extensions', () => {
-    return browserSession.getAllExtensions().map(ext => ({
-      id: ext.id,
-      name: ext.name,
-      version: ext.manifest.version,
-      manifestVersion: typeof ext.manifest.manifest_version === 'number' ? ext.manifest.manifest_version : undefined,
-      icon: ext.manifest.icons
-        ? `crx://extension-icon/${ext.id}/${Object.values(ext.manifest.icons).pop()}`
-        : undefined,
-    }))
-  })
-  ipcMain.handle('browser:load-extension', async () => {
-    if (!mainWindow) return null
-    const result = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openDirectory'],
-      title: 'Select Chrome Extension Directory',
+    ipcMain.handle('shell:open-path', async (_event, absPath: string): Promise<string> => {
+      if (typeof absPath !== 'string' || !absPath.startsWith('/')) {
+        throw new Error('absolute path required')
+      }
+      return shell.openPath(absPath)
     })
-    if (result.canceled || !result.filePaths[0]) return null
-    try {
-      const ext = await browserSession.loadExtension(result.filePaths[0])
-      saveExtensionPaths()
-      return { id: ext.id, name: ext.name }
-    } catch (err) {
-      return { error: String(err) }
-    }
-  })
-  ipcMain.handle('browser:remove-extension', (_, extensionId: string) => {
-    browserSession.removeExtension(extensionId)
-    saveExtensionPaths()
-  })
-  ipcMain.handle('browser:discover-browser-extensions', async () => {
-    const appSupport = join(homedir(), 'Library', 'Application Support')
-    const knownBrowsers = [
-      { name: 'Chrome', dir: 'Google/Chrome/Default/Extensions' },
-      { name: 'Arc', dir: 'Arc/User Data/Default/Extensions' },
-      { name: 'Brave', dir: 'BraveSoftware/Brave-Browser/Default/Extensions' },
-      { name: 'Edge', dir: 'Microsoft Edge/Default/Extensions' },
-      { name: 'Chromium', dir: 'Chromium/Default/Extensions' },
-      { name: 'Vivaldi', dir: 'Vivaldi/Default/Extensions' },
-    ]
-    const alreadyLoaded = new Set(browserSession.getAllExtensions().map(e => e.id))
-    const results: { name: string; extensions: { id: string; name: string; version: string; path: string; alreadyImported: boolean; manifestVersion?: number }[] }[] = []
 
-    for (const browser of knownBrowsers) {
-      const extDir = join(appSupport, browser.dir)
-      let entries: string[]
-      try { entries = await fsp.readdir(extDir) } catch { continue }
-
-      const extensions: typeof results[0]['extensions'] = []
-      for (const id of entries) {
-        if (id === 'Temp' || id.startsWith('.')) continue
-        const idDir = join(extDir, id)
-        let versions: string[]
-        try { versions = await fsp.readdir(idDir) } catch { continue }
-        const ver = versions.sort().pop()
-        if (!ver) continue
-        const extPath = join(idDir, ver)
+    ipcMain.handle(
+      'auth:github-system-sign-in',
+      async (
+        _event,
+        input: {
+          convexUrl: string
+          redirectTo: string
+        }
+      ) => {
         try {
-          const manifest = JSON.parse(await fsp.readFile(join(extPath, 'manifest.json'), 'utf-8'))
-          let name: string = manifest.name || id
-          if (name.startsWith('__MSG_')) {
-            const key = name.slice(6, -2)
-            for (const lang of ['en', 'en_US', 'en_GB']) {
-              try {
-                const msgs = JSON.parse(await fsp.readFile(join(extPath, '_locales', lang, 'messages.json'), 'utf-8'))
-                if (msgs[key]?.message) { name = msgs[key].message; break }
-              } catch { /* try next lang */ }
+          if (!input?.convexUrl) {
+            return { ok: false, error: 'Convex URL is required' }
+          }
+          if (input.redirectTo !== OAUTH_DEEP_LINK_REDIRECT_URI) {
+            return { ok: false, error: `Unsupported redirect URI: ${input.redirectTo}` }
+          }
+          if (oauthCallbackWaiters.size > 0) {
+            return { ok: false, error: 'An OAuth sign-in flow is already in progress' }
+          }
+
+          // Ignore stale callbacks from prior sign-in attempts.
+          oauthCallbackQueue.length = 0
+
+          const start = await requestGithubSignInStart(input.convexUrl, input.redirectTo)
+          await shell.openExternal(start.redirect)
+
+          const callback = await waitForOAuthCallback(OAUTH_CALLBACK_TIMEOUT_MS)
+          if (callback.error) {
+            return { ok: false, verifier: start.verifier, error: callback.error }
+          }
+          if (!callback.code) {
+            return {
+              ok: false,
+              verifier: start.verifier,
+              error:
+                'GitHub sign-in failed — no authorization code returned. Try again or use a different browser.'
             }
           }
-          extensions.push({
-            id,
-            name,
-            version: manifest.version || '?',
-            path: extPath,
-            alreadyImported: alreadyLoaded.has(id),
-            manifestVersion: typeof manifest.manifest_version === 'number' ? manifest.manifest_version : undefined,
-          })
-        } catch { /* skip unreadable extensions */ }
-      }
-      if (extensions.length > 0) {
-        results.push({ name: browser.name, extensions })
-      }
-    }
-    return results
-  })
-  ipcMain.handle('browser:import-extension', async (_, extPath: string) => {
-    try {
-      const ext = await browserSession.loadExtension(extPath)
-      saveExtensionPaths()
-      return { id: ext.id, name: ext.name }
-    } catch (err) {
-      return { error: String(err) }
-    }
-  })
-  ipcMain.handle('browser:activate-extension', (_, extensionId: string) => {
-    // Trigger the extension's browser action by accessing the library's internal API.
-    // The public API doesn't expose activate(), so we reach into the context's router.
-    try {
-      const ext = browserSession.getExtension(extensionId)
-      if (!ext) return false
-      const activeWc = browserViewManager.getActiveWebContents()
-      if (!activeWc) return false
-      // Access internal browser action API through the context
-      const api = (chromeExtensions as any).api
-      if (api?.browserAction?.activate) {
-        api.browserAction.activate({ type: 'click' }, { extensionId, tabId: activeWc.id })
-        return true
-      }
-      // Fallback: invoke via the internal handle system
-      const ctx = (chromeExtensions as any).ctx
-      if (ctx?.router) {
-        ctx.router.invoke(activeWc, 'browserAction.activate', { eventType: 'click', extensionId })
-        return true
-      }
-      return false
-    } catch (err) {
-      console.warn('[browser:activate-extension] Failed:', err)
-      return false
-    }
-  })
-
-  // Non-test handle: needed by CLI browser registry
-  ipcMain.handle('browser:get-web-contents-id', (_, viewId: string) => browserViewManager.getWebContentsId(viewId))
-
-  // Test-only handles
-  if (isPlaywright) {
-    ipcMain.handle('app:get-renderer-zoom-factor', () => mainWindow?.webContents.zoomFactor ?? null)
-    ipcMain.handle('window:get-content-bounds', () => mainWindow?.getContentBounds() ?? null)
-    ipcMain.handle('window:get-display-scale-factor', () => {
-      if (!mainWindow || mainWindow.isDestroyed()) return null
-      return screen.getDisplayMatching(mainWindow.getBounds()).scaleFactor
-    })
-    ipcMain.handle('browser:get-url', (_, viewId: string) => browserViewManager.getUrl(viewId))
-    ipcMain.handle('browser:get-bounds', (_, viewId: string) => browserViewManager.getBounds(viewId))
-    ipcMain.handle('browser:get-zoom-factor', (_, viewId: string) => browserViewManager.getZoomFactor(viewId))
-    ipcMain.handle(
-      'browser:test-dispatch-mouse-click',
-      (_event, viewId: string, point: { x?: unknown; y?: unknown }, modifiers?: unknown) => {
-        const x = typeof point?.x === 'number' ? point.x : NaN
-        const y = typeof point?.y === 'number' ? point.y : NaN
-        if (!Number.isFinite(x) || !Number.isFinite(y)) return false
-
-        const normalizedModifiers = Array.isArray(modifiers)
-          ? modifiers.filter((modifier): modifier is 'shift' | 'control' | 'alt' | 'meta' =>
-            modifier === 'shift' || modifier === 'control' || modifier === 'alt' || modifier === 'meta')
-          : []
-
-        return browserViewManager.dispatchMouseClick(viewId, { x, y }, normalizedModifiers)
-      }
-    )
-    ipcMain.handle('browser:test-dispatch-create-task-from-link', (_event, viewId: string, payload: { url?: unknown; linkText?: unknown }) => {
-      const url = typeof payload?.url === 'string' ? payload.url : ''
-      if (!/^https?:\/\//i.test(url)) return false
-      const linkText = typeof payload?.linkText === 'string' ? payload.linkText : undefined
-      return browserViewManager.emitCreateTaskFromLinkForView(viewId, { url, linkText, source: 'modified-link-click' })
-    })
-    ipcMain.handle(
-      'browser:test-run-link-context-menu-action',
-      (_event, viewId: string, payload: { linkURL?: unknown; linkText?: unknown }, action: unknown) => {
-        const linkURL = typeof payload?.linkURL === 'string' ? payload.linkURL : ''
-        const linkText = typeof payload?.linkText === 'string' ? payload.linkText : ''
-        if (
-          action !== 'create-task-from-link' &&
-          action !== 'open-link-in-new-tab' &&
-          action !== 'copy-link' &&
-          action !== 'open-link-externally'
-        ) {
-          return false
+          return { ok: true, verifier: start.verifier, code: callback.code }
+        } catch (error) {
+          return {
+            ok: false,
+            error: error instanceof Error ? error.message : 'GitHub sign-in failed'
+          }
         }
-        return browserViewManager.runLinkContextMenuAction(viewId, { linkURL, linkText }, action)
       }
     )
-    ipcMain.handle('browser:get-all-view-ids', () => browserViewManager.getAllViewIds())
-    ipcMain.handle('browser:get-views-for-task', (_, taskId: string) => browserViewManager.getViewsForTask(taskId))
-    ipcMain.handle('browser:list-views', () => browserViewManager.listViews())
-    ipcMain.handle('browser:is-focused', (_, viewId: string) => browserViewManager.isFocused(viewId))
-    ipcMain.handle('browser:get-actual-native-bounds', (_, viewId: string) => browserViewManager.getActualNativeBounds(viewId))
-    ipcMain.handle('browser:is-all-hidden', () => browserViewManager.isAllHidden())
-    ipcMain.handle('browser:get-view-visible', (_, viewId: string) => browserViewManager.getViewVisible(viewId))
-    ipcMain.handle('browser:is-view-natively-visible', (_, viewId: string) => browserViewManager.isViewNativelyVisible(viewId))
-    ipcMain.handle('browser:get-partition', (_, viewId: string) => browserViewManager.getPartition(viewId))
-    ipcMain.handle('browser:get-native-child-view-count', () => browserViewManager.getNativeChildViewCount())
-    ipcMain.handle('browser:is-locked', (_, viewId: string) => browserViewManager.isLocked(viewId))
-  }
 
-  initProcessManager(db)
-  logBoot('process manager initialized')
+    ipcMain.on('app:data-ready', () => {
+      if (rendererDataReady) return
+      logBoot('renderer data-ready (IPC from useTasksData)')
+      rendererDataReady = true
+      tryShowMainWindow()
+    })
 
-  // Reset all main-process state + DB for test isolation (Playwright only)
-  if (isPlaywright) {
-    ipcMain.handle('app:reset-for-test', async () => {
-      // 1. Kill running processes
-      killAllPtys()
-      shutdownChatTransports()
-      stopIdleChecker()
-      killAllProcesses()
+    // Renderer-emitted boot marks routed into main timeline. Renderer measures
+    // are page-relative; we record them with main's clock so the waterfall is
+    // unified. Gated behind SLAYZONE_DEBUG_BOOT.
+    ipcMain.on('boot:mark', (_event, label: string) => {
+      if (typeof label === 'string') logBoot(`renderer: ${label}`)
+    })
 
-      // 2. Stop timers
-      stopAutoBackup()
-      if (linearSyncPoller) { clearInterval(linearSyncPoller); linearSyncPoller = null }
-      if (discoveryPoller) { clearInterval(discoveryPoller); discoveryPoller = null }
-
-      // 3. Stop MCP + tRPC servers (restarted after table drop so ports persist)
-      mcpCleanup?.()
-      mcpCleanup = null
-      ;(globalThis as Record<string, unknown>).__mcpPort = undefined
-      trpcCleanup?.()
-      trpcCleanup = null
-      ;(globalThis as Record<string, unknown>).__trpcPort = undefined
-
-      // 4. Close file watchers
-      closeAllWatchers()
-      closeArtifactWatcher()
-      closeGitWatcher()
-
-      // 5. Clear registries + flags + browser view manager
-      clearBrowserRegistry()
-      resetSyncFlags()
-      browserViewManager.reset()
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.zoomLevel = 0
-        mainWindow.webContents.send('app:zoom-factor-changed', mainWindow.webContents.zoomFactor)
-      }
-
-      // 6. Clear oauth state
-      oauthCallbackQueue.length = 0
-      oauthCallbackWaiters.clear()
-
-      // 7. Drop all tables + re-migrate
-      const tables = db.prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-      ).all() as { name: string }[]
-      db.exec('PRAGMA foreign_keys = OFF')
-      for (const { name } of tables) db.exec(`DROP TABLE IF EXISTS "${name}"`)
-      db.exec('PRAGMA foreign_keys = ON')
-      db.pragma('user_version = 0')
-      runMigrations(db)
-      ensureIntegrationSchema(db)
-      normalizeProjectStatusData(db)
-      syncTerminalModes(db)
-
-      // 7b. Seed post-onboarding baseline so tests skip the onboarding wizard
-      await settings.seedOnboardingCompleted()
-      // Re-warm cache after settings table was dropped + re-migrated
-      await settings.warmCache(['labs_tests_panel', 'labs_jira_integration', 'labs_loop_mode'])
-
-      // 8. Restart MCP + tRPC (after table drop so ports persist to fresh settings table)
-      const mcpMod = await import('./mcp-server')
-      mcpMod.startMcpServer(db, { automationEngine })
-      mcpCleanup = () => mcpMod.stopMcpServer()
-      const trpcMod = await import('@slayzone/transport/server')
-      trpcMod.startTrpcServer({ db, dataRoot: ensureDataRoot() })
-      trpcCleanup = () => trpcMod.stopTrpcServer()
-      // Wait for both servers to be listening
-      await new Promise<void>((resolve) => {
+    ipcMain.handle('app:getVersion', () => app.getVersion())
+    ipcMain.handle('app:get-trpc-port', async () => {
+      const g = globalThis as Record<string, unknown>
+      if (typeof g.__trpcPort === 'number') return g.__trpcPort as number
+      return new Promise<number>((resolve) => {
+        const start = Date.now()
         const check = (): void => {
-          const g = globalThis as Record<string, unknown>
-          if (g.__mcpPort && g.__trpcPort) resolve()
-          else setTimeout(check, 10)
+          const port = (globalThis as Record<string, unknown>).__trpcPort
+          if (typeof port === 'number') resolve(port)
+          else if (Date.now() - start > 5000) resolve(0)
+          else setTimeout(check, 25)
         }
         check()
       })
+    })
+    ipcMain.handle('app:is-tests-panel-enabled', () => isLabEnabled('labs_tests_panel'))
+    ipcMain.on('app:is-tests-panel-enabled-sync', (event) => {
+      event.returnValue = isLabEnabled('labs_tests_panel')
+    })
+    ipcMain.handle('app:is-jira-integration-enabled', () => isLabEnabled('labs_jira_integration'))
+    ipcMain.on('app:is-jira-integration-enabled-sync', (event) => {
+      event.returnValue = isLabEnabled('labs_jira_integration')
+    })
+    ipcMain.handle('app:is-loop-mode-enabled', () => isLabEnabled('labs_loop_mode'))
+    ipcMain.on('app:is-loop-mode-enabled-sync', (event) => {
+      event.returnValue = isLabEnabled('labs_loop_mode')
+    })
+    ipcMain.handle('app:get-protocol-client-status', () => protocolClientStatus)
+    ipcMain.handle('app:get-zoom-factor', () => mainWindow?.webContents.zoomFactor ?? 1)
+    ipcMain.handle('app:adjust-zoom', (_event, command: AppZoomCommand) => applyAppZoom(command))
+    ipcMain.handle('app:focus-renderer', (event) => {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (!win || win.isDestroyed() || !win.isFocused()) return
+      event.sender.focus()
+    })
+    ipcMain.handle('app:restart-for-update', () => restartForUpdate())
+    ipcMain.handle('app:check-for-updates', () => checkForUpdates())
+    ipcMain.handle('app:cli-status', () => checkCliInstalled())
+    ipcMain.handle('app:install-cli', () => installCli(getCliSrc()))
 
-      // 9. Re-init process manager
-      initProcessManager(db)
-      return { ok: true }
+    // Window close
+    ipcMain.handle('window:close', (event) => {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (win) win.close()
     })
 
-    // E2E test bridges. Cheap, read-only. Gated to Playwright so they cannot
-    // be invoked from a production renderer.
-    ipcMain.handle('e2e:get-env', (_e, keys: string[]) => {
-      if (!Array.isArray(keys)) return {}
-      const out: Record<string, string | undefined> = {}
-      for (const k of keys) out[k] = process.env[k]
-      return out
+    // Adjust macOS traffic-light position. Pass null to restore default.
+    ipcMain.handle(
+      'window:set-traffic-light-position',
+      (event, pos: { x: number; y: number } | null) => {
+        if (process.platform !== 'darwin') return
+        const win = BrowserWindow.fromWebContents(event.sender)
+        if (!win) return
+        win.setWindowButtonPosition(pos ?? { x: 10, y: 12 })
+      }
+    )
+
+    // Show/hide macOS traffic-light buttons (close/min/max).
+    ipcMain.handle('window:set-window-button-visibility', (event, visible: boolean) => {
+      if (process.platform !== 'darwin') return
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (!win) return
+      win.setWindowButtonVisibility(visible)
     })
-    ipcMain.handle('e2e:get-mcp-port', () => {
-      return (globalThis as Record<string, unknown>).__mcpPort ?? null
+
+    // Dialog
+    ipcMain.handle(
+      'dialog:showOpenDialog',
+      async (
+        _,
+        options: {
+          title?: string
+          defaultPath?: string
+          properties?: Array<
+            | 'openFile'
+            | 'openDirectory'
+            | 'multiSelections'
+            | 'showHiddenFiles'
+            | 'createDirectory'
+            | 'promptToCreate'
+            | 'noResolveAliases'
+            | 'treatPackageAsDirectory'
+            | 'dontAddToRecent'
+          >
+          filters?: Array<{ name: string; extensions: string[] }>
+        }
+      ) => {
+        return dialog.showOpenDialog(options)
+      }
+    )
+
+    // Browser panel registry (CLI browser control — per-tab)
+    ipcMain.handle(
+      'webview:register-browser-tab',
+      (_, taskId: string, tabId: string, webContentsId: number) => {
+        registerBrowserTab(taskId, tabId, webContentsId)
+      }
+    )
+    ipcMain.handle('webview:unregister-browser-tab', (_, taskId: string, tabId: string) => {
+      unregisterBrowserTab(taskId, tabId)
     })
-  }
+    ipcMain.handle('webview:set-active-browser-tab', (_, taskId: string, tabId: string | null) => {
+      setActiveBrowserTab(taskId, tabId)
+    })
 
-  createWindow()
-  logBoot('windows created')
-  if (mainWindow) setProcessManagerWindow(mainWindow)
+    // Webview shortcut interception
+    const registeredWebviews = new Set<number>()
+    const keyboardPassthroughWebviews = new Set<number>()
 
-  recordDiagnosticEvent({
-    level: 'info', source: 'main', event: 'app.boot.ready',
-    payload: { version: app.getVersion() }
-  })
+    ipcMain.handle('webview:register-shortcuts', (event, webviewId: number) => {
+      if (registeredWebviews.has(webviewId)) return
 
-  // PTY stats poller — lazy start/stop via session lifecycle
-  const ptyStatsPoller = createStatsPoller(
-    () => getPtyPids(),
-    (stats) => { mainWindow?.webContents.send('pty:stats', stats) }
-  )
-  onSessionChange(() => ptyStatsPoller.ensureStarted())
+      const wc = webContents.fromId(webviewId)
+      if (!wc) return
 
-  // Register process IPC handlers
-  ipcMain.handle('processes:create', (_event, projectId: string | null, taskId: string | null, label: string, command: string, cwd: string, autoRestart: boolean) => {
-    return createProcess(projectId, taskId, label, command, cwd, autoRestart)
-  })
-  ipcMain.handle('processes:spawn', (_event, projectId: string | null, taskId: string | null, label: string, command: string, cwd: string, autoRestart: boolean) => {
-    return spawnProcess(projectId, taskId, label, command, cwd, autoRestart)
-  })
-  ipcMain.handle('processes:update', (_event, processId: string, updates: Parameters<typeof updateProcess>[1]) => {
-    return updateProcess(processId, updates)
-  })
-  ipcMain.handle('processes:stop', (_event, processId: string) => {
-    return stopProcess(processId)
-  })
-  ipcMain.handle('processes:kill', (_event, processId: string) => {
-    return killProcess(processId)
-  })
-  ipcMain.handle('processes:restart', (_event, processId: string) => {
-    return restartProcess(processId)
-  })
-  ipcMain.handle('processes:listForTask', (_event, taskId: string | null, projectId: string | null) => {
-    return listForTask(taskId, projectId)
-  })
-  ipcMain.handle('processes:listAll', () => {
-    return listAllProcesses()
-  })
-  ipcMain.handle('processes:killTask', (_event, taskId: string) => {
-    killTaskProcesses(taskId)
-  })
+      registeredWebviews.add(webviewId)
 
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-    else mainWindow?.show()
+      wc.on('before-input-event', (e, input) => {
+        if (keyboardPassthroughWebviews.has(webviewId)) return
+        if (input.type !== 'keyDown') return
+        if (!(input.control || input.meta)) return
+
+        // Cmd/Ctrl+1-9 for tab switching, T/A/D/L reserved for panel actions
+        if (/^[1-9tadl]$/i.test(input.key)) {
+          e.preventDefault()
+          event.sender.send('webview:shortcut', {
+            key: input.key.toLowerCase(),
+            shift: Boolean(input.shift),
+            webviewId
+          })
+        }
+      })
+
+      wc.on('destroyed', () => {
+        registeredWebviews.delete(webviewId)
+        keyboardPassthroughWebviews.delete(webviewId)
+      })
+    })
+
+    ipcMain.handle(
+      'webview:set-keyboard-passthrough',
+      (_event, webviewId: number, enabled: boolean) => {
+        if (enabled) keyboardPassthroughWebviews.add(webviewId)
+        else keyboardPassthroughWebviews.delete(webviewId)
+      }
+    )
+
+    ipcMain.handle(
+      'webview:set-desktop-handoff-policy',
+      (_, webviewId: number, policy: DesktopHandoffPolicy | null) => {
+        const wc = webContents.fromId(webviewId)
+        if (!wc || wc.isDestroyed() || wc.getType() !== 'webview') return false
+
+        if (policy === null) {
+          webviewDesktopHandoffPolicy.delete(webviewId)
+          return true
+        }
+        const protocol = normalizeDesktopProtocol(policy.protocol)
+        if (!protocol) {
+          webviewDesktopHandoffPolicy.delete(webviewId)
+          return false
+        }
+        const hostScope = normalizeDesktopHostScope(policy.hostScope) ?? undefined
+        webviewDesktopHandoffPolicy.set(
+          webviewId,
+          hostScope ? { protocol, hostScope } : { protocol }
+        )
+
+        if (!webviewDesktopHandoffPolicyCleanupRegistered.has(webviewId)) {
+          webviewDesktopHandoffPolicyCleanupRegistered.add(webviewId)
+          wc.once('destroyed', () => {
+            webviewDesktopHandoffPolicy.delete(webviewId)
+            webviewDesktopHandoffPolicyCleanupRegistered.delete(webviewId)
+          })
+        }
+        return true
+      }
+    )
+
+    ipcMain.handle(
+      'webview:open-devtools-bottom',
+      async (_, webviewId: number, options?: { probe?: boolean }) => {
+        const wc = webContents.fromId(webviewId)
+        if (!wc || wc.isDestroyed()) {
+          console.warn('[webview:open-devtools-bottom] missing/destroyed webContents', {
+            webviewId
+          })
+          return false
+        }
+
+        const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+        const waitForEvent = (event: 'devtools-opened' | 'devtools-closed', timeoutMs = 500) =>
+          new Promise<boolean>((resolve) => {
+            const emitter = wc as unknown as NodeJS.EventEmitter
+            let settled = false
+            const handler = () => {
+              if (settled) return
+              settled = true
+              clearTimeout(timer)
+              resolve(true)
+            }
+            const timer = setTimeout(() => {
+              if (settled) return
+              settled = true
+              emitter.removeListener(event, handler)
+              resolve(false)
+            }, timeoutMs)
+            emitter.once(event, handler)
+          })
+
+        const attempts: Array<{
+          mode: 'bottom' | 'right' | 'undocked' | 'detach'
+          activate: boolean
+          before: boolean
+          after: boolean
+          openedEvent: boolean
+          elapsedMs: number
+          error?: string
+        }> = []
+
+        const variants: Array<{
+          mode: 'bottom' | 'right' | 'undocked' | 'detach'
+          activate: boolean
+        }> = [
+          { mode: 'bottom', activate: false },
+          { mode: 'bottom', activate: true },
+          { mode: 'right', activate: false },
+          { mode: 'right', activate: true },
+          { mode: 'undocked', activate: false },
+          { mode: 'undocked', activate: true },
+          { mode: 'detach', activate: false },
+          { mode: 'detach', activate: true }
+        ]
+
+        for (const variant of variants) {
+          try {
+            if (wc.isDevToolsOpened()) {
+              wc.closeDevTools()
+              await waitForEvent('devtools-closed', 300)
+            }
+          } catch {
+            // continue probing
+          }
+          await wait(50)
+
+          const before = wc.isDevToolsOpened()
+          let error: string | undefined
+          const startedAt = Date.now()
+          let openedEvent = false
+          try {
+            const openedPromise = waitForEvent('devtools-opened', 700)
+            wc.openDevTools({ mode: variant.mode, activate: variant.activate })
+            openedEvent = await openedPromise
+          } catch (err) {
+            error = err instanceof Error ? err.message : String(err)
+          }
+          await wait(80)
+          const after = wc.isDevToolsOpened()
+          const elapsedMs = Date.now() - startedAt
+
+          attempts.push({
+            mode: variant.mode,
+            activate: variant.activate,
+            before,
+            after,
+            openedEvent,
+            elapsedMs,
+            ...(error ? { error } : {})
+          })
+
+          if (!options?.probe && after) {
+            console.log('[webview:open-devtools-bottom] selected variant', {
+              webviewId,
+              mode: variant.mode,
+              activate: variant.activate,
+              openedEvent,
+              elapsedMs
+            })
+            return true
+          }
+        }
+
+        if (options?.probe) {
+          return {
+            ok: true,
+            webviewId,
+            type: wc.getType(),
+            attempts
+          }
+        }
+
+        console.warn('[webview:open-devtools-bottom] failed to open', { webviewId, attempts })
+        return wc.isDevToolsOpened()
+      }
+    )
+
+    ipcMain.handle('webview:close-devtools', (_, webviewId: number) => {
+      const wc = webContents.fromId(webviewId)
+      if (!wc || wc.isDestroyed()) {
+        console.warn('[webview:close-devtools] missing/destroyed webContents', { webviewId })
+        return false
+      }
+      if (wc.isDevToolsOpened()) wc.closeDevTools()
+      console.log('[webview:close-devtools]', { webviewId, opened: wc.isDevToolsOpened() })
+      return true
+    })
+
+    ipcMain.handle('webview:open-devtools-detached', async (_, webviewId: number) => {
+      const wc = webContents.fromId(webviewId)
+      if (!wc || wc.isDestroyed()) {
+        console.warn('[webview:open-devtools-detached] missing/destroyed webContents', {
+          webviewId
+        })
+        return false
+      }
+
+      const emitter = wc as unknown as NodeJS.EventEmitter
+      const waitForOpened = (timeoutMs = 1000) =>
+        new Promise<boolean>((resolve) => {
+          let settled = false
+          const handler = () => {
+            if (settled) return
+            settled = true
+            clearTimeout(timer)
+            resolve(true)
+          }
+          const timer = setTimeout(() => {
+            if (settled) return
+            settled = true
+            emitter.removeListener('devtools-opened', handler)
+            resolve(false)
+          }, timeoutMs)
+          emitter.once('devtools-opened', handler)
+        })
+
+      try {
+        if (wc.isDevToolsOpened()) wc.closeDevTools()
+        const openedPromise = waitForOpened()
+        wc.openDevTools({ mode: 'detach', activate: true })
+        const opened = await openedPromise
+        if (opened) return true
+        return wc.isDevToolsOpened()
+      } catch (err) {
+        console.warn('[webview:open-devtools-detached] failed', {
+          webviewId,
+          err: err instanceof Error ? err.message : String(err)
+        })
+        return false
+      }
+    })
+
+    // Inline DevTools IPC handlers removed — DevTools now docked natively via browser-view-manager
+
+    ipcMain.handle('webview:is-devtools-opened', (_, webviewId: number) => {
+      const wc = webContents.fromId(webviewId)
+      if (!wc || wc.isDestroyed()) return false
+      return wc.isDevToolsOpened()
+    })
+
+    // Webview device emulation
+    ipcMain.handle(
+      'webview:enable-device-emulation',
+      (
+        _,
+        webviewId: number,
+        params: {
+          screenSize: { width: number; height: number }
+          viewSize: { width: number; height: number }
+          deviceScaleFactor: number
+          screenPosition: 'mobile' | 'desktop'
+          userAgent?: string
+        }
+      ) => {
+        const wc = webContents.fromId(webviewId)
+        if (!wc) return false
+        wc.enableDeviceEmulation({
+          screenPosition: params.screenPosition,
+          screenSize: params.screenSize,
+          viewSize: params.viewSize,
+          deviceScaleFactor: params.deviceScaleFactor,
+          viewPosition: { x: 0, y: 0 },
+          scale: 1
+        })
+        if (params.userAgent) {
+          wc.setUserAgent(params.userAgent)
+        }
+        return true
+      }
+    )
+
+    ipcMain.handle('webview:disable-device-emulation', (_, webviewId: number) => {
+      const wc = webContents.fromId(webviewId)
+      if (!wc) return false
+      wc.disableDeviceEmulation()
+      wc.setUserAgent(_chromeUa)
+      return true
+    })
+
+    // --- Browser View Manager (WebContentsView) ---
+    // Wire handoff policy mirror so main-process hardening listeners see WCV policies
+    browserViewManager.setHandoffPolicyChangeCallback((wcId, policy) => {
+      if (policy) {
+        webviewDesktopHandoffPolicy.set(wcId, policy)
+      } else {
+        webviewDesktopHandoffPolicy.delete(wcId)
+      }
+    })
+
+    // Lifecycle
+    ipcMain.handle('browser:create-view', (_, opts: CreateViewOpts) =>
+      browserViewManager.createView(opts)
+    )
+    ipcMain.handle('browser:reparent-to-current-window', (event, viewId: string) => {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (!win || win.isDestroyed()) return { ok: false }
+      const ok = browserViewManager.reparentView(viewId, win)
+      return { ok }
+    })
+    ipcMain.handle('browser:destroy-view', (_, viewId: string) =>
+      browserViewManager.destroyView(viewId)
+    )
+    ipcMain.handle('browser:destroy-all-for-task', (_, taskId: string) =>
+      browserViewManager.destroyAllForTask(taskId)
+    )
+
+    // Bounds & visibility
+    ipcMain.handle('browser:set-bounds', (_, viewId: string, bounds: ViewBounds) =>
+      browserViewManager.setBounds(viewId, bounds)
+    )
+    ipcMain.handle('browser:set-visible', (_, viewId: string, visible: boolean) =>
+      browserViewManager.setVisible(viewId, visible)
+    )
+    ipcMain.handle('browser:set-locked', (_, viewId: string, locked: boolean) =>
+      browserViewManager.setLocked(viewId, locked)
+    )
+    ipcMain.handle('browser:hide-all', () => browserViewManager.hideAll())
+    ipcMain.handle('browser:show-all', () => browserViewManager.showAll())
+    ipcMain.handle(
+      'browser:set-handoff-policy',
+      (_, viewId: string, policy: DesktopHandoffPolicy | null) =>
+        browserViewManager.setHandoffPolicy(viewId, policy)
+    )
+
+    // Navigation
+    ipcMain.handle('browser:navigate', (_, viewId: string, url: string) =>
+      browserViewManager.navigate(viewId, url)
+    )
+    ipcMain.handle('browser:go-back', (_, viewId: string) => browserViewManager.goBack(viewId))
+    ipcMain.handle('browser:go-forward', (_, viewId: string) =>
+      browserViewManager.goForward(viewId)
+    )
+    ipcMain.handle('browser:reload', (_, viewId: string, ignoreCache?: boolean) =>
+      browserViewManager.reload(viewId, ignoreCache)
+    )
+    ipcMain.handle('browser:stop', (_, viewId: string) => browserViewManager.stop(viewId))
+
+    // Content
+    ipcMain.handle('browser:execute-js', (_, viewId: string, code: string) =>
+      browserViewManager.executeJs(viewId, code)
+    )
+    ipcMain.handle('browser:insert-css', (_, viewId: string, css: string) =>
+      browserViewManager.insertCss(viewId, css)
+    )
+    ipcMain.handle('browser:remove-css', (_, viewId: string, key: string) =>
+      browserViewManager.removeCss(viewId, key)
+    )
+    ipcMain.handle('browser:set-zoom', (_, viewId: string, factor: number) =>
+      browserViewManager.setZoom(viewId, factor)
+    )
+    ipcMain.handle('browser:focus', (_, viewId: string) => browserViewManager.focus(viewId))
+    ipcMain.handle(
+      'browser:find-in-page',
+      (
+        _,
+        viewId: string,
+        text: string,
+        options?: { forward?: boolean; findNext?: boolean; matchCase?: boolean }
+      ) => browserViewManager.findInPage(viewId, text, options)
+    )
+    ipcMain.handle(
+      'browser:stop-find-in-page',
+      (_, viewId: string, action: 'clearSelection' | 'keepSelection' | 'activateSelection') =>
+        browserViewManager.stopFindInPage(viewId, action)
+    )
+    ipcMain.handle('browser:set-keyboard-passthrough', (_, viewId: string, enabled: boolean) =>
+      browserViewManager.setKeyboardPassthrough(viewId, enabled)
+    )
+    ipcMain.handle(
+      'browser:send-input-event',
+      (_, viewId: string, input: Electron.KeyboardInputEvent) =>
+        browserViewManager.sendInputEvent(viewId, input)
+    )
+    ipcMain.on(
+      'browser:request-create-task-from-link',
+      (event, payload: { url?: unknown; linkText?: unknown }) => {
+        const url = typeof payload?.url === 'string' ? payload.url : ''
+        if (!/^https?:\/\//i.test(url)) return
+        const linkText = typeof payload?.linkText === 'string' ? payload.linkText : undefined
+        browserViewManager.emitCreateTaskFromLinkForWebContents(event.sender.id, {
+          url,
+          linkText,
+          source: 'modified-link-click'
+        })
+      }
+    )
+    ipcMain.on('browser:request-open-link-externally', (_event, payload: { url?: unknown }) => {
+      const url = typeof payload?.url === 'string' ? payload.url : ''
+      if (!/^https?:\/\//i.test(url)) return
+      void shell.openExternal(url)
+    })
+
+    // DevTools
+    ipcMain.handle(
+      'browser:open-devtools',
+      (_, viewId: string, mode: 'bottom' | 'right' | 'undocked' | 'detach') =>
+        browserViewManager.openDevTools(viewId, mode)
+    )
+    ipcMain.handle('browser:close-devtools', (_, viewId: string) =>
+      browserViewManager.closeDevTools(viewId)
+    )
+    ipcMain.handle('browser:is-devtools-open', (_, viewId: string) =>
+      browserViewManager.isDevToolsOpen(viewId)
+    )
+
+    // Chrome extension management
+    ipcMain.handle('browser:get-extensions', () => {
+      return browserSession.getAllExtensions().map((ext) => ({
+        id: ext.id,
+        name: ext.name,
+        version: ext.manifest.version,
+        manifestVersion:
+          typeof ext.manifest.manifest_version === 'number'
+            ? ext.manifest.manifest_version
+            : undefined,
+        icon: ext.manifest.icons
+          ? `crx://extension-icon/${ext.id}/${Object.values(ext.manifest.icons).pop()}`
+          : undefined
+      }))
+    })
+    ipcMain.handle('browser:load-extension', async () => {
+      if (!mainWindow) return null
+      const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory'],
+        title: 'Select Chrome Extension Directory'
+      })
+      if (result.canceled || !result.filePaths[0]) return null
+      try {
+        const ext = await browserSession.loadExtension(result.filePaths[0])
+        saveExtensionPaths()
+        return { id: ext.id, name: ext.name }
+      } catch (err) {
+        return { error: String(err) }
+      }
+    })
+    ipcMain.handle('browser:remove-extension', (_, extensionId: string) => {
+      browserSession.removeExtension(extensionId)
+      saveExtensionPaths()
+    })
+    ipcMain.handle('browser:discover-browser-extensions', async () => {
+      const appSupport = join(homedir(), 'Library', 'Application Support')
+      const knownBrowsers = [
+        { name: 'Chrome', dir: 'Google/Chrome/Default/Extensions' },
+        { name: 'Arc', dir: 'Arc/User Data/Default/Extensions' },
+        { name: 'Brave', dir: 'BraveSoftware/Brave-Browser/Default/Extensions' },
+        { name: 'Edge', dir: 'Microsoft Edge/Default/Extensions' },
+        { name: 'Chromium', dir: 'Chromium/Default/Extensions' },
+        { name: 'Vivaldi', dir: 'Vivaldi/Default/Extensions' }
+      ]
+      const alreadyLoaded = new Set(browserSession.getAllExtensions().map((e) => e.id))
+      const results: {
+        name: string
+        extensions: {
+          id: string
+          name: string
+          version: string
+          path: string
+          alreadyImported: boolean
+          manifestVersion?: number
+        }[]
+      }[] = []
+
+      for (const browser of knownBrowsers) {
+        const extDir = join(appSupport, browser.dir)
+        let entries: string[]
+        try {
+          entries = await fsp.readdir(extDir)
+        } catch {
+          continue
+        }
+
+        const extensions: (typeof results)[0]['extensions'] = []
+        for (const id of entries) {
+          if (id === 'Temp' || id.startsWith('.')) continue
+          const idDir = join(extDir, id)
+          let versions: string[]
+          try {
+            versions = await fsp.readdir(idDir)
+          } catch {
+            continue
+          }
+          const ver = versions.sort().pop()
+          if (!ver) continue
+          const extPath = join(idDir, ver)
+          try {
+            const manifest = JSON.parse(await fsp.readFile(join(extPath, 'manifest.json'), 'utf-8'))
+            let name: string = manifest.name || id
+            if (name.startsWith('__MSG_')) {
+              const key = name.slice(6, -2)
+              for (const lang of ['en', 'en_US', 'en_GB']) {
+                try {
+                  const msgs = JSON.parse(
+                    await fsp.readFile(join(extPath, '_locales', lang, 'messages.json'), 'utf-8')
+                  )
+                  if (msgs[key]?.message) {
+                    name = msgs[key].message
+                    break
+                  }
+                } catch {
+                  /* try next lang */
+                }
+              }
+            }
+            extensions.push({
+              id,
+              name,
+              version: manifest.version || '?',
+              path: extPath,
+              alreadyImported: alreadyLoaded.has(id),
+              manifestVersion:
+                typeof manifest.manifest_version === 'number'
+                  ? manifest.manifest_version
+                  : undefined
+            })
+          } catch {
+            /* skip unreadable extensions */
+          }
+        }
+        if (extensions.length > 0) {
+          results.push({ name: browser.name, extensions })
+        }
+      }
+      return results
+    })
+    ipcMain.handle('browser:import-extension', async (_, extPath: string) => {
+      try {
+        const ext = await browserSession.loadExtension(extPath)
+        saveExtensionPaths()
+        return { id: ext.id, name: ext.name }
+      } catch (err) {
+        return { error: String(err) }
+      }
+    })
+    ipcMain.handle('browser:activate-extension', (_, extensionId: string) => {
+      // Trigger the extension's browser action by accessing the library's internal API.
+      // The public API doesn't expose activate(), so we reach into the context's router.
+      try {
+        const ext = browserSession.getExtension(extensionId)
+        if (!ext) return false
+        const activeWc = browserViewManager.getActiveWebContents()
+        if (!activeWc) return false
+        // Access internal browser action API through the context
+        const api = (chromeExtensions as any).api
+        if (api?.browserAction?.activate) {
+          api.browserAction.activate({ type: 'click' }, { extensionId, tabId: activeWc.id })
+          return true
+        }
+        // Fallback: invoke via the internal handle system
+        const ctx = (chromeExtensions as any).ctx
+        if (ctx?.router) {
+          ctx.router.invoke(activeWc, 'browserAction.activate', { eventType: 'click', extensionId })
+          return true
+        }
+        return false
+      } catch (err) {
+        console.warn('[browser:activate-extension] Failed:', err)
+        return false
+      }
+    })
+
+    // Non-test handle: needed by CLI browser registry
+    ipcMain.handle('browser:get-web-contents-id', (_, viewId: string) =>
+      browserViewManager.getWebContentsId(viewId)
+    )
+
+    // Test-only handles
+    if (isPlaywright) {
+      ipcMain.handle(
+        'app:get-renderer-zoom-factor',
+        () => mainWindow?.webContents.zoomFactor ?? null
+      )
+      ipcMain.handle('window:get-content-bounds', () => mainWindow?.getContentBounds() ?? null)
+      ipcMain.handle('window:get-display-scale-factor', () => {
+        if (!mainWindow || mainWindow.isDestroyed()) return null
+        return screen.getDisplayMatching(mainWindow.getBounds()).scaleFactor
+      })
+      ipcMain.handle('browser:get-url', (_, viewId: string) => browserViewManager.getUrl(viewId))
+      ipcMain.handle('browser:get-bounds', (_, viewId: string) =>
+        browserViewManager.getBounds(viewId)
+      )
+      ipcMain.handle('browser:get-zoom-factor', (_, viewId: string) =>
+        browserViewManager.getZoomFactor(viewId)
+      )
+      ipcMain.handle(
+        'browser:test-dispatch-mouse-click',
+        (_event, viewId: string, point: { x?: unknown; y?: unknown }, modifiers?: unknown) => {
+          const x = typeof point?.x === 'number' ? point.x : NaN
+          const y = typeof point?.y === 'number' ? point.y : NaN
+          if (!Number.isFinite(x) || !Number.isFinite(y)) return false
+
+          const normalizedModifiers = Array.isArray(modifiers)
+            ? modifiers.filter(
+                (modifier): modifier is 'shift' | 'control' | 'alt' | 'meta' =>
+                  modifier === 'shift' ||
+                  modifier === 'control' ||
+                  modifier === 'alt' ||
+                  modifier === 'meta'
+              )
+            : []
+
+          return browserViewManager.dispatchMouseClick(viewId, { x, y }, normalizedModifiers)
+        }
+      )
+      ipcMain.handle(
+        'browser:test-dispatch-create-task-from-link',
+        (_event, viewId: string, payload: { url?: unknown; linkText?: unknown }) => {
+          const url = typeof payload?.url === 'string' ? payload.url : ''
+          if (!/^https?:\/\//i.test(url)) return false
+          const linkText = typeof payload?.linkText === 'string' ? payload.linkText : undefined
+          return browserViewManager.emitCreateTaskFromLinkForView(viewId, {
+            url,
+            linkText,
+            source: 'modified-link-click'
+          })
+        }
+      )
+      ipcMain.handle(
+        'browser:test-run-link-context-menu-action',
+        (
+          _event,
+          viewId: string,
+          payload: { linkURL?: unknown; linkText?: unknown },
+          action: unknown
+        ) => {
+          const linkURL = typeof payload?.linkURL === 'string' ? payload.linkURL : ''
+          const linkText = typeof payload?.linkText === 'string' ? payload.linkText : ''
+          if (
+            action !== 'create-task-from-link' &&
+            action !== 'open-link-in-new-tab' &&
+            action !== 'copy-link' &&
+            action !== 'open-link-externally'
+          ) {
+            return false
+          }
+          return browserViewManager.runLinkContextMenuAction(viewId, { linkURL, linkText }, action)
+        }
+      )
+      ipcMain.handle('browser:get-all-view-ids', () => browserViewManager.getAllViewIds())
+      ipcMain.handle('browser:get-views-for-task', (_, taskId: string) =>
+        browserViewManager.getViewsForTask(taskId)
+      )
+      ipcMain.handle('browser:list-views', () => browserViewManager.listViews())
+      ipcMain.handle('browser:is-focused', (_, viewId: string) =>
+        browserViewManager.isFocused(viewId)
+      )
+      ipcMain.handle('browser:get-actual-native-bounds', (_, viewId: string) =>
+        browserViewManager.getActualNativeBounds(viewId)
+      )
+      ipcMain.handle('browser:is-all-hidden', () => browserViewManager.isAllHidden())
+      ipcMain.handle('browser:get-view-visible', (_, viewId: string) =>
+        browserViewManager.getViewVisible(viewId)
+      )
+      ipcMain.handle('browser:is-view-natively-visible', (_, viewId: string) =>
+        browserViewManager.isViewNativelyVisible(viewId)
+      )
+      ipcMain.handle('browser:get-partition', (_, viewId: string) =>
+        browserViewManager.getPartition(viewId)
+      )
+      ipcMain.handle('browser:get-native-child-view-count', () =>
+        browserViewManager.getNativeChildViewCount()
+      )
+      ipcMain.handle('browser:is-locked', (_, viewId: string) =>
+        browserViewManager.isLocked(viewId)
+      )
+    }
+
+    initProcessManager(db)
+    logBoot('process manager initialized')
+
+    // Reset all main-process state + DB for test isolation (Playwright only)
+    if (isPlaywright) {
+      ipcMain.handle('app:reset-for-test', async () => {
+        // 1. Kill running processes
+        killAllPtys()
+        shutdownChatTransports()
+        stopIdleChecker()
+        killAllProcesses()
+
+        // 2. Stop timers
+        stopAutoBackup()
+        if (linearSyncPoller) {
+          clearInterval(linearSyncPoller)
+          linearSyncPoller = null
+        }
+        if (discoveryPoller) {
+          clearInterval(discoveryPoller)
+          discoveryPoller = null
+        }
+
+        // 3. Stop MCP + tRPC servers (restarted after table drop so ports persist)
+        mcpCleanup?.()
+        mcpCleanup = null
+        ;(globalThis as Record<string, unknown>).__mcpPort = undefined
+        trpcCleanup?.()
+        trpcCleanup = null
+        ;(globalThis as Record<string, unknown>).__trpcPort = undefined
+
+        // 4. Close file watchers
+        closeAllWatchers()
+        closeArtifactWatcher()
+        closeGitWatcher()
+
+        // 5. Clear registries + flags + browser view manager
+        clearBrowserRegistry()
+        resetSyncFlags()
+        browserViewManager.reset()
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.zoomLevel = 0
+          mainWindow.webContents.send('app:zoom-factor-changed', mainWindow.webContents.zoomFactor)
+        }
+
+        // 6. Clear oauth state
+        oauthCallbackQueue.length = 0
+        oauthCallbackWaiters.clear()
+
+        // 7. Drop all tables + re-migrate
+        const tables = db
+          .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+          .all() as { name: string }[]
+        db.exec('PRAGMA foreign_keys = OFF')
+        for (const { name } of tables) db.exec(`DROP TABLE IF EXISTS "${name}"`)
+        db.exec('PRAGMA foreign_keys = ON')
+        db.pragma('user_version = 0')
+        runMigrations(db)
+        ensureIntegrationSchema(db)
+        normalizeProjectStatusData(db)
+        syncTerminalModes(db)
+
+        // 7b. Seed post-onboarding baseline so tests skip the onboarding wizard
+        await settings.seedOnboardingCompleted()
+        // Re-warm cache after settings table was dropped + re-migrated
+        await settings.warmCache(['labs_tests_panel', 'labs_jira_integration', 'labs_loop_mode'])
+
+        // 8. Restart MCP + tRPC (after table drop so ports persist to fresh settings table)
+        const mcpMod = await import('./mcp-server')
+        mcpMod.startMcpServer(db, { automationEngine })
+        mcpCleanup = () => mcpMod.stopMcpServer()
+        const trpcMod = await import('@slayzone/transport/server')
+        trpcMod.startTrpcServer({ db, dataRoot: ensureDataRoot() })
+        trpcCleanup = () => trpcMod.stopTrpcServer()
+        // Wait for both servers to be listening
+        await new Promise<void>((resolve) => {
+          const check = (): void => {
+            const g = globalThis as Record<string, unknown>
+            if (g.__mcpPort && g.__trpcPort) resolve()
+            else setTimeout(check, 10)
+          }
+          check()
+        })
+
+        // 9. Re-init process manager
+        initProcessManager(db)
+        return { ok: true }
+      })
+
+      // E2E test bridges. Cheap, read-only. Gated to Playwright so they cannot
+      // be invoked from a production renderer.
+      ipcMain.handle('e2e:get-env', (_e, keys: string[]) => {
+        if (!Array.isArray(keys)) return {}
+        const out: Record<string, string | undefined> = {}
+        for (const k of keys) out[k] = process.env[k]
+        return out
+      })
+      ipcMain.handle('e2e:get-mcp-port', () => {
+        return (globalThis as Record<string, unknown>).__mcpPort ?? null
+      })
+    }
+
+    createWindow()
+    logBoot('windows created')
+    if (mainWindow) setProcessManagerWindow(mainWindow)
+
+    recordDiagnosticEvent({
+      level: 'info',
+      source: 'main',
+      event: 'app.boot.ready',
+      payload: { version: app.getVersion() }
+    })
+
+    // PTY stats poller — lazy start/stop via session lifecycle
+    const ptyStatsPoller = createStatsPoller(
+      () => getPtyPids(),
+      (stats) => {
+        mainWindow?.webContents.send('pty:stats', stats)
+      }
+    )
+    onSessionChange(() => ptyStatsPoller.ensureStarted())
+
+    // Register process IPC handlers
+    ipcMain.handle(
+      'processes:create',
+      (
+        _event,
+        projectId: string | null,
+        taskId: string | null,
+        label: string,
+        command: string,
+        cwd: string,
+        autoRestart: boolean
+      ) => {
+        return createProcess(projectId, taskId, label, command, cwd, autoRestart)
+      }
+    )
+    ipcMain.handle(
+      'processes:spawn',
+      (
+        _event,
+        projectId: string | null,
+        taskId: string | null,
+        label: string,
+        command: string,
+        cwd: string,
+        autoRestart: boolean
+      ) => {
+        return spawnProcess(projectId, taskId, label, command, cwd, autoRestart)
+      }
+    )
+    ipcMain.handle(
+      'processes:update',
+      (_event, processId: string, updates: Parameters<typeof updateProcess>[1]) => {
+        return updateProcess(processId, updates)
+      }
+    )
+    ipcMain.handle('processes:stop', (_event, processId: string) => {
+      return stopProcess(processId)
+    })
+    ipcMain.handle('processes:kill', (_event, processId: string) => {
+      return killProcess(processId)
+    })
+    ipcMain.handle('processes:restart', (_event, processId: string) => {
+      return restartProcess(processId)
+    })
+    ipcMain.handle(
+      'processes:listForTask',
+      (_event, taskId: string | null, projectId: string | null) => {
+        return listForTask(taskId, projectId)
+      }
+    )
+    ipcMain.handle('processes:listAll', () => {
+      return listAllProcesses()
+    })
+    ipcMain.handle('processes:killTask', (_event, taskId: string) => {
+      killTaskProcesses(taskId)
+    })
+
+    app.on('activate', function () {
+      // On macOS it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+      else mainWindow?.show()
+    })
   })
-}).catch((error) => {
-  console.error('[boot] whenReady failed:', error)
-})
+  .catch((error) => {
+    console.error('[boot] whenReady failed:', error)
+  })
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -2487,8 +2977,10 @@ div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:1
 // Both need guards because allowpopups popups are type 'window', not 'webview'.
 let _chromeUa = ''
 let _chromiumVersion = ''
-const _uaPlatform = process.platform === 'darwin' ? 'macOS' : process.platform === 'win32' ? 'Windows' : 'Linux'
-const _uaPlatformVersion = process.platform === 'darwin' ? '14.0.0' : process.platform === 'win32' ? '10.0.0' : '6.0.0'
+const _uaPlatform =
+  process.platform === 'darwin' ? 'macOS' : process.platform === 'win32' ? 'Windows' : 'Linux'
+const _uaPlatformVersion =
+  process.platform === 'darwin' ? '14.0.0' : process.platform === 'win32' ? '10.0.0' : '6.0.0'
 const isBlockedScheme = (url: string) => isBlockedExternalProtocolUrl(url)
 const webviewDesktopHandoffPolicy = new Map<number, DesktopHandoffPolicy>()
 const webviewDesktopHandoffPolicyCleanupRegistered = new Set<number>()
@@ -2518,7 +3010,8 @@ app.on('web-contents-created', (_, wc) => {
     return isEncodedDesktopHandoffUrl(url, desktopHandoffPolicy)
   }
 
-  const isWebviewOrHasPolicy = () => wc.getType() === 'webview' || webviewDesktopHandoffPolicy.has(wc.id)
+  const isWebviewOrHasPolicy = () =>
+    wc.getType() === 'webview' || webviewDesktopHandoffPolicy.has(wc.id)
 
   // Handoff hardening: legacy webviews + WCV views with policies.
   // setWindowOpenHandler for legacy webviews only — WCV views get their handler from the manager.
@@ -2529,8 +3022,8 @@ app.on('web-contents-created', (_, wc) => {
         return {
           action: 'allow',
           overrideBrowserWindowOptions: {
-            autoHideMenuBar: true,
-          },
+            autoHideMenuBar: true
+          }
         }
       }
       return { action: 'deny' }
@@ -2571,20 +3064,20 @@ app.on('web-contents-created', (_, wc) => {
           brands: [
             { brand: 'Google Chrome', version: _chromiumVersion },
             { brand: 'Chromium', version: _chromiumVersion },
-            { brand: 'Not_A Brand', version: '8' },
+            { brand: 'Not_A Brand', version: '8' }
           ],
           fullVersionList: [
             { brand: 'Google Chrome', version: `${_chromiumVersion}.0.0.0` },
             { brand: 'Chromium', version: `${_chromiumVersion}.0.0.0` },
-            { brand: 'Not_A Brand', version: '8.0.0.0' },
+            { brand: 'Not_A Brand', version: '8.0.0.0' }
           ],
           mobile: false,
           platform: _uaPlatform,
           platformVersion: _uaPlatformVersion,
           architecture: process.arch === 'arm64' ? 'arm' : 'x86',
           model: '',
-          bitness: '64',
-        },
+          bitness: '64'
+        }
       })
       spoofingReady = true
     } catch {
@@ -2659,7 +3152,9 @@ app.on('will-quit', () => {
   // event of the session and proves the chain ran. stopDiagnostics() can clear timers
   // safely after.
   recordDiagnosticEvent({
-    level: 'info', source: 'main', event: 'app.will-quit.complete',
+    level: 'info',
+    source: 'main',
+    event: 'app.will-quit.complete',
     payload: { version: app.getVersion() }
   })
   stopDiagnostics()

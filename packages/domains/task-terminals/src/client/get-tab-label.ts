@@ -4,14 +4,22 @@ import type { TerminalMode } from '@slayzone/terminal/shared'
 /** Human label for a terminal mode (provider name). */
 export function getModeLabel(mode: TerminalMode): string {
   switch (mode) {
-    case 'claude-code': return 'Claude Code'
-    case 'codex': return 'Codex'
-    case 'cursor-agent': return 'Cursor'
-    case 'gemini': return 'Gemini'
-    case 'opencode': return 'OpenCode'
-    case 'copilot': return 'Copilot'
-    case 'ccs': return 'CCS'
-    default: return 'Terminal'
+    case 'claude-code':
+      return 'Claude Code'
+    case 'codex':
+      return 'Codex'
+    case 'cursor-agent':
+      return 'Cursor'
+    case 'gemini':
+      return 'Gemini'
+    case 'opencode':
+      return 'OpenCode'
+    case 'copilot':
+      return 'Copilot'
+    case 'ccs':
+      return 'CCS'
+    default:
+      return 'Terminal'
   }
 }
 

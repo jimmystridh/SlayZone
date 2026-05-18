@@ -19,15 +19,23 @@ export const dialog = {
 }
 
 export const BrowserWindow = class MockBrowserWindow {
-  static getAllWindows() { return [] }
-  static fromWebContents() { return null }
-  static getFocusedWindow() { return null }
+  static getAllWindows() {
+    return []
+  }
+  static fromWebContents() {
+    return null
+  }
+  static getFocusedWindow() {
+    return null
+  }
   webContents = { send: () => {} }
 }
 
 // Capture all ipcMain.emit calls for tests. Reset via __resetIpcEmitCalls().
 export const __ipcEmitCalls: unknown[][] = []
-export function __resetIpcEmitCalls(): void { __ipcEmitCalls.length = 0 }
+export function __resetIpcEmitCalls(): void {
+  __ipcEmitCalls.length = 0
+}
 
 export const ipcMain = {
   handle: () => {},
@@ -41,7 +49,9 @@ export const ipcMain = {
 export const Notification = class MockNotification {
   constructor(_opts?: unknown) {}
   show() {}
-  static isSupported() { return false }
+  static isSupported() {
+    return false
+  }
 }
 
 export const nativeTheme = {
@@ -106,6 +116,18 @@ export const safeStorage = {
 }
 
 export default {
-  app, dialog, BrowserWindow, Notification, ipcMain, nativeTheme, shell,
-  clipboard, nativeImage, session, webContents, safeStorage, net, powerMonitor
+  app,
+  dialog,
+  BrowserWindow,
+  Notification,
+  ipcMain,
+  nativeTheme,
+  shell,
+  clipboard,
+  nativeImage,
+  session,
+  webContents,
+  safeStorage,
+  net,
+  powerMonitor
 }

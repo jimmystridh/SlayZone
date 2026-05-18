@@ -17,10 +17,7 @@ const root = resolve(__dirname, '../../..')
 // through them and pre-bundle their third-party imports automatically.
 function discoverDomainClientEntries(): string[] {
   const entries: string[] = []
-  const dirs = [
-    resolve(root, 'packages/domains'),
-    resolve(root, 'packages/shared')
-  ]
+  const dirs = [resolve(root, 'packages/domains'), resolve(root, 'packages/shared')]
   for (const base of dirs) {
     if (!existsSync(base)) continue
     for (const pkg of readdirSync(base, { withFileTypes: true })) {
@@ -50,7 +47,7 @@ export default defineConfig(({ mode }) => {
       build: {
         rollupOptions: {
           input: {
-            index: resolve('src/main/index.ts'),
+            index: resolve('src/main/index.ts')
           },
           external: ['better-sqlite3', 'node-pty', 'posix']
         }
@@ -63,7 +60,7 @@ export default defineConfig(({ mode }) => {
           input: {
             index: resolve('src/preload/index.ts'),
             'webview-preload': resolve('src/preload/webview-preload.ts'),
-            'browser-chrome-preload': resolve('src/preload/browser-chrome-preload.ts'),
+            'browser-chrome-preload': resolve('src/preload/browser-chrome-preload.ts')
           },
           output: {
             format: 'cjs',
@@ -75,7 +72,11 @@ export default defineConfig(({ mode }) => {
     renderer: {
       envDir: root,
       define: {
-        __POSTHOG_API_KEY__: JSON.stringify(env.POSTHOG_DISABLED === '1' ? '' : (env.POSTHOG_API_KEY ?? 'phc_b66nL6IJ3JhzrOEh98Tdk857rRYuoqWMmQmWShSnstV')),
+        __POSTHOG_API_KEY__: JSON.stringify(
+          env.POSTHOG_DISABLED === '1'
+            ? ''
+            : (env.POSTHOG_API_KEY ?? 'phc_b66nL6IJ3JhzrOEh98Tdk857rRYuoqWMmQmWShSnstV')
+        ),
         __POSTHOG_HOST__: JSON.stringify(env.POSTHOG_HOST ?? 'https://eu.i.posthog.com'),
         __DEV__: JSON.stringify(mode !== 'production'),
         __SLAYZONE_PROFILE__: JSON.stringify(env.SLAYZONE_PROFILE === '1')
@@ -91,7 +92,10 @@ export default defineConfig(({ mode }) => {
           // Otherwise React strips Profiler to a no-op in prod and the perf
           // harness sees zero commits.
           ...(env.SLAYZONE_PROFILE === '1'
-            ? { 'react-dom/client': 'react-dom/profiling', 'scheduler/tracing': 'scheduler/tracing-profiling' }
+            ? {
+                'react-dom/client': 'react-dom/profiling',
+                'scheduler/tracing': 'scheduler/tracing-profiling'
+              }
             : {})
         }
       },

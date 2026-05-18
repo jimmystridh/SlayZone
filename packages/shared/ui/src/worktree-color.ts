@@ -1,4 +1,13 @@
-export const WORKTREE_COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
+export const WORKTREE_COLORS = [
+  '#6366f1',
+  '#f59e0b',
+  '#10b981',
+  '#ef4444',
+  '#8b5cf6',
+  '#ec4899',
+  '#06b6d4',
+  '#84cc16'
+]
 
 export function hashStr(path: string): number {
   let h = 0
@@ -12,7 +21,8 @@ export function assignWorktreeColors(paths: string[]): Map<string, string> {
   const used = new Set<number>()
   for (const p of sorted) {
     let idx = hashStr(p) % WORKTREE_COLORS.length
-    while (used.has(idx) && used.size < WORKTREE_COLORS.length) idx = (idx + 1) % WORKTREE_COLORS.length
+    while (used.has(idx) && used.size < WORKTREE_COLORS.length)
+      idx = (idx + 1) % WORKTREE_COLORS.length
     used.add(idx)
     map.set(p, WORKTREE_COLORS[idx])
   }
@@ -32,7 +42,8 @@ export function assignNewWorktreeColors(
   const toAssign = [...newPaths].filter((p) => !out.has(p)).sort()
   for (const p of toAssign) {
     let idx = hashStr(p) % WORKTREE_COLORS.length
-    while (used.has(idx) && used.size < WORKTREE_COLORS.length) idx = (idx + 1) % WORKTREE_COLORS.length
+    while (used.has(idx) && used.size < WORKTREE_COLORS.length)
+      idx = (idx + 1) % WORKTREE_COLORS.length
     used.add(idx)
     out.set(p, WORKTREE_COLORS[idx])
   }

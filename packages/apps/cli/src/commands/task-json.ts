@@ -36,7 +36,7 @@ export const TASK_JSON_COLUMNS = [
   't.due_date',
   't.parent_id',
   't.created_at',
-  't.updated_at',
+  't.updated_at'
 ] as const
 
 export interface TaskJsonRow extends Record<string, unknown> {
@@ -70,6 +70,6 @@ export function serializeTaskForJson(
     created_at: row.created_at,
     updated_at: row.updated_at,
     is_blocked: ctx.isBlocked,
-    tags: ctx.tags,
+    tags: ctx.tags
   }
 }

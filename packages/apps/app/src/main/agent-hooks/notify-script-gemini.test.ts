@@ -17,7 +17,9 @@ function tmpDir(): string {
 
 function cleanup(...dirs: string[]) {
   for (const d of dirs) {
-    try { fs.rmSync(d, { recursive: true, force: true }) } catch {}
+    try {
+      fs.rmSync(d, { recursive: true, force: true })
+    } catch {}
   }
 }
 
@@ -26,7 +28,13 @@ function writeCurlStub(binDir: string, capturePath: string) {
   fs.writeFileSync(path.join(binDir, 'curl'), stub, { mode: 0o755 })
 }
 
-const GEMINI_EVENTS = ['SessionStart', 'SessionEnd', 'BeforeAgent', 'AfterAgent', 'AfterTool'] as const
+const GEMINI_EVENTS = [
+  'SessionStart',
+  'SessionEnd',
+  'BeforeAgent',
+  'AfterAgent',
+  'AfterTool'
+] as const
 
 describe('notify.sh under Gemini', () => {
   test('emits exactly "{}\\n" on stdout (Gemini hook contract)', async () => {
@@ -46,8 +54,8 @@ describe('notify.sh under Gemini', () => {
         env: {
           PATH: `${binDir}:${process.env.PATH ?? ''}`,
           SLAYZONE_AGENT_HOOK_URL: 'http://127.0.0.1:1/api/agent-hook',
-          SLAYZONE_AGENT_ID: 'gemini',
-        },
+          SLAYZONE_AGENT_ID: 'gemini'
+        }
       })
       expect(res.status).toBe(0)
       expect(res.stdout.toString()).toBe('{}\n')
@@ -75,8 +83,8 @@ describe('notify.sh under Gemini', () => {
         env: {
           PATH: `${binDir}:${process.env.PATH ?? ''}`,
           SLAYZONE_AGENT_HOOK_URL: 'http://127.0.0.1:1/api/agent-hook',
-          SLAYZONE_AGENT_ID: 'gemini',
-        },
+          SLAYZONE_AGENT_ID: 'gemini'
+        }
       })
       expect(res.status).toBe(0)
       expect(res.stdout.toString()).toBe('{}\n')
@@ -104,8 +112,8 @@ describe('notify.sh under Gemini', () => {
           PATH: `${binDir}:${process.env.PATH ?? ''}`,
           SLAYZONE_AGENT_HOOK_URL: 'http://127.0.0.1:1/api/agent-hook',
           SLAYZONE_AGENT_ID: 'gemini',
-          SLAYZONE_TASK_ID: 'task-1',
-        },
+          SLAYZONE_TASK_ID: 'task-1'
+        }
       })
       expect(res.status).toBe(0)
       const env = JSON.parse(fs.readFileSync(capture, 'utf8'))

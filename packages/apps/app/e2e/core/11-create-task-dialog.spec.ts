@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 test.describe('Create task dialog & metadata editing', () => {
@@ -7,12 +7,18 @@ test.describe('Create task dialog & metadata editing', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Dialog Test', color: '#3b82f6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Dialog Test',
+      color: '#3b82f6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     await s.refreshData()
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
-    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({
+      timeout: 5_000
+    })
   })
 
   test('Cmd+N opens create task dialog', async ({ mainWindow }) => {
@@ -44,13 +50,17 @@ test.describe('Create task dialog & metadata editing', () => {
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
     // Toast may also include the title — scope to the kanban card.
-    await expect(mainWindow.getByRole('button', { name: 'Dialog created task' })).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.getByRole('button', { name: 'Dialog created task' })).toBeVisible({
+      timeout: 5_000
+    })
   })
 
   test('change status in task detail metadata sidebar', async ({ mainWindow }) => {
     // Open task detail — click the kanban card (button) to avoid hitting a leftover toast.
     await mainWindow.getByRole('button', { name: 'Dialog created task' }).click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
 
     // Dismiss "Move to In Progress?" dialog if terminal input triggered it
     const dialog = mainWindow.getByRole('alertdialog')
@@ -60,7 +70,10 @@ test.describe('Create task dialog & metadata editing', () => {
 
     // Scope to visible settings panel to avoid hidden tab DOM matches
     const sidebar = mainWindow.locator('[data-testid="task-settings-panel"]:visible')
-    const statusTrigger = sidebar.getByText('Status', { exact: true }).locator('..').getByRole('combobox')
+    const statusTrigger = sidebar
+      .getByText('Status', { exact: true })
+      .locator('..')
+      .getByRole('combobox')
     await statusTrigger.click()
     await mainWindow.getByRole('option', { name: 'Review' }).click()
     await expect(statusTrigger).toHaveText('Review', { timeout: 3_000 })
@@ -84,7 +97,10 @@ test.describe('Create task dialog & metadata editing', () => {
     }
 
     const sidebar = mainWindow.locator('[data-testid="task-settings-panel"]:visible')
-    const priorityTrigger = sidebar.getByText('Priority', { exact: true }).locator('..').getByRole('combobox')
+    const priorityTrigger = sidebar
+      .getByText('Priority', { exact: true })
+      .locator('..')
+      .getByRole('combobox')
     await priorityTrigger.click()
     await mainWindow.getByRole('option', { name: 'Low' }).click()
     await expect(priorityTrigger).toHaveText('Low', { timeout: 3_000 })
@@ -97,6 +113,8 @@ test.describe('Create task dialog & metadata editing', () => {
   test('go back to kanban after metadata edits', async ({ mainWindow }) => {
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
-    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({
+      timeout: 5_000
+    })
   })
 })

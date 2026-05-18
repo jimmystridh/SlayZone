@@ -20,7 +20,11 @@ test.describe('Automations: catchup_on_start (IPC end-to-end)', () => {
     dbPath = path.join(dbDir, 'slayzone.dev.sqlite')
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'CatchupProj', color: '#22c55e', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'CatchupProj',
+      color: '#22c55e',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     await s.refreshData()
   })
@@ -46,12 +50,14 @@ test.describe('Automations: catchup_on_start (IPC end-to-end)', () => {
     name,
     trigger_config: { type: 'cron', params: { expression: '*/5 * * * *' } },
     actions: [{ type: 'run_command', params: { command: 'echo test' } }],
-    ...(catchup_on_start !== undefined ? { catchup_on_start } : {}),
+    ...(catchup_on_start !== undefined ? { catchup_on_start } : {})
   })
 
   test('migration v124 applied: catchup_on_start defaults true', async ({ mainWindow }) => {
     const created = await invoke<{ id: string; catchup_on_start: boolean }>(
-      mainWindow, 'db:automations:create', buildCronInput('default-catchup')
+      mainWindow,
+      'db:automations:create',
+      buildCronInput('default-catchup')
     )
     expect(created.catchup_on_start).toBe(true)
     expect(readRow(created.id)?.catchup_on_start).toBe(1)
@@ -59,7 +65,9 @@ test.describe('Automations: catchup_on_start (IPC end-to-end)', () => {
 
   test('create with catchup_on_start: false is honored', async ({ mainWindow }) => {
     const created = await invoke<{ id: string; catchup_on_start: boolean }>(
-      mainWindow, 'db:automations:create', buildCronInput('opt-out', false)
+      mainWindow,
+      'db:automations:create',
+      buildCronInput('opt-out', false)
     )
     expect(created.catchup_on_start).toBe(false)
     expect(readRow(created.id)?.catchup_on_start).toBe(0)
@@ -67,7 +75,9 @@ test.describe('Automations: catchup_on_start (IPC end-to-end)', () => {
 
   test('update flips catchup_on_start', async ({ mainWindow }) => {
     const created = await invoke<{ id: string; catchup_on_start: boolean }>(
-      mainWindow, 'db:automations:create', buildCronInput('flip-target')
+      mainWindow,
+      'db:automations:create',
+      buildCronInput('flip-target')
     )
     expect(created.catchup_on_start).toBe(true)
 
@@ -80,10 +90,14 @@ test.describe('Automations: catchup_on_start (IPC end-to-end)', () => {
 
   test('get returns parsed boolean', async ({ mainWindow }) => {
     const created = await invoke<{ id: string }>(
-      mainWindow, 'db:automations:create', buildCronInput('get-test', false)
+      mainWindow,
+      'db:automations:create',
+      buildCronInput('get-test', false)
     )
     const fetched = await invoke<{ id: string; catchup_on_start: boolean }>(
-      mainWindow, 'db:automations:get', created.id
+      mainWindow,
+      'db:automations:get',
+      created.id
     )
     expect(fetched.catchup_on_start).toBe(false)
   })

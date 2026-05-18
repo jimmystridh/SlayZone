@@ -45,7 +45,7 @@ function expect<T>(actual: T) {
     },
     toBeFalsy(): void {
       if (actual) throw new Error(`Expected falsy, got ${JSON.stringify(actual)}`)
-    },
+    }
   }
 }
 
@@ -59,7 +59,7 @@ function makeFakeChild(): ChildProcess {
     stderr,
     stdin,
     pid: 12345,
-    kill: () => true,
+    kill: () => true
   }) as unknown as ChildProcess
 }
 
@@ -79,7 +79,7 @@ function createMockIpcMain(): MockIpcMain {
       if (!handler) throw new Error(`No handler for ${channel}`)
       // chat-handlers register(_, ...args) — pass null event placeholder.
       return handler(null, ...args)
-    },
+    }
   }
 }
 
@@ -108,104 +108,107 @@ function setupDb(): Database.Database {
 
 console.log('\nchat:reset IPC handler tests\n')
 
-await test(
-  'chat:reset spawns fresh (no --resume) even when DB has stored chatConversationId',
-  async () => {
-    mgr.__resetForTests()
-    mgr.resetTransportDeps()
+await test('chat:reset spawns fresh (no --resume) even when DB has stored chatConversationId', async () => {
+  mgr.__resetForTests()
+  mgr.resetTransportDeps()
 
-    const db = setupDb()
-    const taskId = 'task-reset-1'
-    const tabId = 'tab-reset-1'
-    const mode = 'claude-code'
+  const db = setupDb()
+  const taskId = 'task-reset-1'
+  const tabId = 'tab-reset-1'
+  const mode = 'claude-code'
 
-    db.prepare('INSERT INTO tasks (id, provider_config) VALUES (?, ?)').run(
-      taskId,
-      JSON.stringify({ [mode]: { chatConversationId: 'old-stored-sid' } })
-    )
+  db.prepare('INSERT INTO tasks (id, provider_config) VALUES (?, ?)').run(
+    taskId,
+    JSON.stringify({ [mode]: { chatConversationId: 'old-stored-sid' } })
+  )
 
-    const spawnArgsLog: string[][] = []
-    mgr.setTransportDepsForTests({
-      whichBinary: async () => '/fake/claude',
-      spawn: (_cmd, args) => {
-        spawnArgsLog.push(args)
-        return makeFakeChild()
-      },
-      broadcastEvent: () => {},
-      broadcastExit: () => {},
-      broadcastStateChange: () => {},
-    })
+  const spawnArgsLog: string[][] = []
+  mgr.setTransportDepsForTests({
+    whichBinary: async () => '/fake/claude',
+    spawn: (_cmd, args) => {
+      spawnArgsLog.push(args)
+      return makeFakeChild()
+    },
+    broadcastEvent: () => {},
+    broadcastExit: () => {},
+    broadcastStateChange: () => {}
+  })
 
-    const ipc = createMockIpcMain()
-    registerChatHandlers(ipc as unknown as Parameters<typeof registerChatHandlers>[0], db)
+  const ipc = createMockIpcMain()
+  registerChatHandlers(ipc as unknown as Parameters<typeof registerChatHandlers>[0], db)
 
-    // Pre-seed: eager start that DOES --resume the stored id (mirrors what
-    // happens when the user explicitly clicks Restart, or sends their first
-    // message in a tab with a stored conversationId).
-    await ipc.invoke('chat:start', {
-      tabId,
-      taskId,
-      mode,
-      cwd: '/tmp',
-      providerFlagsOverride: null,
-    })
-    expect(spawnArgsLog.length).toBe(1)
-    expect(spawnArgsLog[0].includes('--resume')).toBeTruthy()
+  // Pre-seed: eager start that DOES --resume the stored id (mirrors what
+  // happens when the user explicitly clicks Restart, or sends their first
+  // message in a tab with a stored conversationId).
+  await ipc.invoke('chat:start', {
+    tabId,
+    taskId,
+    mode,
+    cwd: '/tmp',
+    providerFlagsOverride: null
+  })
+  expect(spawnArgsLog.length).toBe(1)
+  expect(spawnArgsLog[0].includes('--resume')).toBeTruthy()
 
-    // Persist some chat events for this tab.
-    persistChatEvent(db, tabId, 0, { kind: 'turn-init', sessionId: 'old-stored-sid', model: 'opus', cwd: '/tmp', tools: [] })
-    persistChatEvent(db, tabId, 1, { kind: 'assistant-text', messageId: 'm', text: 'hi' })
-    const evCountBefore = db
-      .prepare('SELECT COUNT(*) AS c FROM chat_events WHERE tab_id = ?')
-      .get(tabId) as { c: number }
-    expect(evCountBefore.c).toBe(2)
+  // Persist some chat events for this tab.
+  persistChatEvent(db, tabId, 0, {
+    kind: 'turn-init',
+    sessionId: 'old-stored-sid',
+    model: 'opus',
+    cwd: '/tmp',
+    tools: []
+  })
+  persistChatEvent(db, tabId, 1, { kind: 'assistant-text', messageId: 'm', text: 'hi' })
+  const evCountBefore = db
+    .prepare('SELECT COUNT(*) AS c FROM chat_events WHERE tab_id = ?')
+    .get(tabId) as { c: number }
+  expect(evCountBefore.c).toBe(2)
 
-    // Now reset. Reset is lazy — wipes DB + skeleton-only; does NOT spawn.
-    const resetInfo = (await ipc.invoke('chat:reset', {
-      tabId,
-      taskId,
-      mode,
-      cwd: '/tmp',
-      providerFlagsOverride: null,
-    })) as { sessionId: string; pid: number | null; ended: boolean }
+  // Now reset. Reset is lazy — wipes DB + skeleton-only; does NOT spawn.
+  const resetInfo = (await ipc.invoke('chat:reset', {
+    tabId,
+    taskId,
+    mode,
+    cwd: '/tmp',
+    providerFlagsOverride: null
+  })) as { sessionId: string; pid: number | null; ended: boolean }
 
-    // Reset does NOT trigger a fresh spawn — still 1 spawn (the pre-seed).
-    expect(spawnArgsLog.length).toBe(1)
-    // Skeleton returned: no live pid, ended sentinel still false (skeleton, not exited).
-    expect(resetInfo.pid).toBe(null)
+  // Reset does NOT trigger a fresh spawn — still 1 spawn (the pre-seed).
+  expect(spawnArgsLog.length).toBe(1)
+  // Skeleton returned: no live pid, ended sentinel still false (skeleton, not exited).
+  expect(resetInfo.pid).toBe(null)
 
-    // Explicit eager start triggers the spawn. THIS spawn is fresh (no --resume).
-    const info = (await ipc.invoke('chat:start', {
-      tabId,
-      taskId,
-      mode,
-      cwd: '/tmp',
-      providerFlagsOverride: null,
-    })) as { sessionId: string }
-    expect(spawnArgsLog.length).toBe(2)
-    expect(spawnArgsLog[1].includes('--resume')).toBeFalsy()
-    expect(spawnArgsLog[1].includes('--session-id')).toBeTruthy()
+  // Explicit eager start triggers the spawn. THIS spawn is fresh (no --resume).
+  const info = (await ipc.invoke('chat:start', {
+    tabId,
+    taskId,
+    mode,
+    cwd: '/tmp',
+    providerFlagsOverride: null
+  })) as { sessionId: string }
+  expect(spawnArgsLog.length).toBe(2)
+  expect(spawnArgsLog[1].includes('--resume')).toBeFalsy()
+  expect(spawnArgsLog[1].includes('--session-id')).toBeTruthy()
 
-    // Returned session info has a fresh sessionId, not the stored one.
-    expect(info.sessionId === 'old-stored-sid').toBe(false)
+  // Returned session info has a fresh sessionId, not the stored one.
+  expect(info.sessionId === 'old-stored-sid').toBe(false)
 
-    // DB chatConversationId is cleared (so future hydrate/start don't re-resume).
-    const cfgRow = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as
-      | { provider_config: string }
-      | undefined
-    const cfg = JSON.parse(cfgRow!.provider_config) as Record<
-      string,
-      { chatConversationId?: string | null }
-    >
-    expect(cfg[mode]?.chatConversationId).toBe(null)
+  // DB chatConversationId is cleared (so future hydrate/start don't re-resume).
+  const cfgRow = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as
+    | { provider_config: string }
+    | undefined
+  const cfg = JSON.parse(cfgRow!.provider_config) as Record<
+    string,
+    { chatConversationId?: string | null }
+  >
+  expect(cfg[mode]?.chatConversationId).toBe(null)
 
-    // Persisted events for this tab are wiped.
-    const evCountAfter = db
-      .prepare('SELECT COUNT(*) AS c FROM chat_events WHERE tab_id = ?')
-      .get(tabId) as { c: number }
-    expect(evCountAfter.c).toBe(0)
-  }
-)
+  // Persisted events for this tab are wiped.
+  const evCountAfter = db
+    .prepare('SELECT COUNT(*) AS c FROM chat_events WHERE tab_id = ?')
+    .get(tabId) as { c: number }
+  expect(evCountAfter.c).toBe(0)
+})
 
 await test('chat:reset still wipes events + clears conv id when no live session exists', async () => {
   mgr.__resetForTests()
@@ -220,14 +223,20 @@ await test('chat:reset still wipes events + clears conv id when no live session 
     taskId,
     JSON.stringify({ [mode]: { chatConversationId: 'stale-sid' } })
   )
-  persistChatEvent(db, tabId, 0, { kind: 'turn-init', sessionId: 'stale-sid', model: 'opus', cwd: '/tmp', tools: [] })
+  persistChatEvent(db, tabId, 0, {
+    kind: 'turn-init',
+    sessionId: 'stale-sid',
+    model: 'opus',
+    cwd: '/tmp',
+    tools: []
+  })
 
   mgr.setTransportDepsForTests({
     whichBinary: async () => '/fake/claude',
     spawn: () => makeFakeChild(),
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
@@ -241,7 +250,7 @@ await test('chat:reset still wipes events + clears conv id when no live session 
     taskId,
     mode,
     cwd: '/tmp',
-    providerFlagsOverride: null,
+    providerFlagsOverride: null
   })
 
   const cfgRow = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as {
@@ -329,10 +338,13 @@ await test('chat:setModel persists to provider_config + respawns with --model fl
   const spawnArgsLog: string[][] = []
   mgr.setTransportDepsForTests({
     whichBinary: async () => '/fake/claude',
-    spawn: (_cmd, args) => { spawnArgsLog.push(args); return makeFakeChild() },
+    spawn: (_cmd, args) => {
+      spawnArgsLog.push(args)
+      return makeFakeChild()
+    },
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
@@ -376,7 +388,7 @@ await test('chat:setModel rejects invalid model id', async () => {
     spawn: () => makeFakeChild(),
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
@@ -406,10 +418,13 @@ await test('chat:start reads stored chatModel and adds --model on cold spawn', a
   const spawnArgsLog: string[][] = []
   mgr.setTransportDepsForTests({
     whichBinary: async () => '/fake/claude',
-    spawn: (_cmd, args) => { spawnArgsLog.push(args); return makeFakeChild() },
+    spawn: (_cmd, args) => {
+      spawnArgsLog.push(args)
+      return makeFakeChild()
+    },
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
@@ -439,18 +454,24 @@ await test('explicit providerFlagsOverride suppresses --model injection', async 
   const spawnArgsLog: string[][] = []
   mgr.setTransportDepsForTests({
     whichBinary: async () => '/fake/claude',
-    spawn: (_cmd, args) => { spawnArgsLog.push(args); return makeFakeChild() },
+    spawn: (_cmd, args) => {
+      spawnArgsLog.push(args)
+      return makeFakeChild()
+    },
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
   registerChatHandlers(ipc as unknown as Parameters<typeof registerChatHandlers>[0], db)
 
   await ipc.invoke('chat:start', {
-    tabId, taskId, mode, cwd: '/tmp',
-    providerFlagsOverride: '--allow-dangerously-skip-permissions',
+    tabId,
+    taskId,
+    mode,
+    cwd: '/tmp',
+    providerFlagsOverride: '--allow-dangerously-skip-permissions'
   })
   expect(spawnArgsLog.length).toBe(1)
   expect(spawnArgsLog[0].includes('--model')).toBeFalsy()
@@ -470,17 +491,24 @@ await test('chat:hydrate does NOT spawn a subprocess', async () => {
   const spawnCount = { n: 0 }
   mgr.setTransportDepsForTests({
     whichBinary: async () => '/fake/claude',
-    spawn: () => { spawnCount.n++; return makeFakeChild() },
+    spawn: () => {
+      spawnCount.n++
+      return makeFakeChild()
+    },
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
   registerChatHandlers(ipc as unknown as Parameters<typeof registerChatHandlers>[0], db)
 
   const info = (await ipc.invoke('chat:hydrate', {
-    tabId, taskId, mode, cwd: '/tmp', providerFlagsOverride: null,
+    tabId,
+    taskId,
+    mode,
+    cwd: '/tmp',
+    providerFlagsOverride: null
   })) as { pid: number | null; ended: boolean }
 
   // Hydrate returns a skeleton: no live pid, ended is false (skeleton, not exited).
@@ -501,17 +529,25 @@ await test('chat:send triggers lazy spawn on a hydrated session', async () => {
   let lastChild: ChildProcess | null = null
   mgr.setTransportDepsForTests({
     whichBinary: async () => '/fake/claude',
-    spawn: () => { spawnCount.n++; lastChild = makeFakeChild(); return lastChild },
+    spawn: () => {
+      spawnCount.n++
+      lastChild = makeFakeChild()
+      return lastChild
+    },
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
   registerChatHandlers(ipc as unknown as Parameters<typeof registerChatHandlers>[0], db)
 
   await ipc.invoke('chat:hydrate', {
-    tabId, taskId, mode, cwd: '/tmp', providerFlagsOverride: null,
+    tabId,
+    taskId,
+    mode,
+    cwd: '/tmp',
+    providerFlagsOverride: null
   })
   expect(spawnCount.n).toBe(0)
 
@@ -535,17 +571,32 @@ await test('chat:hydrate twice is idempotent — only one skeleton, zero spawns'
   const spawnCount = { n: 0 }
   mgr.setTransportDepsForTests({
     whichBinary: async () => '/fake/claude',
-    spawn: () => { spawnCount.n++; return makeFakeChild() },
+    spawn: () => {
+      spawnCount.n++
+      return makeFakeChild()
+    },
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
   registerChatHandlers(ipc as unknown as Parameters<typeof registerChatHandlers>[0], db)
 
-  await ipc.invoke('chat:hydrate', { tabId, taskId, mode, cwd: '/tmp', providerFlagsOverride: null })
-  await ipc.invoke('chat:hydrate', { tabId, taskId, mode, cwd: '/tmp', providerFlagsOverride: null })
+  await ipc.invoke('chat:hydrate', {
+    tabId,
+    taskId,
+    mode,
+    cwd: '/tmp',
+    providerFlagsOverride: null
+  })
+  await ipc.invoke('chat:hydrate', {
+    tabId,
+    taskId,
+    mode,
+    cwd: '/tmp',
+    providerFlagsOverride: null
+  })
   expect(spawnCount.n).toBe(0)
 })
 
@@ -560,15 +611,24 @@ await test('chat:reset wipes DB and leaves the new session lazy (no spawn)', asy
     taskId,
     JSON.stringify({ [mode]: { chatConversationId: 'old-sid' } })
   )
-  persistChatEvent(db, tabId, 0, { kind: 'turn-init', sessionId: 'old-sid', model: 'opus', cwd: '/tmp', tools: [] })
+  persistChatEvent(db, tabId, 0, {
+    kind: 'turn-init',
+    sessionId: 'old-sid',
+    model: 'opus',
+    cwd: '/tmp',
+    tools: []
+  })
 
   const spawnCount = { n: 0 }
   mgr.setTransportDepsForTests({
     whichBinary: async () => '/fake/claude',
-    spawn: () => { spawnCount.n++; return makeFakeChild() },
+    spawn: () => {
+      spawnCount.n++
+      return makeFakeChild()
+    },
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
@@ -579,11 +639,18 @@ await test('chat:reset wipes DB and leaves the new session lazy (no spawn)', asy
   // No spawn on reset.
   expect(spawnCount.n).toBe(0)
   // Persisted history wiped.
-  const ev = db.prepare('SELECT COUNT(*) AS c FROM chat_events WHERE tab_id = ?').get(tabId) as { c: number }
+  const ev = db.prepare('SELECT COUNT(*) AS c FROM chat_events WHERE tab_id = ?').get(tabId) as {
+    c: number
+  }
   expect(ev.c).toBe(0)
   // Conversation id cleared.
-  const cfgRow = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as { provider_config: string }
-  const cfg = JSON.parse(cfgRow.provider_config) as Record<string, { chatConversationId?: string | null }>
+  const cfgRow = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as {
+    provider_config: string
+  }
+  const cfg = JSON.parse(cfgRow.provider_config) as Record<
+    string,
+    { chatConversationId?: string | null }
+  >
   expect(cfg[mode]?.chatConversationId).toBe(null)
 })
 
@@ -599,24 +666,35 @@ await test('chat:setMode pre-spawn persists DB without spawning', async () => {
   const spawnCount = { n: 0 }
   mgr.setTransportDepsForTests({
     whichBinary: async () => '/fake/claude',
-    spawn: () => { spawnCount.n++; return makeFakeChild() },
+    spawn: () => {
+      spawnCount.n++
+      return makeFakeChild()
+    },
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   const ipc = createMockIpcMain()
   registerChatHandlers(ipc as unknown as Parameters<typeof registerChatHandlers>[0], db)
 
   // Hydrate skeleton.
-  await ipc.invoke('chat:hydrate', { tabId, taskId, mode, cwd: '/tmp', providerFlagsOverride: null })
+  await ipc.invoke('chat:hydrate', {
+    tabId,
+    taskId,
+    mode,
+    cwd: '/tmp',
+    providerFlagsOverride: null
+  })
   expect(spawnCount.n).toBe(0)
 
   // setMode on a not-spawned skeleton: DB write only, no respawn.
   await ipc.invoke('chat:setMode', { tabId, taskId, mode, cwd: '/tmp', chatMode: 'plan' })
   expect(spawnCount.n).toBe(0)
 
-  const cfgRow = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as { provider_config: string }
+  const cfgRow = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as {
+    provider_config: string
+  }
   const cfg = JSON.parse(cfgRow.provider_config) as Record<string, { chatMode?: string }>
   expect(cfg[mode]?.chatMode).toBe('plan')
 })

@@ -173,7 +173,12 @@ export interface SyncNowResult {
 }
 
 export type TaskSyncFieldState = 'in_sync' | 'local_ahead' | 'remote_ahead' | 'conflict'
-export type TaskSyncOverallState = 'in_sync' | 'local_ahead' | 'remote_ahead' | 'conflict' | 'unknown'
+export type TaskSyncOverallState =
+  | 'in_sync'
+  | 'local_ahead'
+  | 'remote_ahead'
+  | 'conflict'
+  | 'unknown'
 
 export interface TaskSyncFieldDiff {
   field: 'title' | 'description' | 'status'

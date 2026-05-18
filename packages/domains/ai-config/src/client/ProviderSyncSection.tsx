@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { cn, Tooltip, TooltipContent, TooltipTrigger } from '@slayzone/ui'
-import {
-  PROVIDER_LABELS,
-  PROVIDER_CAPABILITIES,
-} from '../shared/provider-registry'
+import { PROVIDER_LABELS, PROVIDER_CAPABILITIES } from '../shared/provider-registry'
 import type { CliProvider, CliProviderInfo } from '../shared'
 
 interface ProviderSyncSectionProps {
@@ -26,25 +23,35 @@ export function ProviderSyncSection({ projectId }: ProviderSyncSectionProps) {
 
   useEffect(() => {
     let stale = false
-    void fetchProviders().then(() => { if (stale) return })
-    const handler = () => { void fetchProviders() }
+    void fetchProviders().then(() => {
+      if (stale) return
+    })
+    const handler = () => {
+      void fetchProviders()
+    }
     window.addEventListener('sz:settings-changed', handler)
-    return () => { stale = true; window.removeEventListener('sz:settings-changed', handler) }
+    return () => {
+      stale = true
+      window.removeEventListener('sz:settings-changed', handler)
+    }
   }, [fetchProviders])
 
   const handleToggleComputer = useCallback(async (id: string, enabled: boolean) => {
     await window.api.aiConfig.toggleProvider(id, enabled)
-    setProviders(prev => prev.map(p => p.id === id ? { ...p, enabled } : p))
+    setProviders((prev) => prev.map((p) => (p.id === id ? { ...p, enabled } : p)))
   }, [])
 
-  const handleToggleProject = useCallback(async (provider: CliProvider) => {
-    if (!projectId) return
-    const next = projectProviders.includes(provider)
-      ? projectProviders.filter(p => p !== provider)
-      : [...projectProviders, provider]
-    await window.api.aiConfig.setProjectProviders(projectId, next)
-    setProjectProviders(next)
-  }, [projectId, projectProviders])
+  const handleToggleProject = useCallback(
+    async (provider: CliProvider) => {
+      if (!projectId) return
+      const next = projectProviders.includes(provider)
+        ? projectProviders.filter((p) => p !== provider)
+        : [...projectProviders, provider]
+      await window.api.aiConfig.setProjectProviders(projectId, next)
+      setProjectProviders(next)
+    },
+    [projectId, projectProviders]
+  )
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -72,13 +79,19 @@ export function ProviderSyncSection({ projectId }: ProviderSyncSectionProps) {
                   </span>
                   <div className="flex gap-1">
                     {provider.isDefault && (
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">Default</span>
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        Default
+                      </span>
                     )}
                     {caps?.mcpWritable && (
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">MCP</span>
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        MCP
+                      </span>
                     )}
                     {caps?.mcpReadable && !caps?.mcpWritable && (
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">MCP read</span>
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        MCP read
+                      </span>
                     )}
                   </div>
                 </div>
@@ -98,7 +111,9 @@ export function ProviderSyncSection({ projectId }: ProviderSyncSectionProps) {
                         <span className="pointer-events-none block size-3.5 rounded-full bg-background shadow-sm translate-x-[18px]" />
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent>Cannot disable — this is your default terminal mode</TooltipContent>
+                    <TooltipContent>
+                      Cannot disable — this is your default terminal mode
+                    </TooltipContent>
                   </Tooltip>
                 ) : (
                   <button
@@ -110,10 +125,12 @@ export function ProviderSyncSection({ projectId }: ProviderSyncSectionProps) {
                       provider.enabled ? 'bg-primary' : 'bg-muted'
                     )}
                   >
-                    <span className={cn(
-                      'pointer-events-none block size-3.5 rounded-full bg-background shadow-sm transition-transform',
-                      provider.enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
-                    )} />
+                    <span
+                      className={cn(
+                        'pointer-events-none block size-3.5 rounded-full bg-background shadow-sm transition-transform',
+                        provider.enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                      )}
+                    />
                   </button>
                 )}
               </label>
@@ -133,10 +150,12 @@ export function ProviderSyncSection({ projectId }: ProviderSyncSectionProps) {
                       !provider.enabled && 'opacity-40 cursor-not-allowed'
                     )}
                   >
-                    <span className={cn(
-                      'pointer-events-none block size-3.5 rounded-full bg-background shadow-sm transition-transform',
-                      isProjectEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
-                    )} />
+                    <span
+                      className={cn(
+                        'pointer-events-none block size-3.5 rounded-full bg-background shadow-sm transition-transform',
+                        isProjectEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                      )}
+                    />
                   </button>
                 </label>
               )}

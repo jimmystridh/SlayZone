@@ -21,13 +21,18 @@ interface ConflictFileViewProps {
 
 type PanelId = 'base' | 'ours' | 'theirs'
 
-function resolveLabels(ctx: MergeContext): { oursLabel: string; oursDesc: string; theirsLabel: string; theirsDesc: string } {
+function resolveLabels(ctx: MergeContext): {
+  oursLabel: string
+  oursDesc: string
+  theirsLabel: string
+  theirsDesc: string
+} {
   if (ctx.type === 'merge') {
     return {
       oursLabel: ctx.targetBranch,
       oursDesc: 'Your current branch — the code you had before the merge',
       theirsLabel: ctx.sourceBranch,
-      theirsDesc: 'The incoming branch being merged in',
+      theirsDesc: 'The incoming branch being merged in'
     }
   }
   // Rebase: git swaps ours/theirs from user perspective
@@ -35,11 +40,17 @@ function resolveLabels(ctx: MergeContext): { oursLabel: string; oursDesc: string
     oursLabel: ctx.targetBranch,
     oursDesc: 'The branch you\'re rebasing onto — git calls this "ours" during rebase',
     theirsLabel: ctx.sourceBranch,
-    theirsDesc: 'Your commits being replayed — git calls this "theirs" during rebase',
+    theirsDesc: 'Your commits being replayed — git calls this "theirs" during rebase'
   }
 }
 
-export function ConflictFileView({ repoPath, filePath, terminalMode, onResolved, branchContext }: ConflictFileViewProps) {
+export function ConflictFileView({
+  repoPath,
+  filePath,
+  terminalMode,
+  onResolved,
+  branchContext
+}: ConflictFileViewProps) {
   const { editorThemeId, contentVariant } = useTheme()
   const { editorFontSize } = useAppearance()
   const resolvedEditorColors = getThemeEditorColors(editorThemeId, contentVariant)
@@ -47,11 +58,15 @@ export function ConflictFileView({ repoPath, filePath, terminalMode, onResolved,
     () => buildCodeMirrorTheme(resolvedEditorColors, contentVariant === 'dark'),
     [editorThemeId, contentVariant]
   )
-  const sizeTheme = useMemo(() => EditorView.theme({
-    '&': { height: '100%', fontSize: `${editorFontSize}px` },
-    '.cm-scroller': { overflow: 'auto' },
-    '.cm-content': { fontFamily: 'ui-monospace, monospace' }
-  }), [editorFontSize])
+  const sizeTheme = useMemo(
+    () =>
+      EditorView.theme({
+        '&': { height: '100%', fontSize: `${editorFontSize}px` },
+        '.cm-scroller': { overflow: 'auto' },
+        '.cm-content': { fontFamily: 'ui-monospace, monospace' }
+      }),
+    [editorFontSize]
+  )
   const [content, setContent] = useState<ConflictFileContent | null>(null)
   const [analysis, setAnalysis] = useState<ConflictAnalysis | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
@@ -68,7 +83,7 @@ export function ConflictFileView({ repoPath, filePath, terminalMode, onResolved,
   const labels = resolveLabels(branchContext)
 
   const togglePanel = useCallback((id: PanelId) => {
-    setVisiblePanels(prev => ({ ...prev, [id]: !prev[id] }))
+    setVisiblePanels((prev) => ({ ...prev, [id]: !prev[id] }))
   }, [])
 
   // Load conflict content
@@ -129,17 +144,20 @@ export function ConflictFileView({ repoPath, filePath, terminalMode, onResolved,
     await resolveWithContent(text)
   }, [getEditorContent])
 
-  const resolveWithContent = useCallback(async (text: string) => {
-    setError(null)
-    try {
-      await window.api.git.writeResolvedFile(repoPath, filePath, text)
-      await window.api.git.stageFile(repoPath, filePath)
-      setResolved(true)
-      onResolved()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    }
-  }, [repoPath, filePath, onResolved])
+  const resolveWithContent = useCallback(
+    async (text: string) => {
+      setError(null)
+      try {
+        await window.api.git.writeResolvedFile(repoPath, filePath, text)
+        await window.api.git.stageFile(repoPath, filePath)
+        setResolved(true)
+        onResolved()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err))
+      }
+    },
+    [repoPath, filePath, onResolved]
+  )
 
   const handleAnalyze = useCallback(async () => {
     if (!content) return
@@ -182,42 +200,54 @@ export function ConflictFileView({ repoPath, filePath, terminalMode, onResolved,
               <button
                 className={cn(
                   'px-2 py-0.5 text-[10px] font-medium rounded transition-colors',
-                  visiblePanels.base ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  visiblePanels.base
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
                 onClick={() => togglePanel('base')}
               >
                 Base
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">Common ancestor — what both branches started from</TooltipContent>
+            <TooltipContent side="bottom" className="text-xs">
+              Common ancestor — what both branches started from
+            </TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 className={cn(
                   'px-2 py-0.5 text-[10px] font-medium rounded transition-colors',
-                  visiblePanels.ours ? 'bg-blue-500/20 text-blue-400' : 'text-muted-foreground hover:text-foreground'
+                  visiblePanels.ours
+                    ? 'bg-blue-500/20 text-blue-400'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
                 onClick={() => togglePanel('ours')}
               >
                 {labels.oursLabel}
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs max-w-xs">{labels.oursDesc}</TooltipContent>
+            <TooltipContent side="bottom" className="text-xs max-w-xs">
+              {labels.oursDesc}
+            </TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 className={cn(
                   'px-2 py-0.5 text-[10px] font-medium rounded transition-colors',
-                  visiblePanels.theirs ? 'bg-yellow-500/20 text-yellow-400' : 'text-muted-foreground hover:text-foreground'
+                  visiblePanels.theirs
+                    ? 'bg-yellow-500/20 text-yellow-400'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
                 onClick={() => togglePanel('theirs')}
               >
                 {labels.theirsLabel}
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs max-w-xs">{labels.theirsDesc}</TooltipContent>
+            <TooltipContent side="bottom" className="text-xs max-w-xs">
+              {labels.theirsDesc}
+            </TooltipContent>
           </Tooltip>
         </div>
 
@@ -272,9 +302,7 @@ export function ConflictFileView({ repoPath, filePath, terminalMode, onResolved,
         </Button>
       </div>
 
-      {error && (
-        <div className="px-4 py-1 bg-destructive/10 text-destructive text-xs">{error}</div>
-      )}
+      {error && <div className="px-4 py-1 bg-destructive/10 text-destructive text-xs">{error}</div>}
 
       {resolved && (
         <div className="px-4 py-1 bg-green-500/10 text-green-600 dark:text-green-400 text-xs">
@@ -314,7 +342,9 @@ export function ConflictFileView({ repoPath, filePath, terminalMode, onResolved,
                 <TooltipTrigger asChild>
                   <Info className="h-2.5 w-2.5 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs max-w-xs">{labels.oursDesc}</TooltipContent>
+                <TooltipContent side="bottom" className="text-xs max-w-xs">
+                  {labels.oursDesc}
+                </TooltipContent>
               </Tooltip>
             </div>
             <pre className="p-2 text-xs font-mono whitespace-pre-wrap break-words">
@@ -340,7 +370,9 @@ export function ConflictFileView({ repoPath, filePath, terminalMode, onResolved,
                 <TooltipTrigger asChild>
                   <Info className="h-2.5 w-2.5 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
-                <TooltipContent side="bottom" className="text-xs max-w-xs">{labels.theirsDesc}</TooltipContent>
+                <TooltipContent side="bottom" className="text-xs max-w-xs">
+                  {labels.theirsDesc}
+                </TooltipContent>
               </Tooltip>
             </div>
             <pre className="p-2 text-xs font-mono whitespace-pre-wrap break-words">

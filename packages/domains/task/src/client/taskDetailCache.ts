@@ -6,7 +6,13 @@ import type { PanelVisibility } from '@slayzone/task/shared'
 import type { BrowserTabsState } from '@slayzone/task-browser/shared'
 
 const DEFAULT_PANEL_VISIBILITY: PanelVisibility = {
-  terminal: true, browser: false, diff: false, settings: true, editor: false, artifacts: false, processes: false,
+  terminal: true,
+  browser: false,
+  diff: false,
+  settings: true,
+  editor: false,
+  artifacts: false,
+  processes: false
 }
 
 export interface TaskDetailData {
@@ -36,7 +42,7 @@ async function fetchTaskDetail(taskId: string): Promise<TaskDetailData | null> {
     window.api.tags.getTags().catch(() => [] as Tag[]),
     window.api.taskTags.getTagsForTask(taskId).catch(() => [] as Tag[]),
     window.api.db.getProjects().catch(() => [] as Project[]),
-    window.api.db.getSubTasks(taskId).catch(() => [] as Task[]),
+    window.api.db.getSubTasks(taskId).catch(() => [] as Task[])
   ])
 
   if (!loadedTask) return null
@@ -58,7 +64,7 @@ async function fetchTaskDetail(taskId: string): Promise<TaskDetailData | null> {
   const panelVisibility: PanelVisibility = {
     ...DEFAULT_PANEL_VISIBILITY,
     ...(loadedTask.panel_visibility ?? {}),
-    ...(loadedTask.is_temporary ? { settings: false } : {}),
+    ...(loadedTask.is_temporary ? { settings: false } : {})
   }
 
   // Resolve browser tabs (including fallback to first URL from other tasks)
@@ -77,8 +83,10 @@ async function fetchTaskDetail(taskId: string): Promise<TaskDetailData | null> {
       }
     }
     browserTabs = {
-      tabs: [{ id: 'default', url: firstUrl, title: firstUrl === 'about:blank' ? 'New Tab' : firstUrl }],
-      activeTabId: 'default',
+      tabs: [
+        { id: 'default', url: firstUrl, title: firstUrl === 'about:blank' ? 'New Tab' : firstUrl }
+      ],
+      activeTabId: 'default'
     }
   }
 
@@ -91,10 +99,10 @@ async function fetchTaskDetail(taskId: string): Promise<TaskDetailData | null> {
     parentTask,
     projectPathMissing,
     panelVisibility,
-    browserTabs,
+    browserTabs
   }
 }
 
 export const taskDetailCache = createSuspenseCache({
-  taskDetail: fetchTaskDetail,
+  taskDetail: fetchTaskDetail
 })

@@ -19,11 +19,11 @@ export function createPlaceholderPlugin(text: string) {
           return DecorationSet.create(doc, [
             Decoration.node(0, firstChild.nodeSize, {
               class: 'is-editor-empty',
-              'data-placeholder': text,
-            }),
+              'data-placeholder': text
+            })
           ])
-        },
-      },
+        }
+      }
     })
   })
 }

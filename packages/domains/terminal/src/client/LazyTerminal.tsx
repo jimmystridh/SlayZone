@@ -8,16 +8,16 @@ import type { TerminalHandle, TerminalProps } from './Terminal'
 //
 // Idle prefetch is wired in App.tsx after dataReady so the chunk is usually
 // already warm by the time the user opens a terminal panel.
-const TerminalImpl = lazy(() =>
-  import('./Terminal').then((m) => ({ default: m.Terminal }))
-)
+const TerminalImpl = lazy(() => import('./Terminal').then((m) => ({ default: m.Terminal })))
 
-export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function LazyTerminal(props, ref) {
-  return (
-    <Suspense fallback={<div className="h-full w-full bg-background" />}>
-      <TerminalImpl {...props} ref={ref} />
-    </Suspense>
-  )
-})
+export const Terminal = forwardRef<TerminalHandle, TerminalProps>(
+  function LazyTerminal(props, ref) {
+    return (
+      <Suspense fallback={<div className="h-full w-full bg-background" />}>
+        <TerminalImpl {...props} ref={ref} />
+      </Suspense>
+    )
+  }
+)
 
 export type { TerminalHandle, TerminalProps }

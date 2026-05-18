@@ -11,7 +11,7 @@ type SkillSource = 'project' | 'library' | 'marketplace'
 const SOURCE_LABELS: Record<SkillSource, string> = {
   project: 'Project',
   library: 'Library',
-  marketplace: 'Marketplace',
+  marketplace: 'Marketplace'
 }
 
 function getSkillSource(item: AiConfigItem, isProject: boolean): SkillSource {
@@ -30,7 +30,11 @@ interface SkillGroup {
   items: AiConfigItem[]
 }
 
-function buildGroups(items: AiConfigItem[], groupBy: SkillGroupBy, isProject: boolean): SkillGroup[] | null {
+function buildGroups(
+  items: AiConfigItem[],
+  groupBy: SkillGroupBy,
+  isProject: boolean
+): SkillGroup[] | null {
   if (groupBy === 'none') return null
 
   if (groupBy === 'source') {
@@ -42,7 +46,9 @@ function buildGroups(items: AiConfigItem[], groupBy: SkillGroupBy, isProject: bo
     const order: SkillSource[] = isProject
       ? ['project', 'library', 'marketplace']
       : ['project', 'marketplace']
-    return order.filter((s) => buckets[s]?.length).map((s) => ({ label: SOURCE_LABELS[s], items: buckets[s]! }))
+    return order
+      .filter((s) => buckets[s]?.length)
+      .map((s) => ({ label: SOURCE_LABELS[s], items: buckets[s]! }))
   }
 
   // prefix
@@ -79,7 +85,7 @@ export function SkillListView({
   onDeleteItem,
   updateMap,
   onMarketplaceUpdate,
-  syncHealthMap,
+  syncHealthMap
 }: SkillListViewProps) {
   const showLineCount = useContextManagerStore((s) => s.showLineCount)
   const totalCount = items.length
@@ -122,22 +128,22 @@ export function SkillListView({
           ))}
         </div>
       ) : (
-      <div className="space-y-1">
-        {items.map((item) => (
-          <SkillRow
-            key={item.id}
-            item={item}
-            isProject={isProject}
-            isSelected={selectedSkillId === item.id}
-            showLineCount={showLineCount}
-            hasUpdate={updateMap?.has(item.id)}
-            syncHealth={syncHealthMap?.get(item.id)}
-            onSelect={onSelectSkill}
-            onDelete={onDeleteItem}
-            onMarketplaceUpdate={onMarketplaceUpdate}
-          />
-        ))}
-      </div>
+        <div className="space-y-1">
+          {items.map((item) => (
+            <SkillRow
+              key={item.id}
+              item={item}
+              isProject={isProject}
+              isSelected={selectedSkillId === item.id}
+              showLineCount={showLineCount}
+              hasUpdate={updateMap?.has(item.id)}
+              syncHealth={syncHealthMap?.get(item.id)}
+              onSelect={onSelectSkill}
+              onDelete={onDeleteItem}
+              onMarketplaceUpdate={onMarketplaceUpdate}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
@@ -152,7 +158,7 @@ function SkillRow({
   syncHealth,
   onSelect,
   onDelete,
-  onMarketplaceUpdate,
+  onMarketplaceUpdate
 }: {
   item: AiConfigItem
   isProject?: boolean
@@ -174,19 +180,19 @@ function SkillRow({
       onClick={() => onSelect(isSelected ? null : item.id)}
       className={cn(
         'group flex items-center gap-3 rounded-lg border px-3 py-2 cursor-pointer transition-colors',
-        isSelected
-          ? 'ring-1 ring-primary border-primary/50 bg-surface-3'
-          : 'hover:bg-surface-3'
+        isSelected ? 'ring-1 ring-primary border-primary/50 bg-surface-3' : 'hover:bg-surface-3'
       )}
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-sm font-medium truncate">{item.slug}</span>
           {hasIssues && (
-            <AlertTriangle className={cn(
-              'size-3 shrink-0',
-              validation.status === 'invalid' ? 'text-destructive' : 'text-amber-500'
-            )} />
+            <AlertTriangle
+              className={cn(
+                'size-3 shrink-0',
+                validation.status === 'invalid' ? 'text-destructive' : 'text-amber-500'
+              )}
+            />
           )}
           {provenance && (
             <span className="flex items-center gap-1 rounded-full bg-surface-3 px-1.5 py-0.5 text-[10px] text-muted-foreground shrink-0">
@@ -202,7 +208,10 @@ function SkillRow({
           )}
           {hasUpdate && (
             <button
-              onClick={(e) => { e.stopPropagation(); onMarketplaceUpdate?.(item.id) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onMarketplaceUpdate?.(item.id)
+              }}
               className="flex items-center gap-0.5 text-[10px] text-amber-500 hover:text-amber-400 shrink-0"
               title="Update available from marketplace"
             >
@@ -211,16 +220,19 @@ function SkillRow({
           )}
         </div>
       </div>
-      {syncHealth === 'stale' && (
-        <StatusBadge syncHealth={syncHealth} />
-      )}
+      {syncHealth === 'stale' && <StatusBadge syncHealth={syncHealth} />}
       {showLineCount && (
-        <span className="shrink-0 text-[10px] text-muted-foreground/60">{item.content.split('\n').length}L</span>
+        <span className="shrink-0 text-[10px] text-muted-foreground/60">
+          {item.content.split('\n').length}L
+        </span>
       )}
       <Button
         size="sm"
         variant="ghost"
-        onClick={(e) => { e.stopPropagation(); onDelete(item.id) }}
+        onClick={(e) => {
+          e.stopPropagation()
+          onDelete(item.id)
+        }}
         className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive shrink-0"
       >
         <Trash2 className="size-3" />

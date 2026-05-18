@@ -93,10 +93,7 @@ test('preserves plain text unchanged', () => {
 })
 
 test('handles mixed text and SGR codes', () => {
-  assert(
-    filterBufferData('hello \x1b[1;4;31mworld\x1b[0m'),
-    'hello \x1b[1;31mworld\x1b[0m'
-  )
+  assert(filterBufferData('hello \x1b[1;4;31mworld\x1b[0m'), 'hello \x1b[1;31mworld\x1b[0m')
 })
 
 test('strips underline code 44 is NOT stripped (it is bg blue)', () => {
@@ -141,10 +138,7 @@ test('strips underline between color params', () => {
 
 // Regression: multiple underlines in one stream
 test('strips multiple underline sequences in one buffer', () => {
-  assert(
-    filterBufferData('\x1b[4mfoo\x1b[0m bar \x1b[4:3mbaz\x1b[0m'),
-    'foo\x1b[0m bar baz\x1b[0m'
-  )
+  assert(filterBufferData('\x1b[4mfoo\x1b[0m bar \x1b[4:3mbaz\x1b[0m'), 'foo\x1b[0m bar baz\x1b[0m')
 })
 
 // Split sequence simulation — server filter applied per chunk, client filter on joined batch

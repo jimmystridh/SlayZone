@@ -6,13 +6,14 @@ import type { RestApiDeps } from '../types'
 const DEFAULT_TIMEOUT_MS = 5_000
 const FAILURE_CACHE_TTL_MS = 5_000
 
-export type StartMainPtyResult =
-  | EnsureAliveResult
-  | 'no-task'
+export type StartMainPtyResult = EnsureAliveResult | 'no-task'
 
 const failureCache = new Map<string, { result: EnsureAliveResult; expiresAt: number }>()
 
-interface TaskRow { id: string; terminal_mode: string | null }
+interface TaskRow {
+  id: string
+  terminal_mode: string | null
+}
 
 /** Main-tab sessionId convention (see TaskDetailPage.getMainSessionId): the
  *  renderer composes sessionId as `${taskId}:${tabId}` and the main tab uses
@@ -52,9 +53,9 @@ export async function startMainPty(
 ): Promise<StartMainPtyResult> {
   if (hasPty(mainSessionIdFor(taskId))) return 'already-alive'
 
-  const task = deps.db
-    .prepare('SELECT id, terminal_mode FROM tasks WHERE id = ?')
-    .get(taskId) as TaskRow | undefined
+  const task = deps.db.prepare('SELECT id, terminal_mode FROM tasks WHERE id = ?').get(taskId) as
+    | TaskRow
+    | undefined
   if (!task) return 'no-task'
 
   const cached = failureCache.get(taskId)

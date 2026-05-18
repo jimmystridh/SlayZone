@@ -41,11 +41,12 @@ export interface InstallCodexWrapperResult {
  * the legacy notify=[...] callback even on older codex.
  */
 export async function installCodexWrapper(
-  opts: InstallCodexWrapperOpts = {},
+  opts: InstallCodexWrapperOpts = {}
 ): Promise<InstallCodexWrapperResult> {
   const target = opts.targetPath ?? path.join(getSlayzoneHomeDir(), 'bin', 'codex')
   const source =
-    opts.source ?? (typeof codexWrapperSource === 'string' ? codexWrapperSource : String(codexWrapperSource))
+    opts.source ??
+    (typeof codexWrapperSource === 'string' ? codexWrapperSource : String(codexWrapperSource))
   const changed = await writeFileIfChanged(target, source, 0o755)
 
   let detectedVersion: string | null = null
@@ -58,7 +59,7 @@ export async function installCodexWrapper(
       if (!versionOk) {
         console.warn(
           `[agent-hooks] codex ${probed.raw} detected; hooks subsystem is stable in ≥${MIN_CODEX_VERSION.major}.${MIN_CODEX_VERSION.minor}. ` +
-            `Start/PermissionRequest events may not fire reliably on this version.`,
+            `Start/PermissionRequest events may not fire reliably on this version.`
         )
       }
     }
@@ -78,7 +79,7 @@ async function probeCodexVersion(): Promise<ParsedVersion | null> {
     // Skip our own wrapper to avoid infinite loop if it's already on PATH.
     const { stdout } = await execP('codex --version', {
       timeout: 3000,
-      env: { ...process.env, PATH: stripSlayzoneBin(process.env.PATH ?? '') },
+      env: { ...process.env, PATH: stripSlayzoneBin(process.env.PATH ?? '') }
     })
     return parseCodexVersion(stdout.trim())
   } catch {

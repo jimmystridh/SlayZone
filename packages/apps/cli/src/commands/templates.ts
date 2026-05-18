@@ -26,9 +26,14 @@ function resolveTemplate(db: ReturnType<typeof openDb>, idPrefix: string) {
     `SELECT * FROM task_templates WHERE id LIKE :prefix || '%' LIMIT 2`,
     { ':prefix': idPrefix }
   )
-  if (rows.length === 0) { console.error(`Template not found: ${idPrefix}`); process.exit(1) }
+  if (rows.length === 0) {
+    console.error(`Template not found: ${idPrefix}`)
+    process.exit(1)
+  }
   if (rows.length > 1) {
-    console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${idPrefix}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
   return rows[0]
@@ -36,7 +41,11 @@ function resolveTemplate(db: ReturnType<typeof openDb>, idPrefix: string) {
 
 function safeJsonParse(s: string | null): unknown {
   if (!s) return null
-  try { return JSON.parse(s) } catch { return null }
+  try {
+    return JSON.parse(s)
+  } catch {
+    return null
+  }
 }
 
 export function templatesCommand(): Command {
@@ -67,7 +76,7 @@ export function templatesCommand(): Command {
           provider_config: safeJsonParse(t.provider_config),
           panel_visibility: safeJsonParse(t.panel_visibility),
           browser_tabs: safeJsonParse(t.browser_tabs),
-          web_panel_urls: safeJsonParse(t.web_panel_urls),
+          web_panel_urls: safeJsonParse(t.web_panel_urls)
         }))
         console.log(JSON.stringify(out, null, 2))
         return
@@ -81,8 +90,12 @@ export function templatesCommand(): Command {
       const idW = 9
       const nameW = 20
       const statusW = 12
-      console.log(`${'ID'.padEnd(idW)}  ${'NAME'.padEnd(nameW)}  DEF  ${'STATUS'.padEnd(statusW)}  PRI  MODE`)
-      console.log(`${'-'.repeat(idW)}  ${'-'.repeat(nameW)}  ---  ${'-'.repeat(statusW)}  ---  ${'-'.repeat(14)}`)
+      console.log(
+        `${'ID'.padEnd(idW)}  ${'NAME'.padEnd(nameW)}  DEF  ${'STATUS'.padEnd(statusW)}  PRI  MODE`
+      )
+      console.log(
+        `${'-'.repeat(idW)}  ${'-'.repeat(nameW)}  ---  ${'-'.repeat(statusW)}  ---  ${'-'.repeat(14)}`
+      )
       for (const t of templates) {
         const id = t.id.slice(0, 8).padEnd(idW)
         const name = t.name.slice(0, nameW).padEnd(nameW)
@@ -110,7 +123,7 @@ export function templatesCommand(): Command {
           provider_config: safeJsonParse(t.provider_config),
           panel_visibility: safeJsonParse(t.panel_visibility),
           browser_tabs: safeJsonParse(t.browser_tabs),
-          web_panel_urls: safeJsonParse(t.web_panel_urls),
+          web_panel_urls: safeJsonParse(t.web_panel_urls)
         }
         console.log(JSON.stringify(out, null, 2))
         return
@@ -143,7 +156,10 @@ export function templatesCommand(): Command {
 
       if (opts.priority) {
         const p = parseInt(opts.priority, 10)
-        if (isNaN(p) || p < 1 || p > 5) { console.error('Priority must be 1-5.'); process.exit(1) }
+        if (isNaN(p) || p < 1 || p > 5) {
+          console.error('Priority must be 1-5.')
+          process.exit(1)
+        }
       }
 
       const id = crypto.randomUUID()
@@ -176,7 +192,7 @@ export function templatesCommand(): Command {
             ':priority': opts.priority ? parseInt(opts.priority, 10) : null,
             ':isDefault': opts.default ? 1 : 0,
             ':sortOrder': nextOrder,
-            ':now': now,
+            ':now': now
           }
         )
         db.run('COMMIT')
@@ -187,7 +203,9 @@ export function templatesCommand(): Command {
 
       db.close()
       await notifyApp()
-      console.log(`Created template: ${id.slice(0, 8)}  ${name}${opts.default ? '  (default)' : ''}`)
+      console.log(
+        `Created template: ${id.slice(0, 8)}  ${name}${opts.default ? '  (default)' : ''}`
+      )
     })
 
   // slay templates update
@@ -202,29 +220,55 @@ export function templatesCommand(): Command {
     .option('--no-default', 'Unset as project default')
     .option('--description <text>', 'Template description')
     .action(async (idPrefix: string, opts) => {
-      if (opts.name === undefined && opts.terminalMode === undefined && opts.priority === undefined
-        && opts.status === undefined && opts.description === undefined
-        && opts.default === undefined) {
+      if (
+        opts.name === undefined &&
+        opts.terminalMode === undefined &&
+        opts.priority === undefined &&
+        opts.status === undefined &&
+        opts.description === undefined &&
+        opts.default === undefined
+      ) {
         console.error('Provide at least one option to update.')
         process.exit(1)
       }
 
       if (opts.priority) {
         const p = parseInt(opts.priority, 10)
-        if (isNaN(p) || p < 1 || p > 5) { console.error('Priority must be 1-5.'); process.exit(1) }
+        if (isNaN(p) || p < 1 || p > 5) {
+          console.error('Priority must be 1-5.')
+          process.exit(1)
+        }
       }
 
       const db = openDb()
       const template = resolveTemplate(db, idPrefix)
 
       const sets: string[] = ['updated_at = :now']
-      const params: Record<string, string | number | null> = { ':now': new Date().toISOString(), ':id': template.id }
+      const params: Record<string, string | number | null> = {
+        ':now': new Date().toISOString(),
+        ':id': template.id
+      }
 
-      if (opts.name !== undefined) { sets.push('name = :name'); params[':name'] = opts.name }
-      if (opts.description !== undefined) { sets.push('description = :desc'); params[':desc'] = opts.description || null }
-      if (opts.terminalMode !== undefined) { sets.push('terminal_mode = :mode'); params[':mode'] = opts.terminalMode }
-      if (opts.status !== undefined) { sets.push('default_status = :status'); params[':status'] = opts.status }
-      if (opts.priority !== undefined) { sets.push('default_priority = :priority'); params[':priority'] = parseInt(opts.priority, 10) }
+      if (opts.name !== undefined) {
+        sets.push('name = :name')
+        params[':name'] = opts.name
+      }
+      if (opts.description !== undefined) {
+        sets.push('description = :desc')
+        params[':desc'] = opts.description || null
+      }
+      if (opts.terminalMode !== undefined) {
+        sets.push('terminal_mode = :mode')
+        params[':mode'] = opts.terminalMode
+      }
+      if (opts.status !== undefined) {
+        sets.push('default_status = :status')
+        params[':status'] = opts.status
+      }
+      if (opts.priority !== undefined) {
+        sets.push('default_priority = :priority')
+        params[':priority'] = parseInt(opts.priority, 10)
+      }
 
       db.run('BEGIN')
       try {

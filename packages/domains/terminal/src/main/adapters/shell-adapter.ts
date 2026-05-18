@@ -1,4 +1,10 @@
-import { defaultEncodeSubmit, type TerminalAdapter, type PromptInfo, type ActivityState, type ErrorInfo } from './types'
+import {
+  defaultEncodeSubmit,
+  type TerminalAdapter,
+  type PromptInfo,
+  type ActivityState,
+  type ErrorInfo
+} from './types'
 
 /**
  * Adapter for raw terminal/shell and custom providers.

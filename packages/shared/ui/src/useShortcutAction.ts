@@ -24,7 +24,7 @@ interface Options {
 export function useShortcutAction(
   idOrOpts: string | DynamicOpts,
   handler: () => boolean | void,
-  options?: Options,
+  options?: Options
 ): void {
   const handlerRef = useRef(handler)
   handlerRef.current = handler
@@ -34,12 +34,12 @@ export function useShortcutAction(
   // For static mode, resolve keys reactively from the store
   const isStatic = typeof idOrOpts === 'string'
   const id = isStatic ? idOrOpts : idOrOpts.id
-  const storeOverride = useShortcutStore(s => isStatic ? s.overrides[id] : undefined)
+  const storeOverride = useShortcutStore((s) => (isStatic ? s.overrides[id] : undefined))
 
   let keys: string
   let scope: ShortcutScope
   if (isStatic) {
-    const def = shortcutDefinitions.find(d => d.id === id)
+    const def = shortcutDefinitions.find((d) => d.id === id)
     keys = storeOverride ?? def?.defaultKeys ?? ''
     scope = def?.scope ?? 'global'
   } else {
@@ -55,7 +55,7 @@ export function useShortcutAction(
       scope,
       keys,
       handler: () => handlerRef.current(),
-      enabled,
+      enabled
     })
     return unsub
   }, [id, keys, scope, enabled])

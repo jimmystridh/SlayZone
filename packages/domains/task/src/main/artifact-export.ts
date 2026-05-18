@@ -31,7 +31,11 @@ export const PDF_CSS = `
   `
 
 export function escapeHtml(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
 export function buildPdfHtml(content: string, mode: string, title: string): string {
@@ -52,9 +56,12 @@ export function buildPdfHtml(content: string, mode: string, title: string): stri
 
     case 'code': {
       const lines = content.split('\n')
-      const rows = lines.map((line, i) =>
-        `<tr><td class="line-numbers">${i + 1}</td><td>${escapeHtml(line) || ' '}</td></tr>`
-      ).join('\n')
+      const rows = lines
+        .map(
+          (line, i) =>
+            `<tr><td class="line-numbers">${i + 1}</td><td>${escapeHtml(line) || ' '}</td></tr>`
+        )
+        .join('\n')
       body = `<pre style="background:none;padding:0"><table class="code-table">${rows}</table></pre>`
       break
     }
@@ -122,12 +129,16 @@ export function buildPngHtml(content: string, mode: string, title: string): stri
 
 // --- BrowserWindow rendering orchestration ---
 
-async function waitForTitle(offscreen: BrowserWindow, expected: string, timeoutMs = 5000): Promise<void> {
+async function waitForTitle(
+  offscreen: BrowserWindow,
+  expected: string,
+  timeoutMs = 5000
+): Promise<void> {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
     const ready = await offscreen.webContents.executeJavaScript('document.title')
     if (ready === expected) return
-    await new Promise(r => setTimeout(r, 100))
+    await new Promise((r) => setTimeout(r, 100))
   }
 }
 
@@ -139,20 +150,27 @@ export async function renderToPdf(html: string, isMermaid: boolean): Promise<Buf
   let offscreen: BrowserWindow | null = null
   try {
     offscreen = new BrowserWindow({
-      show: false, width: 800, height: 600,
-      webPreferences: { offscreen: true, nodeIntegration: false, contextIsolation: true },
+      show: false,
+      width: 800,
+      height: 600,
+      webPreferences: { offscreen: true, nodeIntegration: false, contextIsolation: true }
     })
     await offscreen.loadFile(tempPath)
 
     if (isMermaid) await waitForTitle(offscreen, 'MERMAID_READY')
 
-    return Buffer.from(await offscreen.webContents.printToPDF({
-      printBackground: true, pageSize: 'A4',
-      margins: { marginType: 'default' },
-    }))
+    return Buffer.from(
+      await offscreen.webContents.printToPDF({
+        printBackground: true,
+        pageSize: 'A4',
+        margins: { marginType: 'default' }
+      })
+    )
   } finally {
     offscreen?.destroy()
-    try { unlinkSync(tempPath) } catch {}
+    try {
+      unlinkSync(tempPath)
+    } catch {}
   }
 }
 
@@ -164,8 +182,10 @@ export async function renderToPng(html: string): Promise<Buffer> {
   let offscreen: BrowserWindow | null = null
   try {
     offscreen = new BrowserWindow({
-      show: false, width: 2000, height: 2000,
-      webPreferences: { offscreen: true, nodeIntegration: false, contextIsolation: true },
+      show: false,
+      width: 2000,
+      height: 2000,
+      webPreferences: { offscreen: true, nodeIntegration: false, contextIsolation: true }
     })
     await offscreen.loadFile(tempPath)
 
@@ -177,12 +197,14 @@ export async function renderToPng(html: string): Promise<Buffer> {
     const w = Math.max(rect.w, 10)
     const h = Math.max(rect.h, 10)
     offscreen.setContentSize(w, h)
-    await new Promise(r => setTimeout(r, 100))
+    await new Promise((r) => setTimeout(r, 100))
 
     const image = await offscreen.webContents.capturePage({ x: 0, y: 0, width: w, height: h })
     return image.toPNG()
   } finally {
     offscreen?.destroy()
-    try { unlinkSync(tempPath) } catch {}
+    try {
+      unlinkSync(tempPath)
+    } catch {}
   }
 }

@@ -36,45 +36,57 @@ rawDb.exec(`
 const db = createSlayDbAdapter(rawDb)
 
 const projectId = crypto.randomUUID()
-rawDb.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(projectId, 'ArtifactMvProj', '#000')
+rawDb
+  .prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)')
+  .run(projectId, 'ArtifactMvProj', '#000')
 
 function createTask(title: string) {
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
-  rawDb.prepare(
-    `INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config, "order", created_at, updated_at)
+  rawDb
+    .prepare(
+      `INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config, "order", created_at, updated_at)
      VALUES (?, ?, ?, 'inbox', 3, 'claude-code', '{}', 0, ?, ?)`
-  ).run(id, projectId, title, now, now)
+    )
+    .run(id, projectId, title, now, now)
   return id
 }
 
 function createFolder(taskId: string, name: string, parentId: string | null = null) {
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
-  rawDb.prepare(
-    `INSERT INTO artifact_folders (id, task_id, parent_id, name, "order", created_at)
+  rawDb
+    .prepare(
+      `INSERT INTO artifact_folders (id, task_id, parent_id, name, "order", created_at)
      VALUES (?, ?, ?, ?, 0, ?)`
-  ).run(id, taskId, parentId, name, now)
+    )
+    .run(id, taskId, parentId, name, now)
   return id
 }
 
 function createArtifact(taskId: string, title: string, folderId: string | null = null) {
   const id = crypto.randomUUID()
   const now = new Date().toISOString()
-  rawDb.prepare(
-    `INSERT INTO task_artifacts (id, task_id, folder_id, title, "order", created_at, updated_at)
+  rawDb
+    .prepare(
+      `INSERT INTO task_artifacts (id, task_id, folder_id, title, "order", created_at, updated_at)
      VALUES (?, ?, ?, ?, 0, ?, ?)`
-  ).run(id, taskId, folderId, title, now, now)
+    )
+    .run(id, taskId, folderId, title, now, now)
   return id
 }
 
 function getFolderParent(folderId: string): string | null {
-  const row = rawDb.prepare('SELECT parent_id FROM artifact_folders WHERE id = ?').get(folderId) as { parent_id: string | null }
+  const row = rawDb
+    .prepare('SELECT parent_id FROM artifact_folders WHERE id = ?')
+    .get(folderId) as { parent_id: string | null }
   return row.parent_id
 }
 
 function getArtifactFolder(artifactId: string): string | null {
-  const row = rawDb.prepare('SELECT folder_id FROM task_artifacts WHERE id = ?').get(artifactId) as { folder_id: string | null }
+  const row = rawDb
+    .prepare('SELECT folder_id FROM task_artifacts WHERE id = ?')
+    .get(artifactId) as { folder_id: string | null }
   return row.folder_id
 }
 
@@ -87,10 +99,11 @@ await describe('artifacts mv — move artifact to folder', () => {
     const artifactId = createArtifact(taskId, 'test.md')
     expect(getArtifactFolder(artifactId)).toBeNull()
 
-    db.run(
-      `UPDATE task_artifacts SET folder_id = :folderId, updated_at = :now WHERE id = :id`,
-      { ':folderId': folderId, ':now': new Date().toISOString(), ':id': artifactId }
-    )
+    db.run(`UPDATE task_artifacts SET folder_id = :folderId, updated_at = :now WHERE id = :id`, {
+      ':folderId': folderId,
+      ':now': new Date().toISOString(),
+      ':id': artifactId
+    })
     expect(getArtifactFolder(artifactId)).toBe(folderId)
   })
 
@@ -100,10 +113,11 @@ await describe('artifacts mv — move artifact to folder', () => {
     const artifactId = createArtifact(taskId, 'test.md', folderId)
     expect(getArtifactFolder(artifactId)).toBe(folderId)
 
-    db.run(
-      `UPDATE task_artifacts SET folder_id = :folderId, updated_at = :now WHERE id = :id`,
-      { ':folderId': null, ':now': new Date().toISOString(), ':id': artifactId }
-    )
+    db.run(`UPDATE task_artifacts SET folder_id = :folderId, updated_at = :now WHERE id = :id`, {
+      ':folderId': null,
+      ':now': new Date().toISOString(),
+      ':id': artifactId
+    })
     expect(getArtifactFolder(artifactId)).toBeNull()
   })
 })
@@ -117,10 +131,10 @@ await describe('artifacts mvdir — move folder to parent', () => {
     const childId = createFolder(taskId, 'Child')
     expect(getFolderParent(childId)).toBeNull()
 
-    db.run(
-      `UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`,
-      { ':parentId': parentId, ':id': childId }
-    )
+    db.run(`UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`, {
+      ':parentId': parentId,
+      ':id': childId
+    })
     expect(getFolderParent(childId)).toBe(parentId)
   })
 
@@ -130,10 +144,10 @@ await describe('artifacts mvdir — move folder to parent', () => {
     const childId = createFolder(taskId, 'Child', parentId)
     expect(getFolderParent(childId)).toBe(parentId)
 
-    db.run(
-      `UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`,
-      { ':parentId': null, ':id': childId }
-    )
+    db.run(`UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`, {
+      ':parentId': null,
+      ':id': childId
+    })
     expect(getFolderParent(childId)).toBeNull()
   })
 })
@@ -148,7 +162,10 @@ await describe('artifacts mvdir — cycle detection', () => {
     let detected = false
     let cur: string | null = childId
     while (cur) {
-      if (cur === parentId) { detected = true; break }
+      if (cur === parentId) {
+        detected = true
+        break
+      }
       const row = db.query<{ parent_id: string | null }>(
         `SELECT parent_id FROM artifact_folders WHERE id = :id`,
         { ':id': cur }
@@ -168,7 +185,10 @@ await describe('artifacts mvdir — cycle detection', () => {
     let detected = false
     let cur: string | null = c
     while (cur) {
-      if (cur === a) { detected = true; break }
+      if (cur === a) {
+        detected = true
+        break
+      }
       const row = db.query<{ parent_id: string | null }>(
         `SELECT parent_id FROM artifact_folders WHERE id = :id`,
         { ':id': cur }
@@ -187,7 +207,10 @@ await describe('artifacts mvdir — cycle detection', () => {
     let detected = false
     let cur: string | null = b
     while (cur) {
-      if (cur === a) { detected = true; break }
+      if (cur === a) {
+        detected = true
+        break
+      }
       const row = db.query<{ parent_id: string | null }>(
         `SELECT parent_id FROM artifact_folders WHERE id = :id`,
         { ':id': cur }
@@ -205,7 +228,10 @@ await describe('artifacts mvdir — cycle detection', () => {
     let detected = false
     let cur: string | null = a
     while (cur) {
-      if (cur === a) { detected = true; break }
+      if (cur === a) {
+        detected = true
+        break
+      }
       const row = db.query<{ parent_id: string | null }>(
         `SELECT parent_id FROM artifact_folders WHERE id = :id`,
         { ':id': cur }
@@ -224,10 +250,10 @@ await describe('artifacts mvdir — preserves children', () => {
     const artifactId = createArtifact(taskId, 'note.md', folderA)
 
     // Move folderA into folderB
-    db.run(
-      `UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`,
-      { ':parentId': folderB, ':id': folderA }
-    )
+    db.run(`UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`, {
+      ':parentId': folderB,
+      ':id': folderA
+    })
 
     // Artifact still belongs to folderA
     expect(getArtifactFolder(artifactId)).toBe(folderA)
@@ -242,10 +268,10 @@ await describe('artifacts mvdir — preserves children', () => {
     const target = createFolder(taskId, 'Target')
 
     // Move root into target
-    db.run(
-      `UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`,
-      { ':parentId': target, ':id': root }
-    )
+    db.run(`UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`, {
+      ':parentId': target,
+      ':id': root
+    })
 
     // Sub still has root as parent (unchanged)
     expect(getFolderParent(sub)).toBe(root)

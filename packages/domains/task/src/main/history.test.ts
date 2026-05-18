@@ -2,7 +2,12 @@
  * Task history integration tests
  * Run with: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm --loader ../../../../shared/test-utils/loader.ts src/main/history.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerTaskHandlers } from './handlers.js'
 import { registerTagHandlers } from '@slayzone/tags/main'
 import { registerHistoryHandlers } from '@slayzone/history/main'
@@ -14,22 +19,28 @@ registerTagHandlers(h.ipcMain as never, h.db)
 registerHistoryHandlers(h.ipcMain as never, h.db)
 
 const projectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projectId, 'HistoryProject', '#000', '/tmp/history-project')
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(projectId, 'HistoryProject', '#000', '/tmp/history-project')
 
 async function createTask(title: string, extra?: Record<string, unknown>): Promise<Task> {
-  return await h.invoke('db:tasks:create', { projectId, title, ...extra }) as Task
+  return (await h.invoke('db:tasks:create', { projectId, title, ...extra })) as Task
 }
 
 function listTaskEvents(taskId: string) {
-  return h.db.prepare(`
+  return h.db
+    .prepare(`
     SELECT kind, summary, payload_json
     FROM activity_events
     WHERE task_id = ?
     ORDER BY created_at ASC, rowid ASC
-  `).all(taskId) as Array<{ kind: string; summary: string; payload_json: string | null }>
+  `)
+    .all(taskId) as Array<{ kind: string; summary: string; payload_json: string | null }>
 }
 
-async function withFailingActivityEventInsert(fn: () => unknown | Promise<unknown>): Promise<unknown> {
+async function withFailingActivityEventInsert(
+  fn: () => unknown | Promise<unknown>
+): Promise<unknown> {
   h.db.exec(`
     CREATE TEMP TRIGGER fail_activity_event_insert
     BEFORE INSERT ON activity_events
@@ -58,7 +69,11 @@ await describe('task history', () => {
     await h.invoke('db:tasks:update', { id: task.id, title: 'After', status: 'in_progress' })
 
     const events = listTaskEvents(task.id)
-    expect(events.map((event) => event.kind)).toEqual(['task.created', 'task.title_changed', 'task.status_changed'])
+    expect(events.map((event) => event.kind)).toEqual([
+      'task.created',
+      'task.title_changed',
+      'task.status_changed'
+    ])
   })
 
   test('description history stores metadata only', async () => {
@@ -98,14 +113,18 @@ await describe('task history', () => {
     let failed = false
 
     try {
-      await withFailingActivityEventInsert(() => h.invoke('db:tasks:create', { projectId, title: 'Rollback create' }))
+      await withFailingActivityEventInsert(() =>
+        h.invoke('db:tasks:create', { projectId, title: 'Rollback create' })
+      )
     } catch {
       failed = true
     }
 
     expect(failed).toBe(true)
 
-    const createdTask = h.db.prepare('SELECT id FROM tasks WHERE title = ?').get('Rollback create') as { id: string } | undefined
+    const createdTask = h.db
+      .prepare('SELECT id FROM tasks WHERE title = ?')
+      .get('Rollback create') as { id: string } | undefined
     expect(createdTask).toBeUndefined()
   })
 
@@ -114,14 +133,19 @@ await describe('task history', () => {
 
     let failed = false
     try {
-      await withFailingActivityEventInsert(() => h.invoke('db:tasks:update', { id: task.id, title: 'Changed title', status: 'in_progress' }))
+      await withFailingActivityEventInsert(() =>
+        h.invoke('db:tasks:update', { id: task.id, title: 'Changed title', status: 'in_progress' })
+      )
     } catch {
       failed = true
     }
 
     expect(failed).toBe(true)
 
-    const row = h.db.prepare('SELECT title, status FROM tasks WHERE id = ?').get(task.id) as { title: string; status: string }
+    const row = h.db.prepare('SELECT title, status FROM tasks WHERE id = ?').get(task.id) as {
+      title: string
+      status: string
+    }
     expect(row.title).toBe('Rollback update')
     expect(row.status).toBe(task.status)
 
@@ -135,14 +159,18 @@ await describe('task history', () => {
 
     let failed = false
     try {
-      await withFailingActivityEventInsert(() => h.invoke('db:taskTags:setForTask', task.id, [tag.id]))
+      await withFailingActivityEventInsert(() =>
+        h.invoke('db:taskTags:setForTask', task.id, [tag.id])
+      )
     } catch {
       failed = true
     }
 
     expect(failed).toBe(true)
 
-    const taskTags = h.db.prepare('SELECT tag_id FROM task_tags WHERE task_id = ?').all(task.id) as Array<{ tag_id: string }>
+    const taskTags = h.db
+      .prepare('SELECT tag_id FROM task_tags WHERE task_id = ?')
+      .all(task.id) as Array<{ tag_id: string }>
     expect(taskTags).toHaveLength(0)
     expect(listTaskEvents(task.id).map((event) => event.kind)).toEqual(['task.created'])
   })
@@ -161,14 +189,17 @@ await describe('task history', () => {
     insert.run('event-b', task.id, task.project_id, task.id, 'Event B', createdAt)
     insert.run('event-c', task.id, task.project_id, task.id, 'Event C', createdAt)
 
-    const firstPage = await h.invoke('history:listForTask', task.id, { limit: 2 }) as {
+    const firstPage = (await h.invoke('history:listForTask', task.id, { limit: 2 })) as {
       events: Array<{ id: string }>
       nextCursor: { createdAt: string; id: string } | null
     }
     expect(firstPage.events.map((event) => event.id)).toEqual(['event-c', 'event-b'])
     expect(firstPage.nextCursor).toEqual({ createdAt, id: 'event-b' })
 
-    const secondPage = await h.invoke('history:listForTask', task.id, { limit: 2, before: firstPage.nextCursor }) as {
+    const secondPage = (await h.invoke('history:listForTask', task.id, {
+      limit: 2,
+      before: firstPage.nextCursor
+    })) as {
       events: Array<{ id: string }>
       nextCursor: { createdAt: string; id: string } | null
     }

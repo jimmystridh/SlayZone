@@ -2,7 +2,8 @@ import { test, expect, seed, resetApp, TEST_PROJECT_PATH } from '../fixtures/ele
 import {
   testInvoke,
   ensureBrowserPanelVisible,
-  openTaskViaSearch, getActiveViewId,
+  openTaskViaSearch,
+  getActiveViewId
 } from '../fixtures/browser-view'
 import { getTestUrl, TEST_HOST_MATCH } from '../fixtures/test-server'
 
@@ -25,9 +26,14 @@ test.describe('Browser view scripting & CSS (WebContentsView)', () => {
 
     // Navigate to a real page first so JS executes
     await testInvoke(mainWindow, 'browser:navigate', viewId, await getTestUrl('/'))
-    await expect.poll(async () => {
-      return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
-    }, { timeout: 10000 }).toContain(TEST_HOST_MATCH)
+    await expect
+      .poll(
+        async () => {
+          return (await testInvoke(mainWindow, 'browser:get-url', viewId)) as string
+        },
+        { timeout: 10000 }
+      )
+      .toContain(TEST_HOST_MATCH)
 
     const result = await testInvoke(mainWindow, 'browser:execute-js', viewId, '1 + 1')
     expect(result).toBe(2)
@@ -54,7 +60,12 @@ test.describe('Browser view scripting & CSS (WebContentsView)', () => {
     await ensureBrowserPanelVisible(mainWindow)
     const viewId = await getActiveViewId(mainWindow, taskId)
 
-    const key = await testInvoke(mainWindow, 'browser:insert-css', viewId, 'body { background: red !important; }') as string
+    const key = (await testInvoke(
+      mainWindow,
+      'browser:insert-css',
+      viewId,
+      'body { background: red !important; }'
+    )) as string
     expect(typeof key).toBe('string')
     expect(key.length).toBeGreaterThan(0)
   })
@@ -63,7 +74,12 @@ test.describe('Browser view scripting & CSS (WebContentsView)', () => {
     await ensureBrowserPanelVisible(mainWindow)
     const viewId = await getActiveViewId(mainWindow, taskId)
 
-    const key = await testInvoke(mainWindow, 'browser:insert-css', viewId, 'body { opacity: 0.5 !important; }') as string
+    const key = (await testInvoke(
+      mainWindow,
+      'browser:insert-css',
+      viewId,
+      'body { opacity: 0.5 !important; }'
+    )) as string
     // Should not throw
     await testInvoke(mainWindow, 'browser:remove-css', viewId, key)
   })

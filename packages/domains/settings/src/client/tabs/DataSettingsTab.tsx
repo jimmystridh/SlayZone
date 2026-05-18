@@ -1,12 +1,25 @@
 import { useState, useEffect } from 'react'
 import { FolderOpen } from 'lucide-react'
-import { Button, IconButton, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, toast } from '@slayzone/ui'
+import {
+  Button,
+  IconButton,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  toast
+} from '@slayzone/ui'
 import { SettingsTabIntro } from './SettingsTabIntro'
 
 export function DataSettingsTab() {
   const [projects, setProjects] = useState<Array<{ id: string; name: string }>>([])
   const [exportProjectId, setExportProjectId] = useState('')
-  const [importedProjects, setImportedProjects] = useState<Array<{ id: string; name: string; path: string }>>([])
+  const [importedProjects, setImportedProjects] = useState<
+    Array<{ id: string; name: string; path: string }>
+  >([])
 
   useEffect(() => {
     window.api.db.getProjects().then(setProjects)
@@ -27,7 +40,9 @@ export function DataSettingsTab() {
             </SelectTrigger>
             <SelectContent>
               {projects.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -55,7 +70,9 @@ export function DataSettingsTab() {
             const result = await window.api.exportImport.import()
             if (result.canceled) return
             if (result.success) {
-              toast.success(`Imported ${result.projectCount} project(s), ${result.taskCount} task(s)`)
+              toast.success(
+                `Imported ${result.projectCount} project(s), ${result.taskCount} task(s)`
+              )
               if (result.importedProjects?.length) {
                 setImportedProjects(result.importedProjects.map((p: any) => ({ ...p, path: '' })))
               }
@@ -97,7 +114,9 @@ export function DataSettingsTab() {
                     })
                     if (!result.canceled && result.filePaths[0]) {
                       setImportedProjects((prev: any[]) =>
-                        prev.map((proj, j) => (j === i ? { ...proj, path: result.filePaths[0] } : proj))
+                        prev.map((proj, j) =>
+                          j === i ? { ...proj, path: result.filePaths[0] } : proj
+                        )
                       )
                     }
                   }}

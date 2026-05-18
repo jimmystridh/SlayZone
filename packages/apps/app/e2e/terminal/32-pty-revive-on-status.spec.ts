@@ -29,7 +29,11 @@ test.describe('Issue #77: PTY revive on status transition', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Revive Test', color: '#22c55e', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Revive Test',
+      color: '#22c55e',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
   })
@@ -37,7 +41,10 @@ test.describe('Issue #77: PTY revive on status transition', () => {
   test('status → done kills PTY and notifies renderer (Part A)', async ({ mainWindow }) => {
     const s = seed(mainWindow)
     const task = await s.createTask({ projectId, title: 'Kill-notify test', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     const sessionId = getMainSessionId(task.id)
@@ -46,9 +53,9 @@ test.describe('Issue #77: PTY revive on status transition', () => {
 
     // Subscribe to pty:exit on the renderer so we can assert the IPC actually fired.
     await mainWindow.evaluate((id) => {
-      (window as unknown as { __ptyExits: string[] }).__ptyExits = [];
+      ;(window as unknown as { __ptyExits: string[] }).__ptyExits = []
       window.api.pty.onExit((s) => {
-        (window as unknown as { __ptyExits: string[] }).__ptyExits.push(s)
+        ;(window as unknown as { __ptyExits: string[] }).__ptyExits.push(s)
       })
       return id
     }, sessionId)
@@ -59,9 +66,14 @@ test.describe('Issue #77: PTY revive on status transition', () => {
     // Part A assertion: pty:exit IPC reaches the renderer. Before the fix this
     // event would be silently dropped because killPty eagerly deleted the session
     // before SIGKILL, causing node-pty's onExit guard to bail.
-    await expect.poll(async () =>
-      mainWindow.evaluate((id) => (window as unknown as { __ptyExits: string[] }).__ptyExits.includes(id), sessionId)
-    ).toBe(true)
+    await expect
+      .poll(async () =>
+        mainWindow.evaluate(
+          (id) => (window as unknown as { __ptyExits: string[] }).__ptyExits.includes(id),
+          sessionId
+        )
+      )
+      .toBe(true)
 
     await waitForNoPtySession(mainWindow, sessionId)
   })
@@ -70,17 +82,26 @@ test.describe('Issue #77: PTY revive on status transition', () => {
   // above), but pty:respawn-suggested IPC never reaches the renderer
   // subscriber. Either runtime adapter not actually wired in PLAYWRIGHT boot
   // path, or webContents.send drops without erroring. Needs main-process trace.
-  test.skip('status → in_progress broadcasts pty:respawn-suggested (Part B)', async ({ mainWindow }) => {
+  test.skip('status → in_progress broadcasts pty:respawn-suggested (Part B)', async ({
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
-    const task = await s.createTask({ projectId, title: 'Revive-signal test', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'claude-code' }), task.id)
+    const task = await s.createTask({
+      projectId,
+      title: 'Revive-signal test',
+      status: 'in_progress'
+    })
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'claude-code' }),
+      task.id
+    )
     await s.refreshData()
 
     // Subscribe before any status changes
     await mainWindow.evaluate((id) => {
-      (window as unknown as { __respawnCalls: string[] }).__respawnCalls = [];
+      ;(window as unknown as { __respawnCalls: string[] }).__respawnCalls = []
       window.api.pty.onRespawnSuggested((t) => {
-        (window as unknown as { __respawnCalls: string[] }).__respawnCalls.push(t)
+        ;(window as unknown as { __respawnCalls: string[] }).__respawnCalls.push(t)
       })
       return id
     }, task.id)
@@ -88,8 +109,8 @@ test.describe('Issue #77: PTY revive on status transition', () => {
     // Terminal → non-terminal revive should NOT fire if we were never in terminal status
     await mainWindow.evaluate((id) => window.api.db.updateTask({ id, status: 'todo' }), task.id)
     await mainWindow.waitForTimeout(200)
-    const noopCalls = await mainWindow.evaluate(() =>
-      (window as unknown as { __respawnCalls: string[] }).__respawnCalls.length
+    const noopCalls = await mainWindow.evaluate(
+      () => (window as unknown as { __respawnCalls: string[] }).__respawnCalls.length
     )
     expect(noopCalls).toBe(0)
 
@@ -98,15 +119,23 @@ test.describe('Issue #77: PTY revive on status transition', () => {
     // status when the in_progress write computes the `revived` flag.
     await mainWindow.evaluate((id) => window.api.db.updateTask({ id, status: 'done' }), task.id)
     await mainWindow.waitForTimeout(200)
-    const result = await mainWindow.evaluate((id) => window.api.db.updateTask({ id, status: 'in_progress' }), task.id)
+    const result = await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, status: 'in_progress' }),
+      task.id
+    )
     // sanity: status actually flipped at DB level
     expect(result?.status).toBe('in_progress')
 
-    await expect.poll(async () =>
-      mainWindow.evaluate(
-        (id) => (window as unknown as { __respawnCalls: string[] }).__respawnCalls.filter((t) => t === id).length,
-        task.id
+    await expect
+      .poll(async () =>
+        mainWindow.evaluate(
+          (id) =>
+            (window as unknown as { __respawnCalls: string[] }).__respawnCalls.filter(
+              (t) => t === id
+            ).length,
+          task.id
+        )
       )
-    ).toBeGreaterThan(0)
+      .toBeGreaterThan(0)
   })
 })

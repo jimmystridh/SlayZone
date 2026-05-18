@@ -5,7 +5,9 @@ type TreePatch = Record<string, unknown>
 
 async function patchStore(page: Page, patch: TreePatch) {
   await page.evaluate((p) => {
-    const store = (window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }).__slayzone_tabStore
+    const store = (
+      window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }
+    ).__slayzone_tabStore
     if (!store) throw new Error('__slayzone_tabStore not exposed')
     store.setState(p)
   }, patch)
@@ -13,9 +15,13 @@ async function patchStore(page: Page, patch: TreePatch) {
 
 async function setTabs(page: Page, taskIds: string[]) {
   await page.evaluate((ids) => {
-    const store = (window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }).__slayzone_tabStore
+    const store = (
+      window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }
+    ).__slayzone_tabStore
     if (!store) throw new Error('__slayzone_tabStore not exposed')
-    const tabs: Array<{ type: 'home' } | { type: 'task'; taskId: string; title: string }> = [{ type: 'home' }]
+    const tabs: Array<{ type: 'home' } | { type: 'task'; taskId: string; title: string }> = [
+      { type: 'home' }
+    ]
     for (const id of ids) tabs.push({ type: 'task', taskId: id, title: 'tab' })
     store.setState({ tabs, activeTabIndex: 0 })
   }, taskIds)
@@ -92,7 +98,11 @@ test.describe('TreeView actions', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: projectName, color: '#9333ea', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: projectName,
+      color: '#9333ea',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     const op = await s.createProject({ name: otherName, color: '#16a34a', path: TEST_PROJECT_PATH })
     otherProjectId = op.id
@@ -102,11 +112,16 @@ test.describe('TreeView actions', () => {
     await killAllPtys(mainWindow)
 
     // Wipe every task in both projects so each test starts identical.
-    await mainWindow.evaluate(async ({ pid, oid }) => {
-      const all = await window.api.db.getTasks()
-      const ids = all.filter((t: { project_id: string }) => t.project_id === pid || t.project_id === oid).map((t: { id: string }) => t.id)
-      if (ids.length > 0) await window.api.db.deleteTasks(ids)
-    }, { pid: projectId, oid: otherProjectId })
+    await mainWindow.evaluate(
+      async ({ pid, oid }) => {
+        const all = await window.api.db.getTasks()
+        const ids = all
+          .filter((t: { project_id: string }) => t.project_id === pid || t.project_id === oid)
+          .map((t: { id: string }) => t.id)
+        if (ids.length > 0) await window.api.db.deleteTasks(ids)
+      },
+      { pid: projectId, oid: otherProjectId }
+    )
 
     const s = seed(mainWindow)
     rootA = (await s.createTask({ projectId, title: 'TA A', status: 'in_progress' })).id
@@ -114,7 +129,10 @@ test.describe('TreeView actions', () => {
     rootC = (await s.createTask({ projectId, title: 'TA C', status: 'in_progress' })).id
     rootD = (await s.createTask({ projectId, title: 'TA D', status: 'in_progress' })).id
     await mainWindow.evaluate((ids) => window.api.db.reorderTasks([ids.a, ids.b, ids.c, ids.d]), {
-      a: rootA, b: rootB, c: rootC, d: rootD,
+      a: rootA,
+      b: rootB,
+      c: rootC,
+      d: rootD
     })
 
     // Remount TreeView with a clean filter set.
@@ -136,7 +154,7 @@ test.describe('TreeView actions', () => {
       treeOrderBy: 'manual',
       treeOrderDir: 'asc',
       treeGroupTemporary: true,
-      treeShowEmptyGroups: false,
+      treeShowEmptyGroups: false
     })
     // Tree filters projects to those with open tabs / active session tasks.
     // Without at least one tab, the project doesn't render — pin rootA.
@@ -156,11 +174,21 @@ test.describe('TreeView actions', () => {
     await menuItem(mainWindow, /Delete 3 tasks/).click()
     await confirmAlert(mainWindow, 'Delete')
 
-    await expect.poll(async () => {
-      const all = await seed(mainWindow).getTasks()
-      const ids = new Set(all.map((t: { id: string }) => t.id))
-      return { hasA: ids.has(rootA), hasB: ids.has(rootB), hasC: ids.has(rootC), hasD: ids.has(rootD) }
-    }, { timeout: 5_000 }).toEqual({ hasA: false, hasB: false, hasC: false, hasD: true })
+    await expect
+      .poll(
+        async () => {
+          const all = await seed(mainWindow).getTasks()
+          const ids = new Set(all.map((t: { id: string }) => t.id))
+          return {
+            hasA: ids.has(rootA),
+            hasB: ids.has(rootB),
+            hasC: ids.has(rootC),
+            hasD: ids.has(rootD)
+          }
+        },
+        { timeout: 5_000 }
+      )
+      .toEqual({ hasA: false, hasB: false, hasC: false, hasD: true })
   })
 
   test('bulk archive via context menu sets archived_at on all selected', async ({ mainWindow }) => {
@@ -171,15 +199,26 @@ test.describe('TreeView actions', () => {
     await menuItem(mainWindow, /Archive 2 tasks/).click()
     await confirmAlert(mainWindow, 'Archive')
 
-    await expect.poll(async () => {
-      const a = await getTaskById(mainWindow, rootA)
-      const b = await getTaskById(mainWindow, rootB)
-      const c = await getTaskById(mainWindow, rootC)
-      return { aArchived: !!a?.archived_at, bArchived: !!b?.archived_at, cArchived: !!c?.archived_at }
-    }, { timeout: 5_000 }).toEqual({ aArchived: true, bArchived: true, cArchived: false })
+    await expect
+      .poll(
+        async () => {
+          const a = await getTaskById(mainWindow, rootA)
+          const b = await getTaskById(mainWindow, rootB)
+          const c = await getTaskById(mainWindow, rootC)
+          return {
+            aArchived: !!a?.archived_at,
+            bArchived: !!b?.archived_at,
+            cArchived: !!c?.archived_at
+          }
+        },
+        { timeout: 5_000 }
+      )
+      .toEqual({ aArchived: true, bArchived: true, cArchived: false })
   })
 
-  test('bulk status change via context menu submenu sets all selected to todo', async ({ mainWindow }) => {
+  test('bulk status change via context menu submenu sets all selected to todo', async ({
+    mainWindow
+  }) => {
     await taskRow(mainWindow, rootA).click()
     await taskRow(mainWindow, rootB).click({ modifiers: ['Meta'] })
     await taskRow(mainWindow, rootC).click({ modifiers: ['Meta'] })
@@ -188,15 +227,22 @@ test.describe('TreeView actions', () => {
     await hoverSubmenu(mainWindow, 'Status')
     await radioItem(mainWindow, /Todo/).click()
 
-    await expect.poll(async () => {
-      const a = await getTaskById(mainWindow, rootA)
-      const b = await getTaskById(mainWindow, rootB)
-      const c = await getTaskById(mainWindow, rootC)
-      return [a?.status, b?.status, c?.status]
-    }, { timeout: 5_000 }).toEqual(['todo', 'todo', 'todo'])
+    await expect
+      .poll(
+        async () => {
+          const a = await getTaskById(mainWindow, rootA)
+          const b = await getTaskById(mainWindow, rootB)
+          const c = await getTaskById(mainWindow, rootC)
+          return [a?.status, b?.status, c?.status]
+        },
+        { timeout: 5_000 }
+      )
+      .toEqual(['todo', 'todo', 'todo'])
   })
 
-  test('bulk priority change via context menu submenu sets all selected to urgent', async ({ mainWindow }) => {
+  test('bulk priority change via context menu submenu sets all selected to urgent', async ({
+    mainWindow
+  }) => {
     await taskRow(mainWindow, rootA).click()
     await taskRow(mainWindow, rootB).click({ modifiers: ['Meta'] })
 
@@ -204,11 +250,16 @@ test.describe('TreeView actions', () => {
     await hoverSubmenu(mainWindow, 'Priority')
     await radioItem(mainWindow, /Urgent/).click()
 
-    await expect.poll(async () => {
-      const a = await getTaskById(mainWindow, rootA)
-      const b = await getTaskById(mainWindow, rootB)
-      return [a?.priority, b?.priority]
-    }, { timeout: 5_000 }).toEqual([1, 1])
+    await expect
+      .poll(
+        async () => {
+          const a = await getTaskById(mainWindow, rootA)
+          const b = await getTaskById(mainWindow, rootB)
+          return [a?.priority, b?.priority]
+        },
+        { timeout: 5_000 }
+      )
+      .toEqual([1, 1])
   })
 
   test('bulk block toggle via context menu marks all selected blocked', async ({ mainWindow }) => {
@@ -218,12 +269,17 @@ test.describe('TreeView actions', () => {
     await rightClickRow(mainWindow, rootA)
     await menuItem(mainWindow, /^Block$/).click()
 
-    await expect.poll(async () => {
-      const a = await getTaskById(mainWindow, rootA)
-      const b = await getTaskById(mainWindow, rootB)
-      const c = await getTaskById(mainWindow, rootC)
-      return [!!a?.is_blocked, !!b?.is_blocked, !!c?.is_blocked]
-    }, { timeout: 5_000 }).toEqual([true, true, false])
+    await expect
+      .poll(
+        async () => {
+          const a = await getTaskById(mainWindow, rootA)
+          const b = await getTaskById(mainWindow, rootB)
+          const c = await getTaskById(mainWindow, rootC)
+          return [!!a?.is_blocked, !!b?.is_blocked, !!c?.is_blocked]
+        },
+        { timeout: 5_000 }
+      )
+      .toEqual([true, true, false])
   })
 
   test('bulk move-to-project via context menu reassigns all selected', async ({ mainWindow }) => {
@@ -234,12 +290,17 @@ test.describe('TreeView actions', () => {
     await hoverSubmenu(mainWindow, 'Move to')
     await radioItem(mainWindow, new RegExp(otherName)).click()
 
-    await expect.poll(async () => {
-      const a = await getTaskById(mainWindow, rootA)
-      const b = await getTaskById(mainWindow, rootB)
-      const c = await getTaskById(mainWindow, rootC)
-      return [a?.project_id, b?.project_id, c?.project_id]
-    }, { timeout: 5_000 }).toEqual([otherProjectId, otherProjectId, projectId])
+    await expect
+      .poll(
+        async () => {
+          const a = await getTaskById(mainWindow, rootA)
+          const b = await getTaskById(mainWindow, rootB)
+          const c = await getTaskById(mainWindow, rootC)
+          return [a?.project_id, b?.project_id, c?.project_id]
+        },
+        { timeout: 5_000 }
+      )
+      .toEqual([otherProjectId, otherProjectId, projectId])
   })
 
   test('single delete via context menu removes only that row', async ({ mainWindow }) => {
@@ -247,22 +308,34 @@ test.describe('TreeView actions', () => {
     await menuItem(mainWindow, /^Delete$/).click()
     await confirmAlert(mainWindow, 'Delete')
 
-    await expect.poll(async () => {
-      const all = await seed(mainWindow).getTasks()
-      const ids = new Set(all.map((t: { id: string }) => t.id))
-      return { hasA: ids.has(rootA), hasB: ids.has(rootB), hasC: ids.has(rootC) }
-    }, { timeout: 5_000 }).toEqual({ hasA: true, hasB: false, hasC: true })
+    await expect
+      .poll(
+        async () => {
+          const all = await seed(mainWindow).getTasks()
+          const ids = new Set(all.map((t: { id: string }) => t.id))
+          return { hasA: ids.has(rootA), hasB: ids.has(rootB), hasC: ids.has(rootC) }
+        },
+        { timeout: 5_000 }
+      )
+      .toEqual({ hasA: true, hasB: false, hasC: true })
   })
 
-  test('single archive via context menu sets archived_at only on that row', async ({ mainWindow }) => {
+  test('single archive via context menu sets archived_at only on that row', async ({
+    mainWindow
+  }) => {
     await rightClickRow(mainWindow, rootC)
     await menuItem(mainWindow, /^Archive$/).click()
     await confirmAlert(mainWindow, 'Archive')
 
-    await expect.poll(async () => {
-      const a = await getTaskById(mainWindow, rootA)
-      const c = await getTaskById(mainWindow, rootC)
-      return { aArchived: !!a?.archived_at, cArchived: !!c?.archived_at }
-    }, { timeout: 5_000 }).toEqual({ aArchived: false, cArchived: true })
+    await expect
+      .poll(
+        async () => {
+          const a = await getTaskById(mainWindow, rootA)
+          const c = await getTaskById(mainWindow, rootC)
+          return { aArchived: !!a?.archived_at, cArchived: !!c?.archived_at }
+        },
+        { timeout: 5_000 }
+      )
+      .toEqual({ aArchived: false, cArchived: true })
   })
 })

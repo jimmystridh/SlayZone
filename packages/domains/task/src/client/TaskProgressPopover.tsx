@@ -1,6 +1,16 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Gauge } from 'lucide-react'
-import { Popover, PopoverContent, PopoverTrigger, ProgressRing, Slider, Tooltip, TooltipContent, TooltipTrigger, cn } from '@slayzone/ui'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  ProgressRing,
+  Slider,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  cn
+} from '@slayzone/ui'
 
 const PRESETS = [0, 25, 50, 75, 100] as const
 
@@ -31,7 +41,7 @@ export function TaskProgressPopover({
   label = 'Progress',
   align = 'start',
   children,
-  tooltip,
+  tooltip
 }: TaskProgressPopoverProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [local, setLocal] = useState(value)
@@ -53,7 +63,7 @@ export function TaskProgressPopover({
       aria-label={`${label}: ${Math.round(display)}%`}
       className={cn(
         'inline-flex items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        buttonClassName,
+        buttonClassName
       )}
       onClick={(e) => e.stopPropagation()}
     >
@@ -81,11 +91,7 @@ export function TaskProgressPopover({
       ) : (
         <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       )}
-      <PopoverContent
-        className="w-72 p-4"
-        align={align}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <PopoverContent className="w-72 p-4" align={align} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Gauge className="size-4 text-muted-foreground" />
@@ -125,7 +131,7 @@ export function TaskProgressPopover({
                   'h-7 rounded-md text-xs font-medium tabular-nums transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   active
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                    : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                 )}
               >
                 {p}

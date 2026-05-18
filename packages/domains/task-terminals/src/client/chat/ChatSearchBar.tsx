@@ -31,7 +31,7 @@ export function ChatSearchBar({
   onPrev,
   onNext,
   onClose,
-  focusToken,
+  focusToken
 }: ChatSearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -40,24 +40,23 @@ export function ChatSearchBar({
     inputRef.current?.select()
   }, [focusToken])
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      onClose()
-    } else if (e.key === 'Enter' && e.shiftKey) {
-      e.preventDefault()
-      onPrev()
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      onNext()
-    }
-  }, [onClose, onPrev, onNext])
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      } else if (e.key === 'Enter' && e.shiftKey) {
+        e.preventDefault()
+        onPrev()
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        onNext()
+      }
+    },
+    [onClose, onPrev, onNext]
+  )
 
-  const countDisplay = query
-    ? resultCount > 0
-      ? `${resultIndex + 1}/${resultCount}`
-      : '0/0'
-    : ''
+  const countDisplay = query ? (resultCount > 0 ? `${resultIndex + 1}/${resultCount}` : '0/0') : ''
 
   return (
     <div
@@ -77,10 +76,20 @@ export function ChatSearchBar({
       <span className="text-xs text-muted-foreground tabular-nums shrink-0 min-w-[3ch] text-right">
         {countDisplay}
       </span>
-      <button onClick={onPrev} title="Previous (Shift+Enter)" className="p-0.5 hover:bg-accent rounded" disabled={resultCount === 0}>
+      <button
+        onClick={onPrev}
+        title="Previous (Shift+Enter)"
+        className="p-0.5 hover:bg-accent rounded"
+        disabled={resultCount === 0}
+      >
         <ChevronUp className="size-4 text-muted-foreground hover:text-foreground" />
       </button>
-      <button onClick={onNext} title="Next (Enter)" className="p-0.5 hover:bg-accent rounded" disabled={resultCount === 0}>
+      <button
+        onClick={onNext}
+        title="Next (Enter)"
+        className="p-0.5 hover:bg-accent rounded"
+        disabled={resultCount === 0}
+      >
         <ChevronDown className="size-4 text-muted-foreground hover:text-foreground" />
       </button>
       <button

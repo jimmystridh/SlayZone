@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  ArrowLeft, ChevronRight,
-  FileText, RefreshCw, Server, Settings2, Sparkles,
+  ArrowLeft,
+  ChevronRight,
+  FileText,
+  RefreshCw,
+  Server,
+  Settings2,
+  Sparkles,
   type LucideIcon
 } from 'lucide-react'
 import { Button, Tooltip, TooltipContent, TooltipTrigger, cn, toast } from '@slayzone/ui'
@@ -42,7 +47,12 @@ interface ContextData {
   mcpConfigs: McpConfigFileResult[]
 }
 
-interface SectionCounts { total: number; synced: number; stale: number; unmanaged: number }
+interface SectionCounts {
+  total: number
+  synced: number
+  stale: number
+  unmanaged: number
+}
 
 function computeSkillCounts(tree: ContextTreeEntry[]): SectionCounts {
   const counts = countSyncHealths(
@@ -61,8 +71,9 @@ function computeSkillCounts(tree: ContextTreeEntry[]): SectionCounts {
 function computeInstructionCounts(instructions: ContextData['instructions']): SectionCounts {
   const providerHealth = instructions.providerHealth ?? {}
   const counts = countSyncHealths(
-    (Object.keys(providerHealth) as CliProvider[])
-      .map((provider) => providerHealth[provider]?.health ?? 'not_synced')
+    (Object.keys(providerHealth) as CliProvider[]).map(
+      (provider) => providerHealth[provider]?.health ?? 'not_synced'
+    )
   )
   return {
     total: counts.total,
@@ -81,14 +92,35 @@ function computeMcpCounts(configs: McpConfigFileResult[]): SectionCounts {
 function CountsSummary({ counts }: { counts: SectionCounts }) {
   if (counts.total === 0) return null
   const pills: Array<{ label: string; value: number; bg: string; text: string }> = []
-  if (counts.synced > 0) pills.push({ label: 'synced', value: counts.synced, bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400' })
-  if (counts.stale > 0) pills.push({ label: 'stale', value: counts.stale, bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400' })
-  if (counts.unmanaged > 0) pills.push({ label: 'unmanaged', value: counts.unmanaged, bg: 'bg-muted', text: 'text-muted-foreground' })
+  if (counts.synced > 0)
+    pills.push({
+      label: 'synced',
+      value: counts.synced,
+      bg: 'bg-green-100 dark:bg-green-900/30',
+      text: 'text-green-700 dark:text-green-400'
+    })
+  if (counts.stale > 0)
+    pills.push({
+      label: 'stale',
+      value: counts.stale,
+      bg: 'bg-amber-100 dark:bg-amber-900/30',
+      text: 'text-amber-700 dark:text-amber-400'
+    })
+  if (counts.unmanaged > 0)
+    pills.push({
+      label: 'unmanaged',
+      value: counts.unmanaged,
+      bg: 'bg-muted',
+      text: 'text-muted-foreground'
+    })
   if (pills.length === 0) return null
   return (
     <div className="flex items-center gap-1">
       {pills.map((p) => (
-        <span key={p.label} className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium', p.bg, p.text)}>
+        <span
+          key={p.label}
+          className={cn('rounded-full px-2 py-0.5 text-[10px] font-medium', p.bg, p.text)}
+        >
           {p.value} {p.label}
         </span>
       ))}
@@ -96,7 +128,14 @@ function CountsSummary({ counts }: { counts: SectionCounts }) {
   )
 }
 
-function OverviewCard({ testId, icon: Icon, label, detail, counts, onClick }: {
+function OverviewCard({
+  testId,
+  icon: Icon,
+  label,
+  detail,
+  counts,
+  onClick
+}: {
   testId: string
   icon: LucideIcon
   label: string
@@ -115,7 +154,9 @@ function OverviewCard({ testId, icon: Icon, label, detail, counts, onClick }: {
         <span className="text-sm font-medium">{label}</span>
       </div>
       {counts && counts.total > 0 && <CountsSummary counts={counts} />}
-      {detail && <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">{detail}</span>}
+      {detail && (
+        <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">{detail}</span>
+      )}
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
     </button>
   )
@@ -140,10 +181,36 @@ function ProjectOverviewPanel({
 
   return (
     <div className="space-y-2.5">
-      <OverviewCard testId="project-context-overview-providers" icon={Settings2} label="Providers" detail={`${data.enabledProviders.length} enabled`} onClick={() => onNavigate('providers')} />
-      <OverviewCard testId="project-context-overview-instructions" icon={FileText} label="Instructions" detail={`${instrCounts.total} provider${instrCounts.total === 1 ? '' : 's'}`} counts={instrCounts} onClick={() => onNavigate('instructions')} />
-      <OverviewCard testId="project-context-overview-skills" icon={Sparkles} label="Skills" detail={`${skillCounts.total} total`} counts={skillCounts} onClick={() => onNavigate('skill')} />
-      <OverviewCard testId="project-context-overview-mcp" icon={Server} label="MCP Servers" detail={`${mcpCounts.total} server${mcpCounts.total === 1 ? '' : 's'}`} onClick={() => onNavigate('mcp')} />
+      <OverviewCard
+        testId="project-context-overview-providers"
+        icon={Settings2}
+        label="Providers"
+        detail={`${data.enabledProviders.length} enabled`}
+        onClick={() => onNavigate('providers')}
+      />
+      <OverviewCard
+        testId="project-context-overview-instructions"
+        icon={FileText}
+        label="Instructions"
+        detail={`${instrCounts.total} provider${instrCounts.total === 1 ? '' : 's'}`}
+        counts={instrCounts}
+        onClick={() => onNavigate('instructions')}
+      />
+      <OverviewCard
+        testId="project-context-overview-skills"
+        icon={Sparkles}
+        label="Skills"
+        detail={`${skillCounts.total} total`}
+        counts={skillCounts}
+        onClick={() => onNavigate('skill')}
+      />
+      <OverviewCard
+        testId="project-context-overview-mcp"
+        icon={Server}
+        label="MCP Servers"
+        detail={`${mcpCounts.total} server${mcpCounts.total === 1 ? '' : 's'}`}
+        onClick={() => onNavigate('mcp')}
+      />
 
       <div className="flex items-center gap-2 pt-3">
         <div className="flex-1" />
@@ -154,18 +221,20 @@ function ProjectOverviewPanel({
                 size="sm"
                 className="h-7 px-2 text-[11px]"
                 variant="outline"
-                onClick={() => { void onResetAndSync() }}
+                onClick={() => {
+                  void onResetAndSync()
+                }}
                 disabled={syncingMode !== null}
                 data-testid="project-context-reset-sync"
               >
-                <RefreshCw className={cn('mr-1.5 size-3.5', syncingMode === 'reset' && 'animate-spin')} />
+                <RefreshCw
+                  className={cn('mr-1.5 size-3.5', syncingMode === 'reset' && 'animate-spin')}
+                />
                 Reset and sync
               </Button>
             </span>
           </TooltipTrigger>
-          <TooltipContent>
-            Remove unmanaged files, then sync all managed items.
-          </TooltipContent>
+          <TooltipContent>Remove unmanaged files, then sync all managed items.</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -173,18 +242,20 @@ function ProjectOverviewPanel({
               <Button
                 size="sm"
                 className="h-7 px-2 text-[11px]"
-                onClick={() => { void onSyncAll() }}
+                onClick={() => {
+                  void onSyncAll()
+                }}
                 disabled={syncingMode !== null}
                 data-testid="project-context-sync-all"
               >
-                <RefreshCw className={cn('mr-1.5 size-3.5', syncingMode === 'sync' && 'animate-spin')} />
+                <RefreshCw
+                  className={cn('mr-1.5 size-3.5', syncingMode === 'sync' && 'animate-spin')}
+                />
                 Sync All
               </Button>
             </span>
           </TooltipTrigger>
-          <TooltipContent>
-            Sync all managed items to provider files.
-          </TooltipContent>
+          <TooltipContent>Sync all managed items to provider files.</TooltipContent>
         </Tooltip>
       </div>
     </div>
@@ -195,30 +266,35 @@ function ProjectOverviewPanel({
 // Main project layout
 // ---------------------------------------------------------------------------
 
-export function ProjectContextFlat({ projectId, projectPath, onOpenContextManager }: ProjectContextFlatProps) {
+export function ProjectContextFlat({
+  projectId,
+  projectPath,
+  onOpenContextManager
+}: ProjectContextFlatProps) {
   const [data, setData] = useState<ContextData | null>(null)
   const [version, setVersion] = useState(0)
   const [syncingMode, setSyncingMode] = useState<'sync' | 'reset' | null>(null)
   const [section, setSection] = useState<ProjectSection | null>(null)
 
-  const bumpVersion = useCallback(() => setVersion(v => v + 1), [])
+  const bumpVersion = useCallback(() => setVersion((v) => v + 1), [])
 
   useEffect(() => {
     let stale = false
     void (async () => {
       try {
-        const [skillsStatus, localItems, enabledProviders, instructions, contextTree, mcpConfigs] = await Promise.all([
-          window.api.aiConfig.getProjectSkillsStatus(projectId, projectPath),
-          window.api.aiConfig.listItems({ scope: 'project', projectId }),
-          window.api.aiConfig.getProjectProviders(projectId),
-          window.api.aiConfig.getRootInstructions(projectId, projectPath),
-          window.api.aiConfig.getContextTree(projectPath, projectId),
-          window.api.aiConfig.discoverMcpConfigs(projectPath)
-        ])
+        const [skillsStatus, localItems, enabledProviders, instructions, contextTree, mcpConfigs] =
+          await Promise.all([
+            window.api.aiConfig.getProjectSkillsStatus(projectId, projectPath),
+            window.api.aiConfig.listItems({ scope: 'project', projectId }),
+            window.api.aiConfig.getProjectProviders(projectId),
+            window.api.aiConfig.getRootInstructions(projectId, projectPath),
+            window.api.aiConfig.getContextTree(projectPath, projectId),
+            window.api.aiConfig.discoverMcpConfigs(projectPath)
+          ])
         if (stale) return
         setData({
-          linkedSkills: skillsStatus.filter(s => s.item.type === 'skill'),
-          localItems: localItems.filter(i => i.type !== 'root_instructions'),
+          linkedSkills: skillsStatus.filter((s) => s.item.type === 'skill'),
+          localItems: localItems.filter((i) => i.type !== 'root_instructions'),
           enabledProviders,
           instructions: {
             ...instructions,
@@ -231,7 +307,9 @@ export function ProjectContextFlat({ projectId, projectPath, onOpenContextManage
         // silent
       }
     })()
-    return () => { stale = true }
+    return () => {
+      stale = true
+    }
   }, [projectId, projectPath, version])
 
   const handleSyncAll = async () => {
@@ -244,7 +322,9 @@ export function ProjectContextFlat({ projectId, projectPath, onOpenContextManage
       })
       const removed = result.deleted.length
       const added = result.written.length
-      toast.success(`Sync complete: removed ${removed} file${removed === 1 ? '' : 's'}, added ${added} file${added === 1 ? '' : 's'}.`)
+      toast.success(
+        `Sync complete: removed ${removed} file${removed === 1 ? '' : 's'}, added ${added} file${added === 1 ? '' : 's'}.`
+      )
       bumpVersion()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Sync failed')
@@ -263,7 +343,9 @@ export function ProjectContextFlat({ projectId, projectPath, onOpenContextManage
       })
       const removed = result.deleted.length
       const added = result.written.length
-      toast.success(`Reset complete: removed ${removed} file${removed === 1 ? '' : 's'}, added ${added} file${added === 1 ? '' : 's'}.`)
+      toast.success(
+        `Reset complete: removed ${removed} file${removed === 1 ? '' : 's'}, added ${added} file${added === 1 ? '' : 's'}.`
+      )
       bumpVersion()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Reset and sync failed')
@@ -272,20 +354,18 @@ export function ProjectContextFlat({ projectId, projectPath, onOpenContextManage
     }
   }
 
-
-
   if (!data) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3, 4].map(i => (
+        {[1, 2, 3, 4].map((i) => (
           <div key={i} className="h-16 animate-pulse rounded-lg border bg-muted/20" />
         ))}
       </div>
     )
   }
 
-  const linkedSkillIds = new Set(data.linkedSkills.map(s => s.item.id))
-  const localSkills = data.localItems.filter(i => i.type === 'skill' && !linkedSkillIds.has(i.id))
+  const linkedSkillIds = new Set(data.linkedSkills.map((s) => s.item.id))
+  const localSkills = data.localItems.filter((i) => i.type === 'skill' && !linkedSkillIds.has(i.id))
 
   const sectionTitles: Record<ProjectSection, string> = {
     providers: 'Providers',
@@ -295,7 +375,8 @@ export function ProjectContextFlat({ projectId, projectPath, onOpenContextManage
   }
 
   const sectionDescriptions: Record<ProjectSection, string> = {
-    providers: 'Choose which providers this project syncs to. Defaults inherited from computer settings.',
+    providers:
+      'Choose which providers this project syncs to. Defaults inherited from computer settings.',
     instructions: 'Use the “Use library” button in the instructions editor to load shared content.',
     skill: 'Select, edit, and sync project skills.',
     mcp: 'Manage MCP servers synced for this project.'
@@ -314,21 +395,10 @@ export function ProjectContextFlat({ projectId, projectPath, onOpenContextManage
       )
     }
     if (section === 'providers') {
-      return (
-        <ProviderChips
-          projectId={projectId}
-          layout="panel"
-          onChange={bumpVersion}
-        />
-      )
+      return <ProviderChips projectId={projectId} layout="panel" onChange={bumpVersion} />
     }
     if (section === 'instructions') {
-      return (
-        <ProjectInstructions
-          projectId={projectId}
-          projectPath={projectPath}
-        />
-      )
+      return <ProjectInstructions projectId={projectId} projectPath={projectPath} />
     }
     if (section === 'skill') {
       return (
@@ -368,17 +438,13 @@ export function ProjectContextFlat({ projectId, projectPath, onOpenContextManage
           <div className="flex items-center gap-2">
             <div id="context-manager-header-actions" />
             {section !== 'instructions' && (
-              <span className="text-xs text-muted-foreground">
-                {sectionDescriptions[section]}
-              </span>
+              <span className="text-xs text-muted-foreground">{sectionDescriptions[section]}</span>
             )}
           </div>
         </div>
       )}
 
-      <div className="min-h-0 flex-1">
-        {content}
-      </div>
+      <div className="min-h-0 flex-1">{content}</div>
     </div>
   )
 }

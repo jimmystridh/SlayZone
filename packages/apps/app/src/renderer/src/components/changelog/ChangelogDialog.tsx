@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  cn,
+  cn
 } from '@slayzone/ui'
 import { Sparkles, Zap, Bug, AlertTriangle, ChevronRight } from 'lucide-react'
 import { track } from '@slayzone/telemetry/client'
@@ -19,22 +19,34 @@ interface Props {
   lastSeenVersion?: string | null
 }
 
-const categoryConfig: Record<ChangeCategory, { label: string; icon: typeof Sparkles; color: string }> = {
+const categoryConfig: Record<
+  ChangeCategory,
+  { label: string; icon: typeof Sparkles; color: string }
+> = {
   breaking: { label: 'Breaking', icon: AlertTriangle, color: 'text-red-400' },
   feature: { label: 'New', icon: Sparkles, color: 'text-violet-400' },
   improvement: { label: 'Improved', icon: Zap, color: 'text-blue-400' },
-  fix: { label: 'Fixed', icon: Bug, color: 'text-amber-400' },
+  fix: { label: 'Fixed', icon: Bug, color: 'text-amber-400' }
 }
 
 export function ChangelogDialog({ open, onOpenChange, lastSeenVersion }: Props) {
-  useEffect(() => { if (open) track('changelog_viewed') }, [open])
+  useEffect(() => {
+    if (open) track('changelog_viewed')
+  }, [open])
   const entries = CHANGELOG.slice(0, 6)
-  const lastSeenIndex = lastSeenVersion ? entries.findIndex((e) => e.version === lastSeenVersion) : -1
-  const isNew = (i: number) => lastSeenVersion ? (lastSeenIndex === -1 || i < lastSeenIndex) : i === 0
+  const lastSeenIndex = lastSeenVersion
+    ? entries.findIndex((e) => e.version === lastSeenVersion)
+    : -1
+  const isNew = (i: number) =>
+    lastSeenVersion ? lastSeenIndex === -1 || i < lastSeenIndex : i === 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden" style={{ maxWidth: 800 }} showCloseButton={false}>
+      <DialogContent
+        className="max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden"
+        style={{ maxWidth: 800 }}
+        showCloseButton={false}
+      >
         <DialogDescription className="sr-only">Recent changes and updates</DialogDescription>
 
         <div className="px-10 pt-10 pb-4">
@@ -81,12 +93,16 @@ function ItemList({ items }: { items: ChangelogEntry['items'] }) {
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">{item.title}</span>
-                <span className={cn('text-[10px] uppercase tracking-wider font-semibold', config.color)}>
+                <span
+                  className={cn('text-[10px] uppercase tracking-wider font-semibold', config.color)}
+                >
                   {config.label}
                 </span>
               </div>
               {item.description && (
-                <p className="text-[13px] text-muted-foreground mt-0.5 leading-relaxed">{item.description}</p>
+                <p className="text-[13px] text-muted-foreground mt-0.5 leading-relaxed">
+                  {item.description}
+                </p>
               )}
             </div>
           </div>
@@ -96,7 +112,15 @@ function ItemList({ items }: { items: ChangelogEntry['items'] }) {
   )
 }
 
-function VersionAccordion({ entry, isLatest, defaultOpen }: { entry: ChangelogEntry; isLatest: boolean; defaultOpen: boolean }) {
+function VersionAccordion({
+  entry,
+  isLatest,
+  defaultOpen
+}: {
+  entry: ChangelogEntry
+  isLatest: boolean
+  defaultOpen: boolean
+}) {
   return (
     <Collapsible.Root defaultOpen={defaultOpen}>
       <div className="pt-4">
@@ -110,7 +134,9 @@ function VersionAccordion({ entry, isLatest, defaultOpen }: { entry: ChangelogEn
               </span>
             )}
             <span className="text-sm font-semibold tracking-tight">{entry.tagline}</span>
-            <span className="text-[11px] text-muted-foreground/50 tabular-nums ml-auto shrink-0">{entry.date}</span>
+            <span className="text-[11px] text-muted-foreground/50 tabular-nums ml-auto shrink-0">
+              {entry.date}
+            </span>
           </div>
         </Collapsible.Trigger>
 

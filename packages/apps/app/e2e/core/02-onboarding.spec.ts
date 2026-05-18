@@ -6,7 +6,9 @@ test.describe('Onboarding', () => {
   })
 
   test('onboarding is skipped when pre-seeded', async ({ mainWindow }) => {
-    const completed = await mainWindow.evaluate(() => window.api.settings.get('onboarding_completed'))
+    const completed = await mainWindow.evaluate(() =>
+      window.api.settings.get('onboarding_completed')
+    )
     expect(completed).toBe('true')
     await expect(mainWindow.getByText('Welcome to SlayZone', { exact: true })).not.toBeVisible()
   })
@@ -18,11 +20,13 @@ test.describe('Onboarding', () => {
       // Clear the flag to trigger the dialog on reload
       await s.setSetting('onboarding_completed', '')
       await mainWindow.evaluate(() => {
-        (window as any).__slayzone_dialogStore.getState().openOnboarding()
+        ;(window as any).__slayzone_dialogStore.getState().openOnboarding()
       })
 
       // Step 0: Welcome
-      await expect(mainWindow.getByText('Welcome to SlayZone', { exact: true }).first()).toBeVisible({ timeout: 10_000 })
+      await expect(
+        mainWindow.getByText('Welcome to SlayZone', { exact: true }).first()
+      ).toBeVisible({ timeout: 10_000 })
       const dialog = mainWindow.locator('[role="dialog"]').last()
       await dialog.getByRole('button', { name: 'Continue' }).click()
 
@@ -40,7 +44,12 @@ test.describe('Onboarding', () => {
 
       // Step 4: CLI install
       await expect(dialog.getByText(/Install the slay CLI|CLI installed\./i)).toBeVisible()
-      if (await dialog.getByRole('button', { name: 'Skip' }).isVisible().catch(() => false)) {
+      if (
+        await dialog
+          .getByRole('button', { name: 'Skip' })
+          .isVisible()
+          .catch(() => false)
+      ) {
         await dialog.getByRole('button', { name: 'Skip' }).click()
       } else {
         await dialog.getByRole('button', { name: 'Continue' }).click()
@@ -51,7 +60,9 @@ test.describe('Onboarding', () => {
       await expect(dialog).not.toBeVisible({ timeout: 5_000 })
 
       // Verify persistence
-      const completed = await mainWindow.evaluate(() => window.api.settings.get('onboarding_completed'))
+      const completed = await mainWindow.evaluate(() =>
+        window.api.settings.get('onboarding_completed')
+      )
       expect(completed).toBe('true')
     } finally {
       // Restore flag so subsequent tests never see the onboarding dialog

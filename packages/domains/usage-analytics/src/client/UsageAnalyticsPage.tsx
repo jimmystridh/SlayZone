@@ -25,14 +25,21 @@ interface Props {
 
 export function UsageAnalyticsPage({ onTaskClick }: Props) {
   const {
-    data, range, setRange, loading, refresh,
-    selectedProvider, setSelectedProvider, providerSupported,
+    data,
+    range,
+    setRange,
+    loading,
+    refresh,
+    selectedProvider,
+    setSelectedProvider,
+    providerSupported,
     providerOptions
   } = useUsageAnalytics()
 
-  const providerLabel = providerOptions.find((o) => o.id === selectedProvider)?.label
-    ?? PROVIDER_USAGE_SUPPORT[selectedProvider]?.label
-    ?? selectedProvider
+  const providerLabel =
+    providerOptions.find((o) => o.id === selectedProvider)?.label ??
+    PROVIDER_USAGE_SUPPORT[selectedProvider]?.label ??
+    selectedProvider
 
   return (
     <div className="flex h-full flex-col overflow-y-auto scrollbar-thin">
@@ -60,7 +67,8 @@ export function UsageAnalyticsPage({ onTaskClick }: Props) {
         {!providerSupported ? (
           <div className="rounded-lg border bg-surface-2 p-8 text-center">
             <p className="text-sm text-muted-foreground">
-              {providerLabel} does not store usage data locally. Usage tracking is only available for {formatSupportedProviders()}.
+              {providerLabel} does not store usage data locally. Usage tracking is only available
+              for {formatSupportedProviders()}.
             </p>
           </div>
         ) : (

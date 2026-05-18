@@ -2,8 +2,17 @@
  * turn-tracker integration tests (worktree-scoped).
  * Run: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/agent-turns/src/main/turn-tracker.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
-import { recordTurnBoundary, initChatTurnSubscriber, initPtyTurnSubscriber } from './turn-tracker.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  recordTurnBoundary,
+  initChatTurnSubscriber,
+  initPtyTurnSubscriber
+} from './turn-tracker.js'
 import { listTurnsForWorktree } from './db.js'
 import { spawnSync } from 'node:child_process'
 import * as fs from 'node:fs'
@@ -93,10 +102,18 @@ await describe('multi-task in same worktree', () => {
     const taskB = crypto.randomUUID()
     const tabA = `tab-${taskA.slice(0, 8)}`
     const tabB = `tab-${taskB.slice(0, 8)}`
-    h.db.prepare('INSERT INTO tasks (id, project_id, title, worktree_path) VALUES (?, ?, ?, ?)').run(taskA, projectId, 'A', repo)
-    h.db.prepare('INSERT INTO tasks (id, project_id, title, worktree_path) VALUES (?, ?, ?, ?)').run(taskB, projectId, 'B', repo)
-    h.db.prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)').run(tabA, taskA, 'claude-code', 0)
-    h.db.prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)').run(tabB, taskB, 'claude-code', 0)
+    h.db
+      .prepare('INSERT INTO tasks (id, project_id, title, worktree_path) VALUES (?, ?, ?, ?)')
+      .run(taskA, projectId, 'A', repo)
+    h.db
+      .prepare('INSERT INTO tasks (id, project_id, title, worktree_path) VALUES (?, ?, ?, ?)')
+      .run(taskB, projectId, 'B', repo)
+    h.db
+      .prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)')
+      .run(tabA, taskA, 'claude-code', 0)
+    h.db
+      .prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)')
+      .run(tabB, taskB, 'claude-code', 0)
 
     fs.writeFileSync(path.join(repo, 'a.txt'), 'from A')
     await recordTurnBoundary(h.db, tabA, 'A first')
@@ -132,11 +149,17 @@ await describe('worktree path fallback', () => {
     const repo = mkRepo()
     repos.push(repo)
     const altProj = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(altProj, 'fb', '#0', repo)
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(altProj, 'fb', '#0', repo)
     const taskId = crypto.randomUUID()
     const tabId = `tab-${taskId.slice(0, 8)}`
-    h.db.prepare('INSERT INTO tasks (id, project_id, title) VALUES (?, ?, ?)').run(taskId, altProj, 'T')
-    h.db.prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)').run(tabId, taskId, 'claude-code', 0)
+    h.db
+      .prepare('INSERT INTO tasks (id, project_id, title) VALUES (?, ?, ?)')
+      .run(taskId, altProj, 'T')
+    h.db
+      .prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)')
+      .run(tabId, taskId, 'claude-code', 0)
     fs.writeFileSync(path.join(repo, 'fb.txt'), 'fb')
     await recordTurnBoundary(h.db, tabId, 'x')
     expect(listTurnsForWorktree(h.db, repo)).toHaveLength(1)
@@ -144,11 +167,17 @@ await describe('worktree path fallback', () => {
 
   test('skips when both worktree_path AND project.path empty', async () => {
     const noPathProj = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(noPathProj, 'np', '#0')
+    h.db
+      .prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)')
+      .run(noPathProj, 'np', '#0')
     const taskId = crypto.randomUUID()
     const tabId = `tab-${taskId.slice(0, 8)}`
-    h.db.prepare('INSERT INTO tasks (id, project_id, title) VALUES (?, ?, ?)').run(taskId, noPathProj, 'T')
-    h.db.prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)').run(tabId, taskId, 'claude-code', 0)
+    h.db
+      .prepare('INSERT INTO tasks (id, project_id, title) VALUES (?, ?, ?)')
+      .run(taskId, noPathProj, 'T')
+    h.db
+      .prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)')
+      .run(tabId, taskId, 'claude-code', 0)
     await recordTurnBoundary(h.db, tabId, 'x')
     // Nothing inserted for this specific task
     const row = h.db.prepare('SELECT COUNT(*) as c FROM agent_turns WHERE task_id = ?').get(taskId)
@@ -226,8 +255,12 @@ await describe('initPtyTurnSubscriber', () => {
     repos.push(repo)
     const taskId = crypto.randomUUID()
     const tabId = `tab-${taskId.slice(0, 8)}`
-    h.db.prepare('INSERT INTO tasks (id, project_id, title, worktree_path) VALUES (?, ?, ?, ?)').run(taskId, projectId, 'T', repo)
-    h.db.prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)').run(tabId, taskId, 'terminal', 0)
+    h.db
+      .prepare('INSERT INTO tasks (id, project_id, title, worktree_path) VALUES (?, ?, ?, ?)')
+      .run(taskId, projectId, 'T', repo)
+    h.db
+      .prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)')
+      .run(tabId, taskId, 'terminal', 0)
     fs.writeFileSync(path.join(repo, 'shell.txt'), 'x')
     const sub = initPtyTurnSubscriber(h.db)
     sub(`${taskId}:${tabId}`, taskId, 'ls -la')
@@ -238,6 +271,10 @@ await describe('initPtyTurnSubscriber', () => {
 
 // Cleanup
 for (const r of repos) {
-  try { fs.rmSync(r, { recursive: true, force: true }) } catch { /* ignore */ }
+  try {
+    fs.rmSync(r, { recursive: true, force: true })
+  } catch {
+    /* ignore */
+  }
 }
 h.cleanup()

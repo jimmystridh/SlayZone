@@ -5,11 +5,35 @@
 import { getTabLabel, numberDuplicateLabels } from './get-tab-label.js'
 import type { TerminalTab } from '../shared/types.js'
 
-function test(name: string, fn: () => void) { try { fn(); console.log(`  ✓ ${name}`) } catch (e) { console.error(`  ✗ ${name}`); throw e } }
-function expect<T>(v: T) { return { toBe(e: T) { if (v !== e) throw new Error(`expected ${JSON.stringify(e)}, got ${JSON.stringify(v)}`) } } }
+function test(name: string, fn: () => void) {
+  try {
+    fn()
+    console.log(`  ✓ ${name}`)
+  } catch (e) {
+    console.error(`  ✗ ${name}`)
+    throw e
+  }
+}
+function expect<T>(v: T) {
+  return {
+    toBe(e: T) {
+      if (v !== e) throw new Error(`expected ${JSON.stringify(e)}, got ${JSON.stringify(v)}`)
+    }
+  }
+}
 
 function makeTab(overrides: Partial<TerminalTab> = {}): TerminalTab {
-  return { id: '1', taskId: 't', groupId: 'g', label: null, mode: 'terminal', isMain: false, position: 0, createdAt: '', ...overrides }
+  return {
+    id: '1',
+    taskId: 't',
+    groupId: 'g',
+    label: null,
+    mode: 'terminal',
+    isMain: false,
+    position: 0,
+    createdAt: '',
+    ...overrides
+  }
 }
 
 console.log('getTabLabel')
@@ -20,7 +44,9 @@ test('user-set label takes priority over processTitle', () => {
 })
 
 test('user-set label takes priority on main tab', () => {
-  expect(getTabLabel(makeTab({ isMain: true, mode: 'claude-code', label: 'Custom' }))).toBe('Custom')
+  expect(getTabLabel(makeTab({ isMain: true, mode: 'claude-code', label: 'Custom' }))).toBe(
+    'Custom'
+  )
 })
 
 // Main tab mode names
@@ -72,14 +98,21 @@ test('single tab — no numbering', () => {
 })
 
 test('two tabs with same label — second gets (2)', () => {
-  const labels = new Map([['a', 'zsh'], ['b', 'zsh']])
+  const labels = new Map([
+    ['a', 'zsh'],
+    ['b', 'zsh']
+  ])
   const result = numberDuplicateLabels(labels)
   expect(result.get('a')!).toBe('zsh')
   expect(result.get('b')!).toBe('zsh (2)')
 })
 
 test('three tabs with same label — numbered (2) and (3)', () => {
-  const labels = new Map([['a', 'Terminal'], ['b', 'Terminal'], ['c', 'Terminal']])
+  const labels = new Map([
+    ['a', 'Terminal'],
+    ['b', 'Terminal'],
+    ['c', 'Terminal']
+  ])
   const result = numberDuplicateLabels(labels)
   expect(result.get('a')!).toBe('Terminal')
   expect(result.get('b')!).toBe('Terminal (2)')
@@ -87,7 +120,11 @@ test('three tabs with same label — numbered (2) and (3)', () => {
 })
 
 test('mixed unique and duplicate — unique stays bare', () => {
-  const labels = new Map([['a', 'zsh'], ['b', 'node'], ['c', 'zsh']])
+  const labels = new Map([
+    ['a', 'zsh'],
+    ['b', 'node'],
+    ['c', 'zsh']
+  ])
   const result = numberDuplicateLabels(labels)
   expect(result.get('a')!).toBe('zsh')
   expect(result.get('b')!).toBe('node')
@@ -95,7 +132,11 @@ test('mixed unique and duplicate — unique stays bare', () => {
 })
 
 test('all unique — no numbering', () => {
-  const labels = new Map([['a', 'zsh'], ['b', 'node'], ['c', 'vim']])
+  const labels = new Map([
+    ['a', 'zsh'],
+    ['b', 'node'],
+    ['c', 'vim']
+  ])
   const result = numberDuplicateLabels(labels)
   expect(result.get('a')!).toBe('zsh')
   expect(result.get('b')!).toBe('node')

@@ -32,7 +32,11 @@ export interface DiffHunk {
 
 export type DiffResult =
   | { kind: 'text'; hunks: DiffHunk[] }
-  | { kind: 'binary'; a: { hash: ContentHash; size: number }; b: { hash: ContentHash; size: number } }
+  | {
+      kind: 'binary'
+      a: { hash: ContentHash; size: number }
+      b: { hash: ContentHash; size: number }
+    }
 
 export interface PruneOptions {
   keepLast?: number

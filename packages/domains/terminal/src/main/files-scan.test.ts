@@ -28,7 +28,9 @@ async function test(name: string, fn: () => Promise<void> | void): Promise<void>
 
 function assertEqual<T>(actual: T, expected: T, label?: string): void {
   if (actual !== expected) {
-    throw new Error(`${label ?? 'values'}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+    throw new Error(
+      `${label ?? 'values'}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`
+    )
   }
 }
 
@@ -61,9 +63,21 @@ await test('fs-walk respects skip set (node_modules, dist, .git excluded)', asyn
   await writeFile(dir, 'dist/bundle.js', '')
   const results = await listProjectFiles(dir, '')
   const paths = results.map((r) => r.path)
-  assertEqual(paths.some((p) => p.includes('node_modules')), false, 'node_modules excluded')
-  assertEqual(paths.some((p) => p.includes('dist/')), false, 'dist excluded')
-  assertEqual(paths.some((p) => p.includes('keep.ts')), true, 'src file kept')
+  assertEqual(
+    paths.some((p) => p.includes('node_modules')),
+    false,
+    'node_modules excluded'
+  )
+  assertEqual(
+    paths.some((p) => p.includes('dist/')),
+    false,
+    'dist excluded'
+  )
+  assertEqual(
+    paths.some((p) => p.includes('keep.ts')),
+    true,
+    'src file kept'
+  )
 })
 
 await test('fs-walk: dotfiles / dotdirs excluded', async () => {
@@ -74,7 +88,11 @@ await test('fs-walk: dotfiles / dotdirs excluded', async () => {
   const results = await listProjectFiles(dir, '')
   const paths = results.map((r) => r.path)
   assertEqual(paths.includes('.env'), false, 'dotfile excluded')
-  assertEqual(paths.some((p) => p.startsWith('.git')), false, '.git excluded')
+  assertEqual(
+    paths.some((p) => p.startsWith('.git')),
+    false,
+    '.git excluded'
+  )
   assertEqual(paths.includes('visible.ts'), true, 'regular file kept')
 })
 
@@ -98,7 +116,11 @@ await test('query filter: prefix match on basename ranks above substring-in-path
   const paths = results.map((r) => r.path)
   // Dashboard.tsx = prefix match on basename (score 3). summary.json has 'dashboard' in path only (score 1).
   assertEqual(paths[0], 'Dashboard.tsx', 'prefix match ranks first')
-  assertEqual(paths.includes('data/user-dashboard/summary.json'), true, 'path-only match still included')
+  assertEqual(
+    paths.includes('data/user-dashboard/summary.json'),
+    true,
+    'path-only match still included'
+  )
 })
 
 await test('empty query with fs-walk returns all files', async () => {

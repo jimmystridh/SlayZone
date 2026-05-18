@@ -132,7 +132,9 @@ interface GitHubGraphQLProjectIssuesData {
   } | null
 }
 
-function toSearchParams(query?: Record<string, string | number | boolean | null | undefined>): string {
+function toSearchParams(
+  query?: Record<string, string | number | boolean | null | undefined>
+): string {
   if (!query) return ''
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(query)) {
@@ -167,7 +169,7 @@ async function requestGitHub<T>(
   if (!res.ok) {
     let detail = ''
     try {
-      const body = await res.json() as GitHubError
+      const body = (await res.json()) as GitHubError
       if (body.message) detail = body.message
     } catch {
       // Ignore JSON parsing failures.
@@ -175,7 +177,7 @@ async function requestGitHub<T>(
     throw new Error(`GitHub API request failed: HTTP ${res.status}${detail ? ` - ${detail}` : ''}`)
   }
 
-  return await res.json() as T
+  return (await res.json()) as T
 }
 
 async function requestGitHubGraphQL<T>(
@@ -201,15 +203,17 @@ async function requestGitHubGraphQL<T>(
   if (!res.ok) {
     let detail = ''
     try {
-      const body = await res.json() as GitHubError
+      const body = (await res.json()) as GitHubError
       if (body.message) detail = body.message
     } catch {
       // Ignore JSON parsing failures.
     }
-    throw new Error(`GitHub GraphQL request failed: HTTP ${res.status}${detail ? ` - ${detail}` : ''}`)
+    throw new Error(
+      `GitHub GraphQL request failed: HTTP ${res.status}${detail ? ` - ${detail}` : ''}`
+    )
   }
 
-  const body = await res.json() as GitHubGraphQLResponse<T>
+  const body = (await res.json()) as GitHubGraphQLResponse<T>
   if (body.errors?.length) {
     const first = body.errors.find((error) => Boolean(error.message))
     throw new Error(`GitHub GraphQL request failed${first?.message ? ` - ${first.message}` : ''}`)
@@ -419,18 +423,14 @@ export async function listIssues(
   const owner = encodeURIComponent(input.owner)
   const repo = encodeURIComponent(input.repo)
 
-  const rows = await requestGitHub<GitHubIssue[]>(
-    token,
-    `/repos/${owner}/${repo}/issues`,
-    {
-      state: 'all',
-      per_page: perPage,
-      page,
-      sort: 'updated',
-      direction: 'desc',
-      since: input.since ?? undefined
-    }
-  )
+  const rows = await requestGitHub<GitHubIssue[]>(token, `/repos/${owner}/${repo}/issues`, {
+    state: 'all',
+    per_page: perPage,
+    page,
+    sort: 'updated',
+    direction: 'desc',
+    since: input.since ?? undefined
+  })
 
   const issues = rows
     .filter((row) => !row.pull_request)
@@ -478,9 +478,12 @@ export async function getIssuesBatch(
       repository { name owner { login } }
     }
   `
-  const aliases = issues.map((issue, i) =>
-    `i${i}: repository(owner: "${issue.owner}", name: "${issue.repo}") { issue(number: ${issue.number}) { ...IssueFields } }`
-  ).join('\n')
+  const aliases = issues
+    .map(
+      (issue, i) =>
+        `i${i}: repository(owner: "${issue.owner}", name: "${issue.repo}") { issue(number: ${issue.number}) { ...IssueFields } }`
+    )
+    .join('\n')
 
   const query = `${fragment}\nquery BatchIssues { ${aliases} }`
 

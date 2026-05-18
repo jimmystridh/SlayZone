@@ -16,14 +16,18 @@ vi.mock('@slayzone/ui', () => {
     Label: ({ children, ...props }: any) => <label {...props}>{children}</label>,
     Select: ({ children, value, onValueChange }: any) => (
       <div data-testid-select={value} data-value={value}>
-        <input type="hidden" data-select-value={value} onChange={(e: any) => onValueChange(e.target.value)} />
+        <input
+          type="hidden"
+          data-select-value={value}
+          onChange={(e: any) => onValueChange(e.target.value)}
+        />
         {children}
       </div>
     ),
     SelectContent: Passthrough,
     SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
     SelectTrigger: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    SelectValue: () => null,
+    SelectValue: () => null
   }
 })
 
@@ -40,8 +44,14 @@ import { TasksGeneralTab } from './TasksGeneralTab'
 
 const TEST_COLUMNS = [
   { id: 'todo', label: 'Todo', color: 'blue', position: 0, category: 'unstarted' as const },
-  { id: 'in_progress', label: 'In Progress', color: 'yellow', position: 1, category: 'started' as const },
-  { id: 'done', label: 'Done', color: 'green', position: 2, category: 'completed' as const },
+  {
+    id: 'in_progress',
+    label: 'In Progress',
+    color: 'yellow',
+    position: 1,
+    category: 'started' as const
+  },
+  { id: 'done', label: 'Done', color: 'green', position: 2, category: 'completed' as const }
 ]
 
 function makeProject(overrides: Record<string, unknown> = {}) {
@@ -61,7 +71,7 @@ function makeProject(overrides: Record<string, unknown> = {}) {
     sort_order: 0,
     created_at: '2026-01-01',
     updated_at: '2026-01-01',
-    ...overrides,
+    ...overrides
   } as any
 }
 
@@ -103,7 +113,7 @@ describe('TasksGeneralTab', () => {
     })
     render(<TasksGeneralTab project={project} onUpdated={vi.fn()} />)
     const selects = document.querySelectorAll('[data-value]')
-    const values = Array.from(selects).map(el => el.getAttribute('data-value'))
+    const values = Array.from(selects).map((el) => el.getAttribute('data-value'))
     expect(values).toContain('in_progress')
   })
 
@@ -113,7 +123,7 @@ describe('TasksGeneralTab', () => {
     })
     render(<TasksGeneralTab project={project} onUpdated={vi.fn()} />)
     const selects = document.querySelectorAll('[data-value]')
-    const values = Array.from(selects).map(el => el.getAttribute('data-value'))
+    const values = Array.from(selects).map((el) => el.getAttribute('data-value'))
     expect(values).toContain('done')
   })
 
@@ -173,12 +183,12 @@ describe('TasksGeneralTab', () => {
 
     const { rerender } = render(<TasksGeneralTab project={proj1} onUpdated={vi.fn()} />)
     let selects = document.querySelectorAll('[data-value]')
-    let values = Array.from(selects).map(el => el.getAttribute('data-value'))
+    let values = Array.from(selects).map((el) => el.getAttribute('data-value'))
     expect(values).toContain('in_progress')
 
     rerender(<TasksGeneralTab project={proj2} onUpdated={vi.fn()} />)
     selects = document.querySelectorAll('[data-value]')
-    values = Array.from(selects).map(el => el.getAttribute('data-value'))
+    values = Array.from(selects).map((el) => el.getAttribute('data-value'))
     expect(values).toContain('done')
     expect(values).not.toContain('in_progress')
   })

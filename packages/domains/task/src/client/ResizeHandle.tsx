@@ -19,7 +19,7 @@ export function ResizeHandle({
   onDragStart,
   onDragEnd,
   onReset,
-  style,
+  style
 }: ResizeHandleProps) {
   const isDragging = useRef(false)
   const startX = useRef(0)
@@ -27,7 +27,9 @@ export function ResizeHandle({
   const cleanupRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    return () => { cleanupRef.current?.() }
+    return () => {
+      cleanupRef.current?.()
+    }
   }, [])
 
   const handleMouseDown = useCallback(
@@ -41,7 +43,10 @@ export function ResizeHandle({
       const handleMouseMove = (e: MouseEvent) => {
         if (!isDragging.current) return
         const delta = e.clientX - startX.current
-        const newWidth = Math.min(maxWidth ?? Infinity, Math.max(minWidth, startWidth.current - delta))
+        const newWidth = Math.min(
+          maxWidth ?? Infinity,
+          Math.max(minWidth, startWidth.current - delta)
+        )
         onWidthChange(newWidth)
       }
 

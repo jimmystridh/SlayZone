@@ -8,22 +8,38 @@ let pass = 0
 let fail = 0
 
 function test(name: string, fn: () => void) {
-  try { fn(); console.log(`  \u2713 ${name}`); pass++ }
-  catch (e) { console.log(`  \u2717 ${name}`); console.error(`    ${e}`); fail++; process.exitCode = 1 }
+  try {
+    fn()
+    console.log(`  \u2713 ${name}`)
+    pass++
+  } catch (e) {
+    console.log(`  \u2717 ${name}`)
+    console.error(`    ${e}`)
+    fail++
+    process.exitCode = 1
+  }
 }
 
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     }
   }
 }
 
 const fullCtx: TemplateContext = {
-  task: { id: 't1', name: 'Fix login', status: 'done', priority: 3, worktree_path: '/tmp/wt', branch: 'fix/login' },
+  task: {
+    id: 't1',
+    name: 'Fix login',
+    status: 'done',
+    priority: 3,
+    worktree_path: '/tmp/wt',
+    branch: 'fix/login'
+  },
   project: { id: 'p1', name: 'SlayZone', path: '/home/user/slayzone' },
-  trigger: { old_status: 'todo', new_status: 'done' },
+  trigger: { old_status: 'todo', new_status: 'done' }
 }
 
 console.log('\nresolveTemplate — basic replacement')
@@ -63,16 +79,21 @@ test('replaces {{project.name}}', () => {
 console.log('\nresolveTemplate — multiple variables')
 
 test('replaces multiple different variables', () => {
-  expect(resolveTemplate('{{task.name}} in {{project.name}}', fullCtx)).toBe('Fix login in SlayZone')
+  expect(resolveTemplate('{{task.name}} in {{project.name}}', fullCtx)).toBe(
+    'Fix login in SlayZone'
+  )
 })
 
 test('replaces same variable twice', () => {
-  expect(resolveTemplate('{{task.name}} and {{task.name}}', fullCtx)).toBe('Fix login and Fix login')
+  expect(resolveTemplate('{{task.name}} and {{task.name}}', fullCtx)).toBe(
+    'Fix login and Fix login'
+  )
 })
 
 test('replaces all groups in one template', () => {
-  expect(resolveTemplate('{{task.name}} {{project.path}} {{trigger.old_status}}', fullCtx))
-    .toBe('Fix login /home/user/slayzone todo')
+  expect(resolveTemplate('{{task.name}} {{project.path}} {{trigger.old_status}}', fullCtx)).toBe(
+    'Fix login /home/user/slayzone todo'
+  )
 })
 
 console.log('\nresolveTemplate — missing context')
@@ -98,7 +119,9 @@ test('unknown key on valid group → empty string', () => {
 })
 
 test('null field value → empty string', () => {
-  const ctx: TemplateContext = { task: { id: 't1', name: 'X', status: 's', priority: 1, worktree_path: null, branch: null } }
+  const ctx: TemplateContext = {
+    task: { id: 't1', name: 'X', status: 's', priority: 1, worktree_path: null, branch: null }
+  }
   expect(resolveTemplate('{{task.worktree_path}}', ctx)).toBe('')
 })
 
@@ -159,12 +182,17 @@ test('has 12 entries', () => {
 test('every name resolves non-empty against full context', () => {
   const ctx: TemplateContext = {
     task: {
-      id: 't1', name: 'n', status: 's', priority: 3,
-      worktree_path: '/wt', branch: 'b',
-      terminal_mode: 'claude-code', terminal_mode_flags: '--foo',
+      id: 't1',
+      name: 'n',
+      status: 's',
+      priority: 3,
+      worktree_path: '/wt',
+      branch: 'b',
+      terminal_mode: 'claude-code',
+      terminal_mode_flags: '--foo'
     },
     project: { id: 'p1', name: 'P', path: '/p' },
-    trigger: { old_status: 'o', new_status: 'n' },
+    trigger: { old_status: 'o', new_status: 'n' }
   }
   for (const v of TEMPLATE_VARIABLES) {
     const out = resolveTemplate(`{{${v.name}}}`, ctx)

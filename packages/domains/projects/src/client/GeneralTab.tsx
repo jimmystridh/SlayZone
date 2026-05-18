@@ -120,11 +120,18 @@ export function GeneralTab({ project, onUpdated, onChanged, onClose }: GeneralTa
               placeholder="/path/to/repo"
               className="flex-1"
             />
-            <IconButton type="button" variant="outline" aria-label="Browse folder" onClick={handleBrowse}>
+            <IconButton
+              type="button"
+              variant="outline"
+              aria-label="Browse folder"
+              onClick={handleBrowse}
+            >
               <FolderOpen className="h-4 w-4" />
             </IconButton>
           </div>
-          <p className="text-xs text-muted-foreground">Claude Code terminal will open in this directory</p>
+          <p className="text-xs text-muted-foreground">
+            Claude Code terminal will open in this directory
+          </p>
         </div>
         <div className="space-y-1">
           <Label>Color</Label>
@@ -145,7 +152,17 @@ export function GeneralTab({ project, onUpdated, onChanged, onClose }: GeneralTa
                   draggable={false}
                 />
               ) : (
-                <span className={lettersPreview.length >= 5 ? 'text-xs' : lettersPreview.length > 2 ? 'text-sm' : 'text-base'}>{lettersPreview}</span>
+                <span
+                  className={
+                    lettersPreview.length >= 5
+                      ? 'text-xs'
+                      : lettersPreview.length > 2
+                        ? 'text-sm'
+                        : 'text-base'
+                  }
+                >
+                  {lettersPreview}
+                </span>
               )}
             </div>
             <div className="flex-1 space-y-1">
@@ -160,7 +177,13 @@ export function GeneralTab({ project, onUpdated, onChanged, onClose }: GeneralTa
                     className="w-28"
                   />
                 )}
-                <Button type="button" variant="outline" size="sm" onClick={handleUploadIcon} disabled={iconBusy}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleUploadIcon}
+                  disabled={iconBusy}
+                >
                   <Upload className="h-3.5 w-3.5 mr-1.5" />
                   {iconImagePath ? 'Upload new image' : 'Upload image'}
                 </Button>

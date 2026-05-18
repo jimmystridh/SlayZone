@@ -4,7 +4,7 @@ import { shortcutDefinitions } from '@slayzone/shortcuts'
 function toPlaywrightKey(keys: string, isMac = process.platform === 'darwin'): string {
   return keys
     .split('+')
-    .map(part => {
+    .map((part) => {
       if (part === 'mod') return isMac ? 'Meta' : 'Control'
       if (part === 'shift') return 'Shift'
       if (part === 'alt') return 'Alt'
@@ -15,7 +15,7 @@ function toPlaywrightKey(keys: string, isMac = process.platform === 'darwin'): s
 }
 
 export function shortcutKey(id: string): string {
-  const def = shortcutDefinitions.find(d => d.id === id)
+  const def = shortcutDefinitions.find((d) => d.id === id)
   if (!def) throw new Error(`Unknown shortcut id: ${id}`)
   return toPlaywrightKey(def.defaultKeys)
 }

@@ -1,8 +1,4 @@
-import type {
-  CliProvider,
-  SyncHealth,
-  SyncReason
-} from '../shared'
+import type { CliProvider, SyncHealth, SyncReason } from '../shared'
 
 export interface ProviderSyncEntry {
   syncHealth: SyncHealth

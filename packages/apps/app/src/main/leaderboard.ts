@@ -5,7 +5,11 @@ import { refreshUsageData, queryDailyTotals } from '@slayzone/usage-analytics/ma
 import { isCompletedStatus, parseColumnsConfig } from '@slayzone/projects/shared'
 
 async function getDailyTokens(db: Database): Promise<Array<{ date: string; totalTokens: number }>> {
-  try { await refreshUsageData(db) } catch { /* best-effort: still query stale data */ }
+  try {
+    await refreshUsageData(db)
+  } catch {
+    /* best-effort: still query stale data */
+  }
   return queryDailyTotals(db)
 }
 
@@ -22,9 +26,11 @@ function getTodayCompletedTasks(db: Database): number {
     )
     .all(today) as Array<{ status: string; columns_config: string | null }>
 
-  return rows.reduce((count, row) => (
-    isCompletedStatus(row.status, parseColumnsConfig(row.columns_config)) ? count + 1 : count
-  ), 0)
+  return rows.reduce(
+    (count, row) =>
+      isCompletedStatus(row.status, parseColumnsConfig(row.columns_config)) ? count + 1 : count,
+    0
+  )
 }
 
 export function registerLeaderboardHandlers(ipcMain: IpcMain, db: Database): void {

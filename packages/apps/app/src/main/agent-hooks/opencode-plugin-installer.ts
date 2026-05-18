@@ -35,11 +35,12 @@ export interface InstallOpencodePluginResult {
  * SLAYZONE_AGENT_HOOK_URL is set, but the notify path resolves at install time).
  */
 export async function installOpencodePlugin(
-  opts: InstallOpencodePluginOpts,
+  opts: InstallOpencodePluginOpts
 ): Promise<InstallOpencodePluginResult> {
   const target = opts.targetPath ?? getOpencodePluginPath()
   const rawSource =
-    opts.source ?? (typeof opencodePluginSource === 'string' ? opencodePluginSource : String(opencodePluginSource))
+    opts.source ??
+    (typeof opencodePluginSource === 'string' ? opencodePluginSource : String(opencodePluginSource))
   const content = rawSource.split(NOTIFY_PATH_PLACEHOLDER).join(opts.notifyPath)
   const changed = await writeFileIfChanged(target, content, 0o644)
   return { path: target, changed }

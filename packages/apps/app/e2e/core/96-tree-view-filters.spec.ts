@@ -6,7 +6,9 @@ type TreePatch = Record<string, unknown>
 
 async function patchStore(page: Page, patch: TreePatch) {
   await page.evaluate((p) => {
-    const store = (window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }).__slayzone_tabStore
+    const store = (
+      window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }
+    ).__slayzone_tabStore
     if (!store) throw new Error('__slayzone_tabStore not exposed')
     store.setState(p)
   }, patch)
@@ -14,9 +16,13 @@ async function patchStore(page: Page, patch: TreePatch) {
 
 async function setTabs(page: Page, taskIds: string[]) {
   await page.evaluate((ids) => {
-    const store = (window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }).__slayzone_tabStore
+    const store = (
+      window as unknown as { __slayzone_tabStore?: { setState: (s: unknown) => void } }
+    ).__slayzone_tabStore
     if (!store) throw new Error('__slayzone_tabStore not exposed')
-    const tabs: Array<{ type: 'home' } | { type: 'task'; taskId: string; title: string }> = [{ type: 'home' }]
+    const tabs: Array<{ type: 'home' } | { type: 'task'; taskId: string; title: string }> = [
+      { type: 'home' }
+    ]
     for (const id of ids) tabs.push({ type: 'task', taskId: id, title: 'tab' })
     store.setState({ tabs, activeTabIndex: 0 })
   }, taskIds)
@@ -56,7 +62,11 @@ test.describe('TreeView setting combinations', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: projectName, color: '#3b82f6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: projectName,
+      color: '#3b82f6',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
 
     const t1 = await s.createTask({ projectId, title: 'Root in_progress', status: 'in_progress' })
@@ -70,28 +80,48 @@ test.describe('TreeView setting combinations', () => {
     await s.archiveTask(rootArchived)
 
     const c1 = await mainWindow.evaluate(
-      ({ pid, parentId }) => window.api.db.createTask({ projectId: pid, title: 'Child in_progress', status: 'in_progress', parentId }),
+      ({ pid, parentId }) =>
+        window.api.db.createTask({
+          projectId: pid,
+          title: 'Child in_progress',
+          status: 'in_progress',
+          parentId
+        }),
       { pid: projectId, parentId: rootDone }
     )
     childInProgress = c1!.id
     const c2 = await mainWindow.evaluate(
-      ({ pid, parentId }) => window.api.db.createTask({ projectId: pid, title: 'Child done', status: 'done', parentId }),
+      ({ pid, parentId }) =>
+        window.api.db.createTask({ projectId: pid, title: 'Child done', status: 'done', parentId }),
       { pid: projectId, parentId: rootInProgress }
     )
     childDone = c2!.id
     const c3 = await mainWindow.evaluate(
-      ({ pid, parentId }) => window.api.db.createTask({ projectId: pid, title: 'Child todo', status: 'todo', parentId }),
+      ({ pid, parentId }) =>
+        window.api.db.createTask({ projectId: pid, title: 'Child todo', status: 'todo', parentId }),
       { pid: projectId, parentId: rootInProgress }
     )
     childTodo = c3!.id
 
     const td = await mainWindow.evaluate(
-      (pid) => window.api.db.createTask({ projectId: pid, title: 'Temp done', status: 'done', isTemporary: true }),
+      (pid) =>
+        window.api.db.createTask({
+          projectId: pid,
+          title: 'Temp done',
+          status: 'done',
+          isTemporary: true
+        }),
       projectId
     )
     tempDone = td!.id
     const tip = await mainWindow.evaluate(
-      (pid) => window.api.db.createTask({ projectId: pid, title: 'Temp in_progress', status: 'in_progress', isTemporary: true }),
+      (pid) =>
+        window.api.db.createTask({
+          projectId: pid,
+          title: 'Temp in_progress',
+          status: 'in_progress',
+          isTemporary: true
+        }),
       projectId
     )
     tempInProgress = tip!.id
@@ -120,7 +150,7 @@ test.describe('TreeView setting combinations', () => {
       treeCrossOutDone: false,
       treeShowStatus: false,
       treeShowPriority: false,
-      treeShowWorktree: false,
+      treeShowWorktree: false
     })
     // Anchor open tab keeps the project in TreeView's "active" set.
     await setTabs(mainWindow, [rootInProgress])
@@ -148,7 +178,7 @@ test.describe('TreeView setting combinations', () => {
   test('status filter chip extends visibility', async ({ mainWindow }) => {
     await patchStore(mainWindow, {
       treeStatusFilter: ['in_progress', 'todo'],
-      treeShowSubtasks: false,
+      treeShowSubtasks: false
     })
     await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
     await expect(taskRow(mainWindow, rootTodo)).toBeVisible()
@@ -197,20 +227,22 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeStatusFilter: ['in_progress', 'todo'],
       treePriorityFilter: [1],
-      treeShowSubtasks: false,
+      treeShowSubtasks: false
     })
     await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
     await expect(taskRow(mainWindow, rootTodo)).toHaveCount(0)
   })
 
-  test('show-all-subtasks: bypass adds task + parent chain only (not full subtree)', async ({ mainWindow }) => {
+  test('show-all-subtasks: bypass adds task + parent chain only (not full subtree)', async ({
+    mainWindow
+  }) => {
     // Empty status filter → nothing strict-matches. But open tab on
     // childDone bypasses → childDone + rootInProgress (parent chain) shown.
     // childTodo (sibling, no open tab) should NOT be pulled in.
     await patchStore(mainWindow, {
       treeStatusFilter: [],
       treeShowSubtasks: true,
-      treeShowAllSubtasks: true,
+      treeShowAllSubtasks: true
     })
     await setTabs(mainWindow, [rootInProgress, childDone])
     await expect(taskRow(mainWindow, childDone)).toBeVisible()
@@ -218,7 +250,9 @@ test.describe('TreeView setting combinations', () => {
     await expect(taskRow(mainWindow, childTodo)).toHaveCount(0)
   })
 
-  test('priority filter applies to descendants in show-all-subtasks mode', async ({ mainWindow }) => {
+  test('priority filter applies to descendants in show-all-subtasks mode', async ({
+    mainWindow
+  }) => {
     // Root passes filter; child has different priority → child should be hidden.
     await seed(mainWindow).updateTask({ id: rootInProgress, priority: 1 })
     await seed(mainWindow).updateTask({ id: childTodo, priority: 3 })
@@ -227,7 +261,7 @@ test.describe('TreeView setting combinations', () => {
       treeStatusFilter: ['in_progress'],
       treePriorityFilter: [1],
       treeShowSubtasks: true,
-      treeShowAllSubtasks: true,
+      treeShowAllSubtasks: true
     })
     await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
     await expect(taskRow(mainWindow, childTodo)).toHaveCount(0)
@@ -238,7 +272,7 @@ test.describe('TreeView setting combinations', () => {
       treeStatusFilter: ['in_progress', 'todo', 'done'],
       treePriorityFilter: [],
       treeShowSubtasks: false,
-      treeShowAllOpen: false,
+      treeShowAllOpen: false
     })
     await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
     await expect(taskRow(mainWindow, rootTodo)).toBeVisible()
@@ -256,7 +290,7 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowSubtasks: true,
       treeShowAllSubtasks: false,
-      treeStatusFilter: ['in_progress'],
+      treeStatusFilter: ['in_progress']
     })
     // Parent rootInProgress matches; childInProgress is under rootDone (which does not match);
     // childTodo/childDone under rootInProgress are not in_progress → hidden.
@@ -269,7 +303,7 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowSubtasks: true,
       treeShowAllSubtasks: false,
-      treeStatusFilter: ['in_progress'],
+      treeStatusFilter: ['in_progress']
     })
     // childInProgress is in_progress under rootDone (done); parent must climb in for hierarchy.
     await expect(taskRow(mainWindow, childInProgress)).toBeVisible()
@@ -280,7 +314,7 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowSubtasks: true,
       treeShowAllSubtasks: true,
-      treeStatusFilter: ['in_progress'],
+      treeStatusFilter: ['in_progress']
     })
     // rootInProgress matches → its entire subtree (childTodo, childDone) visible.
     await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
@@ -293,7 +327,7 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowSubtasks: false,
       treeShowAllSubtasks: true,
-      treeStatusFilter: ['in_progress'],
+      treeStatusFilter: ['in_progress']
     })
     await expect(taskRow(mainWindow, rootInProgress)).toBeVisible()
     await expect(taskRow(mainWindow, childTodo)).toHaveCount(0)
@@ -312,7 +346,7 @@ test.describe('TreeView setting combinations', () => {
   test('show only active: pinned task always shows', async ({ mainWindow }) => {
     await patchStore(mainWindow, {
       treeShowOnlyActive: true,
-      treePinnedTaskIds: [rootDone],
+      treePinnedTaskIds: [rootDone]
     })
     await expect(taskRow(mainWindow, rootDone)).toBeVisible()
   })
@@ -321,7 +355,7 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowOnlyActive: true,
       treeStatusFilter: ['in_progress', 'todo', 'done'],
-      treeShowAllOpen: false,
+      treeShowAllOpen: false
     })
     await expect(taskRow(mainWindow, rootInProgress)).toHaveCount(0)
     await expect(taskRow(mainWindow, rootTodo)).toHaveCount(0)
@@ -333,7 +367,7 @@ test.describe('TreeView setting combinations', () => {
       treeCrossOutDone: true,
       treeStatusFilter: ['in_progress', 'done'],
       treeShowSubtasks: true,
-      treeShowAllSubtasks: true,
+      treeShowAllSubtasks: true
     })
     // rootDone needs to be visible somehow — pull in via subtask 'all' + childInProgress climb.
     // Easier: just open it as a tab.
@@ -381,7 +415,7 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowTemporary: false,
       treeStatusFilter: ['in_progress', 'todo', 'done'],
-      treeShowSubtasks: false,
+      treeShowSubtasks: false
     })
     await expect(taskRow(mainWindow, tempDone)).toHaveCount(0)
     await expect(taskRow(mainWindow, tempInProgress)).toHaveCount(0)
@@ -398,7 +432,7 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowSubtasks: false,
       treeShowTemporary: false,
-      treePinnedTaskIds: [tempInProgress],
+      treePinnedTaskIds: [tempInProgress]
     })
     await expect(taskRow(mainWindow, tempInProgress)).toBeVisible()
   })
@@ -408,7 +442,7 @@ test.describe('TreeView setting combinations', () => {
       treeShowSubtasks: false,
       treeShowOnlyActive: true,
       treeShowAllOpen: false,
-      treePinnedTaskIds: [rootDone],
+      treePinnedTaskIds: [rootDone]
     })
     await expect(taskRow(mainWindow, rootDone)).toBeVisible()
   })
@@ -417,12 +451,14 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowSubtasks: false,
       treeStatusFilter: ['in_progress'],
-      treePinnedTaskIds: [rootDone],
+      treePinnedTaskIds: [rootDone]
     })
     await expect(taskRow(mainWindow, rootDone)).toBeVisible()
   })
 
-  test('priority filter applies to pinned tasks (universal — no shortcut)', async ({ mainWindow }) => {
+  test('priority filter applies to pinned tasks (universal — no shortcut)', async ({
+    mainWindow
+  }) => {
     // Diagram: Priority check comes BEFORE Pinned shortcut, so priority
     // always applies. Pinned with non-matching priority -> drop.
     await seed(mainWindow).updateTask({ id: rootDone, priority: 1 })
@@ -430,7 +466,7 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowSubtasks: false,
       treePriorityFilter: [4],
-      treePinnedTaskIds: [rootDone],
+      treePinnedTaskIds: [rootDone]
     })
     await expect(taskRow(mainWindow, rootDone)).toHaveCount(0)
   })
@@ -443,13 +479,16 @@ test.describe('TreeView setting combinations', () => {
     await patchStore(mainWindow, {
       treeShowSubtasks: false,
       treeStatusFilter: ['in_progress'],
-      treeShowAllOpen: false,
+      treeShowAllOpen: false
     })
     await expect(taskRow(mainWindow, tempDone)).toHaveCount(0)
   })
 
   test('default does NOT cross out done task', async ({ mainWindow }) => {
-    await patchStore(mainWindow, { treeCrossOutDone: false, treeStatusFilter: ['in_progress', 'done'] })
+    await patchStore(mainWindow, {
+      treeCrossOutDone: false,
+      treeStatusFilter: ['in_progress', 'done']
+    })
     await setTabs(mainWindow, [rootInProgress, rootDone])
     const struck = taskRow(mainWindow, rootDone).locator('span.line-through')
     await expect(struck).toHaveCount(0)

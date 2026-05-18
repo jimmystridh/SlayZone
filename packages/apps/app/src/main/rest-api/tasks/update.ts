@@ -12,7 +12,10 @@ export function registerUpdateTaskRoute(app: Express, deps: RestApiDeps): void {
       return
     }
     try {
-      const task = await updateTaskOp(deps.db, parsed.data as UpdateTaskInput, { ipcMain, onMutation: deps.notifyRenderer })
+      const task = await updateTaskOp(deps.db, parsed.data as UpdateTaskInput, {
+        ipcMain,
+        onMutation: deps.notifyRenderer
+      })
       if (!task) {
         res.status(404).json({ ok: false, error: 'Task not found' })
         return

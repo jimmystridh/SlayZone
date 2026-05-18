@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 test.describe('Filters', () => {
@@ -7,10 +7,19 @@ test.describe('Filters', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Filter Test', color: '#ec4899', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Filter Test',
+      color: '#ec4899',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    await s.createTask({ projectId: p.id, title: 'Critical filter task', status: 'todo', priority: 1 })
+    await s.createTask({
+      projectId: p.id,
+      title: 'Critical filter task',
+      status: 'todo',
+      priority: 1
+    })
     await s.createTask({ projectId: p.id, title: 'Low filter task', status: 'todo', priority: 4 })
     await s.createTask({ projectId: p.id, title: 'Done filter task', status: 'done' })
 

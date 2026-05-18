@@ -3,7 +3,13 @@
  * Run with: pnpm dlx tsx packages/domains/terminal/src/client/chat-timeline.test.ts
  */
 import type { AgentEvent } from '../shared/agent-events'
-import { initialState, reducer, isInFlight, isAwaitingUserQuestion, deriveLoadingLabel } from './chat-timeline'
+import {
+  initialState,
+  reducer,
+  isInFlight,
+  isAwaitingUserQuestion,
+  deriveLoadingLabel
+} from './chat-timeline'
 
 let passed = 0
 let failed = 0
@@ -28,7 +34,7 @@ function expect<T>(actual: T) {
     },
     toBeTruthy() {
       if (!actual) throw new Error(`Expected truthy, got ${JSON.stringify(actual)}`)
-    },
+    }
   }
 }
 
@@ -38,25 +44,25 @@ const ev = {
     sessionId,
     model: 'opus',
     cwd: '/tmp',
-    tools: [],
+    tools: []
   }),
   text: (id = 'msg-1', text = 'hello'): AgentEvent => ({
     kind: 'assistant-text',
     messageId: id,
-    text,
+    text
   }),
   call: (id = 't-1', name = 'Bash'): AgentEvent => ({
     kind: 'tool-call',
     id,
     name,
-    input: {},
+    input: {}
   }),
   result: (toolUseId = 't-1', isError = false): AgentEvent => ({
     kind: 'tool-result',
     toolUseId,
     isError,
     rawContent: 'done',
-    structured: null,
+    structured: null
   }),
   turnResult: (): AgentEvent => ({
     kind: 'result',
@@ -70,9 +76,14 @@ const ev = {
     terminalReason: 'completed',
     text: 'ok',
     modelUsage: {},
-    usage: { inputTokens: 0, outputTokens: 0, cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
-    permissionDenials: [],
-  }),
+    usage: {
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadInputTokens: 0,
+      cacheCreationInputTokens: 0
+    },
+    permissionDenials: []
+  })
 }
 
 console.log('\nChat timeline reducer tests\n')
@@ -181,7 +192,7 @@ test('drift recovery: replay w/ orphaned mid-buffer user-message self-heals', ()
   expect(isInFlight(s)).toBe(true)
   // Turn 2: arrives next. Healer must close turn 1 before counting turn 2.
   s = reducer(s, { type: 'event', event: { kind: 'user-message', text: 'turn 2' } })
-  expect(isInFlight(s)).toBe(true)  // turn 2 still in flight
+  expect(isInFlight(s)).toBe(true) // turn 2 still in flight
   s = reducer(s, { type: 'event', event: ev.turnResult() })
   expect(isInFlight(s)).toBe(false)
   // Synthetic interrupted from heal must be visible between the two user-text rows.
@@ -199,17 +210,20 @@ test('drift recovery: process-exit mid-stream balances counters + clears openBlo
   s = reducer(s, { type: 'event', event: ev.turnInit('sid-A') })
   s = reducer(s, { type: 'event', event: { kind: 'user-message', text: 'hi' } })
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'm1' } })
-  s = reducer(s, { type: 'event', event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'partial' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' }
+  })
+  s = reducer(s, {
+    type: 'event',
+    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'partial' }
   })
   expect(isInFlight(s)).toBe(true)
   expect(s.openBlocks.size).toBe(1)
   // Process dies before stream-message-stop / result.
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'process-exit', code: null, signal: 'SIGKILL' },
+    event: { kind: 'process-exit', code: null, signal: 'SIGKILL' }
   })
   expect(isInFlight(s)).toBe(false)
   expect(s.openBlocks.size).toBe(0)
@@ -222,10 +236,13 @@ test('drift recovery: result clears stranded openBlocks (missing stream-message-
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, { type: 'event', event: { kind: 'user-message', text: 'hi' } })
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'm1' } })
-  s = reducer(s, { type: 'event', event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'response' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' }
+  })
+  s = reducer(s, {
+    type: 'event',
+    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'response' }
   })
   expect(s.openBlocks.size).toBe(1)
   // Result arrives without stream-message-stop (e.g. SDK closes stream abruptly).
@@ -255,9 +272,9 @@ test('drift recovery: idempotent — replay produces same state regardless of or
   // between live application and cold replay of the same buffer.
   const events: AgentEvent[] = [
     ev.turnInit(),
-    { kind: 'user-message', text: 'orphan' },  // never terminated
-    { kind: 'user-message', text: 'next' },     // triggers heal
-    ev.turnResult(),
+    { kind: 'user-message', text: 'orphan' }, // never terminated
+    { kind: 'user-message', text: 'next' }, // triggers heal
+    ev.turnResult()
   ]
   let live = initialState()
   for (const e of events) live = reducer(live, { type: 'event', event: e })
@@ -276,7 +293,7 @@ test('replay determinism: live vs getBuffer yields identical timeline (timestamp
     ev.call('t-1', 'Read'),
     ev.result('t-1'),
     ev.text('m-2', 'done'),
-    ev.turnResult(),
+    ev.turnResult()
   ]
   let live = initialState()
   for (const e of events) live = reducer(live, { type: 'event', event: e })
@@ -290,7 +307,10 @@ test('replay determinism: live vs getBuffer yields identical timeline (timestamp
 
 test('thinking event → thinking timeline item', () => {
   let s = initialState()
-  s = reducer(s, { type: 'event', event: { kind: 'assistant-thinking', messageId: 'm', text: '', hasSignature: true } })
+  s = reducer(s, {
+    type: 'event',
+    event: { kind: 'assistant-thinking', messageId: 'm', text: '', hasSignature: true }
+  })
   const thinking = s.timeline.filter((i) => i.kind === 'thinking')
   expect(thinking.length).toBe(1)
   if (thinking[0].kind !== 'thinking') throw new Error('wrong')
@@ -301,7 +321,7 @@ test('unknown event is dropped from timeline', () => {
   let s = initialState()
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'unknown', reason: 'unknown-type', raw: { type: 'speculative' } },
+    event: { kind: 'unknown', reason: 'unknown-type', raw: { type: 'speculative' } }
   })
   const unknown = s.timeline.filter((i) => i.kind === 'unknown')
   expect(unknown.length).toBe(0)
@@ -339,19 +359,19 @@ test('stream deltas build text item incrementally', () => {
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'msg-x' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'Hel' },
+    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'Hel' }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'lo wor' },
+    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'lo wor' }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'ld' },
+    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'ld' }
   })
   s = reducer(s, { type: 'event', event: { kind: 'stream-block-stop', blockIndex: 0 } })
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-stop' } })
@@ -367,11 +387,11 @@ test('atomic assistant-text is suppressed when messageId was streamed', () => {
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'msg-x' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'streamed' },
+    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'streamed' }
   })
   s = reducer(s, { type: 'event', event: { kind: 'stream-block-stop', blockIndex: 0 } })
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-stop' } })
@@ -402,8 +422,8 @@ test('tool_use input_json deltas accumulate + parse on block-stop', () => {
       blockIndex: 0,
       blockType: 'tool_use',
       toolUseId: 't-1',
-      toolName: 'Read',
-    },
+      toolName: 'Read'
+    }
   })
   s = reducer(s, {
     type: 'event',
@@ -411,8 +431,8 @@ test('tool_use input_json deltas accumulate + parse on block-stop', () => {
       kind: 'stream-block-delta',
       blockIndex: 0,
       deltaType: 'input_json',
-      text: '{"path":',
-    },
+      text: '{"path":'
+    }
   })
   s = reducer(s, {
     type: 'event',
@@ -420,8 +440,8 @@ test('tool_use input_json deltas accumulate + parse on block-stop', () => {
       kind: 'stream-block-delta',
       blockIndex: 0,
       deltaType: 'input_json',
-      text: '"/etc/hosts"}',
-    },
+      text: '"/etc/hosts"}'
+    }
   })
   s = reducer(s, { type: 'event', event: { kind: 'stream-block-stop', blockIndex: 0 } })
   const tools = s.timeline.filter((i) => i.kind === 'tool')
@@ -437,7 +457,7 @@ test('empty text block (start + stop, no delta) does not leave placeholder', () 
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'msg-empty' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' }
   })
   s = reducer(s, { type: 'event', event: { kind: 'stream-block-stop', blockIndex: 0 } })
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-stop' } })
@@ -511,15 +531,15 @@ test('signature_delta flips hasSignature on thinking item', () => {
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'msg-t' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'thinking' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'thinking' }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'thinking', text: 'pondering' },
+    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'thinking', text: 'pondering' }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'signature', text: 'sig-xyz' },
+    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'signature', text: 'sig-xyz' }
   })
   s = reducer(s, { type: 'event', event: { kind: 'stream-block-stop', blockIndex: 0 } })
   const thinking = s.timeline.filter((i) => i.kind === 'thinking')
@@ -539,8 +559,8 @@ test('sub-agent: enrichment events accumulate on one row while in-flight', () =>
       phase: 'in-flight',
       toolUseId: 'tu_a',
       description: 'Investigate X',
-      raw: {},
-    },
+      raw: {}
+    }
   })
   // Later `task_notification` arrives as another in-flight event carrying usage.
   s = reducer(s, {
@@ -552,8 +572,8 @@ test('sub-agent: enrichment events accumulate on one row while in-flight', () =>
       status: 'completed',
       summary: 'Investigate X',
       usage: { totalTokens: 1234, toolUses: 5, durationMs: 6789 },
-      raw: {},
-    },
+      raw: {}
+    }
   })
   const subAgents = s.timeline.filter((i) => i.kind === 'sub-agent')
   expect(subAgents.length).toBe(1)
@@ -572,12 +592,24 @@ test('sub-agent: tool-result for the outer Task closes the row to completed', ()
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'tu_TASK', description: 'X', raw: {} },
+    event: {
+      kind: 'sub-agent',
+      phase: 'in-flight',
+      toolUseId: 'tu_TASK',
+      description: 'X',
+      raw: {}
+    }
   })
   // Outer Task's tool-result arrives — canonical completion signal.
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-result', toolUseId: 'tu_TASK', isError: false, rawContent: 'done', structured: null },
+    event: {
+      kind: 'tool-result',
+      toolUseId: 'tu_TASK',
+      isError: false,
+      rawContent: 'done',
+      structured: null
+    }
   })
   const subAgents = s.timeline.filter((i) => i.kind === 'sub-agent')
   expect(subAgents.length).toBe(1)
@@ -590,11 +622,23 @@ test('sub-agent: tool-result with isError closes the row to failed', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'tu_FAIL', description: 'broken', raw: {} },
+    event: {
+      kind: 'sub-agent',
+      phase: 'in-flight',
+      toolUseId: 'tu_FAIL',
+      description: 'broken',
+      raw: {}
+    }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-result', toolUseId: 'tu_FAIL', isError: true, rawContent: 'boom', structured: null },
+    event: {
+      kind: 'tool-result',
+      toolUseId: 'tu_FAIL',
+      isError: true,
+      rawContent: 'boom',
+      structured: null
+    }
   })
   const sub = s.timeline.find((i) => i.kind === 'sub-agent')
   if (!sub || sub.kind !== 'sub-agent') throw new Error('missing')
@@ -607,12 +651,24 @@ test('sub-agent: closes via tool-result even without any task_notification', () 
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'tu_NO_NOTIF', description: 'orphan', raw: {} },
+    event: {
+      kind: 'sub-agent',
+      phase: 'in-flight',
+      toolUseId: 'tu_NO_NOTIF',
+      description: 'orphan',
+      raw: {}
+    }
   })
   // No notification — go straight to tool-result.
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-result', toolUseId: 'tu_NO_NOTIF', isError: false, rawContent: 'ok', structured: null },
+    event: {
+      kind: 'tool-result',
+      toolUseId: 'tu_NO_NOTIF',
+      isError: false,
+      rawContent: 'ok',
+      structured: null
+    }
   })
   const sub = s.timeline.find((i) => i.kind === 'sub-agent')
   if (!sub || sub.kind !== 'sub-agent') throw new Error('missing')
@@ -624,11 +680,23 @@ test('sub-agent: late notification after tool-result does not regress phase', ()
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'tu_OOO', description: 'ooo', raw: {} },
+    event: {
+      kind: 'sub-agent',
+      phase: 'in-flight',
+      toolUseId: 'tu_OOO',
+      description: 'ooo',
+      raw: {}
+    }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-result', toolUseId: 'tu_OOO', isError: false, rawContent: 'ok', structured: null },
+    event: {
+      kind: 'tool-result',
+      toolUseId: 'tu_OOO',
+      isError: false,
+      rawContent: 'ok',
+      structured: null
+    }
   })
   // Late `task_notification` carrying usage arrives AFTER close.
   s = reducer(s, {
@@ -639,8 +707,8 @@ test('sub-agent: late notification after tool-result does not regress phase', ()
       toolUseId: 'tu_OOO',
       status: 'completed',
       usage: { totalTokens: 100, toolUses: 1, durationMs: 5 },
-      raw: {},
-    },
+      raw: {}
+    }
   })
   const sub = s.timeline.find((i) => i.kind === 'sub-agent')
   if (!sub || sub.kind !== 'sub-agent') throw new Error('missing')
@@ -655,7 +723,13 @@ test('sub-agent: interrupt flips in-flight rows to failed', () => {
   s = reducer(s, { type: 'user-sent', text: 'go' })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'tu_INT', description: 'mid', raw: {} },
+    event: {
+      kind: 'sub-agent',
+      phase: 'in-flight',
+      toolUseId: 'tu_INT',
+      description: 'mid',
+      raw: {}
+    }
   })
   s = reducer(s, { type: 'event', event: { kind: 'interrupted' } })
   const sub = s.timeline.find((i) => i.kind === 'sub-agent')
@@ -670,7 +744,13 @@ test('sub-agent: process-exit while in-flight heals the spinner', () => {
   s = reducer(s, { type: 'user-sent', text: 'go' })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'tu_EXIT', description: 'crashy', raw: {} },
+    event: {
+      kind: 'sub-agent',
+      phase: 'in-flight',
+      toolUseId: 'tu_EXIT',
+      description: 'crashy',
+      raw: {}
+    }
   })
   s = reducer(s, { type: 'event', event: { kind: 'process-exit', code: 1, signal: null } })
   const sub = s.timeline.find((i) => i.kind === 'sub-agent')
@@ -687,11 +767,23 @@ test('sub-agent: legacy persisted phase strings normalize to in-flight on replay
   s = reducer(s, {
     type: 'event',
     // Cast: legacy events on disk have these phase strings, current type doesn't allow them.
-    event: { kind: 'sub-agent', phase: 'started', toolUseId: 'tu_LEG', description: 'leg', raw: {} } as unknown as AgentEvent,
+    event: {
+      kind: 'sub-agent',
+      phase: 'started',
+      toolUseId: 'tu_LEG',
+      description: 'leg',
+      raw: {}
+    } as unknown as AgentEvent
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'notification', toolUseId: 'tu_LEG', status: 'completed', raw: {} } as unknown as AgentEvent,
+    event: {
+      kind: 'sub-agent',
+      phase: 'notification',
+      toolUseId: 'tu_LEG',
+      status: 'completed',
+      raw: {}
+    } as unknown as AgentEvent
   })
   // Legacy notification → still in-flight (canonical close = tool-result).
   let sub = s.timeline.find((i) => i.kind === 'sub-agent')
@@ -700,7 +792,13 @@ test('sub-agent: legacy persisted phase strings normalize to in-flight on replay
   // Replay the tool-result that was also persisted → closes correctly.
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-result', toolUseId: 'tu_LEG', isError: false, rawContent: 'ok', structured: null },
+    event: {
+      kind: 'tool-result',
+      toolUseId: 'tu_LEG',
+      isError: false,
+      rawContent: 'ok',
+      structured: null
+    }
   })
   sub = s.timeline.find((i) => i.kind === 'sub-agent')
   if (!sub || sub.kind !== 'sub-agent') throw new Error('missing')
@@ -712,11 +810,11 @@ test('sub-agent: distinct toolUseIds get their own rows', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'a', description: 'A', raw: {} },
+    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'a', description: 'A', raw: {} }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'b', description: 'B', raw: {} },
+    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'b', description: 'B', raw: {} }
   })
   const subAgents = s.timeline.filter((i) => i.kind === 'sub-agent')
   expect(subAgents.length).toBe(2)
@@ -727,17 +825,36 @@ test('sub-agent children: parentToolUseId on tool-call routes into childIndex', 
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'tu_TASK', description: 'find', raw: {} },
+    event: {
+      kind: 'sub-agent',
+      phase: 'in-flight',
+      toolUseId: 'tu_TASK',
+      description: 'find',
+      raw: {}
+    }
   })
   // Sub-agent's inner tool call carries parent_tool_use_id pointing at the Task.
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-call', id: 'tu_INNER', name: 'Grep', input: { pattern: 'x' }, parentToolUseId: 'tu_TASK' },
+    event: {
+      kind: 'tool-call',
+      id: 'tu_INNER',
+      name: 'Grep',
+      input: { pattern: 'x' },
+      parentToolUseId: 'tu_TASK'
+    }
   })
   // Result for the inner tool also carries parent.
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-result', toolUseId: 'tu_INNER', isError: false, rawContent: 'matches', structured: null, parentToolUseId: 'tu_TASK' },
+    event: {
+      kind: 'tool-result',
+      toolUseId: 'tu_INNER',
+      isError: false,
+      rawContent: 'matches',
+      structured: null,
+      parentToolUseId: 'tu_TASK'
+    }
   })
   // Inner tool item exists in flat timeline (one of the items, not first since session-start + sub-agent precede).
   const tools = s.timeline.filter((i) => i.kind === 'tool')
@@ -759,15 +876,32 @@ test('sub-agent children: assistant-text + thinking are routed by parentToolUseI
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'tu_TASK', description: 'reason', raw: {} },
+    event: {
+      kind: 'sub-agent',
+      phase: 'in-flight',
+      toolUseId: 'tu_TASK',
+      description: 'reason',
+      raw: {}
+    }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'assistant-text', messageId: 'm-inner', text: 'thinking aloud', parentToolUseId: 'tu_TASK' },
+    event: {
+      kind: 'assistant-text',
+      messageId: 'm-inner',
+      text: 'thinking aloud',
+      parentToolUseId: 'tu_TASK'
+    }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'assistant-thinking', messageId: 'm-inner-2', text: 'private', hasSignature: false, parentToolUseId: 'tu_TASK' },
+    event: {
+      kind: 'assistant-thinking',
+      messageId: 'm-inner-2',
+      text: 'private',
+      hasSignature: false,
+      parentToolUseId: 'tu_TASK'
+    }
   })
   const children = s.childIndex.get('tu_TASK') ?? []
   expect(children.length).toBe(2)
@@ -792,7 +926,13 @@ test('sub-agent children: nested sub-agent inside sub-agent registers under oute
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'sub-agent', phase: 'in-flight', toolUseId: 'tu_OUTER', description: 'outer', raw: {} },
+    event: {
+      kind: 'sub-agent',
+      phase: 'in-flight',
+      toolUseId: 'tu_OUTER',
+      description: 'outer',
+      raw: {}
+    }
   })
   s = reducer(s, {
     type: 'event',
@@ -802,8 +942,8 @@ test('sub-agent children: nested sub-agent inside sub-agent registers under oute
       toolUseId: 'tu_INNER',
       description: 'inner',
       parentToolUseId: 'tu_OUTER',
-      raw: {},
-    },
+      raw: {}
+    }
   })
   const outerChildren = s.childIndex.get('tu_OUTER') ?? []
   expect(outerChildren.length).toBe(1)
@@ -824,7 +964,7 @@ test('deriveLoadingLabel: "Thinking…" while thinking block open', () => {
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'm' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'thinking' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'thinking' }
   })
   expect(deriveLoadingLabel(s)).toBe('Thinking…')
 })
@@ -835,7 +975,7 @@ test('deriveLoadingLabel: "Writing…" while text block open', () => {
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'm' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' }
   })
   expect(deriveLoadingLabel(s)).toBe('Writing…')
 })
@@ -845,7 +985,7 @@ test('deriveLoadingLabel: tool with file_path → verb + basename', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-call', id: 't', name: 'Read', input: { file_path: '/a/b/foo.ts' } },
+    event: { kind: 'tool-call', id: 't', name: 'Read', input: { file_path: '/a/b/foo.ts' } }
   })
   expect(deriveLoadingLabel(s)).toBe('Read foo.ts')
 })
@@ -855,7 +995,7 @@ test('deriveLoadingLabel: Bash command target', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-call', id: 't', name: 'Bash', input: { command: 'pnpm build' } },
+    event: { kind: 'tool-call', id: 't', name: 'Bash', input: { command: 'pnpm build' } }
   })
   expect(deriveLoadingLabel(s)).toBe('Run pnpm build')
 })
@@ -869,8 +1009,8 @@ test('deriveLoadingLabel: long command truncated', () => {
       kind: 'tool-call',
       id: 't',
       name: 'Bash',
-      input: { command: 'a'.repeat(60) },
-    },
+      input: { command: 'a'.repeat(60) }
+    }
   })
   const label = deriveLoadingLabel(s)
   expect(label?.startsWith('Run ')).toBeTruthy()
@@ -884,11 +1024,11 @@ test('deriveLoadingLabel: api-retry overrides open block', () => {
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'm' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'api-retry', attempt: 2, maxRetries: 5, delayMs: 3000, error: '529' },
+    event: { kind: 'api-retry', attempt: 2, maxRetries: 5, delayMs: 3000, error: '529' }
   })
   expect(deriveLoadingLabel(s)).toBe('Retrying (2/5) in 3s…')
 })
@@ -898,7 +1038,7 @@ test('deriveLoadingLabel: tool label sticks after tool-result completes', () => 
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-call', id: 't', name: 'Edit', input: { file_path: '/x/App.tsx' } },
+    event: { kind: 'tool-call', id: 't', name: 'Edit', input: { file_path: '/x/App.tsx' } }
   })
   s = reducer(s, { type: 'event', event: ev.result('t') })
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-stop' } })
@@ -911,11 +1051,11 @@ test('deriveLoadingLabel: text label sticky after stream-block-stop', () => {
   s = reducer(s, { type: 'event', event: { kind: 'stream-message-start', messageId: 'm' } })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' },
+    event: { kind: 'stream-block-start', blockIndex: 0, blockType: 'text' }
   })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'hi' },
+    event: { kind: 'stream-block-delta', blockIndex: 0, deltaType: 'text', text: 'hi' }
   })
   s = reducer(s, { type: 'event', event: { kind: 'stream-block-stop', blockIndex: 0 } })
   expect(deriveLoadingLabel(s)).toBe('Writing…')
@@ -930,7 +1070,7 @@ test('isAwaitingUserQuestion: true while AskUserQuestion is latest tool in turn'
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-call', id: 't', name: 'AskUserQuestion', input: { questions: [] } },
+    event: { kind: 'tool-call', id: 't', name: 'AskUserQuestion', input: { questions: [] } }
   })
   expect(isAwaitingUserQuestion(s)).toBe(true)
 })
@@ -940,7 +1080,7 @@ test('isAwaitingUserQuestion: false after user replies (user-text after tool)', 
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-call', id: 't', name: 'AskUserQuestion', input: { questions: [] } },
+    event: { kind: 'tool-call', id: 't', name: 'AskUserQuestion', input: { questions: [] } }
   })
   s = reducer(s, { type: 'user-sent', text: 'my answer' })
   expect(isAwaitingUserQuestion(s)).toBe(false)
@@ -951,7 +1091,7 @@ test('isAwaitingUserQuestion: false when latest tool is not AskUserQuestion', ()
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'tool-call', id: 't', name: 'Read', input: { file_path: '/a.ts' } },
+    event: { kind: 'tool-call', id: 't', name: 'Read', input: { file_path: '/a.ts' } }
   })
   expect(isAwaitingUserQuestion(s)).toBe(false)
 })
@@ -961,7 +1101,7 @@ test('deriveLoadingLabel: stops scanning at user-text boundary', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'api-retry', attempt: 1, maxRetries: 3, delayMs: 1000, error: 'x' },
+    event: { kind: 'api-retry', attempt: 1, maxRetries: 3, delayMs: 1000, error: 'x' }
   })
   s = reducer(s, { type: 'user-sent', text: 'next turn' })
   expect(deriveLoadingLabel(s)).toBe(null)
@@ -1120,16 +1260,17 @@ test('optimistic: replay determinism after dedup matches direct user-message app
 
 // ---- bg-shells -------------------------------------------------------
 
-const bgCall = (
-  id: string,
-  name: string,
-  input: unknown,
-): AgentEvent => ({ kind: 'tool-call', id, name, input })
+const bgCall = (id: string, name: string, input: unknown): AgentEvent => ({
+  kind: 'tool-call',
+  id,
+  name,
+  input
+})
 const bgResult = (
   toolUseId: string,
   rawContent: unknown,
   structured: unknown = null,
-  isError = false,
+  isError = false
 ): AgentEvent => ({ kind: 'tool-result', toolUseId, isError, rawContent, structured })
 
 test('bg-shells: spawn registers a pending shell with command', () => {
@@ -1137,7 +1278,7 @@ test('bg-shells: spawn registers a pending shell with command', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('spawn-1', 'Bash', { command: 'pnpm dev', run_in_background: true }),
+    event: bgCall('spawn-1', 'Bash', { command: 'pnpm dev', run_in_background: true })
   })
   expect(s.bgShells.size).toBe(1)
   const shell = s.bgShells.get('spawn-1')!
@@ -1151,11 +1292,11 @@ test('bg-shells: spawn result assigns shell id + flips to running', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('spawn-1', 'Bash', { command: 'pnpm dev', run_in_background: true }),
+    event: bgCall('spawn-1', 'Bash', { command: 'pnpm dev', run_in_background: true })
   })
   s = reducer(s, {
     type: 'event',
-    event: bgResult('spawn-1', 'Command running in background with shell ID: bash_1'),
+    event: bgResult('spawn-1', 'Command running in background with shell ID: bash_1')
   })
   const shell = s.bgShells.get('spawn-1')!
   expect(shell.shellId).toBe('bash_1')
@@ -1167,13 +1308,13 @@ test('bg-shells: BashOutput poll updates status + lastPolledAt + tail', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('spawn-1', 'Bash', { command: 'long', run_in_background: true }),
+    event: bgCall('spawn-1', 'Bash', { command: 'long', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('spawn-1', '', { shellId: 'bash_2' }) })
   s = reducer(s, { type: 'event', event: bgCall('poll-1', 'BashOutput', { bash_id: 'bash_2' }) })
   s = reducer(s, {
     type: 'event',
-    event: bgResult('poll-1', '', { status: 'running', stdout: 'tick\n' }),
+    event: bgResult('poll-1', '', { status: 'running', stdout: 'tick\n' })
   })
   const shell = s.bgShells.get('spawn-1')!
   expect(shell.status).toBe('running')
@@ -1186,13 +1327,13 @@ test('bg-shells: completed BashOutput sets exit code + status', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('spawn-1', 'Bash', { command: 'one-shot', run_in_background: true }),
+    event: bgCall('spawn-1', 'Bash', { command: 'one-shot', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('spawn-1', '', { shellId: 'bash_3' }) })
   s = reducer(s, { type: 'event', event: bgCall('poll-1', 'BashOutput', { bash_id: 'bash_3' }) })
   s = reducer(s, {
     type: 'event',
-    event: bgResult('poll-1', '', { status: 'completed', exitCode: 0, stdout: 'done\n' }),
+    event: bgResult('poll-1', '', { status: 'completed', exitCode: 0, stdout: 'done\n' })
   })
   const shell = s.bgShells.get('spawn-1')!
   expect(shell.status).toBe('completed')
@@ -1204,7 +1345,7 @@ test('bg-shells: KillShell ack without explicit status still flips to killed', (
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('spawn-1', 'Bash', { command: 'never-ends', run_in_background: true }),
+    event: bgCall('spawn-1', 'Bash', { command: 'never-ends', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('spawn-1', '', { shellId: 'bash_42' }) })
   s = reducer(s, { type: 'event', event: bgCall('kill-1', 'KillShell', { shell_id: 'bash_42' }) })
@@ -1218,13 +1359,13 @@ test('bg-shells: KillShell call+result marks shell killed', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('spawn-1', 'Bash', { command: 'never-ends', run_in_background: true }),
+    event: bgCall('spawn-1', 'Bash', { command: 'never-ends', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('spawn-1', '', { shellId: 'bash_9' }) })
   s = reducer(s, { type: 'event', event: bgCall('kill-1', 'KillShell', { shell_id: 'bash_9' }) })
   s = reducer(s, {
     type: 'event',
-    event: bgResult('kill-1', '', { status: 'killed' }),
+    event: bgResult('kill-1', '', { status: 'killed' })
   })
   const shell = s.bgShells.get('spawn-1')!
   expect(shell.status).toBe('killed')
@@ -1235,7 +1376,7 @@ test('bg-shells: non-bg Bash call does not register a shell', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('spawn-1', 'Bash', { command: 'ls', run_in_background: false }),
+    event: bgCall('spawn-1', 'Bash', { command: 'ls', run_in_background: false })
   })
   expect(s.bgShells.size).toBe(0)
 })
@@ -1245,11 +1386,11 @@ test('bg-shells: order preserved across multiple spawns', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('a', 'Bash', { command: 'one', run_in_background: true }),
+    event: bgCall('a', 'Bash', { command: 'one', run_in_background: true })
   })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('b', 'Bash', { command: 'two', run_in_background: true }),
+    event: bgCall('b', 'Bash', { command: 'two', run_in_background: true })
   })
   expect(s.bgShellOrder.join(',')).toBe('a,b')
 })
@@ -1262,19 +1403,22 @@ test('bg-shells: eviction caps terminal-status history but keeps active shells',
     const id = `t${i}`
     s = reducer(s, {
       type: 'event',
-      event: bgCall(id, 'Bash', { command: `cmd${i}`, run_in_background: true }),
+      event: bgCall(id, 'Bash', { command: `cmd${i}`, run_in_background: true })
     })
     s = reducer(s, { type: 'event', event: bgResult(id, '', { shellId: `bash_${i}` }) })
-    s = reducer(s, { type: 'event', event: bgCall(`p${i}`, 'BashOutput', { bash_id: `bash_${i}` }) })
     s = reducer(s, {
       type: 'event',
-      event: bgResult(`p${i}`, '', { status: 'completed', exitCode: 0 }),
+      event: bgCall(`p${i}`, 'BashOutput', { bash_id: `bash_${i}` })
+    })
+    s = reducer(s, {
+      type: 'event',
+      event: bgResult(`p${i}`, '', { status: 'completed', exitCode: 0 })
     })
   }
   // Plus one still-running shell that must survive.
   s = reducer(s, {
     type: 'event',
-    event: bgCall('alive', 'Bash', { command: 'streaming', run_in_background: true }),
+    event: bgCall('alive', 'Bash', { command: 'streaming', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('alive', '', { shellId: 'bash_alive' }) })
   // Terminal count capped at 30, active always kept → 31 total.
@@ -1292,7 +1436,7 @@ test('bg-shells: reset clears shells', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('a', 'Bash', { command: 'one', run_in_background: true }),
+    event: bgCall('a', 'Bash', { command: 'one', run_in_background: true })
   })
   s = reducer(s, { type: 'reset' })
   expect(s.bgShells.size).toBe(0)
@@ -1316,7 +1460,7 @@ test('spawn-token: bg shell tags spawnedInSpawnId at creation', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('shell-a', 'Bash', { command: 'pnpm dev', run_in_background: true }),
+    event: bgCall('shell-a', 'Bash', { command: 'pnpm dev', run_in_background: true })
   })
   const shell = s.bgShells.get('shell-a')!
   expect(shell.spawnedInSpawnId).toBe('sp-1')
@@ -1328,7 +1472,7 @@ test('spawn-token: new session-spawn drops active shells from prior spawn', () =
   s = reducer(s, { type: 'event', event: ev.turnInit('sid-r') })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('shell-a', 'Bash', { command: 'pnpm dev', run_in_background: true }),
+    event: bgCall('shell-a', 'Bash', { command: 'pnpm dev', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('shell-a', '', { shellId: 'bash_1' }) })
   expect(s.bgShells.get('shell-a')!.status).toBe('running')
@@ -1345,7 +1489,7 @@ test('spawn-token: same spawnId twice does not flip own shells', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('shell-a', 'Bash', { command: 'x', run_in_background: true }),
+    event: bgCall('shell-a', 'Bash', { command: 'x', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('shell-a', '', { shellId: 'bash_1' }) })
   // Re-emission of same spawnId (defensive — should be idempotent).
@@ -1359,13 +1503,13 @@ test('spawn-token: terminal-status shells (completed/killed) survive new spawn',
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('shell-a', 'Bash', { command: 'one-shot', run_in_background: true }),
+    event: bgCall('shell-a', 'Bash', { command: 'one-shot', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('shell-a', '', { shellId: 'bash_1' }) })
   s = reducer(s, { type: 'event', event: bgCall('poll-a', 'BashOutput', { bash_id: 'bash_1' }) })
   s = reducer(s, {
     type: 'event',
-    event: bgResult('poll-a', '', { status: 'completed', exitCode: 0 }),
+    event: bgResult('poll-a', '', { status: 'completed', exitCode: 0 })
   })
   expect(s.bgShells.get('shell-a')!.status).toBe('completed')
   s = reducer(s, { type: 'event', event: spawn('sp-2') })
@@ -1382,7 +1526,7 @@ test('spawn-token: legacy shells (no spawnedInSpawnId) drop on first session-spa
   s = reducer(s, { type: 'event', event: ev.turnInit() })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('legacy-a', 'Bash', { command: 'old', run_in_background: true }),
+    event: bgCall('legacy-a', 'Bash', { command: 'old', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('legacy-a', '', { shellId: 'bash_legacy' }) })
   expect(s.bgShells.get('legacy-a')!.spawnedInSpawnId).toBe(null)
@@ -1396,12 +1540,12 @@ test('spawn-token: process-exit (agent event) drops active shells', () => {
   s = reducer(s, { type: 'event', event: ev.turnInit('sid-x') })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('shell-a', 'Bash', { command: 'long', run_in_background: true }),
+    event: bgCall('shell-a', 'Bash', { command: 'long', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('shell-a', '', { shellId: 'bash_1' }) })
   s = reducer(s, {
     type: 'event',
-    event: { kind: 'process-exit', code: 0, signal: null },
+    event: { kind: 'process-exit', code: 0, signal: null }
   })
   expect(s.bgShells.has('shell-a')).toBe(false)
 })
@@ -1412,7 +1556,7 @@ test('spawn-token: process-exit (live IPC action) drops active shells when sessi
   s = reducer(s, { type: 'event', event: ev.turnInit('sid-live') })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('shell-a', 'Bash', { command: 'long', run_in_background: true }),
+    event: bgCall('shell-a', 'Bash', { command: 'long', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('shell-a', '', { shellId: 'bash_1' }) })
   s = reducer(s, { type: 'process-exit', sessionId: 'sid-live', code: 0, signal: null })
@@ -1426,7 +1570,7 @@ test('spawn-token: stale process-exit (mismatched sessionId) does NOT drop shell
   s = reducer(s, { type: 'event', event: ev.turnInit('sid-current') })
   s = reducer(s, {
     type: 'event',
-    event: bgCall('shell-a', 'Bash', { command: 'long', run_in_background: true }),
+    event: bgCall('shell-a', 'Bash', { command: 'long', run_in_background: true })
   })
   s = reducer(s, { type: 'event', event: bgResult('shell-a', '', { shellId: 'bash_1' }) })
   s = reducer(s, { type: 'process-exit', sessionId: 'sid-old', code: 137, signal: 'SIGKILL' })
@@ -1445,7 +1589,7 @@ test('spawn-token: replay determinism across spawn-token boundary', () => {
     bgCall('shell-a', 'Bash', { command: 'pnpm dev', run_in_background: true }),
     bgResult('shell-a', '', { shellId: 'bash_1' }),
     spawn('sp-new'),
-    ev.turnInit('sid-resume'),
+    ev.turnInit('sid-resume')
   ]
   let s = initialState()
   for (const e of events) s = reducer(s, { type: 'event', event: e })

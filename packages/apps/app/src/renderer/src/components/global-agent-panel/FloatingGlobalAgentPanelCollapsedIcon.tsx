@@ -7,11 +7,11 @@ interface Props {
 }
 
 const DOT_COLORS: Record<TerminalState, string> = {
-  starting:  '#fbbf24',
-  running:   '#fbbf24',
-  idle:      '#4ade80',
-  error:     '#ef4444',
-  dead:      '#666',
+  starting: '#fbbf24',
+  running: '#fbbf24',
+  idle: '#4ade80',
+  error: '#ef4444',
+  dead: '#666'
 }
 
 export function FloatingGlobalAgentPanelCollapsedIcon({ state, onExpand }: Props) {

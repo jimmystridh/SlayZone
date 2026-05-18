@@ -9,7 +9,7 @@ import {
   MENU_SHORTCUT_DEFAULTS,
   detectPlatform,
   getBlockedWebPanelKeys,
-  type ElectronInput,
+  type ElectronInput
 } from './index'
 
 describe('toElectronAccelerator', () => {
@@ -50,7 +50,7 @@ describe('matchesShortcut', () => {
       ctrlKey: false,
       shiftKey: false,
       altKey: false,
-      ...overrides,
+      ...overrides
     } as KeyboardEvent
   }
 
@@ -63,7 +63,9 @@ describe('matchesShortcut', () => {
   })
 
   it('matches mod+shift+d', () => {
-    expect(matchesShortcut(makeKeyEvent({ key: 'd', metaKey: true, shiftKey: true }), 'mod+shift+d')).toBe(true)
+    expect(
+      matchesShortcut(makeKeyEvent({ key: 'd', metaKey: true, shiftKey: true }), 'mod+shift+d')
+    ).toBe(true)
   })
 
   it('does not match mod+shift+d without shift', () => {
@@ -83,21 +85,33 @@ describe('matchesShortcut', () => {
   })
 
   it('does not match mod+k when extra modifiers pressed', () => {
-    expect(matchesShortcut(makeKeyEvent({ key: 'k', metaKey: true, shiftKey: true }), 'mod+k')).toBe(false)
+    expect(
+      matchesShortcut(makeKeyEvent({ key: 'k', metaKey: true, shiftKey: true }), 'mod+k')
+    ).toBe(false)
   })
 
   it('matches mod+alt+r via e.code when macOS Alt produces dead key (®)', () => {
-    expect(matchesShortcut(makeKeyEvent({ key: '®', code: 'KeyR', metaKey: true, altKey: true }), 'mod+alt+r')).toBe(true)
+    expect(
+      matchesShortcut(
+        makeKeyEvent({ key: '®', code: 'KeyR', metaKey: true, altKey: true }),
+        'mod+alt+r'
+      )
+    ).toBe(true)
   })
 
   it('matches mod+alt+r when e.key is already correct', () => {
-    expect(matchesShortcut(makeKeyEvent({ key: 'r', code: 'KeyR', metaKey: true, altKey: true }), 'mod+alt+r')).toBe(true)
+    expect(
+      matchesShortcut(
+        makeKeyEvent({ key: 'r', code: 'KeyR', metaKey: true, altKey: true }),
+        'mod+alt+r'
+      )
+    ).toBe(true)
   })
 })
 
 describe('shortcutDefinitions', () => {
   it('always contains go-home shortcut', () => {
-    const goHome = shortcutDefinitions.find(d => d.id === 'go-home')
+    const goHome = shortcutDefinitions.find((d) => d.id === 'go-home')
     expect(goHome).toBeDefined()
     expect(goHome!.platform).toBe('mac')
   })
@@ -113,7 +127,13 @@ describe('shortcutDefinitions', () => {
   })
 
   it('matchesShortcut returns false when keys is null', () => {
-    const e = { key: 'k', metaKey: true, ctrlKey: false, shiftKey: false, altKey: false } as KeyboardEvent
+    const e = {
+      key: 'k',
+      metaKey: true,
+      ctrlKey: false,
+      shiftKey: false,
+      altKey: false
+    } as KeyboardEvent
     expect(matchesShortcut(e, null)).toBe(false)
   })
 
@@ -126,7 +146,7 @@ describe('shortcutDefinitions', () => {
   })
 
   it('has no duplicate ids', () => {
-    const ids = shortcutDefinitions.map(d => d.id)
+    const ids = shortcutDefinitions.map((d) => d.id)
     expect(new Set(ids).size).toBe(ids.length)
   })
 })
@@ -167,7 +187,7 @@ describe('withShortcut', () => {
 describe('MENU_SHORTCUT_DEFAULTS', () => {
   it('is derived from shortcutDefinitions (no duplication)', () => {
     for (const [id, keys] of Object.entries(MENU_SHORTCUT_DEFAULTS)) {
-      const def = shortcutDefinitions.find(d => d.id === id)
+      const def = shortcutDefinitions.find((d) => d.id === id)
       expect(def).toBeDefined()
       expect(def!.defaultKeys).toBe(keys)
     }
@@ -183,7 +203,7 @@ describe('matchesElectronInput', () => {
       control: false,
       shift: false,
       alt: false,
-      ...overrides,
+      ...overrides
     }
   }
 
@@ -192,11 +212,15 @@ describe('matchesElectronInput', () => {
   })
 
   it('does not match on keyUp', () => {
-    expect(matchesElectronInput(makeInput({ type: 'keyUp', key: ',', meta: true }), 'mod+,')).toBe(false)
+    expect(matchesElectronInput(makeInput({ type: 'keyUp', key: ',', meta: true }), 'mod+,')).toBe(
+      false
+    )
   })
 
   it('matches mod+shift+, (project settings)', () => {
-    expect(matchesElectronInput(makeInput({ key: ',', meta: true, shift: true }), 'mod+shift+,')).toBe(true)
+    expect(
+      matchesElectronInput(makeInput({ key: ',', meta: true, shift: true }), 'mod+shift+,')
+    ).toBe(true)
   })
 
   it('does not match mod+shift+, when only meta pressed', () => {
@@ -212,19 +236,30 @@ describe('matchesElectronInput', () => {
   })
 
   it('does not match when extra modifiers pressed', () => {
-    expect(matchesElectronInput(makeInput({ key: 'k', meta: true, shift: true }), 'mod+k')).toBe(false)
+    expect(matchesElectronInput(makeInput({ key: 'k', meta: true, shift: true }), 'mod+k')).toBe(
+      false
+    )
   })
 
   it('matches mod+shift+s (screenshot)', () => {
-    expect(matchesElectronInput(makeInput({ key: 's', meta: true, shift: true }), 'mod+shift+s')).toBe(true)
+    expect(
+      matchesElectronInput(makeInput({ key: 's', meta: true, shift: true }), 'mod+shift+s')
+    ).toBe(true)
   })
 
   it('key comparison is case-insensitive', () => {
-    expect(matchesElectronInput(makeInput({ key: 'S', meta: true, shift: true }), 'mod+shift+s')).toBe(true)
+    expect(
+      matchesElectronInput(makeInput({ key: 'S', meta: true, shift: true }), 'mod+shift+s')
+    ).toBe(true)
   })
 
   it('matches mod+alt+r via code when macOS Alt produces dead key (®)', () => {
-    expect(matchesElectronInput(makeInput({ key: '®', code: 'KeyR', meta: true, alt: true }), 'mod+alt+r')).toBe(true)
+    expect(
+      matchesElectronInput(
+        makeInput({ key: '®', code: 'KeyR', meta: true, alt: true }),
+        'mod+alt+r'
+      )
+    ).toBe(true)
   })
 })
 
@@ -269,7 +304,7 @@ describe('getBlockedWebPanelKeys', () => {
 
   it('does not block every letter (some remain available)', () => {
     const blocked = getBlockedWebPanelKeys()
-    const available = 'abcdefghijklmnopqrstuvwxyz'.split('').filter(l => !blocked.has(l))
+    const available = 'abcdefghijklmnopqrstuvwxyz'.split('').filter((l) => !blocked.has(l))
     expect(available.length).toBeGreaterThan(0)
   })
 })

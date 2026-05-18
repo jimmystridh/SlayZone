@@ -41,9 +41,7 @@ export function prepareProjectCreate(input: PrepareProjectCreateInput): Prepared
   const columnsConfig = input.columnsConfig ? validateColumns(input.columnsConfig) : null
   const name = normalizeProjectName(input.name)
   const color = normalizeProjectColor(input.color)
-  const path = typeof input.path === 'string'
-    ? (input.path.trim() || null)
-    : (input.path ?? null)
+  const path = typeof input.path === 'string' ? input.path.trim() || null : (input.path ?? null)
   const now = new Date().toISOString()
 
   return {
@@ -54,6 +52,6 @@ export function prepareProjectCreate(input: PrepareProjectCreateInput): Prepared
     columnsConfig,
     columnsConfigJson: columnsConfig ? JSON.stringify(columnsConfig) : null,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
   }
 }

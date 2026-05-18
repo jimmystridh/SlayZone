@@ -3,7 +3,8 @@ import type { IgnoredFileNode } from '../shared/types'
 export type NodeState = 'checked' | 'indeterminate' | 'unchecked'
 
 export function globToRegex(pattern: string): RegExp {
-  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&')
+  const escaped = pattern
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
     .replace(/\*\*/g, '\0')
     .replace(/\*/g, '[^/]*')
     .replace(/\?/g, '[^/]')
@@ -26,7 +27,7 @@ export function globToRegex(pattern: string): RegExp {
  * - Multi-segment globs (`docs/**`) match the top-level dir by first segment only.
  */
 export function filterTreeByGlobs(nodes: IgnoredFileNode[], globs: string[]): Set<string> {
-  if (globs.length === 0) return new Set(nodes.map(n => n.path))
+  if (globs.length === 0) return new Set(nodes.map((n) => n.path))
 
   const basenameMatchers: RegExp[] = []
   const dirPrefixes: string[] = []
@@ -41,10 +42,11 @@ export function filterTreeByGlobs(nodes: IgnoredFileNode[], globs: string[]): Se
     // Dir globs match top-level only (depth 0). Basename globs match files at any depth
     // — but skip when an ancestor is already matched, otherwise a parent dir + descendant
     // file would both end up as selection roots, violating the no-overlap invariant.
-    const selfDirMatch = !ancestorMatched && depth === 0 && node.isDirectory && dirPrefixes.includes(node.name)
+    const selfDirMatch =
+      !ancestorMatched && depth === 0 && node.isDirectory && dirPrefixes.includes(node.name)
     if (selfDirMatch) matched.add(node.path)
     const nowMatched = ancestorMatched || selfDirMatch
-    if (!nowMatched && !node.isDirectory && basenameMatchers.some(re => re.test(node.name))) {
+    if (!nowMatched && !node.isDirectory && basenameMatchers.some((re) => re.test(node.name))) {
       matched.add(node.path)
     }
     for (const c of node.children) walk(c, depth + 1, nowMatched)
@@ -59,7 +61,10 @@ export function filterTreeByGlobs(nodes: IgnoredFileNode[], globs: string[]): Se
  * or a dir path meaning the whole subtree is copied. Invariant: no ancestor and
  * descendant appear together (enforced by `filterTreeByGlobs` and `toggle`).
  */
-export function computeStates(tree: IgnoredFileNode[], selected: Set<string>): {
+export function computeStates(
+  tree: IgnoredFileNode[],
+  selected: Set<string>
+): {
   states: Map<string, NodeState>
   selectedCounts: Map<string, number>
   selectedFileCount: number
@@ -68,7 +73,10 @@ export function computeStates(tree: IgnoredFileNode[], selected: Set<string>): {
   const selectedCounts = new Map<string, number>()
   let selectedFileCount = 0
 
-  const walk = (node: IgnoredFileNode, ancestorSelected: boolean): { state: NodeState; count: number } => {
+  const walk = (
+    node: IgnoredFileNode,
+    ancestorSelected: boolean
+  ): { state: NodeState; count: number } => {
     const inherited = ancestorSelected || selected.has(node.path)
     if (!node.isDirectory) {
       const st: NodeState = inherited ? 'checked' : 'unchecked'

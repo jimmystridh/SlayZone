@@ -91,7 +91,6 @@ export async function parseClaudeFiles(
           const rl = createInterface({ input: stream, crlfDelay: Infinity })
 
           rl.on('line', (line) => {
-
             let entry: ClaudeAssistantEntry
             try {
               entry = JSON.parse(line)

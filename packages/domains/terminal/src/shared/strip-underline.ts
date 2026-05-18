@@ -6,7 +6,10 @@
 export function stripUnderlineCodes(data: string): string {
   return data.replace(/\x1b\[([0-9;:]*)m/g, (_, params) => {
     if (!params) return '\x1b[m'
-    const filtered = params.split(';').filter((p: string) => p !== '4' && !p.startsWith('4:')).join(';')
+    const filtered = params
+      .split(';')
+      .filter((p: string) => p !== '4' && !p.startsWith('4:'))
+      .join(';')
     return filtered ? `\x1b[${filtered}m` : ''
   })
 }

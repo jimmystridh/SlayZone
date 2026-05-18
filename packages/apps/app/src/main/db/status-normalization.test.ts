@@ -36,7 +36,7 @@ function expect(actual: unknown) {
       if (JSON.stringify(actual) !== JSON.stringify(expected)) {
         throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
       }
-    },
+    }
   }
 }
 
@@ -49,13 +49,15 @@ function createDb(): Database.Database {
 }
 
 function insertProject(db: Database.Database, id: string, columnsConfig: string | null): void {
-  db.prepare('INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)')
-    .run(id, id, '#000000', '/tmp/test', columnsConfig)
+  db.prepare(
+    'INSERT INTO projects (id, name, color, path, columns_config) VALUES (?, ?, ?, ?, ?)'
+  ).run(id, id, '#000000', '/tmp/test', columnsConfig)
 }
 
 function insertTask(db: Database.Database, id: string, projectId: string, status: string): void {
-  db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)')
-    .run(id, projectId, id, status, 3, 0)
+  db.prepare(
+    'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(id, projectId, id, status, 3, 0)
 }
 
 function hasProjectColumn(db: Database.Database, columnName: string): boolean {
@@ -72,7 +74,7 @@ test('normalizes stale columns JSON and remaps unknown task statuses', () => {
     const customColumns: ColumnConfig[] = [
       { id: 'doing', label: 'Doing', color: 'blue', position: 4, category: 'started' },
       { id: 'queued', label: 'Queued', color: 'gray', position: 1, category: 'unstarted' },
-      { id: 'done_custom', label: 'Done', color: 'green', position: 7, category: 'completed' },
+      { id: 'done_custom', label: 'Done', color: 'green', position: 7, category: 'completed' }
     ]
     insertProject(db, projectId, JSON.stringify(customColumns))
     insertTask(db, 'task-known', projectId, 'doing')
@@ -87,7 +89,7 @@ test('normalizes stale columns JSON and remaps unknown task statuses', () => {
     expect(normalizedColumns).toEqual([
       { id: 'queued', label: 'Queued', color: 'gray', position: 0, category: 'unstarted' },
       { id: 'doing', label: 'Doing', color: 'blue', position: 1, category: 'started' },
-      { id: 'done_custom', label: 'Done', color: 'green', position: 2, category: 'completed' },
+      { id: 'done_custom', label: 'Done', color: 'green', position: 2, category: 'completed' }
     ])
 
     const statuses = db
@@ -95,7 +97,7 @@ test('normalizes stale columns JSON and remaps unknown task statuses', () => {
       .all(projectId) as Array<{ id: string; status: string }>
     expect(statuses).toEqual([
       { id: 'task-known', status: 'doing' },
-      { id: 'task-unknown', status: 'queued' },
+      { id: 'task-unknown', status: 'queued' }
     ])
   } finally {
     db.close()

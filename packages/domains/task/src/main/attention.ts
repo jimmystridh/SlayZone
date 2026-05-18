@@ -21,7 +21,7 @@ export function handleAttentionTransition(
   sessionId: string,
   newState: TerminalState,
   oldState: TerminalState,
-  hasUserInput: boolean,
+  hasUserInput: boolean
 ): boolean {
   const taskId = sessionId.split(':')[0]
   if (!taskId) return false

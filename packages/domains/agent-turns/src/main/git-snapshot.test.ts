@@ -210,5 +210,9 @@ await describe('snapshot is non-destructive', () => {
 
 // Cleanup
 for (const r of repos) {
-  try { fs.rmSync(r, { recursive: true, force: true }) } catch { /* ignore */ }
+  try {
+    fs.rmSync(r, { recursive: true, force: true })
+  } catch {
+    /* ignore */
+  }
 }

@@ -52,4 +52,6 @@ ${slashRules.join('\n')}
 ${htmlRules.join('\n')}
 `
 await writeFile(redirectsPath, out)
-console.log(`[build-redirects] generated ${slashRules.length} slash rules + ${htmlRules.length} .html rules`)
+console.log(
+  `[build-redirects] generated ${slashRules.length} slash rules + ${htmlRules.length} .html rules`
+)

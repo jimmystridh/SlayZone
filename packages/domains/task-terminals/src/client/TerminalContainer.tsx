@@ -1,7 +1,21 @@
-import { useState, useEffect, useCallback, useRef, useMemo, forwardRef, useImperativeHandle } from 'react'
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  forwardRef,
+  useImperativeHandle
+} from 'react'
 import { usePty } from '@slayzone/terminal'
 import type { TerminalMode } from '@slayzone/terminal/shared'
-import { matchesShortcut, useShortcutStore, withModalGuard, getThemeChrome, getChromeStyleOverrides } from '@slayzone/ui'
+import {
+  matchesShortcut,
+  useShortcutStore,
+  withModalGuard,
+  getThemeChrome,
+  getChromeStyleOverrides
+} from '@slayzone/ui'
 import { useTheme } from '@slayzone/settings/client'
 import { useTaskTerminals } from './useTaskTerminals'
 import { TerminalTabBar, type TerminalTabBarHandle } from './TerminalTabBar'
@@ -46,350 +60,409 @@ interface TerminalContainerProps {
   overlay?: React.ReactNode
 }
 
-export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalContainerProps>(function TerminalContainer({
-  taskId,
-  cwd,
-  defaultMode,
-  conversationId,
-  existingConversationId,
-  supportsSessionId,
-  initialPrompt,
-  providerFlags,
-  executionContext,
-  isActive = true,
-  hasShortcutFocus,
-  focusRequestId = 0,
-  onConversationCreated,
-  onSessionInvalid,
-  onReady,
-  onFirstInput,
-  onRetry,
-  onFocusRequestHandled,
-  onMainTabActiveChange,
-  onOpenUrl,
-  onOpenFile,
-  onMainReset,
-  rightContent,
-  mainTabAccessories,
-  mainTabContextMenu,
-  overlay,
-}: TerminalContainerProps, ref) {
-  const {
-    tabs,
-    groups,
-    activeGroupId,
-    setActiveGroupId,
-    createTab,
-    splitTab,
-    closeTab,
-    movePane,
-    renameTab,
-    getSessionId
-  } = useTaskTerminals(taskId, defaultMode)
+export const TerminalContainer = forwardRef<TerminalContainerHandle, TerminalContainerProps>(
+  function TerminalContainer(
+    {
+      taskId,
+      cwd,
+      defaultMode,
+      conversationId,
+      existingConversationId,
+      supportsSessionId,
+      initialPrompt,
+      providerFlags,
+      executionContext,
+      isActive = true,
+      hasShortcutFocus,
+      focusRequestId = 0,
+      onConversationCreated,
+      onSessionInvalid,
+      onReady,
+      onFirstInput,
+      onRetry,
+      onFocusRequestHandled,
+      onMainTabActiveChange,
+      onOpenUrl,
+      onOpenFile,
+      onMainReset,
+      rightContent,
+      mainTabAccessories,
+      mainTabContextMenu,
+      overlay
+    }: TerminalContainerProps,
+    ref
+  ) {
+    const {
+      tabs,
+      groups,
+      activeGroupId,
+      setActiveGroupId,
+      createTab,
+      splitTab,
+      closeTab,
+      movePane,
+      renameTab,
+      getSessionId
+    } = useTaskTerminals(taskId, defaultMode)
 
-  // Owns keyboard shortcuts; falls back to isActive so non-explode callers need not set it.
-  const shortcutActive = hasShortcutFocus ?? isActive
+    // Owns keyboard shortcuts; falls back to isActive so non-explode callers need not set it.
+    const shortcutActive = hasShortcutFocus ?? isActive
 
-  const { subscribePrompt, subscribeTitle } = usePty()
-  const { terminalOverrideThemeId, contentVariant } = useTheme()
-  const terminalPanelStyle = useMemo(() => {
-    if (!terminalOverrideThemeId) return undefined
-    return getChromeStyleOverrides(getThemeChrome(terminalOverrideThemeId, contentVariant))
-  }, [terminalOverrideThemeId, contentVariant])
-  const splitGroupRef = useRef<TerminalSplitGroupHandle | null>(null)
-  const tabBarRef = useRef<TerminalTabBarHandle | null>(null)
-  const pendingFocusRef = useRef<string | boolean>(isActive)
-  const terminalApiRef = useRef<{
-    sendInput: (text: string) => Promise<void>
-    write: (data: string) => Promise<boolean>
-    focus: () => void
-    clearBuffer: () => Promise<void>
-  } | null>(null)
-  const lastHandledFocusRequestRef = useRef(0)
+    const { subscribePrompt, subscribeTitle } = usePty()
+    const { terminalOverrideThemeId, contentVariant } = useTheme()
+    const terminalPanelStyle = useMemo(() => {
+      if (!terminalOverrideThemeId) return undefined
+      return getChromeStyleOverrides(getThemeChrome(terminalOverrideThemeId, contentVariant))
+    }, [terminalOverrideThemeId, contentVariant])
+    const splitGroupRef = useRef<TerminalSplitGroupHandle | null>(null)
+    const tabBarRef = useRef<TerminalTabBarHandle | null>(null)
+    const pendingFocusRef = useRef<string | boolean>(isActive)
+    const terminalApiRef = useRef<{
+      sendInput: (text: string) => Promise<void>
+      write: (data: string) => Promise<boolean>
+      focus: () => void
+      clearBuffer: () => Promise<void>
+    } | null>(null)
+    const lastHandledFocusRequestRef = useRef(0)
 
-  // Get active group
-  const activeGroup = groups.find(g => g.id === activeGroupId)
-  const mainGroupId = groups.find((group) => group.tabs.some((tab) => tab.isMain))?.id ?? null
+    // Get active group
+    const activeGroup = groups.find((g) => g.id === activeGroupId)
+    const mainGroupId = groups.find((group) => group.tabs.some((tab) => tab.isMain))?.id ?? null
 
-  // Notify parent when main tab active state changes
-  useEffect(() => {
-    onMainTabActiveChange?.(activeGroup?.isMain ?? false)
-  }, [activeGroup?.isMain, onMainTabActiveChange])
+    // Notify parent when main tab active state changes
+    useEffect(() => {
+      onMainTabActiveChange?.(activeGroup?.isMain ?? false)
+    }, [activeGroup?.isMain, onMainTabActiveChange])
 
-  // Forward main tab state changes to task-level callbacks
-  useEffect(() => {
-    const mainTab = tabs.find(t => t.isMain)
-    if (!mainTab) return
-    const mainSessionId = getSessionId(mainTab.id)
-    return subscribePrompt(mainSessionId, () => {
-      // Main tab prompt events could trigger task-level UI updates
-    })
-  }, [taskId, tabs, getSessionId, subscribePrompt])
-
-  // Multi-window: claim all task sessions for THIS window on mount + on focus.
-  // PTY output reroutes to the window currently rendering the terminal panel.
-  useEffect(() => {
-    const claimAll = () => {
-      for (const tab of tabs) {
-        const sid = getSessionId(tab.id)
-        if (sid) void window.api.pty.claimSession(sid)
-      }
-    }
-    claimAll()
-    window.addEventListener('focus', claimAll)
-    return () => window.removeEventListener('focus', claimAll)
-  }, [tabs, getSessionId])
-
-  // Track terminal process titles for tab labels
-  const [terminalTitles, setTerminalTitles] = useState<Map<string, string>>(new Map())
-  useEffect(() => {
-    const unsubs: Array<() => void> = []
-    for (const tab of tabs) {
-      if (tab.isMain) continue
-      const sessionId = getSessionId(tab.id)
-      const unsub = subscribeTitle(sessionId, (title) => {
-        setTerminalTitles(prev => {
-          const next = new Map(prev)
-          if (title) {
-            next.set(tab.id, title)
-          } else {
-            next.delete(tab.id)
-          }
-          return next
-        })
+    // Forward main tab state changes to task-level callbacks
+    useEffect(() => {
+      const mainTab = tabs.find((t) => t.isMain)
+      if (!mainTab) return
+      const mainSessionId = getSessionId(mainTab.id)
+      return subscribePrompt(mainSessionId, () => {
+        // Main tab prompt events could trigger task-level UI updates
       })
-      unsubs.push(unsub)
-    }
-    return () => unsubs.forEach(u => u())
-  }, [tabs, getSessionId, subscribeTitle])
+    }, [taskId, tabs, getSessionId, subscribePrompt])
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    if (!shortcutActive) return
-    if (useShortcutStore.getState().isRecording) return
-
-    const handleKeyDown = withModalGuard((e: KeyboardEvent) => {
-      if (useShortcutStore.getState().isRecording) return
-      // New group
-      if (matchesShortcut(e, useShortcutStore.getState().getKeys('terminal-new-group'))) {
-        e.preventDefault()
-        pendingFocusRef.current = true
-        createTab()
+    // Multi-window: claim all task sessions for THIS window on mount + on focus.
+    // PTY output reroutes to the window currently rendering the terminal panel.
+    useEffect(() => {
+      const claimAll = () => {
+        for (const tab of tabs) {
+          const sid = getSessionId(tab.id)
+          if (sid) void window.api.pty.claimSession(sid)
+        }
       }
-      // Split current group
-      if (matchesShortcut(e, useShortcutStore.getState().getKeys('terminal-split')) && activeGroup) {
-        e.preventDefault()
-        const lastPane = activeGroup.tabs[activeGroup.tabs.length - 1]
+      claimAll()
+      window.addEventListener('focus', claimAll)
+      return () => window.removeEventListener('focus', claimAll)
+    }, [tabs, getSessionId])
+
+    // Track terminal process titles for tab labels
+    const [terminalTitles, setTerminalTitles] = useState<Map<string, string>>(new Map())
+    useEffect(() => {
+      const unsubs: Array<() => void> = []
+      for (const tab of tabs) {
+        if (tab.isMain) continue
+        const sessionId = getSessionId(tab.id)
+        const unsub = subscribeTitle(sessionId, (title) => {
+          setTerminalTitles((prev) => {
+            const next = new Map(prev)
+            if (title) {
+              next.set(tab.id, title)
+            } else {
+              next.delete(tab.id)
+            }
+            return next
+          })
+        })
+        unsubs.push(unsub)
+      }
+      return () => unsubs.forEach((u) => u())
+    }, [tabs, getSessionId, subscribeTitle])
+
+    // Keyboard shortcuts
+    useEffect(() => {
+      if (!shortcutActive) return
+      if (useShortcutStore.getState().isRecording) return
+
+      const handleKeyDown = withModalGuard((e: KeyboardEvent) => {
+        if (useShortcutStore.getState().isRecording) return
+        // New group
+        if (matchesShortcut(e, useShortcutStore.getState().getKeys('terminal-new-group'))) {
+          e.preventDefault()
+          pendingFocusRef.current = true
+          createTab()
+        }
+        // Split current group
+        if (
+          matchesShortcut(e, useShortcutStore.getState().getKeys('terminal-split')) &&
+          activeGroup
+        ) {
+          e.preventDefault()
+          const lastPane = activeGroup.tabs[activeGroup.tabs.length - 1]
+          if (lastPane) {
+            splitTab(lastPane.id).then((newTab) => {
+              if (newTab) pendingFocusRef.current = getSessionId(newTab.id)
+            })
+          }
+        }
+      })
+
+      window.addEventListener('keydown', handleKeyDown)
+      return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [shortcutActive, activeGroup, createTab, splitTab, getSessionId])
+
+    // Handle conversation created - only for main tab
+    const handleConversationCreated = useCallback(
+      (convId: string) => {
+        onConversationCreated?.(convId)
+      },
+      [onConversationCreated]
+    )
+
+    // Split the active group — add a new pane
+    const handleSplitGroup = useCallback(
+      (groupId: string) => {
+        const group = groups.find((g) => g.id === groupId)
+        if (!group) return
+        const lastPane = group.tabs[group.tabs.length - 1]
         if (lastPane) {
-          splitTab(lastPane.id).then(newTab => {
+          splitTab(lastPane.id).then((newTab) => {
             if (newTab) pendingFocusRef.current = getSessionId(newTab.id)
           })
         }
-      }
-    })
+      },
+      [groups, splitTab, getSessionId]
+    )
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [shortcutActive, activeGroup, createTab, splitTab, getSessionId])
-
-  // Handle conversation created - only for main tab
-  const handleConversationCreated = useCallback((convId: string) => {
-    onConversationCreated?.(convId)
-  }, [onConversationCreated])
-
-  // Split the active group — add a new pane
-  const handleSplitGroup = useCallback((groupId: string) => {
-    const group = groups.find(g => g.id === groupId)
-    if (!group) return
-    const lastPane = group.tabs[group.tabs.length - 1]
-    if (lastPane) {
-      splitTab(lastPane.id).then(newTab => {
-        if (newTab) pendingFocusRef.current = getSessionId(newTab.id)
-      })
-    }
-  }, [groups, splitTab, getSessionId])
-
-  // Close an entire group (all its panes)
-  const closeGroup = useCallback(async (groupId: string) => {
-    const group = groups.find(g => g.id === groupId)
-    if (!group || group.isMain) return
-    for (const tab of [...group.tabs].reverse()) {
-      await closeTab(tab.id)
-    }
-  }, [groups, closeTab])
-
-  const tryApplyFocusRequest = useCallback(() => {
-    if (focusRequestId <= 0 || focusRequestId <= lastHandledFocusRequestRef.current) return
-    if (!isActive || !terminalApiRef.current) return
-
-    if (mainGroupId && activeGroupId !== mainGroupId) {
-      pendingFocusRef.current = true
-      setActiveGroupId(mainGroupId)
-      return
-    }
-
-    splitGroupRef.current?.focus()
-    lastHandledFocusRequestRef.current = focusRequestId
-    onFocusRequestHandled?.(focusRequestId)
-  }, [
-    focusRequestId,
-    isActive,
-    mainGroupId,
-    activeGroupId,
-    setActiveGroupId,
-    onFocusRequestHandled
-  ])
-
-  useEffect(() => {
-    tryApplyFocusRequest()
-  }, [tryApplyFocusRequest])
-
-  // Focus terminal when task becomes the shortcut-focused cell (or active in non-explode)
-  useEffect(() => {
-    if (!shortcutActive) return
-    if (splitGroupRef.current) {
-      splitGroupRef.current.focus()
-    } else {
-      pendingFocusRef.current = true
-    }
-  }, [shortcutActive])
-
-  const handlePaneAttached = useCallback((api: { sessionId: string; focus: () => void }) => {
-    const pending = pendingFocusRef.current
-    if (pending === true || pending === api.sessionId) {
-      api.focus()
-      pendingFocusRef.current = false
-    }
-  }, [])
-
-  // Handle terminal ready - pass up to parent (main tab's API)
-  const handleTerminalReady = useCallback((api: {
-    sendInput: (text: string) => Promise<void>
-    write: (data: string) => Promise<boolean>
-    focus: () => void
-    clearBuffer: () => Promise<void>
-  }) => {
-    terminalApiRef.current = api
-    onReady?.(api)
-    tryApplyFocusRequest()
-  }, [onReady, tryApplyFocusRequest])
-
-  // Close a group and focus the adjacent group's terminal
-  const closeGroupAndFocusAdjacent = useCallback(async (groupId: string) => {
-    const groupIndex = groups.findIndex(g => g.id === groupId)
-    if (groupIndex === -1 || groups[groupIndex]?.isMain) return
-    const adjacentGroup = groups[groupIndex > 0 ? groupIndex - 1 : 1]
-    await closeGroup(groupId)
-    if (adjacentGroup) {
-      pendingFocusRef.current = true
-      setActiveGroupId(adjacentGroup.id)
-    }
-  }, [groups, closeGroup, setActiveGroupId])
-
-  useImperativeHandle(ref, () => ({
-    closeActiveGroup: async (): Promise<boolean> => {
-      const active = document.activeElement as HTMLElement | null
-      const paneEl = active?.closest('[data-session-id]')
-      const sessionId = paneEl?.getAttribute('data-session-id')
-
-      if (sessionId) {
-        const tabId = sessionId.substring(taskId.length + 1)
-        const group = groups.find(g => g.tabs.some(t => t.id === tabId))
-        if (!group) return false
-        if (group.isMain && group.tabs.length === 1) return false
-
-        if (group.tabs.length > 1) {
-          // Multiple panes: close focused pane, focus adjacent pane in same group
-          const paneIndex = group.tabs.findIndex(t => t.id === tabId)
-          const adjacentTab = group.tabs[paneIndex > 0 ? paneIndex - 1 : 1]
-          await closeTab(tabId)
-          if (adjacentTab) {
-            splitGroupRef.current?.focus(`${taskId}:${adjacentTab.id}`)
-          }
-        } else {
-          // Last pane in group: close group and focus adjacent group
-          await closeGroupAndFocusAdjacent(group.id)
+    // Close an entire group (all its panes)
+    const closeGroup = useCallback(
+      async (groupId: string) => {
+        const group = groups.find((g) => g.id === groupId)
+        if (!group || group.isMain) return
+        for (const tab of [...group.tabs].reverse()) {
+          await closeTab(tab.id)
         }
-        return true
+      },
+      [groups, closeTab]
+    )
+
+    const tryApplyFocusRequest = useCallback(() => {
+      if (focusRequestId <= 0 || focusRequestId <= lastHandledFocusRequestRef.current) return
+      if (!isActive || !terminalApiRef.current) return
+
+      if (mainGroupId && activeGroupId !== mainGroupId) {
+        pendingFocusRef.current = true
+        setActiveGroupId(mainGroupId)
+        return
+      }
+
+      splitGroupRef.current?.focus()
+      lastHandledFocusRequestRef.current = focusRequestId
+      onFocusRequestHandled?.(focusRequestId)
+    }, [
+      focusRequestId,
+      isActive,
+      mainGroupId,
+      activeGroupId,
+      setActiveGroupId,
+      onFocusRequestHandled
+    ])
+
+    useEffect(() => {
+      tryApplyFocusRequest()
+    }, [tryApplyFocusRequest])
+
+    // Focus terminal when task becomes the shortcut-focused cell (or active in non-explode)
+    useEffect(() => {
+      if (!shortcutActive) return
+      if (splitGroupRef.current) {
+        splitGroupRef.current.focus()
       } else {
-        // No focused pane: close active group and focus adjacent group
-        const activeGroup = groups.find(g => g.id === activeGroupId)
-        if (!activeGroup || activeGroup.isMain) return false
-        await closeGroupAndFocusAdjacent(activeGroupId)
-        return true
+        pendingFocusRef.current = true
       }
-    }
-  }), [taskId, tabs, groups, closeTab, closeGroupAndFocusAdjacent, activeGroupId])
+    }, [shortcutActive])
 
-  // Build pane props for the active group
-  const paneProps = useMemo(() => {
-    if (!activeGroup) return []
-    return activeGroup.tabs.map(tab => {
-      const canClose = !tab.isMain
-      return {
-        tab,
-        taskId,
-        sessionId: getSessionId(tab.id),
-        cwd,
-        conversationId: tab.isMain ? conversationId : undefined,
-        existingConversationId: tab.isMain ? existingConversationId : undefined,
-        supportsSessionId: tab.isMain ? supportsSessionId : undefined,
-        initialPrompt: tab.isMain ? initialPrompt : undefined,
-        providerFlags: tab.isMain ? providerFlags : undefined,
-        executionContext,
-        onConversationCreated: tab.isMain ? handleConversationCreated : undefined,
-        onSessionInvalid: tab.isMain ? onSessionInvalid : undefined,
-        onReady: tab.isMain ? handleTerminalReady : undefined,
-        onFirstInput: tab.isMain ? onFirstInput : undefined,
-        onRetry: tab.isMain ? onRetry : undefined,
-        // Context menu callbacks
-        onSplit: () => handleSplitGroup(activeGroup.id),
-        onNewGroup: () => { pendingFocusRef.current = true; createTab() },
-        onClose: canClose ? () => {
-          if (activeGroup.tabs.length === 1) {
-            void closeGroup(activeGroup.id)
+    const handlePaneAttached = useCallback((api: { sessionId: string; focus: () => void }) => {
+      const pending = pendingFocusRef.current
+      if (pending === true || pending === api.sessionId) {
+        api.focus()
+        pendingFocusRef.current = false
+      }
+    }, [])
+
+    // Handle terminal ready - pass up to parent (main tab's API)
+    const handleTerminalReady = useCallback(
+      (api: {
+        sendInput: (text: string) => Promise<void>
+        write: (data: string) => Promise<boolean>
+        focus: () => void
+        clearBuffer: () => Promise<void>
+      }) => {
+        terminalApiRef.current = api
+        onReady?.(api)
+        tryApplyFocusRequest()
+      },
+      [onReady, tryApplyFocusRequest]
+    )
+
+    // Close a group and focus the adjacent group's terminal
+    const closeGroupAndFocusAdjacent = useCallback(
+      async (groupId: string) => {
+        const groupIndex = groups.findIndex((g) => g.id === groupId)
+        if (groupIndex === -1 || groups[groupIndex]?.isMain) return
+        const adjacentGroup = groups[groupIndex > 0 ? groupIndex - 1 : 1]
+        await closeGroup(groupId)
+        if (adjacentGroup) {
+          pendingFocusRef.current = true
+          setActiveGroupId(adjacentGroup.id)
+        }
+      },
+      [groups, closeGroup, setActiveGroupId]
+    )
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        closeActiveGroup: async (): Promise<boolean> => {
+          const active = document.activeElement as HTMLElement | null
+          const paneEl = active?.closest('[data-session-id]')
+          const sessionId = paneEl?.getAttribute('data-session-id')
+
+          if (sessionId) {
+            const tabId = sessionId.substring(taskId.length + 1)
+            const group = groups.find((g) => g.tabs.some((t) => t.id === tabId))
+            if (!group) return false
+            if (group.isMain && group.tabs.length === 1) return false
+
+            if (group.tabs.length > 1) {
+              // Multiple panes: close focused pane, focus adjacent pane in same group
+              const paneIndex = group.tabs.findIndex((t) => t.id === tabId)
+              const adjacentTab = group.tabs[paneIndex > 0 ? paneIndex - 1 : 1]
+              await closeTab(tabId)
+              if (adjacentTab) {
+                splitGroupRef.current?.focus(`${taskId}:${adjacentTab.id}`)
+              }
+            } else {
+              // Last pane in group: close group and focus adjacent group
+              await closeGroupAndFocusAdjacent(group.id)
+            }
+            return true
           } else {
-            void closeTab(tab.id)
+            // No focused pane: close active group and focus adjacent group
+            const activeGroup = groups.find((g) => g.id === activeGroupId)
+            if (!activeGroup || activeGroup.isMain) return false
+            await closeGroupAndFocusAdjacent(activeGroupId)
+            return true
           }
-        } : null,
-        onRename: tab.isMain ? null : () => tabBarRef.current?.startRename(tab.id),
-        onResetSession: tab.isMain && onMainReset ? onMainReset : null,
-      }
-    })
-  }, [activeGroup, getSessionId, cwd, taskId, conversationId, existingConversationId, supportsSessionId, initialPrompt, providerFlags, executionContext, handleConversationCreated, onSessionInvalid, handleTerminalReady, onFirstInput, onRetry, handleSplitGroup, createTab, closeGroup, closeTab, onMainReset])
+        }
+      }),
+      [taskId, tabs, groups, closeTab, closeGroupAndFocusAdjacent, activeGroupId]
+    )
 
-  return (
-    <div className="h-full flex" style={terminalPanelStyle as React.CSSProperties | undefined}>
-      <div className="flex-1 min-w-0 flex flex-col">
-        <TerminalTabBar
-          ref={tabBarRef}
-          groups={groups}
-          activeGroupId={activeGroupId}
-          terminalTitles={terminalTitles}
-          onGroupSelect={(groupId) => { pendingFocusRef.current = true; setActiveGroupId(groupId) }}
-          onGroupCreate={() => { pendingFocusRef.current = true; createTab() }}
-          onGroupClose={closeGroup}
-          onGroupSplit={handleSplitGroup}
-          onPaneClose={closeTab}
-          onPaneMove={movePane}
-          onGroupRename={renameTab}
-          rightContent={rightContent}
-          mainTabAccessories={mainTabAccessories}
-          mainTabContextMenu={mainTabContextMenu}
-        />
-        <div className="flex-1 min-h-0 relative">
-          <TerminalSplitGroup
-            ref={splitGroupRef}
-            key={activeGroupId}
-            panes={paneProps}
-            isActive={isActive}
-            onAttached={handlePaneAttached}
-            onOpenUrl={onOpenUrl}
-            onOpenFile={onOpenFile}
+    // Build pane props for the active group
+    const paneProps = useMemo(() => {
+      if (!activeGroup) return []
+      return activeGroup.tabs.map((tab) => {
+        const canClose = !tab.isMain
+        return {
+          tab,
+          taskId,
+          sessionId: getSessionId(tab.id),
+          cwd,
+          conversationId: tab.isMain ? conversationId : undefined,
+          existingConversationId: tab.isMain ? existingConversationId : undefined,
+          supportsSessionId: tab.isMain ? supportsSessionId : undefined,
+          initialPrompt: tab.isMain ? initialPrompt : undefined,
+          providerFlags: tab.isMain ? providerFlags : undefined,
+          executionContext,
+          onConversationCreated: tab.isMain ? handleConversationCreated : undefined,
+          onSessionInvalid: tab.isMain ? onSessionInvalid : undefined,
+          onReady: tab.isMain ? handleTerminalReady : undefined,
+          onFirstInput: tab.isMain ? onFirstInput : undefined,
+          onRetry: tab.isMain ? onRetry : undefined,
+          // Context menu callbacks
+          onSplit: () => handleSplitGroup(activeGroup.id),
+          onNewGroup: () => {
+            pendingFocusRef.current = true
+            createTab()
+          },
+          onClose: canClose
+            ? () => {
+                if (activeGroup.tabs.length === 1) {
+                  void closeGroup(activeGroup.id)
+                } else {
+                  void closeTab(tab.id)
+                }
+              }
+            : null,
+          onRename: tab.isMain ? null : () => tabBarRef.current?.startRename(tab.id),
+          onResetSession: tab.isMain && onMainReset ? onMainReset : null
+        }
+      })
+    }, [
+      activeGroup,
+      getSessionId,
+      cwd,
+      taskId,
+      conversationId,
+      existingConversationId,
+      supportsSessionId,
+      initialPrompt,
+      providerFlags,
+      executionContext,
+      handleConversationCreated,
+      onSessionInvalid,
+      handleTerminalReady,
+      onFirstInput,
+      onRetry,
+      handleSplitGroup,
+      createTab,
+      closeGroup,
+      closeTab,
+      onMainReset
+    ])
+
+    return (
+      <div className="h-full flex" style={terminalPanelStyle as React.CSSProperties | undefined}>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <TerminalTabBar
+            ref={tabBarRef}
+            groups={groups}
+            activeGroupId={activeGroupId}
+            terminalTitles={terminalTitles}
+            onGroupSelect={(groupId) => {
+              pendingFocusRef.current = true
+              setActiveGroupId(groupId)
+            }}
+            onGroupCreate={() => {
+              pendingFocusRef.current = true
+              createTab()
+            }}
+            onGroupClose={closeGroup}
+            onGroupSplit={handleSplitGroup}
+            onPaneClose={closeTab}
+            onPaneMove={movePane}
+            onGroupRename={renameTab}
+            rightContent={rightContent}
+            mainTabAccessories={mainTabAccessories}
+            mainTabContextMenu={mainTabContextMenu}
           />
-          {overlay}
+          <div className="flex-1 min-h-0 relative">
+            <TerminalSplitGroup
+              ref={splitGroupRef}
+              key={activeGroupId}
+              panes={paneProps}
+              isActive={isActive}
+              onAttached={handlePaneAttached}
+              onOpenUrl={onOpenUrl}
+              onOpenFile={onOpenFile}
+            />
+            {overlay}
+          </div>
         </div>
       </div>
-    </div>
-  )
-})
+    )
+  }
+)

@@ -1,11 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import {
-  ExternalLink,
-  GitPullRequest,
-  GitMerge,
-  CircleDot,
-  CircleX
-} from 'lucide-react'
+import { ExternalLink, GitPullRequest, GitMerge, CircleDot, CircleX } from 'lucide-react'
 import { cn, PulseGrid } from '@slayzone/ui'
 import type { Task } from '@slayzone/task/shared'
 import type { GhPullRequest } from '../shared/types'
@@ -40,22 +34,27 @@ function usePrFilterState(projectId: string | null) {
       try {
         const value = await window.api.settings.get(key)
         if (value) setFilter({ ...DEFAULT_FILTER, ...JSON.parse(value) })
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     })()
   }, [key])
 
-  const updateFilter = useCallback((next: Partial<PrFilterState>) => {
-    setFilter(prev => {
-      const updated = { ...prev, ...next }
-      if (key) {
-        clearTimeout(saveTimerRef.current)
-        saveTimerRef.current = setTimeout(() => {
-          window.api.settings.set(key, JSON.stringify(updated))
-        }, 500)
-      }
-      return updated
-    })
-  }, [key])
+  const updateFilter = useCallback(
+    (next: Partial<PrFilterState>) => {
+      setFilter((prev) => {
+        const updated = { ...prev, ...next }
+        if (key) {
+          clearTimeout(saveTimerRef.current)
+          saveTimerRef.current = setTimeout(() => {
+            window.api.settings.set(key, JSON.stringify(updated))
+          }, 500)
+        }
+        return updated
+      })
+    },
+    [key]
+  )
 
   return { filter, updateFilter }
 }
@@ -84,7 +83,9 @@ export function ProjectPrTab({ projectPath, visible, tasks, onTaskClick }: Proje
         if (!cancelled) setLoading(false)
       }
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [visible, projectPath])
 
   // Build map of PR URL → task
@@ -95,7 +96,7 @@ export function ProjectPrTab({ projectPath, visible, tasks, onTaskClick }: Proje
 
   // Unique authors for filter
   const authors = useMemo(() => {
-    const set = new Set(prs.map(p => p.author))
+    const set = new Set(prs.map((p) => p.author))
     return Array.from(set).sort()
   }, [prs])
 
@@ -103,10 +104,10 @@ export function ProjectPrTab({ projectPath, visible, tasks, onTaskClick }: Proje
   const filteredPrs = useMemo(() => {
     let result = [...prs]
     if (filter.filterAuthor) {
-      result = result.filter(p => p.author === filter.filterAuthor)
+      result = result.filter((p) => p.author === filter.filterAuthor)
     }
     if (filter.filterReview) {
-      result = result.filter(p => p.reviewDecision === filter.filterReview)
+      result = result.filter((p) => p.reviewDecision === filter.filterReview)
     }
     switch (filter.sortBy) {
       case 'oldest':
@@ -135,9 +136,7 @@ export function ProjectPrTab({ projectPath, visible, tasks, onTaskClick }: Proje
   }
 
   if (error) {
-    return (
-      <div className="p-4 text-xs text-destructive">{error}</div>
-    )
+    return <div className="p-4 text-xs text-destructive">{error}</div>
   }
 
   if (prs.length === 0) {
@@ -158,7 +157,7 @@ export function ProjectPrTab({ projectPath, visible, tasks, onTaskClick }: Proje
         {/* Sort */}
         <select
           value={filter.sortBy}
-          onChange={e => updateFilter({ sortBy: e.target.value as PrFilterState['sortBy'] })}
+          onChange={(e) => updateFilter({ sortBy: e.target.value as PrFilterState['sortBy'] })}
           className="h-6 px-2 text-[11px] rounded border bg-transparent text-foreground"
         >
           <option value="newest">Newest</option>
@@ -169,17 +168,23 @@ export function ProjectPrTab({ projectPath, visible, tasks, onTaskClick }: Proje
         {authors.length > 1 && (
           <select
             value={filter.filterAuthor}
-            onChange={e => updateFilter({ filterAuthor: e.target.value })}
+            onChange={(e) => updateFilter({ filterAuthor: e.target.value })}
             className="h-6 px-2 text-[11px] rounded border bg-transparent text-foreground"
           >
             <option value="">All authors</option>
-            {authors.map(a => <option key={a} value={a}>{a}</option>)}
+            {authors.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
           </select>
         )}
         {/* Review filter */}
         <select
           value={filter.filterReview}
-          onChange={e => updateFilter({ filterReview: e.target.value as PrFilterState['filterReview'] })}
+          onChange={(e) =>
+            updateFilter({ filterReview: e.target.value as PrFilterState['filterReview'] })
+          }
           className="h-6 px-2 text-[11px] rounded border bg-transparent text-foreground"
         >
           <option value="">All reviews</option>
@@ -188,7 +193,9 @@ export function ProjectPrTab({ projectPath, visible, tasks, onTaskClick }: Proje
           <option value="REVIEW_REQUIRED">Review required</option>
         </select>
         {filteredPrs.length !== prs.length && (
-          <span className="text-[10px] text-muted-foreground ml-auto">{filteredPrs.length}/{prs.length}</span>
+          <span className="text-[10px] text-muted-foreground ml-auto">
+            {filteredPrs.length}/{prs.length}
+          </span>
         )}
       </div>
 
@@ -210,7 +217,9 @@ export function ProjectPrTab({ projectPath, visible, tasks, onTaskClick }: Proje
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium truncate">{pr.title}</span>
-                      <span className="text-[10px] text-muted-foreground shrink-0">#{pr.number}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        #{pr.number}
+                      </span>
                       <AgeBadge age={age} />
                     </div>
                     <div className="text-[10px] text-muted-foreground">

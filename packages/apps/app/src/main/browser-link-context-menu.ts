@@ -19,7 +19,7 @@ export function normalizeBrowserLinkContextMenuInput(
 ): BrowserLinkContextMenuInput {
   return {
     linkURL: input.linkURL.trim(),
-    linkText: input.linkText.trim(),
+    linkText: input.linkText.trim()
   }
 }
 
@@ -34,6 +34,6 @@ export function buildBrowserLinkContextMenuItems(
     { action: 'create-task-from-link', label: 'Create Task From Link' },
     { action: 'open-link-in-new-tab', label: 'Open Link in New Tab' },
     { action: 'copy-link', label: 'Copy Link' },
-    { action: 'open-link-externally', label: 'Open Link Externally' },
+    { action: 'open-link-externally', label: 'Open Link Externally' }
   ]
 }

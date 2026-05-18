@@ -21,7 +21,7 @@ export const CreateTaskInputSchema = z.object({
   parentId: z.string().optional(),
   isTemporary: z.boolean().optional(),
   repoName: z.string().nullable().optional(),
-  templateId: z.string().optional(),
+  templateId: z.string().optional()
 }) satisfies z.ZodType<CreateTaskInput>
 
 export type { Task as CreateTaskOutput } from '../types'

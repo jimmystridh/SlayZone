@@ -15,17 +15,15 @@ const automation: Automation = {
   enabled: true,
   trigger_config: {
     type: 'task_status_change',
-    params: { fromStatus: 'in_review', toStatus: 'done' },
+    params: { fromStatus: 'in_review', toStatus: 'done' }
   },
   conditions: [],
-  actions: [
-    { type: 'run_command', params: { command: 'printf close' } },
-  ],
+  actions: [{ type: 'run_command', params: { command: 'printf close' } }],
   run_count: 3,
   last_run_at: '2026-03-31T11:00:00.000Z',
   sort_order: 0,
   created_at: '2026-03-31T10:00:00.000Z',
-  updated_at: '2026-03-31T10:00:00.000Z',
+  updated_at: '2026-03-31T10:00:00.000Z'
 }
 
 beforeEach(() => {
@@ -46,10 +44,10 @@ beforeEach(() => {
           error: null,
           startedAt: '2026-03-31T11:00:00.000Z',
           completedAt: '2026-03-31T11:00:01.000Z',
-          durationMs: 1000,
-        },
-      ]),
-    },
+          durationMs: 1000
+        }
+      ])
+    }
   } as any
 })
 
@@ -83,8 +81,8 @@ describe('AutomationCard', () => {
         error: 'Partial warning',
         duration_ms: 1200,
         started_at: '2026-03-31T11:00:00.000Z',
-        completed_at: '2026-03-31T11:00:01.200Z',
-      },
+        completed_at: '2026-03-31T11:00:01.200Z'
+      }
     ])
 
     render(

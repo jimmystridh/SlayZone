@@ -20,9 +20,7 @@ describe('diffVersions default target', () => {
     // diff(v1) w/ no b should be v1 vs current (v2 = 'beta'), not vs latest (v3 = 'gamma').
     const result = diffVersions(env.db, env.blobStore, { artifactId: 'a1', a: 1 })
     if (result.kind !== 'text') throw new Error('expected text diff')
-    const allText = result.hunks
-      .flatMap((h) => h.lines.map((l) => l.text))
-      .join('\n')
+    const allText = result.hunks.flatMap((h) => h.lines.map((l) => l.text)).join('\n')
     expect(allText).toContain('beta')
     expect(allText).not.toContain('gamma')
   })
@@ -30,9 +28,7 @@ describe('diffVersions default target', () => {
   it('diffs explicit b ref', () => {
     const result = diffVersions(env.db, env.blobStore, { artifactId: 'a1', a: 1, b: 3 })
     if (result.kind !== 'text') throw new Error('expected text diff')
-    const allText = result.hunks
-      .flatMap((h) => h.lines.map((l) => l.text))
-      .join('\n')
+    const allText = result.hunks.flatMap((h) => h.lines.map((l) => l.text)).join('\n')
     expect(allText).toContain('gamma')
   })
 })

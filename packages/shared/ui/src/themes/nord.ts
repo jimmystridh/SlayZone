@@ -41,7 +41,7 @@ export const nord: UnifiedThemeDefinition = {
       surface2: '#3b4252',
       surface3: '#434c5e',
       modal: '#272c36',
-      modalBorder: 'rgba(216, 222, 233, 0.25)',
+      modalBorder: 'rgba(216, 222, 233, 0.25)'
     },
     terminal: {
       background: '#2e3440',
@@ -65,7 +65,7 @@ export const nord: UnifiedThemeDefinition = {
       brightBlue: '#81a1c1',
       brightMagenta: '#b48ead',
       brightCyan: '#8fbcbb',
-      brightWhite: '#eceff4',
+      brightWhite: '#eceff4'
     },
     editor: {
       background: '#2e3440',
@@ -85,7 +85,7 @@ export const nord: UnifiedThemeDefinition = {
       variable: '#d8dee9',
       property: '#d08770',
       link: '#88c0d0',
-      heading: '#d8dee9',
-    },
-  },
+      heading: '#d8dee9'
+    }
+  }
 }

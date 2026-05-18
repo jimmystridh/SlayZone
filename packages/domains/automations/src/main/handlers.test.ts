@@ -2,7 +2,12 @@
  * Automations handler contract tests
  * Run with: pnpm tsx --loader ./packages/shared/test-utils/loader.ts packages/domains/automations/src/main/handlers.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerAutomationHandlers } from './handlers.js'
 import type { Automation, AutomationRun } from '@slayzone/automations/shared'
 import type { AutomationEngine } from './engine.js'
@@ -14,7 +19,16 @@ const manualCalls: string[] = []
 const mockEngine = {
   async executeManual(id: string) {
     manualCalls.push(id)
-    return { id: 'run-1', automation_id: id, trigger_event: null, status: 'success', error: null, duration_ms: 10, started_at: '', completed_at: '' }
+    return {
+      id: 'run-1',
+      automation_id: id,
+      trigger_event: null,
+      status: 'success',
+      error: null,
+      duration_ms: 10,
+      started_at: '',
+      completed_at: ''
+    }
   }
 } as unknown as AutomationEngine
 
@@ -23,8 +37,12 @@ registerAutomationHandlers(h.ipcMain as never, h.db, mockEngine)
 // Seed projects
 const projectId = crypto.randomUUID()
 const projectId2 = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projectId, 'P1', '#000', '/tmp/p1')
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projectId2, 'P2', '#111', '/tmp/p2')
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(projectId, 'P1', '#000', '/tmp/p1')
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(projectId2, 'P2', '#111', '/tmp/p2')
 
 const triggerConfig = { type: 'task_status_change', params: { toStatus: 'done' } }
 const actions = [{ type: 'run_command', params: { command: 'echo hi' } }]
@@ -33,7 +51,12 @@ const actions = [{ type: 'run_command', params: { command: 'echo hi' } }]
 
 await describe('db:automations:create', () => {
   test('creates with required fields', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'Auto 1', trigger_config: triggerConfig, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'Auto 1',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     expect(a.name).toBe('Auto 1')
     expect(a.project_id).toBe(projectId)
     expect(a.enabled).toBe(true)
@@ -43,12 +66,22 @@ await describe('db:automations:create', () => {
   })
 
   test('description defaults to null', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'Auto 2', trigger_config: triggerConfig, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'Auto 2',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     expect(a.description).toBeNull()
   })
 
   test('conditions defaults to empty array', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'Auto 3', trigger_config: triggerConfig, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'Auto 3',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     expect(a.conditions).toHaveLength(0)
   })
 
@@ -60,18 +93,37 @@ await describe('db:automations:create', () => {
   })
 
   test('different project starts at sort_order 0', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId2, name: 'P2 Auto', trigger_config: triggerConfig, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId2,
+      name: 'P2 Auto',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     expect(a.sort_order).toBe(0)
   })
 
   test('stores description when provided', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'Described', description: 'A desc', trigger_config: triggerConfig, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'Described',
+      description: 'A desc',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     expect(a.description).toBe('A desc')
   })
 
   test('stores conditions when provided', () => {
-    const conditions = [{ type: 'task_property', params: { field: 'status', operator: 'equals', value: 'done' } }]
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'Conditional', trigger_config: triggerConfig, conditions, actions }) as Automation
+    const conditions = [
+      { type: 'task_property', params: { field: 'status', operator: 'equals', value: 'done' } }
+    ]
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'Conditional',
+      trigger_config: triggerConfig,
+      conditions,
+      actions
+    }) as Automation
     expect(a.conditions).toHaveLength(1)
     expect(a.conditions[0].type).toBe('task_property')
   })
@@ -126,7 +178,10 @@ await describe('db:automations:update', () => {
   test('updates name only', () => {
     const all = h.invoke('db:automations:getByProject', projectId) as Automation[]
     const orig = all[0]
-    const updated = h.invoke('db:automations:update', { id: orig.id, name: 'Renamed' }) as Automation
+    const updated = h.invoke('db:automations:update', {
+      id: orig.id,
+      name: 'Renamed'
+    }) as Automation
     expect(updated.name).toBe('Renamed')
     expect(updated.trigger_config.type).toBe(orig.trigger_config.type) // unchanged
   })
@@ -142,7 +197,10 @@ await describe('db:automations:update', () => {
   test('updates trigger_config', () => {
     const all = h.invoke('db:automations:getByProject', projectId) as Automation[]
     const newTrigger = { type: 'manual' as const, params: {} }
-    const a = h.invoke('db:automations:update', { id: all[0].id, trigger_config: newTrigger }) as Automation
+    const a = h.invoke('db:automations:update', {
+      id: all[0].id,
+      trigger_config: newTrigger
+    }) as Automation
     expect(a.trigger_config.type).toBe('manual')
   })
 
@@ -152,7 +210,7 @@ await describe('db:automations:update', () => {
       id: all[0].id,
       name: 'Multi',
       description: 'New desc',
-      actions: [{ type: 'change_task_status', params: { status: 'done' } }],
+      actions: [{ type: 'change_task_status', params: { status: 'done' } }]
     }) as Automation
     expect(a.name).toBe('Multi')
     expect(a.description).toBe('New desc')
@@ -168,8 +226,13 @@ await describe('db:automations:update', () => {
 
   test('updates conditions', () => {
     const all = h.invoke('db:automations:getByProject', projectId) as Automation[]
-    const newConditions = [{ type: 'task_property' as const, params: { field: 'worktree_path', operator: 'exists' } }]
-    const a = h.invoke('db:automations:update', { id: all[0].id, conditions: newConditions }) as Automation
+    const newConditions = [
+      { type: 'task_property' as const, params: { field: 'worktree_path', operator: 'exists' } }
+    ]
+    const a = h.invoke('db:automations:update', {
+      id: all[0].id,
+      conditions: newConditions
+    }) as Automation
     expect(a.conditions).toHaveLength(1)
     expect(a.conditions[0].params.field).toBe('worktree_path')
   })
@@ -187,7 +250,12 @@ await describe('db:automations:update', () => {
 
 await describe('db:automations:delete', () => {
   test('deletes existing → true', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'ToDelete', trigger_config: triggerConfig, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'ToDelete',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     expect(h.invoke('db:automations:delete', a.id)).toBe(true)
   })
 
@@ -196,13 +264,26 @@ await describe('db:automations:delete', () => {
   })
 
   test('CASCADE deletes related runs', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'WithRuns', trigger_config: triggerConfig, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'WithRuns',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     // Insert a run directly
-    h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))").run('run-x', a.id)
-    const runsBefore = h.db.prepare('SELECT * FROM automation_runs WHERE automation_id = ?').all(a.id)
+    h.db
+      .prepare(
+        "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))"
+      )
+      .run('run-x', a.id)
+    const runsBefore = h.db
+      .prepare('SELECT * FROM automation_runs WHERE automation_id = ?')
+      .all(a.id)
     expect(runsBefore).toHaveLength(1)
     h.invoke('db:automations:delete', a.id)
-    const runsAfter = h.db.prepare('SELECT * FROM automation_runs WHERE automation_id = ?').all(a.id)
+    const runsAfter = h.db
+      .prepare('SELECT * FROM automation_runs WHERE automation_id = ?')
+      .all(a.id)
     expect(runsAfter).toHaveLength(0)
   })
 })
@@ -224,7 +305,7 @@ await describe('db:automations:toggle', () => {
 await describe('db:automations:reorder', () => {
   test('reorders by ID array', () => {
     const all = h.invoke('db:automations:getByProject', projectId) as Automation[]
-    const reversed = [...all].reverse().map(a => a.id)
+    const reversed = [...all].reverse().map((a) => a.id)
     h.invoke('db:automations:reorder', reversed)
     const after = h.invoke('db:automations:getByProject', projectId) as Automation[]
     expect(after[0].id).toBe(reversed[0])
@@ -250,9 +331,22 @@ await describe('db:automations:getRuns', () => {
   })
 
   test('returns runs ordered by started_at DESC', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'RunTest', trigger_config: triggerConfig, actions }) as Automation
-    h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', '2026-01-01')").run('r1', a.id)
-    h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'error', '2026-01-02')").run('r2', a.id)
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'RunTest',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
+    h.db
+      .prepare(
+        "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', '2026-01-01')"
+      )
+      .run('r1', a.id)
+    h.db
+      .prepare(
+        "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'error', '2026-01-02')"
+      )
+      .run('r2', a.id)
     const runs = h.invoke('db:automations:getRuns', a.id) as AutomationRun[]
     expect(runs).toHaveLength(2)
     expect(runs[0].id).toBe('r2') // newer first
@@ -260,18 +354,36 @@ await describe('db:automations:getRuns', () => {
   })
 
   test('respects custom limit', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'LimitTest', trigger_config: triggerConfig, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'LimitTest',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     for (let i = 0; i < 5; i++) {
-      h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))").run(`lim-${i}`, a.id)
+      h.db
+        .prepare(
+          "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))"
+        )
+        .run(`lim-${i}`, a.id)
     }
     const runs = h.invoke('db:automations:getRuns', a.id, 2) as AutomationRun[]
     expect(runs).toHaveLength(2)
   })
 
   test('default limit is 50', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'DefaultLimitTest', trigger_config: triggerConfig, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'DefaultLimitTest',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     for (let i = 0; i < 60; i++) {
-      h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))").run(`dl-${i}`, a.id)
+      h.db
+        .prepare(
+          "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))"
+        )
+        .run(`dl-${i}`, a.id)
     }
     const runs = h.invoke('db:automations:getRuns', a.id) as AutomationRun[]
     expect(runs).toHaveLength(50)
@@ -282,19 +394,50 @@ await describe('db:automations:getRuns', () => {
 
 await describe('db:automations:clearRuns', () => {
   test('deletes all runs for automation', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'ClearTest', trigger_config: triggerConfig, actions }) as Automation
-    h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))").run('cr-1', a.id)
-    h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))").run('cr-2', a.id)
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'ClearTest',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
+    h.db
+      .prepare(
+        "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))"
+      )
+      .run('cr-1', a.id)
+    h.db
+      .prepare(
+        "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))"
+      )
+      .run('cr-2', a.id)
     h.invoke('db:automations:clearRuns', a.id)
     const runs = h.invoke('db:automations:getRuns', a.id) as AutomationRun[]
     expect(runs).toHaveLength(0)
   })
 
   test('does not affect other automations runs', () => {
-    const a1 = h.invoke('db:automations:create', { project_id: projectId, name: 'Clear1', trigger_config: triggerConfig, actions }) as Automation
-    const a2 = h.invoke('db:automations:create', { project_id: projectId, name: 'Clear2', trigger_config: triggerConfig, actions }) as Automation
-    h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))").run('iso-1', a1.id)
-    h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))").run('iso-2', a2.id)
+    const a1 = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'Clear1',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
+    const a2 = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'Clear2',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
+    h.db
+      .prepare(
+        "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))"
+      )
+      .run('iso-1', a1.id)
+    h.db
+      .prepare(
+        "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))"
+      )
+      .run('iso-2', a2.id)
     h.invoke('db:automations:clearRuns', a1.id)
     const runs1 = h.invoke('db:automations:getRuns', a1.id) as AutomationRun[]
     const runs2 = h.invoke('db:automations:getRuns', a2.id) as AutomationRun[]
@@ -307,7 +450,12 @@ await describe('db:automations:clearRuns', () => {
 
 await describe('db:automations:runManual', () => {
   test('delegates to engine.executeManual', async () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'ManualTest', trigger_config: { type: 'manual', params: {} }, actions }) as Automation
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'ManualTest',
+      trigger_config: { type: 'manual', params: {} },
+      actions
+    }) as Automation
     manualCalls.length = 0
     await h.invoke('db:automations:runManual', a.id)
     expect(manualCalls).toHaveLength(1)
@@ -334,8 +482,17 @@ await describe('db:automations:reorder edge cases', () => {
 
 await describe('db:automations:getRuns edge cases', () => {
   test('limit=0 returns no runs (SQL LIMIT 0)', () => {
-    const a = h.invoke('db:automations:create', { project_id: projectId, name: 'Limit0Test', trigger_config: triggerConfig, actions }) as Automation
-    h.db.prepare("INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))").run('lz-1', a.id)
+    const a = h.invoke('db:automations:create', {
+      project_id: projectId,
+      name: 'Limit0Test',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
+    h.db
+      .prepare(
+        "INSERT INTO automation_runs (id, automation_id, status, started_at) VALUES (?, ?, 'success', datetime('now'))"
+      )
+      .run('lz-1', a.id)
     const runs = h.invoke('db:automations:getRuns', a.id, 0) as AutomationRun[]
     expect(runs).toHaveLength(0)
   })
@@ -346,8 +503,15 @@ await describe('db:automations:getRuns edge cases', () => {
 await describe('project deletion cascade', () => {
   test('deleting project cascades to its automations', () => {
     const tempProjId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(tempProjId, 'TempProj', '#000', '/tmp/tp')
-    const a = h.invoke('db:automations:create', { project_id: tempProjId, name: 'CascadeTest', trigger_config: triggerConfig, actions }) as Automation
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(tempProjId, 'TempProj', '#000', '/tmp/tp')
+    const a = h.invoke('db:automations:create', {
+      project_id: tempProjId,
+      name: 'CascadeTest',
+      trigger_config: triggerConfig,
+      actions
+    }) as Automation
     expect(a.id).toBeTruthy()
     h.db.prepare('DELETE FROM projects WHERE id = ?').run(tempProjId)
     const result = h.invoke('db:automations:get', a.id)

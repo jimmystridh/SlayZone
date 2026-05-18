@@ -37,7 +37,9 @@ export function execAsync(
 
     let timer: ReturnType<typeof setTimeout> | undefined
     if (opts.timeout) {
-      timer = setTimeout(() => { child.kill('SIGTERM') }, opts.timeout)
+      timer = setTimeout(() => {
+        child.kill('SIGTERM')
+      }, opts.timeout)
     }
 
     child.on('close', (code) => {
@@ -50,9 +52,13 @@ export function execAsync(
         level: code === 0 ? 'info' : 'error',
         source,
         event: code === 0 ? `${source}.command` : `${source}.command_failed`,
-        message: code === 0 ? label : (stderrStr.trim() || `command failed: ${label}`),
+        message: code === 0 ? label : stderrStr.trim() || `command failed: ${label}`,
         payload: {
-          command: label, cwd: opts.cwd, durationMs, success: code === 0, exitCode: code,
+          command: label,
+          cwd: opts.cwd,
+          durationMs,
+          success: code === 0,
+          exitCode: code,
           ...(code !== 0 && { stderr: trimOutput(stderrStr), stdout: trimOutput(stdoutStr) })
         }
       })
@@ -71,7 +77,11 @@ export function execGit(args: string[], options: { cwd: string }): Promise<strin
   return execAsync('git', args, { cwd: options.cwd }).then((result) => {
     if (result.status !== 0) {
       const errMsg = result.stderr.trim() || `git command failed: git ${args.join(' ')}`
-      const error = new Error(errMsg) as Error & { status: number | null; stderr: string; stdout: string }
+      const error = new Error(errMsg) as Error & {
+        status: number | null
+        stderr: string
+        stdout: string
+      }
       error.status = result.status
       error.stderr = result.stderr
       error.stdout = result.stdout
@@ -83,5 +93,5 @@ export function execGit(args: string[], options: { cwd: string }): Promise<strin
 
 /** Like execGit, but appends -z for NUL-delimited output and returns a parsed filename array. */
 export function execGitFileList(args: string[], options: { cwd: string }): Promise<string[]> {
-  return execGit([...args, '-z'], options).then(out => out.split('\0').filter(Boolean))
+  return execGit([...args, '-z'], options).then((out) => out.split('\0').filter(Boolean))
 }

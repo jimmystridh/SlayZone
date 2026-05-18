@@ -1,10 +1,27 @@
-import { test, expect, seed, resetApp, goHome, clickProject, TEST_PROJECT_PATH } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  resetApp,
+  goHome,
+  clickProject,
+  TEST_PROJECT_PATH
+} from '../fixtures/electron'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const RESULTS_DIR = path.resolve(__dirname, '..', '..', '..', '..', '..', 'working-notes', 'performance')
+const RESULTS_DIR = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  '..',
+  '..',
+  'working-notes',
+  'performance'
+)
 
 interface PerfMetrics {
   timestamp: string
@@ -71,7 +88,7 @@ test.describe('Performance Profiling', () => {
       return {
         usedMB: Math.round(m.usedJSHeapSize / 1048576),
         totalMB: Math.round(m.totalJSHeapSize / 1048576),
-        limitMB: Math.round(m.jsHeapSizeLimit / 1048576),
+        limitMB: Math.round(m.jsHeapSizeLimit / 1048576)
       }
     })
     metrics.memory = mem
@@ -98,7 +115,7 @@ test.describe('Performance Profiling', () => {
         svgChildren,
         svgPctOfDOM: Math.round((svgChildren / total) * 100),
         canvases: document.getElementsByTagName('canvas').length,
-        styleElements: document.getElementsByTagName('style').length,
+        styleElements: document.getElementsByTagName('style').length
       }
     })
     metrics.dom = dom
@@ -116,7 +133,7 @@ test.describe('Performance Profiling', () => {
       const fcp = entries.find((e) => e.name === 'first-contentful-paint')
       return {
         firstPaint: Math.round(fp?.startTime ?? -1),
-        firstContentfulPaint: Math.round(fcp?.startTime ?? -1),
+        firstContentfulPaint: Math.round(fcp?.startTime ?? -1)
       }
     })
     metrics.paint = paint
@@ -135,8 +152,8 @@ test.describe('Performance Profiling', () => {
         count: entries.length,
         slowest: sorted.slice(0, 10).map((e) => ({
           name: e.name.split('/').pop()?.substring(0, 60) ?? '',
-          durationMs: Math.round(e.duration),
-        })),
+          durationMs: Math.round(e.duration)
+        }))
       }
     })
     metrics.resources = resources
@@ -187,7 +204,7 @@ test.describe('Performance Profiling', () => {
     metrics.interaction = {
       tabSwitchMs: switchMs,
       taskOpenMs: 0,
-      refreshDataMs: 0,
+      refreshDataMs: 0
     }
     // Wait for home to render
     await mainWindow.waitForTimeout(500)
@@ -238,7 +255,7 @@ test.describe('Performance Profiling', () => {
         taskCount: 100,
         domNodesAtScale: document.getElementsByTagName('*').length,
         memoryAtScaleMB: Math.round(mem.usedJSHeapSize / 1048576),
-        loadBoardDataAtScaleMs: loadMs,
+        loadBoardDataAtScaleMs: loadMs
       }
     })
     metrics.scaling = scaleData
@@ -258,7 +275,7 @@ test.describe('Performance Profiling', () => {
 
     // Interact during profiling
     await mainWindow.evaluate(() => {
-      (window as any).__slayzone_refreshData?.()
+      ;(window as any).__slayzone_refreshData?.()
     })
     await mainWindow.waitForTimeout(1_000)
 
@@ -274,13 +291,14 @@ test.describe('Performance Profiling', () => {
       domNodes: extract(afterMetrics, 'Nodes'),
       jsEventListenersBefore: extract(beforeMetrics, 'JSEventListeners'),
       jsEventListeners: extract(afterMetrics, 'JSEventListeners'),
-      jsEventListenersDelta: extract(afterMetrics, 'JSEventListeners') - extract(beforeMetrics, 'JSEventListeners'),
+      jsEventListenersDelta:
+        extract(afterMetrics, 'JSEventListeners') - extract(beforeMetrics, 'JSEventListeners'),
       layoutCount: extract(afterMetrics, 'LayoutCount'),
       recalcStyleCount: extract(afterMetrics, 'RecalcStyleCount'),
       layoutDuration: Math.round(extract(afterMetrics, 'LayoutDuration') * 1000),
       recalcStyleDuration: Math.round(extract(afterMetrics, 'RecalcStyleDuration') * 1000),
       scriptDuration: Math.round(extract(afterMetrics, 'ScriptDuration') * 1000),
-      taskDuration: Math.round(extract(afterMetrics, 'TaskDuration') * 1000),
+      taskDuration: Math.round(extract(afterMetrics, 'TaskDuration') * 1000)
     }
 
     writePerfResults('cdp-metrics', cdpData)

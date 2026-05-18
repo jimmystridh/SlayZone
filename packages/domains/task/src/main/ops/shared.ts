@@ -3,7 +3,13 @@ import type { Database } from 'better-sqlite3'
 import type { ProviderConfig, Task, UpdateTaskInput } from '@slayzone/task/shared'
 import { validateReparent, reparentErrorMessage, type ReparentTaskRow } from '@slayzone/task/shared'
 import type { ColumnConfig } from '@slayzone/projects/shared'
-import { getDefaultStatus, getStatusByCategory, isKnownStatus, isTerminalStatus, parseColumnsConfig } from '@slayzone/projects/shared'
+import {
+  getDefaultStatus,
+  getStatusByCategory,
+  isKnownStatus,
+  isTerminalStatus,
+  parseColumnsConfig
+} from '@slayzone/projects/shared'
 import { DEFAULT_TERMINAL_MODES } from '@slayzone/terminal/shared'
 import path from 'path'
 import { existsSync, rmSync } from 'fs'
@@ -16,11 +22,11 @@ import {
   copyIgnoredFiles,
   resolveCopyBehavior,
   getWorktreeColor,
-  ensureProjectWorktreeColors,
+  ensureProjectWorktreeColors
 } from '@slayzone/worktrees/main'
 import {
   DEFAULT_WORKTREE_BASE_PATH_TEMPLATE,
-  resolveWorktreeBasePathTemplate,
+  resolveWorktreeBasePathTemplate
 } from '@slayzone/worktrees/shared'
 
 export type DiagnosticLevel = 'debug' | 'info' | 'warn' | 'error'
@@ -71,13 +77,18 @@ export function getRuntimeAdapters(): TaskRuntimeAdapters {
 
 export function safeJsonParse(value: unknown): unknown {
   if (!value || typeof value !== 'string') return null
-  try { return JSON.parse(value) } catch { return null }
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
 }
 
 // Parse JSON columns from DB row
 export function parseTask(row: Record<string, unknown> | undefined): Task | null {
   if (!row) return null
-  const providerConfig: ProviderConfig = (safeJsonParse(row.provider_config) as ProviderConfig) ?? {}
+  const providerConfig: ProviderConfig =
+    (safeJsonParse(row.provider_config) as ProviderConfig) ?? {}
   return {
     ...row,
     dangerously_skip_permissions: Boolean(row.dangerously_skip_permissions),
@@ -140,18 +151,27 @@ export async function attachWorktreeColors(db: Database, tasks: Task[]): Promise
   })
 }
 
-export async function parseAndColorTasks(db: Database, rows: Record<string, unknown>[]): Promise<Task[]> {
+export async function parseAndColorTasks(
+  db: Database,
+  rows: Record<string, unknown>[]
+): Promise<Task[]> {
   return attachWorktreeColors(db, parseTasks(rows))
 }
 
-export async function parseAndColorTask(db: Database, row: Record<string, unknown> | undefined): Promise<Task | null> {
+export async function parseAndColorTask(
+  db: Database,
+  row: Record<string, unknown> | undefined
+): Promise<Task | null> {
   const task = parseTask(row)
   if (!task) return null
   const [colored] = await attachWorktreeColors(db, [task])
   return colored
 }
 
-export async function colorOne<T extends Task | null | undefined>(db: Database, task: T): Promise<T> {
+export async function colorOne<T extends Task | null | undefined>(
+  db: Database,
+  task: T
+): Promise<T> {
   if (!task) return task
   const [colored] = await attachWorktreeColors(db, [task])
   return colored as T
@@ -169,22 +189,26 @@ export type TerminalModeFlagsRow = { id: string; default_flags: string | null }
 export function getEnabledModeDefaults(db: Database): TerminalModeFlagsRow[] {
   let rows: TerminalModeFlagsRow[] = []
   try {
-    rows = db.prepare('SELECT id, default_flags FROM terminal_modes WHERE enabled = 1').all() as TerminalModeFlagsRow[]
+    rows = db
+      .prepare('SELECT id, default_flags FROM terminal_modes WHERE enabled = 1')
+      .all() as TerminalModeFlagsRow[]
   } catch {
     rows = []
   }
 
   if (rows.length > 0) return rows
 
-  return DEFAULT_TERMINAL_MODES
-    .filter((mode) => mode.enabled)
-    .map((mode) => ({ id: mode.id, default_flags: mode.defaultFlags ?? '' }))
+  return DEFAULT_TERMINAL_MODES.filter((mode) => mode.enabled).map((mode) => ({
+    id: mode.id,
+    default_flags: mode.defaultFlags ?? ''
+  }))
 }
 
 export function getModeDefaultFlags(db: Database, modeId: string): string | undefined {
   try {
-    const row = db.prepare('SELECT default_flags FROM terminal_modes WHERE id = ?')
-      .get(modeId) as { default_flags: string | null } | undefined
+    const row = db.prepare('SELECT default_flags FROM terminal_modes WHERE id = ?').get(modeId) as
+      | { default_flags: string | null }
+      | undefined
     if (row) return row.default_flags ?? ''
   } catch {
     // Fall back to built-in defaults when terminal_modes is unavailable or unseeded.
@@ -202,16 +226,24 @@ export function cleanupTaskImmediate(taskId: string): void {
 /** Kill PTY + processes + remove worktree + artifact files — used for archive and hard purge.
  *  `batchIds` lists every task being cleaned up in the same operation so the shared-worktree
  *  guard ignores siblings that are about to be archived (e.g. cascade from parent). */
-export async function cleanupTaskFull(db: Database, taskId: string, batchIds: string[] = [taskId]): Promise<void> {
+export async function cleanupTaskFull(
+  db: Database,
+  taskId: string,
+  batchIds: string[] = [taskId]
+): Promise<void> {
   cleanupTaskImmediate(taskId)
   runtimeAdapters.killTaskProcesses(taskId)
   // Clean up artifact files on disk
-  const artifactsBaseDir = path.join(process.env.SLAYZONE_DB_DIR || app.getPath('userData'), 'artifacts', taskId)
+  const artifactsBaseDir = path.join(
+    process.env.SLAYZONE_DB_DIR || app.getPath('userData'),
+    'artifacts',
+    taskId
+  )
   if (existsSync(artifactsBaseDir)) rmSync(artifactsBaseDir, { recursive: true, force: true })
 
-  const task = db.prepare(
-    'SELECT worktree_path, project_id FROM tasks WHERE id = ?'
-  ).get(taskId) as { worktree_path: string | null; project_id: string } | undefined
+  const task = db.prepare('SELECT worktree_path, project_id FROM tasks WHERE id = ?').get(taskId) as
+    | { worktree_path: string | null; project_id: string }
+    | undefined
 
   if (!task?.worktree_path) return
 
@@ -220,14 +252,16 @@ export async function cleanupTaskFull(db: Database, taskId: string, batchIds: st
   // siblings short-circuit on `existsSync(worktreePath)` inside removeWorktree.
   const ids = batchIds.length > 0 ? batchIds : [taskId]
   const placeholders = ids.map(() => '?').join(',')
-  const sharedRow = db.prepare(
-    `SELECT COUNT(*) AS n FROM tasks WHERE worktree_path = ? AND id NOT IN (${placeholders}) AND archived_at IS NULL AND deleted_at IS NULL`
-  ).get(task.worktree_path, ...ids) as { n: number } | undefined
+  const sharedRow = db
+    .prepare(
+      `SELECT COUNT(*) AS n FROM tasks WHERE worktree_path = ? AND id NOT IN (${placeholders}) AND archived_at IS NULL AND deleted_at IS NULL`
+    )
+    .get(task.worktree_path, ...ids) as { n: number } | undefined
   if ((sharedRow?.n ?? 0) > 0) return
 
-  const project = db.prepare(
-    'SELECT path FROM projects WHERE id = ?'
-  ).get(task.project_id) as { path: string } | undefined
+  const project = db.prepare('SELECT path FROM projects WHERE id = ?').get(task.project_id) as
+    | { path: string }
+    | undefined
 
   if (project?.path) {
     try {
@@ -262,16 +296,16 @@ function parseBooleanSetting(value: string | null | undefined): boolean {
 }
 
 function isAutoCreateWorktreeEnabled(db: Database, projectId: string): boolean {
-  const projectRow = db.prepare(
-    'SELECT auto_create_worktree_on_task_create FROM projects WHERE id = ?'
-  ).get(projectId) as { auto_create_worktree_on_task_create: number | null } | undefined
+  const projectRow = db
+    .prepare('SELECT auto_create_worktree_on_task_create FROM projects WHERE id = ?')
+    .get(projectId) as { auto_create_worktree_on_task_create: number | null } | undefined
 
   if (projectRow?.auto_create_worktree_on_task_create === 1) return true
   if (projectRow?.auto_create_worktree_on_task_create === 0) return false
 
-  const globalRow = db.prepare(
-    "SELECT value FROM settings WHERE key = 'auto_create_worktree_on_task_create'"
-  ).get() as { value: string } | undefined
+  const globalRow = db
+    .prepare("SELECT value FROM settings WHERE key = 'auto_create_worktree_on_task_create'")
+    .get() as { value: string } | undefined
   return parseBooleanSetting(globalRow?.value)
 }
 
@@ -284,9 +318,9 @@ export async function maybeAutoCreateWorktree(
 ): Promise<void> {
   if (!isAutoCreateWorktreeEnabled(db, projectId)) return
 
-  const projectRow = db.prepare('SELECT path, worktree_source_branch FROM projects WHERE id = ?').get(projectId) as
-    | { path: string | null; worktree_source_branch: string | null }
-    | undefined
+  const projectRow = db
+    .prepare('SELECT path, worktree_source_branch FROM projects WHERE id = ?')
+    .get(projectId) as { path: string | null; worktree_source_branch: string | null } | undefined
   if (!projectRow?.path) {
     runtimeAdapters.recordDiagnosticEvent({
       level: 'info',
@@ -322,8 +356,11 @@ export async function maybeAutoCreateWorktree(
   }
 
   const baseTemplate =
-    (db.prepare("SELECT value FROM settings WHERE key = 'worktree_base_path'")
-      .get() as { value: string } | undefined)?.value || DEFAULT_WORKTREE_BASE_PATH_TEMPLATE
+    (
+      db.prepare("SELECT value FROM settings WHERE key = 'worktree_base_path'").get() as
+        | { value: string }
+        | undefined
+    )?.value || DEFAULT_WORKTREE_BASE_PATH_TEMPLATE
   const basePath = resolveWorktreeBasePathTemplate(baseTemplate, repoPath)
   const branch = slugify(taskTitle) || `task-${taskId.slice(0, 8)}`
   const worktreePath = path.join(basePath, branch)
@@ -404,9 +441,9 @@ export async function maybeAutoCreateWorktree(
 }
 
 export function updateTask(db: Database, data: UpdateTaskInput): Task | null {
-  const existing = db.prepare('SELECT project_id, status, is_temporary FROM tasks WHERE id = ?').get(data.id) as
-    | { project_id: string; status: string; is_temporary: number }
-    | undefined
+  const existing = db
+    .prepare('SELECT project_id, status, is_temporary FROM tasks WHERE id = ?')
+    .get(data.id) as { project_id: string; status: string; is_temporary: number } | undefined
   const targetProjectId = data.projectId ?? existing?.project_id
   const targetColumns = targetProjectId ? getProjectColumns(db, targetProjectId) : null
   const projectChanged = data.projectId !== undefined && existing?.project_id !== data.projectId
@@ -423,7 +460,8 @@ export function updateTask(db: Database, data: UpdateTaskInput): Task | null {
       ? data.status
       : getDefaultStatus(targetColumns)
   } else if (shouldPromoteFromTemp) {
-    normalizedStatusForWrite = getStatusByCategory('started', targetColumns) ?? getDefaultStatus(targetColumns)
+    normalizedStatusForWrite =
+      getStatusByCategory('started', targetColumns) ?? getDefaultStatus(targetColumns)
   } else if (projectChanged && existing?.status && !isKnownStatus(existing.status, targetColumns)) {
     normalizedStatusForWrite = getDefaultStatus(targetColumns)
   }
@@ -431,61 +469,153 @@ export function updateTask(db: Database, data: UpdateTaskInput): Task | null {
   const fields: string[] = []
   const values: unknown[] = []
 
-  if (data.title !== undefined) { fields.push('title = ?'); values.push(data.title) }
-  if (data.description !== undefined) { fields.push('description = ?', "description_format = 'markdown'"); values.push(data.description) }
+  if (data.title !== undefined) {
+    fields.push('title = ?')
+    values.push(data.title)
+  }
+  if (data.description !== undefined) {
+    fields.push('description = ?', "description_format = 'markdown'")
+    values.push(data.description)
+  }
   if (data.status !== undefined || normalizedStatusForWrite !== undefined) {
     fields.push('status = ?')
     values.push(normalizedStatusForWrite ?? data.status)
   }
-  if (data.assignee !== undefined) { fields.push('assignee = ?'); values.push(data.assignee) }
-  if (data.priority !== undefined) { fields.push('priority = ?'); values.push(data.priority) }
+  if (data.assignee !== undefined) {
+    fields.push('assignee = ?')
+    values.push(data.assignee)
+  }
+  if (data.priority !== undefined) {
+    fields.push('priority = ?')
+    values.push(data.priority)
+  }
   if (data.progress !== undefined) {
     fields.push('progress = ?')
     values.push(Math.max(0, Math.min(100, Math.round(data.progress))))
   }
-  if (data.dueDate !== undefined) { fields.push('due_date = ?'); values.push(data.dueDate) }
+  if (data.dueDate !== undefined) {
+    fields.push('due_date = ?')
+    values.push(data.dueDate)
+  }
   if (data.projectId !== undefined) {
-    fields.push('project_id = ?'); values.push(data.projectId)
+    fields.push('project_id = ?')
+    values.push(data.projectId)
     if (projectChanged) {
       // Clear repo/worktree/base_dir fields — child repos and worktrees may differ across projects
-      if (data.repoName === undefined) { fields.push('repo_name = ?'); values.push(null) }
-      if (data.worktreePath === undefined) { fields.push('worktree_path = ?'); values.push(null) }
-      if (data.worktreeParentBranch === undefined) { fields.push('worktree_parent_branch = ?'); values.push(null) }
-      if (data.baseDir === undefined) { fields.push('base_dir = ?'); values.push(null) }
+      if (data.repoName === undefined) {
+        fields.push('repo_name = ?')
+        values.push(null)
+      }
+      if (data.worktreePath === undefined) {
+        fields.push('worktree_path = ?')
+        values.push(null)
+      }
+      if (data.worktreeParentBranch === undefined) {
+        fields.push('worktree_parent_branch = ?')
+        values.push(null)
+      }
+      if (data.baseDir === undefined) {
+        fields.push('base_dir = ?')
+        values.push(null)
+      }
     }
   }
   if (data.parentId !== undefined) {
-    const lookupStmt = db.prepare('SELECT id, project_id, parent_id, archived_at, deleted_at FROM tasks WHERE id = ?')
+    const lookupStmt = db.prepare(
+      'SELECT id, project_id, parent_id, archived_at, deleted_at FROM tasks WHERE id = ?'
+    )
     const result = validateReparent({
       taskId: data.id,
       parentId: data.parentId,
       targetProjectId,
-      lookup: (id) => (lookupStmt.get(id) as ReparentTaskRow | undefined) ?? null,
+      lookup: (id) => (lookupStmt.get(id) as ReparentTaskRow | undefined) ?? null
     })
     if (!result.ok) {
-      throw new Error(reparentErrorMessage(result.error, { taskId: data.id, parentId: data.parentId }))
+      throw new Error(
+        reparentErrorMessage(result.error, { taskId: data.id, parentId: data.parentId })
+      )
     }
-    fields.push('parent_id = ?'); values.push(data.parentId)
+    fields.push('parent_id = ?')
+    values.push(data.parentId)
   }
-  if (data.terminalMode !== undefined) { fields.push('terminal_mode = ?'); values.push(data.terminalMode) }
-  if (data.terminalShell !== undefined) { fields.push('terminal_shell = ?'); values.push(data.terminalShell) }
+  if (data.terminalMode !== undefined) {
+    fields.push('terminal_mode = ?')
+    values.push(data.terminalMode)
+  }
+  if (data.terminalShell !== undefined) {
+    fields.push('terminal_shell = ?')
+    values.push(data.terminalShell)
+  }
 
   // --- Provider config: merge providerConfig + legacy per-field updates ---
   {
-    const legacyMappings: Array<{ mode: string; col: string; convId?: string | null; flags?: string; hasConvId: boolean; hasFlags: boolean }> = [
-      { mode: 'claude-code', col: 'claude', convId: data.claudeConversationId, flags: data.claudeFlags, hasConvId: data.claudeConversationId !== undefined, hasFlags: data.claudeFlags !== undefined },
-      { mode: 'codex', col: 'codex', convId: data.codexConversationId, flags: data.codexFlags, hasConvId: data.codexConversationId !== undefined, hasFlags: data.codexFlags !== undefined },
-      { mode: 'cursor-agent', col: 'cursor', convId: data.cursorConversationId, flags: data.cursorFlags, hasConvId: data.cursorConversationId !== undefined, hasFlags: data.cursorFlags !== undefined },
-      { mode: 'gemini', col: 'gemini', convId: data.geminiConversationId, flags: data.geminiFlags, hasConvId: data.geminiConversationId !== undefined, hasFlags: data.geminiFlags !== undefined },
-      { mode: 'opencode', col: 'opencode', convId: data.opencodeConversationId, flags: data.opencodeFlags, hasConvId: data.opencodeConversationId !== undefined, hasFlags: data.opencodeFlags !== undefined },
+    const legacyMappings: Array<{
+      mode: string
+      col: string
+      convId?: string | null
+      flags?: string
+      hasConvId: boolean
+      hasFlags: boolean
+    }> = [
+      {
+        mode: 'claude-code',
+        col: 'claude',
+        convId: data.claudeConversationId,
+        flags: data.claudeFlags,
+        hasConvId: data.claudeConversationId !== undefined,
+        hasFlags: data.claudeFlags !== undefined
+      },
+      {
+        mode: 'codex',
+        col: 'codex',
+        convId: data.codexConversationId,
+        flags: data.codexFlags,
+        hasConvId: data.codexConversationId !== undefined,
+        hasFlags: data.codexFlags !== undefined
+      },
+      {
+        mode: 'cursor-agent',
+        col: 'cursor',
+        convId: data.cursorConversationId,
+        flags: data.cursorFlags,
+        hasConvId: data.cursorConversationId !== undefined,
+        hasFlags: data.cursorFlags !== undefined
+      },
+      {
+        mode: 'gemini',
+        col: 'gemini',
+        convId: data.geminiConversationId,
+        flags: data.geminiFlags,
+        hasConvId: data.geminiConversationId !== undefined,
+        hasFlags: data.geminiFlags !== undefined
+      },
+      {
+        mode: 'opencode',
+        col: 'opencode',
+        convId: data.opencodeConversationId,
+        flags: data.opencodeFlags,
+        hasConvId: data.opencodeConversationId !== undefined,
+        hasFlags: data.opencodeFlags !== undefined
+      }
     ]
-    const hasLegacyUpdate = legacyMappings.some(m => m.hasConvId || m.hasFlags)
-    const shouldResetConversationIds = (data.worktreePath !== undefined || data.baseDir !== undefined || projectChanged) && data.providerConfig === undefined && !hasLegacyUpdate
+    const hasLegacyUpdate = legacyMappings.some((m) => m.hasConvId || m.hasFlags)
+    const shouldResetConversationIds =
+      (data.worktreePath !== undefined || data.baseDir !== undefined || projectChanged) &&
+      data.providerConfig === undefined &&
+      !hasLegacyUpdate
 
-    if (data.providerConfig !== undefined || hasLegacyUpdate || data.terminalMode !== undefined || shouldResetConversationIds) {
+    if (
+      data.providerConfig !== undefined ||
+      hasLegacyUpdate ||
+      data.terminalMode !== undefined ||
+      shouldResetConversationIds
+    ) {
       // Read current provider_config
-      const currentRow = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(data.id) as { provider_config: string } | undefined
-      const current: ProviderConfig = (safeJsonParse(currentRow?.provider_config) as ProviderConfig) ?? {}
+      const currentRow = db
+        .prepare('SELECT provider_config FROM tasks WHERE id = ?')
+        .get(data.id) as { provider_config: string } | undefined
+      const current: ProviderConfig =
+        (safeJsonParse(currentRow?.provider_config) as ProviderConfig) ?? {}
       // Deep merge: per-mode entry merge so partial updates don't clobber existing fields
       const merged: ProviderConfig = { ...current }
 
@@ -519,28 +649,49 @@ export function updateTask(db: Database, data: UpdateTaskInput): Task | null {
         }
       }
 
-      fields.push('provider_config = ?'); values.push(JSON.stringify(merged))
+      fields.push('provider_config = ?')
+      values.push(JSON.stringify(merged))
 
       // Dual-write to legacy columns
       for (const m of legacyMappings) {
         const entry = merged[m.mode]
         if (!entry) continue
         if (m.hasConvId || data.providerConfig !== undefined || shouldResetConversationIds) {
-          fields.push(`${m.col}_conversation_id = ?`); values.push(entry.conversationId ?? null)
+          fields.push(`${m.col}_conversation_id = ?`)
+          values.push(entry.conversationId ?? null)
         }
         if (m.hasFlags || data.providerConfig !== undefined) {
-          fields.push(`${m.col}_flags = ?`); values.push(entry.flags ?? '')
+          fields.push(`${m.col}_flags = ?`)
+          values.push(entry.flags ?? '')
         }
       }
     }
   }
-  if (data.panelVisibility !== undefined) { fields.push('panel_visibility = ?'); values.push(data.panelVisibility ? JSON.stringify(data.panelVisibility) : null) }
+  if (data.panelVisibility !== undefined) {
+    fields.push('panel_visibility = ?')
+    values.push(data.panelVisibility ? JSON.stringify(data.panelVisibility) : null)
+  }
   // Note: these also get cleared to null on project change (see projectChanged block above)
-  if (data.worktreePath !== undefined) { fields.push('worktree_path = ?'); values.push(data.worktreePath) }
-  if (data.worktreeParentBranch !== undefined) { fields.push('worktree_parent_branch = ?'); values.push(data.worktreeParentBranch) }
-  if (data.baseDir !== undefined) { fields.push('base_dir = ?'); values.push(data.baseDir) }
-  if (data.browserUrl !== undefined) { fields.push('browser_url = ?'); values.push(data.browserUrl) }
-  if (data.prUrl !== undefined) { fields.push('pr_url = ?'); values.push(data.prUrl) }
+  if (data.worktreePath !== undefined) {
+    fields.push('worktree_path = ?')
+    values.push(data.worktreePath)
+  }
+  if (data.worktreeParentBranch !== undefined) {
+    fields.push('worktree_parent_branch = ?')
+    values.push(data.worktreeParentBranch)
+  }
+  if (data.baseDir !== undefined) {
+    fields.push('base_dir = ?')
+    values.push(data.baseDir)
+  }
+  if (data.browserUrl !== undefined) {
+    fields.push('browser_url = ?')
+    values.push(data.browserUrl)
+  }
+  if (data.prUrl !== undefined) {
+    fields.push('pr_url = ?')
+    values.push(data.prUrl)
+  }
   if (data.browserTabs !== undefined) {
     // Preserve server-authoritative per-tab flags (`agentTouched`, `locked`)
     // when the renderer writes back tabs via generic updates (URL/title from
@@ -549,53 +700,109 @@ export function updateTask(db: Database, data: UpdateTaskInput): Task | null {
     // be clobbered by stale renderer state.
     const merged = data.browserTabs
       ? (() => {
-        if (!data.browserTabs) return null
-        const existingRow = db.prepare('SELECT browser_tabs FROM tasks WHERE id = ?').get(data.id) as
-          | { browser_tabs: string | null }
-          | undefined
-        let existingTabs: { id: string; agentTouched?: boolean; locked?: boolean }[] = []
-        if (existingRow?.browser_tabs) {
-          try {
-            const parsed = JSON.parse(existingRow.browser_tabs) as { tabs?: typeof existingTabs }
-            if (Array.isArray(parsed.tabs)) existingTabs = parsed.tabs
-          } catch { /* ignore */ }
-        }
-        const existingById = new Map(existingTabs.map(t => [t.id, t]))
-        return {
-          ...data.browserTabs,
-          tabs: data.browserTabs.tabs.map(t => {
-            const prev = existingById.get(t.id)
-            if (!prev) return t
-            return {
-              ...t,
-              ...(prev.agentTouched !== undefined ? { agentTouched: prev.agentTouched } : {}),
-              ...(prev.locked !== undefined ? { locked: prev.locked } : {}),
+          if (!data.browserTabs) return null
+          const existingRow = db
+            .prepare('SELECT browser_tabs FROM tasks WHERE id = ?')
+            .get(data.id) as { browser_tabs: string | null } | undefined
+          let existingTabs: { id: string; agentTouched?: boolean; locked?: boolean }[] = []
+          if (existingRow?.browser_tabs) {
+            try {
+              const parsed = JSON.parse(existingRow.browser_tabs) as { tabs?: typeof existingTabs }
+              if (Array.isArray(parsed.tabs)) existingTabs = parsed.tabs
+            } catch {
+              /* ignore */
             }
-          }),
-        }
-      })()
+          }
+          const existingById = new Map(existingTabs.map((t) => [t.id, t]))
+          return {
+            ...data.browserTabs,
+            tabs: data.browserTabs.tabs.map((t) => {
+              const prev = existingById.get(t.id)
+              if (!prev) return t
+              return {
+                ...t,
+                ...(prev.agentTouched !== undefined ? { agentTouched: prev.agentTouched } : {}),
+                ...(prev.locked !== undefined ? { locked: prev.locked } : {})
+              }
+            })
+          }
+        })()
       : null
-    fields.push('browser_tabs = ?'); values.push(merged ? JSON.stringify(merged) : null)
+    fields.push('browser_tabs = ?')
+    values.push(merged ? JSON.stringify(merged) : null)
   }
-  if (data.webPanelUrls !== undefined) { fields.push('web_panel_urls = ?'); values.push(data.webPanelUrls ? JSON.stringify(data.webPanelUrls) : null) }
-  if (data.editorOpenFiles !== undefined) { fields.push('editor_open_files = ?'); values.push(data.editorOpenFiles ? JSON.stringify(data.editorOpenFiles) : null) }
-  if (data.diffCollapsedFiles !== undefined) { fields.push('diff_collapsed_files = ?'); values.push(data.diffCollapsedFiles && data.diffCollapsedFiles.length ? JSON.stringify(data.diffCollapsedFiles) : null) }
-  if (data.gitActiveTab !== undefined) { fields.push('git_active_tab = ?'); values.push(data.gitActiveTab) }
-  if (data.mergeState !== undefined) { fields.push('merge_state = ?'); values.push(data.mergeState) }
-  if (data.mergeContext !== undefined) { fields.push('merge_context = ?'); values.push(data.mergeContext ? JSON.stringify(data.mergeContext) : null) }
-  if (data.loopConfig !== undefined) { fields.push('loop_config = ?'); values.push(data.loopConfig ? JSON.stringify(data.loopConfig) : null) }
-  if (data.snoozedUntil !== undefined) { fields.push('snoozed_until = ?'); values.push(data.snoozedUntil) }
-  if (data.isTemporary !== undefined) { fields.push('is_temporary = ?'); values.push(data.isTemporary ? 1 : 0) }
-  else if (shouldPromoteFromTemp) { fields.push('is_temporary = ?'); values.push(0) }
-  if (data.isBlocked !== undefined) { fields.push('is_blocked = ?'); values.push(data.isBlocked ? 1 : 0) }
-  if (data.blockedComment !== undefined) { fields.push('blocked_comment = ?'); values.push(data.blockedComment) }
-  if (data.repoName !== undefined) { fields.push('repo_name = ?'); values.push(data.repoName) }
-  if (data.activeArtifactId !== undefined) { fields.push('active_artifact_id = ?'); values.push(data.activeArtifactId) }
-  if (data.needsAttention !== undefined) { fields.push('needs_attention = ?'); values.push(data.needsAttention ? 1 : 0) }
-  if (data.devUrlToastDismissed !== undefined) { fields.push('dev_url_toast_dismissed = ?'); values.push(data.devUrlToastDismissed ? 1 : 0) }
+  if (data.webPanelUrls !== undefined) {
+    fields.push('web_panel_urls = ?')
+    values.push(data.webPanelUrls ? JSON.stringify(data.webPanelUrls) : null)
+  }
+  if (data.editorOpenFiles !== undefined) {
+    fields.push('editor_open_files = ?')
+    values.push(data.editorOpenFiles ? JSON.stringify(data.editorOpenFiles) : null)
+  }
+  if (data.diffCollapsedFiles !== undefined) {
+    fields.push('diff_collapsed_files = ?')
+    values.push(
+      data.diffCollapsedFiles && data.diffCollapsedFiles.length
+        ? JSON.stringify(data.diffCollapsedFiles)
+        : null
+    )
+  }
+  if (data.gitActiveTab !== undefined) {
+    fields.push('git_active_tab = ?')
+    values.push(data.gitActiveTab)
+  }
+  if (data.mergeState !== undefined) {
+    fields.push('merge_state = ?')
+    values.push(data.mergeState)
+  }
+  if (data.mergeContext !== undefined) {
+    fields.push('merge_context = ?')
+    values.push(data.mergeContext ? JSON.stringify(data.mergeContext) : null)
+  }
+  if (data.loopConfig !== undefined) {
+    fields.push('loop_config = ?')
+    values.push(data.loopConfig ? JSON.stringify(data.loopConfig) : null)
+  }
+  if (data.snoozedUntil !== undefined) {
+    fields.push('snoozed_until = ?')
+    values.push(data.snoozedUntil)
+  }
+  if (data.isTemporary !== undefined) {
+    fields.push('is_temporary = ?')
+    values.push(data.isTemporary ? 1 : 0)
+  } else if (shouldPromoteFromTemp) {
+    fields.push('is_temporary = ?')
+    values.push(0)
+  }
+  if (data.isBlocked !== undefined) {
+    fields.push('is_blocked = ?')
+    values.push(data.isBlocked ? 1 : 0)
+  }
+  if (data.blockedComment !== undefined) {
+    fields.push('blocked_comment = ?')
+    values.push(data.blockedComment)
+  }
+  if (data.repoName !== undefined) {
+    fields.push('repo_name = ?')
+    values.push(data.repoName)
+  }
+  if (data.activeArtifactId !== undefined) {
+    fields.push('active_artifact_id = ?')
+    values.push(data.activeArtifactId)
+  }
+  if (data.needsAttention !== undefined) {
+    fields.push('needs_attention = ?')
+    values.push(data.needsAttention ? 1 : 0)
+  }
+  if (data.devUrlToastDismissed !== undefined) {
+    fields.push('dev_url_toast_dismissed = ?')
+    values.push(data.devUrlToastDismissed ? 1 : 0)
+  }
 
   if (fields.length === 0) {
-    const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(data.id) as Record<string, unknown> | undefined
+    const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(data.id) as
+      | Record<string, unknown>
+      | undefined
     return parseTask(row)
   }
 
@@ -605,13 +812,13 @@ export function updateTask(db: Database, data: UpdateTaskInput): Task | null {
   db.prepare(`UPDATE tasks SET ${fields.join(', ')} WHERE id = ?`).run(...values)
 
   const effectiveStatus = normalizedStatusForWrite
-  const reachedTerminal = effectiveStatus !== undefined && isTerminalStatus(effectiveStatus, targetColumns)
+  const reachedTerminal =
+    effectiveStatus !== undefined && isTerminalStatus(effectiveStatus, targetColumns)
   // `previouslyTerminal` uses the PRE-write status. Compute before project-change
   // logic may invalidate the old status's known-ness. Use same column config (pre-change)
   // only when project didn't change; otherwise semantics are ambiguous and we skip respawn.
-  const previouslyTerminal = !projectChanged && existing?.status
-    ? isTerminalStatus(existing.status, targetColumns)
-    : false
+  const previouslyTerminal =
+    !projectChanged && existing?.status ? isTerminalStatus(existing.status, targetColumns) : false
   const revived = effectiveStatus !== undefined && !reachedTerminal && previouslyTerminal
   if (reachedTerminal) {
     runtimeAdapters.onReachedTerminal(data.id)
@@ -621,7 +828,9 @@ export function updateTask(db: Database, data: UpdateTaskInput): Task | null {
   }
   // Clear snooze when task reaches terminal status
   if (reachedTerminal && !fields.some((f) => f.startsWith('snoozed_until'))) {
-    db.prepare('UPDATE tasks SET snoozed_until = NULL WHERE id = ? AND snoozed_until IS NOT NULL').run(data.id)
+    db.prepare(
+      'UPDATE tasks SET snoozed_until = NULL WHERE id = ? AND snoozed_until IS NOT NULL'
+    ).run(data.id)
   }
   // Revive path: task moved from a terminal status (e.g. `done`) back to an active
   // one (e.g. `in_progress`). Signal the renderer to respawn the main AI tab so
@@ -630,7 +839,9 @@ export function updateTask(db: Database, data: UpdateTaskInput): Task | null {
     runtimeAdapters.requestPtyRespawn(data.id)
   }
 
-  const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(data.id) as Record<string, unknown> | undefined
+  const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(data.id) as
+    | Record<string, unknown>
+    | undefined
   return parseTask(row)
 }
 

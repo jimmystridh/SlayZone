@@ -25,7 +25,10 @@ export function stripCanonicalSkillMetadata(metadataJson: string): string {
   return JSON.stringify(parsed)
 }
 
-export function writeSkillValidationMetadata(metadataJson: string, validation: SkillValidationState): string {
+export function writeSkillValidationMetadata(
+  metadataJson: string,
+  validation: SkillValidationState
+): string {
   const parsed = parseJsonObject(metadataJson)
   parsed[SKILL_VALIDATION_METADATA_KEY] = validation
   return JSON.stringify(parsed)

@@ -6,14 +6,19 @@ import type { RestApiDeps } from '../types'
 export function registerBrowserNavigateRoute(app: Express, deps: RestApiDeps): void {
   app.post('/api/browser/navigate', async (req, res) => {
     const { taskId, url, panel = 'visible', tabId } = req.body ?? {}
-    if (!url) { res.status(400).json({ error: 'url required' }); return }
+    if (!url) {
+      res.status(400).json({ error: 'url required' })
+      return
+    }
     try {
       const parsed = new URL(url)
       if (!ALLOWED_NAVIGATE_SCHEMES.includes(parsed.protocol)) {
-        res.status(400).json({ error: `Scheme not allowed: ${parsed.protocol}` }); return
+        res.status(400).json({ error: `Scheme not allowed: ${parsed.protocol}` })
+        return
       }
     } catch {
-      res.status(400).json({ error: 'Invalid URL' }); return
+      res.status(400).json({ error: 'Invalid URL' })
+      return
     }
     const result = await ensureBrowserWc(taskId, panel, res, url, tabId)
     if (!result) return
@@ -22,7 +27,8 @@ export function registerBrowserNavigateRoute(app: Express, deps: RestApiDeps): v
       if (!result.autoOpened) await result.wc.loadURL(url)
       // Auto-open counts as "opening" the tab, not interacting with it. Skip
       // the trip flag so first-navigate-that-opens-panel doesn't auto-lock.
-      if (!result.autoOpened) markTabAgentTouched(deps.db, deps.notifyRenderer, taskId, result.tabId)
+      if (!result.autoOpened)
+        markTabAgentTouched(deps.db, deps.notifyRenderer, taskId, result.tabId)
       res.json({ ok: true, url: result.wc.getURL() })
     } catch (err) {
       res.status(500).json({ error: err instanceof Error ? err.message : String(err) })

@@ -19,16 +19,21 @@ function shouldSkip(name: string): boolean {
   return IGNORED_DIRS.has(name) || (name.startsWith('.') && name !== '.')
 }
 
-export async function scanTestFiles(projectPath: string, categories: TestCategory[]): Promise<ScanResult> {
+export async function scanTestFiles(
+  projectPath: string,
+  categories: TestCategory[]
+): Promise<ScanResult> {
   if (categories.length === 0) return { matches: [], totalScanned: 0 }
 
-  const matchers = categories.map((c) => {
-    try {
-      return { id: c.id, isMatch: picomatch(c.pattern) }
-    } catch {
-      return null
-    }
-  }).filter((m): m is { id: string; isMatch: picomatch.Matcher } => m !== null)
+  const matchers = categories
+    .map((c) => {
+      try {
+        return { id: c.id, isMatch: picomatch(c.pattern) }
+      } catch {
+        return null
+      }
+    })
+    .filter((m): m is { id: string; isMatch: picomatch.Matcher } => m !== null)
 
   const matches: TestFileMatch[] = []
   let totalScanned = 0

@@ -20,7 +20,7 @@ const STATUS_LABELS: Record<BgShellStatus, string> = {
   completed: 'Completed',
   killed: 'Killed',
   failed: 'Failed',
-  unknown: 'Unknown',
+  unknown: 'Unknown'
 }
 
 const STATUS_DOT_COLORS: Record<BgShellStatus, string> = {
@@ -29,7 +29,7 @@ const STATUS_DOT_COLORS: Record<BgShellStatus, string> = {
   completed: 'bg-green-500',
   killed: 'bg-muted-foreground',
   failed: 'bg-red-500',
-  unknown: 'bg-orange-500',
+  unknown: 'bg-orange-500'
 }
 
 const ACTIVE_STATUSES = new Set<BgShellStatus>(['pending', 'running'])
@@ -56,7 +56,7 @@ export function BackgroundJobsBanner({
   shells,
   order,
   defaultCollapsed = false,
-  floating = true,
+  floating = true
 }: BackgroundJobsBannerProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const now = Date.now()
@@ -83,7 +83,7 @@ export function BackgroundJobsBanner({
       style={{
         boxShadow: headerActive
           ? '0 0 20px 0 rgba(234,179,8,0.35), 0 0 60px 0 rgba(234,179,8,0.12)'
-          : '0 4px 20px 0 rgba(234,179,8,0.06), 0 0 15px 2px rgba(234,179,8,0.06)',
+          : '0 4px 20px 0 rgba(234,179,8,0.06), 0 0 15px 2px rgba(234,179,8,0.06)'
       }}
     >
       <button
@@ -99,9 +99,7 @@ export function BackgroundJobsBanner({
           BACKGROUND JOBS
         </span>
         <span className="flex items-center gap-1.5 text-muted-foreground font-mono tabular-nums">
-          {activeCount > 0 && (
-            <span className="text-foreground">{activeCount}</span>
-          )}
+          {activeCount > 0 && <span className="text-foreground">{activeCount}</span>}
           <span>/{list.length}</span>
           {collapsed ? (
             <ChevronRight className="size-3.5" aria-hidden="true" />

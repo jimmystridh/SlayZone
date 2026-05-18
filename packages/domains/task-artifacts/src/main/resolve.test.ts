@@ -77,7 +77,7 @@ describe('resolveVersionRef', () => {
     createVersion(env.db, env.txn, env.blobStore, {
       artifactId: 'a1',
       bytes: 'snap',
-      name: 'milestone',
+      name: 'milestone'
     })
     expect(resolveVersionRef(env.db, 'a1', 'milestone').name).toBe('milestone')
   })

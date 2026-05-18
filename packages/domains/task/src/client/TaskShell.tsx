@@ -5,7 +5,9 @@ import { Skeleton } from '@slayzone/ui'
 export function TaskShell(): React.JSX.Element {
   useEffect(() => {
     performance.mark('sz:suspense:taskShell:mount')
-    return () => { performance.mark('sz:suspense:taskShell:unmount') }
+    return () => {
+      performance.mark('sz:suspense:taskShell:unmount')
+    }
   }, [])
 
   return (

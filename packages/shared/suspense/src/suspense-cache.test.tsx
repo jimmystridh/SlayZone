@@ -9,7 +9,7 @@ afterEach(cleanup)
 describe('createSuspenseCache', () => {
   it('suspends then renders resolved data', async () => {
     const cache = createSuspenseCache({
-      greeting: () => Promise.resolve('hello'),
+      greeting: () => Promise.resolve('hello')
     })
 
     function Inner() {
@@ -83,7 +83,7 @@ describe('createSuspenseCache', () => {
   it('invalidateAll triggers re-fetch', async () => {
     let callCount = 0
     const cache = createSuspenseCache({
-      counter: () => Promise.resolve(++callCount),
+      counter: () => Promise.resolve(++callCount)
     })
 
     function Inner() {
@@ -117,7 +117,11 @@ describe('createSuspenseCache', () => {
     function Inner() {
       const a = cache.useData('item', 'a')
       const b = cache.useData('item', 'b')
-      return <div data-testid="result">{a},{b}</div>
+      return (
+        <div data-testid="result">
+          {a},{b}
+        </div>
+      )
     }
 
     await act(async () => {
@@ -145,7 +149,7 @@ describe('createSuspenseCache', () => {
   it('evict removes entry without triggering re-render', async () => {
     const renderCount = vi.fn()
     const cache = createSuspenseCache({
-      test: () => Promise.resolve('data'),
+      test: () => Promise.resolve('data')
     })
 
     function Inner() {
@@ -173,7 +177,7 @@ describe('createSuspenseCache', () => {
 
   it('handles rejection — error propagates through error boundary', async () => {
     const cache = createSuspenseCache({
-      failing: () => Promise.reject(new Error('fetch failed')),
+      failing: () => Promise.reject(new Error('fetch failed'))
     })
 
     function Inner() {
@@ -218,7 +222,7 @@ describe('createSuspenseCache', () => {
         callCount++
         if (callCount === 1) return Promise.reject(new Error('fail'))
         return Promise.resolve('recovered')
-      },
+      }
     })
 
     function Inner() {
@@ -237,10 +241,13 @@ describe('createSuspenseCache', () => {
       render() {
         if (this.state.error) {
           return (
-            <button data-testid="retry" onClick={() => {
-              this.props.cache.invalidate('flaky')
-              this.setState({ error: null })
-            }}>
+            <button
+              data-testid="retry"
+              onClick={() => {
+                this.props.cache.invalidate('flaky')
+                this.setState({ error: null })
+              }}
+            >
               {this.state.error}
             </button>
           )

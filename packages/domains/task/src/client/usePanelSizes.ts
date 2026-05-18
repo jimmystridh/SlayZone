@@ -21,12 +21,20 @@ const HANDLE_WIDTH = 16 // w-4 = 1rem
 const STORAGE_VERSION = 5
 
 // Built-in order: terminal, browser, editor, [web panels inserted here], diff, processes, settings
-const BUILTIN_ORDER = ['terminal', 'browser', 'editor', 'artifacts', 'diff', 'processes', 'settings']
+const BUILTIN_ORDER = [
+  'terminal',
+  'browser',
+  'editor',
+  'artifacts',
+  'diff',
+  'processes',
+  'settings'
+]
 
 /** Build ordered panel list: built-ins in fixed order, web panels between editor and diff */
 export function buildPanelOrder(visibility: PanelVisibility): string[] {
   const order: string[] = []
-  const webPanelIds = Object.keys(visibility).filter(id => id.startsWith('web:'))
+  const webPanelIds = Object.keys(visibility).filter((id) => id.startsWith('web:'))
 
   for (const id of BUILTIN_ORDER) {
     order.push(id)
@@ -89,7 +97,10 @@ export function usePanelSizes(): [
             setSizes({ ...DEFAULT_SIZES, ...rest })
           } else {
             // Old format — only keep settings width, reset everything else
-            const migrated = { ...DEFAULT_SIZES, settings: parsed.settings ?? DEFAULT_SIZES.settings }
+            const migrated = {
+              ...DEFAULT_SIZES,
+              settings: parsed.settings ?? DEFAULT_SIZES.settings
+            }
             setSizes(migrated)
             persist(migrated)
           }
@@ -109,9 +120,12 @@ export function usePanelSizes(): [
     })
   }, [])
 
-  const resetPanel = useCallback((panel: string) => {
-    updateSizes({ [panel]: DEFAULT_SIZES[panel] ?? 'auto' })
-  }, [updateSizes])
+  const resetPanel = useCallback(
+    (panel: string) => {
+      updateSizes({ [panel]: DEFAULT_SIZES[panel] ?? 'auto' })
+    },
+    [updateSizes]
+  )
 
   const resetAll = useCallback(() => {
     updateSizes(DEFAULT_SIZES)

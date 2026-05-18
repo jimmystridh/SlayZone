@@ -13,25 +13,29 @@ export interface UpdateManyTasksInput {
 export async function updateManyTasksOp(
   db: Database,
   data: UpdateManyTasksInput,
-  deps: OpDeps,
+  deps: OpDeps
 ): Promise<Task[]> {
   const { ipcMain, onMutation } = deps
   const { ids, updates } = data
   if (ids.length === 0) return []
 
-  const results: Array<{ id: string; previous: Task | null; next: Task | null }> = db.transaction(() => {
-    const out: Array<{ id: string; previous: Task | null; next: Task | null }> = []
-    for (const id of ids) {
-      const previousRow = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as Record<string, unknown> | undefined
-      const previousTask = parseTask(previousRow)
-      const nextTask = updateTask(db, { ...updates, id } as UpdateTaskInput)
-      if (previousTask && nextTask) {
-        recordActivityEvents(db, buildTaskUpdatedEvents(previousTask, nextTask))
+  const results: Array<{ id: string; previous: Task | null; next: Task | null }> = db.transaction(
+    () => {
+      const out: Array<{ id: string; previous: Task | null; next: Task | null }> = []
+      for (const id of ids) {
+        const previousRow = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as
+          | Record<string, unknown>
+          | undefined
+        const previousTask = parseTask(previousRow)
+        const nextTask = updateTask(db, { ...updates, id } as UpdateTaskInput)
+        if (previousTask && nextTask) {
+          recordActivityEvents(db, buildTaskUpdatedEvents(previousTask, nextTask))
+        }
+        out.push({ id, previous: previousTask, next: nextTask })
       }
-      out.push({ id, previous: previousTask, next: nextTask })
+      return out
     }
-    return out
-  })()
+  )()
 
   for (const r of results) {
     if (!r.next) continue
@@ -41,11 +45,11 @@ export async function updateManyTasksOp(
       taskEvents.emit('task:updated', {
         taskId: r.id,
         projectId,
-        oldStatus: r.previous?.status,
+        oldStatus: r.previous?.status
       })
     }
   }
-  if (results.some(r => r.next)) onMutation?.()
+  if (results.some((r) => r.next)) onMutation?.()
 
   const colored: Task[] = []
   for (const r of results) {

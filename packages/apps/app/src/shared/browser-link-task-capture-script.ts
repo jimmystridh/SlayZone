@@ -110,8 +110,12 @@ const BROWSER_CREATE_TASK_FROM_LINK_CAPTURE_SCRIPT_TEMPLATE = `
 })();
 `
 
-export function buildBrowserCreateTaskFromLinkCaptureScript(bridgeKey: string, installedKey: string): string {
-  return BROWSER_CREATE_TASK_FROM_LINK_CAPTURE_SCRIPT_TEMPLATE
-    .replace('__SLZ_BRIDGE_KEY__', JSON.stringify(bridgeKey))
-    .replace('__SLZ_INSTALLED_KEY__', JSON.stringify(installedKey))
+export function buildBrowserCreateTaskFromLinkCaptureScript(
+  bridgeKey: string,
+  installedKey: string
+): string {
+  return BROWSER_CREATE_TASK_FROM_LINK_CAPTURE_SCRIPT_TEMPLATE.replace(
+    '__SLZ_BRIDGE_KEY__',
+    JSON.stringify(bridgeKey)
+  ).replace('__SLZ_INSTALLED_KEY__', JSON.stringify(installedKey))
 }

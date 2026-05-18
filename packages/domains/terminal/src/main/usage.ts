@@ -9,7 +9,7 @@ import { recordDiagnosticEvent } from '@slayzone/diagnostics/main'
 import type { ProviderUsage, UsageWindow, UsageProviderConfig } from '@slayzone/terminal/shared'
 
 const TIMEOUT_MS = 10_000
-const MIN_BACKOFF_MS = 30_000    // minimum backoff on 429 (even if retry-after says 0)
+const MIN_BACKOFF_MS = 30_000 // minimum backoff on 429 (even if retry-after says 0)
 const FALLBACK_CLAUDE_VERSION = '2.1.0'
 
 let cachedClaudeVersion: string | null = null
@@ -29,7 +29,12 @@ function getClaudeVersion(): Promise<string> {
 
 // ── Provider metadata ────────────────────────────────────────────────
 
-interface ProviderMeta { id: string; label: string; cli: string; vendor: string }
+interface ProviderMeta {
+  id: string
+  label: string
+  cli: string
+  vendor: string
+}
 const CLAUDE: ProviderMeta = { id: 'claude', label: 'Claude', cli: 'claude', vendor: 'Anthropic' }
 const CODEX: ProviderMeta = { id: 'codex', label: 'Codex', cli: 'codex', vendor: 'OpenAI' }
 
@@ -74,7 +79,12 @@ function friendlyError(e: unknown): string {
     return 'Request timed out'
   if (msg.includes('CERT') || msg.includes('SSL'))
     return 'SSL error — VPN or proxy may be interfering'
-  if (msg.includes('ERR_FAILED') || msg.includes('ECONNRESET') || msg.includes('ERR_NETWORK_CHANGED') || msg.includes('ERR_HTTP2'))
+  if (
+    msg.includes('ERR_FAILED') ||
+    msg.includes('ECONNRESET') ||
+    msg.includes('ERR_NETWORK_CHANGED') ||
+    msg.includes('ERR_HTTP2')
+  )
     return 'Network request failed — refresh to retry'
   return msg
 }
@@ -82,11 +92,13 @@ function friendlyError(e: unknown): string {
 function isTransientNetError(e: unknown): boolean {
   if (!(e instanceof Error)) return false
   const msg = e.message
-  return msg.includes('ERR_FAILED')
-    || msg.includes('ECONNRESET')
-    || msg.includes('ERR_NETWORK_CHANGED')
-    || msg.includes('ERR_HTTP2')
-    || msg.includes('UND_ERR_SOCKET')
+  return (
+    msg.includes('ERR_FAILED') ||
+    msg.includes('ECONNRESET') ||
+    msg.includes('ERR_NETWORK_CHANGED') ||
+    msg.includes('ERR_HTTP2') ||
+    msg.includes('UND_ERR_SOCKET')
+  )
 }
 
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
@@ -110,21 +122,22 @@ function getByPath(obj: any, path: string): any {
 
 function getKeychainValue(service: string): Promise<string | null> {
   return new Promise((resolve) => {
-    const proc = spawn('security', [
-      'find-generic-password',
-      '-s', service,
-      '-w'
-    ])
+    const proc = spawn('security', ['find-generic-password', '-s', service, '-w'])
 
     let out = ''
-    proc.stdout?.on('data', (d) => { out += d.toString() })
+    proc.stdout?.on('data', (d) => {
+      out += d.toString()
+    })
     proc.on('close', (code) => {
       if (code !== 0 || !out.trim()) return resolve(null)
       resolve(out.trim())
     })
     proc.on('error', () => resolve(null))
 
-    setTimeout(() => { proc.kill(); resolve(null) }, TIMEOUT_MS)
+    setTimeout(() => {
+      proc.kill()
+      resolve(null)
+    }, TIMEOUT_MS)
   })
 }
 
@@ -154,7 +167,11 @@ function getClaudeToken(): Promise<string | null> {
   return getFileToken()
 }
 
-function mapWindow(key: string, label: string, w: { utilization: number; resets_at: string } | null): UsageWindow | null {
+function mapWindow(
+  key: string,
+  label: string,
+  w: { utilization: number; resets_at: string } | null
+): UsageWindow | null {
   if (!w) return null
   return { key, label, utilization: w.utilization, resetsAt: w.resets_at }
 }
@@ -163,10 +180,10 @@ async function fetchClaudeUsageWithToken(token: string): Promise<ProviderUsage> 
   const version = await getClaudeVersion()
   const res = await fetch('https://api.anthropic.com/api/oauth/usage', {
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'anthropic-beta': 'oauth-2025-04-20',
       'Content-Type': 'application/json',
-      'User-Agent': `claude-code/${version}`,
+      'User-Agent': `claude-code/${version}`
     }
   })
 
@@ -178,7 +195,7 @@ async function fetchClaudeUsageWithToken(token: string): Promise<ProviderUsage> 
     mapWindow('fiveHour', '5h', data.five_hour),
     mapWindow('sevenDay', '7d', data.seven_day),
     mapWindow('sevenDayOpus', 'Opus', data.seven_day_opus),
-    mapWindow('sevenDaySonnet', 'Son.', data.seven_day_sonnet),
+    mapWindow('sevenDaySonnet', 'Son.', data.seven_day_sonnet)
   ].filter((w): w is UsageWindow => w !== null)
 
   return { provider: CLAUDE.id, label: CLAUDE.label, windows, error: null, fetchedAt: Date.now() }
@@ -203,9 +220,18 @@ async function getCodexAuth(): Promise<CodexAuth | null> {
   }
 }
 
-function mapCodexWindow(key: string, label: string, w: { used_percent: number; reset_at: number } | null): UsageWindow | null {
+function mapCodexWindow(
+  key: string,
+  label: string,
+  w: { used_percent: number; reset_at: number } | null
+): UsageWindow | null {
   if (!w) return null
-  return { key, label, utilization: w.used_percent, resetsAt: new Date(w.reset_at * 1000).toISOString() }
+  return {
+    key,
+    label,
+    utilization: w.used_percent,
+    resetsAt: new Date(w.reset_at * 1000).toISOString()
+  }
 }
 
 async function fetchCodexUsageWithToken(auth: CodexAuth): Promise<ProviderUsage> {
@@ -215,10 +241,10 @@ async function fetchCodexUsageWithToken(auth: CodexAuth): Promise<ProviderUsage>
   const res = await net.fetch('https://chatgpt.com/backend-api/wham/usage', {
     credentials: 'omit',
     headers: {
-      'Authorization': `Bearer ${auth.accessToken}`,
+      Authorization: `Bearer ${auth.accessToken}`,
       'ChatGPT-Account-Id': auth.accountId,
       'User-Agent': 'codex-cli',
-      'Accept': 'application/json'
+      Accept: 'application/json'
     }
   })
 
@@ -229,7 +255,7 @@ async function fetchCodexUsageWithToken(auth: CodexAuth): Promise<ProviderUsage>
   const rl = data.rate_limit
   const windows: UsageWindow[] = [
     mapCodexWindow('fiveHour', '5h', rl?.primary_window),
-    mapCodexWindow('sevenDay', '7d', rl?.secondary_window),
+    mapCodexWindow('sevenDay', '7d', rl?.secondary_window)
   ].filter((w): w is UsageWindow => w !== null)
 
   return { provider: CODEX.id, label: CODEX.label, windows, error: null, fetchedAt: Date.now() }
@@ -254,7 +280,9 @@ async function resolveAuth(config: UsageProviderConfig): Promise<Record<string, 
     const parsed = JSON.parse(raw)
     const paths = Array.isArray(config.authFileTokenPath)
       ? config.authFileTokenPath
-      : config.authFileTokenPath ? [config.authFileTokenPath] : []
+      : config.authFileTokenPath
+        ? [config.authFileTokenPath]
+        : []
     let token: string | null = null
     for (const p of paths) {
       token = getByPath(parsed, p) ?? null
@@ -312,12 +340,14 @@ function extractWindows(data: any, config: UsageProviderConfig): UsageWindow[] {
   if (config.singleWindow) {
     const util = getByPath(data, mapping.utilization)
     if (util == null) return []
-    const rawLabel = mapping.label.startsWith('=') ? mapping.label.slice(1) : (getByPath(data, mapping.label) ?? mapping.label)
+    const rawLabel = mapping.label.startsWith('=')
+      ? mapping.label.slice(1)
+      : (getByPath(data, mapping.label) ?? mapping.label)
     windows.push({
-      key: mapping.key ? getByPath(data, mapping.key) ?? 'default' : 'default',
+      key: mapping.key ? (getByPath(data, mapping.key) ?? 'default') : 'default',
       label: resolveLabel(rawLabel, mapping),
       utilization: Number(util),
-      resetsAt: parseResetsAt(getByPath(data, mapping.resetsAt), mapping.resetsAtFormat),
+      resetsAt: parseResetsAt(getByPath(data, mapping.resetsAt), mapping.resetsAtFormat)
     })
     return windows
   }
@@ -329,29 +359,40 @@ function extractWindows(data: any, config: UsageProviderConfig): UsageWindow[] {
     const item = arr[i]
     const util = getByPath(item, mapping.utilization)
     if (util == null) continue
-    const rawLabel = mapping.label.startsWith('=') ? mapping.label.slice(1) : (getByPath(item, mapping.label) ?? `Window ${i + 1}`)
+    const rawLabel = mapping.label.startsWith('=')
+      ? mapping.label.slice(1)
+      : (getByPath(item, mapping.label) ?? `Window ${i + 1}`)
     windows.push({
       key: mapping.key ? (getByPath(item, mapping.key) ?? `w${i}`) : `w${i}`,
       label: resolveLabel(rawLabel, mapping),
       utilization: Number(util),
-      resetsAt: parseResetsAt(getByPath(item, mapping.resetsAt), mapping.resetsAtFormat),
+      resetsAt: parseResetsAt(getByPath(item, mapping.resetsAt), mapping.resetsAtFormat)
     })
   }
 
   return windows
 }
 
-async function fetchCustomUsage(providerId: string, providerLabel: string, config: UsageProviderConfig): Promise<ProviderUsage> {
-  const meta: ProviderMeta = { id: providerId, label: providerLabel, cli: providerId, vendor: providerLabel }
+async function fetchCustomUsage(
+  providerId: string,
+  providerLabel: string,
+  config: UsageProviderConfig
+): Promise<ProviderUsage> {
+  const meta: ProviderMeta = {
+    id: providerId,
+    label: providerLabel,
+    cli: providerId,
+    vendor: providerLabel
+  }
 
   const authHeaders = await resolveAuth(config)
   const res = await net.fetch(config.url, {
     method: config.method || 'GET',
     credentials: 'omit',
     headers: {
-      'Accept': 'application/json',
-      ...authHeaders,
-    },
+      Accept: 'application/json',
+      ...authHeaders
+    }
   })
 
   if (res.status === 429) throw new RateLimitError(parseRetryAfter(res))
@@ -364,18 +405,21 @@ async function fetchCustomUsage(providerId: string, providerLabel: string, confi
 }
 
 // Standalone test for usage config (no caching)
-async function testUsageConfig(config: UsageProviderConfig): Promise<{ ok: boolean; windows?: UsageWindow[]; error?: string }> {
+async function testUsageConfig(
+  config: UsageProviderConfig
+): Promise<{ ok: boolean; windows?: UsageWindow[]; error?: string }> {
   try {
     const authHeaders = await resolveAuth(config)
     const res = await net.fetch(config.url, {
       method: config.method || 'GET',
       credentials: 'omit',
-      headers: { 'Accept': 'application/json', ...authHeaders },
+      headers: { Accept: 'application/json', ...authHeaders }
     })
     if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
     const data = await res.json()
     const windows = extractWindows(data, config)
-    if (windows.length === 0) return { ok: false, error: 'No windows found — check response mapping' }
+    if (windows.length === 0)
+      return { ok: false, error: 'No windows found — check response mapping' }
     return { ok: true, windows }
   } catch (e) {
     return { ok: false, error: friendlyError(e) }
@@ -384,10 +428,10 @@ async function testUsageConfig(config: UsageProviderConfig): Promise<{ ok: boole
 
 // ── Cache + backoff (per-provider) ──────────────────────────────────
 
-const MIN_INTERVAL_MS = 10_000   // hard floor: never fetch faster than 10s apart
-const DEFAULT_TTL_MS = 60_000    // auto-poll cache: 1 minute
+const MIN_INTERVAL_MS = 10_000 // hard floor: never fetch faster than 10s apart
+const DEFAULT_TTL_MS = 60_000 // auto-poll cache: 1 minute
 
-const MAX_STALE_FAILURES = 3  // drop cached windows after N consecutive failures
+const MAX_STALE_FAILURES = 3 // drop cached windows after N consecutive failures
 
 interface CacheEntry {
   result: ProviderUsage
@@ -404,7 +448,11 @@ let lastFetchAt = 0
 // Built-in provider IDs that have hardcoded fetchers
 const BUILTIN_USAGE_IDS = new Set(['claude', 'codex'])
 
-function fetchProvider(p: ProviderMeta, fetcher: () => Promise<ProviderUsage>, tokenHint?: string): Promise<ProviderUsage> {
+function fetchProvider(
+  p: ProviderMeta,
+  fetcher: () => Promise<ProviderUsage>,
+  tokenHint?: string
+): Promise<ProviderUsage> {
   let existing = cache.get(p.id)
 
   // Account changed — discard stale data from different account
@@ -418,65 +466,73 @@ function fetchProvider(p: ProviderMeta, fetcher: () => Promise<ProviderUsage>, t
     return Promise.resolve(existing.result)
   }
 
-  return withRetry(fetcher).then((result) => {
-    cache.set(p.id, {
-      result,
-      cachedAt: Date.now(),
-      backoffUntil: existing?.backoffUntil ?? 0,
-      tokenHint,
-      consecutiveFailures: 0,
-    })
-    return result
-  }).catch((e): ProviderUsage => {
-    const failures = (existing?.consecutiveFailures ?? 0) + 1
-    recordDiagnosticEvent({
-      level: failures >= MAX_STALE_FAILURES ? 'warn' : 'info',
-      source: 'usage',
-      event: 'usage.fetch_error',
-      message: `${p.id}: ${e instanceof Error ? e.message : String(e)}`,
-      payload: {
-        provider: p.id,
-        errorName: e instanceof Error ? e.name : null,
-        rawMessage: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : null,
-        consecutiveFailures: failures,
-        isRateLimit: e instanceof RateLimitError,
-      },
-    })
-    if (e instanceof RateLimitError) {
-      const backoff = Math.max(e.retryAfterMs, MIN_BACKOFF_MS)
-      const backoffUntil = Math.max(existing?.backoffUntil ?? 0, Date.now() + backoff)
-      if (existing) {
-        existing.backoffUntil = backoffUntil
-        existing.consecutiveFailures = failures
-      } else {
-        cache.set(p.id, { result: usageError(p, 'Rate limited'), cachedAt: Date.now(), backoffUntil, tokenHint, consecutiveFailures: failures })
-      }
-    }
-    const errorMsg = e instanceof RateLimitError ? e.message : friendlyError(e)
-    // Preserve last valid windows so UI can show stale data + error indicator —
-    // but drop stale windows after N consecutive failures so "9h old" doesn't persist forever.
-    if (existing?.result.windows.length && failures < MAX_STALE_FAILURES) {
-      const stale = { ...existing.result, error: errorMsg }
+  return withRetry(fetcher)
+    .then((result) => {
       cache.set(p.id, {
-        result: stale,
-        cachedAt: existing.cachedAt,
-        backoffUntil: existing.backoffUntil,
-        tokenHint: existing.tokenHint,
-        consecutiveFailures: failures,
+        result,
+        cachedAt: Date.now(),
+        backoffUntil: existing?.backoffUntil ?? 0,
+        tokenHint,
+        consecutiveFailures: 0
       })
-      return stale
-    }
-    const err = usageError(p, errorMsg)
-    cache.set(p.id, {
-      result: err,
-      cachedAt: Date.now(),
-      backoffUntil: existing?.backoffUntil ?? 0,
-      tokenHint,
-      consecutiveFailures: failures,
+      return result
     })
-    return err
-  })
+    .catch((e): ProviderUsage => {
+      const failures = (existing?.consecutiveFailures ?? 0) + 1
+      recordDiagnosticEvent({
+        level: failures >= MAX_STALE_FAILURES ? 'warn' : 'info',
+        source: 'usage',
+        event: 'usage.fetch_error',
+        message: `${p.id}: ${e instanceof Error ? e.message : String(e)}`,
+        payload: {
+          provider: p.id,
+          errorName: e instanceof Error ? e.name : null,
+          rawMessage: e instanceof Error ? e.message : String(e),
+          stack: e instanceof Error ? e.stack : null,
+          consecutiveFailures: failures,
+          isRateLimit: e instanceof RateLimitError
+        }
+      })
+      if (e instanceof RateLimitError) {
+        const backoff = Math.max(e.retryAfterMs, MIN_BACKOFF_MS)
+        const backoffUntil = Math.max(existing?.backoffUntil ?? 0, Date.now() + backoff)
+        if (existing) {
+          existing.backoffUntil = backoffUntil
+          existing.consecutiveFailures = failures
+        } else {
+          cache.set(p.id, {
+            result: usageError(p, 'Rate limited'),
+            cachedAt: Date.now(),
+            backoffUntil,
+            tokenHint,
+            consecutiveFailures: failures
+          })
+        }
+      }
+      const errorMsg = e instanceof RateLimitError ? e.message : friendlyError(e)
+      // Preserve last valid windows so UI can show stale data + error indicator —
+      // but drop stale windows after N consecutive failures so "9h old" doesn't persist forever.
+      if (existing?.result.windows.length && failures < MAX_STALE_FAILURES) {
+        const stale = { ...existing.result, error: errorMsg }
+        cache.set(p.id, {
+          result: stale,
+          cachedAt: existing.cachedAt,
+          backoffUntil: existing.backoffUntil,
+          tokenHint: existing.tokenHint,
+          consecutiveFailures: failures
+        })
+        return stale
+      }
+      const err = usageError(p, errorMsg)
+      cache.set(p.id, {
+        result: err,
+        cachedAt: Date.now(),
+        backoffUntil: existing?.backoffUntil ?? 0,
+        tokenHint,
+        consecutiveFailures: failures
+      })
+      return err
+    })
 }
 
 // ── Handler ──────────────────────────────────────────────────────────
@@ -487,27 +543,31 @@ export function registerUsageHandlers(ipcMain: IpcMain, db: Database.Database): 
 
     // Hard floor: never refetch within 10s (blocks spam-clicking)
     if (now - lastFetchAt < MIN_INTERVAL_MS && cache.size > 0) {
-      return [...cache.values()].map(e => e.result)
+      return [...cache.values()].map((e) => e.result)
     }
 
     // Auto-poll uses longer cache TTL
     if (!force && now - lastFetchAt < DEFAULT_TTL_MS && cache.size > 0) {
-      return [...cache.values()].map(e => e.result)
+      return [...cache.values()].map((e) => e.result)
     }
 
     // Deduplicate concurrent requests
     if (inflight) return inflight
 
     // Gather custom providers from DB
-    const customRows = db.prepare(
-      `SELECT id, label, usage_config FROM terminal_modes WHERE usage_config IS NOT NULL AND enabled = 1`
-    ).all() as { id: string; label: string; usage_config: string }[]
+    const customRows = db
+      .prepare(
+        `SELECT id, label, usage_config FROM terminal_modes WHERE usage_config IS NOT NULL AND enabled = 1`
+      )
+      .all() as { id: string; label: string; usage_config: string }[]
 
     // Check enabled status for built-in providers
     const builtinEnabled = new Map(
-      (db.prepare(
-        `SELECT id, enabled FROM terminal_modes WHERE id IN ('claude-code', 'codex')`
-      ).all() as { id: string; enabled: number }[]).map(r => [r.id, r.enabled === 1])
+      (
+        db
+          .prepare(`SELECT id, enabled FROM terminal_modes WHERE id IN ('claude-code', 'codex')`)
+          .all() as { id: string; enabled: number }[]
+      ).map((r) => [r.id, r.enabled === 1])
     )
 
     const fetchers: Promise<ProviderUsage>[] = []
@@ -515,18 +575,28 @@ export function registerUsageHandlers(ipcMain: IpcMain, db: Database.Database): 
     if (builtinEnabled.get('claude-code') !== false) {
       const claudeToken = await getClaudeToken()
       if (claudeToken) {
-        fetchers.push(fetchProvider(CLAUDE, () => fetchClaudeUsageWithToken(claudeToken), claudeToken))
+        fetchers.push(
+          fetchProvider(CLAUDE, () => fetchClaudeUsageWithToken(claudeToken), claudeToken)
+        )
       } else {
-        fetchers.push(Promise.resolve(usageError(CLAUDE, `Not logged in — run \`${CLAUDE.cli}\` to authenticate`)))
+        fetchers.push(
+          Promise.resolve(
+            usageError(CLAUDE, `Not logged in — run \`${CLAUDE.cli}\` to authenticate`)
+          )
+        )
       }
     }
 
     if (builtinEnabled.get('codex') !== false) {
       const codexAuth = await getCodexAuth()
       if (codexAuth) {
-        fetchers.push(fetchProvider(CODEX, () => fetchCodexUsageWithToken(codexAuth), codexAuth.accessToken))
+        fetchers.push(
+          fetchProvider(CODEX, () => fetchCodexUsageWithToken(codexAuth), codexAuth.accessToken)
+        )
       } else {
-        fetchers.push(Promise.resolve(usageError(CODEX, `Not logged in — run \`${CODEX.cli}\` to authenticate`)))
+        fetchers.push(
+          Promise.resolve(usageError(CODEX, `Not logged in — run \`${CODEX.cli}\` to authenticate`))
+        )
       }
     }
 
@@ -537,17 +607,21 @@ export function registerUsageHandlers(ipcMain: IpcMain, db: Database.Database): 
         if (!config.enabled) continue
         const meta: ProviderMeta = { id: row.id, label: row.label, cli: row.id, vendor: row.label }
         fetchers.push(fetchProvider(meta, () => fetchCustomUsage(row.id, row.label, config)))
-      } catch { /* skip corrupt config */ }
+      } catch {
+        /* skip corrupt config */
+      }
     }
 
-    inflight = Promise.all(fetchers).then((results) => {
-      lastFetchAt = Date.now()
-      inflight = null
-      return results
-    }).catch((e) => {
-      inflight = null
-      throw e
-    })
+    inflight = Promise.all(fetchers)
+      .then((results) => {
+        lastFetchAt = Date.now()
+        inflight = null
+        return results
+      })
+      .catch((e) => {
+        inflight = null
+        throw e
+      })
 
     return inflight
   })

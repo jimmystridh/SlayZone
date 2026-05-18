@@ -54,7 +54,11 @@ function main() {
   }
 
   const channels = JSON.parse(channelsJson)
-  if (!Array.isArray(channels) || channels.length === 0 || channels.some((c) => typeof c !== 'string' || c.length === 0)) {
+  if (
+    !Array.isArray(channels) ||
+    channels.length === 0 ||
+    channels.some((c) => typeof c !== 'string' || c.length === 0)
+  ) {
     throw new Error('channels-json must be a non-empty JSON string array')
   }
 
@@ -79,7 +83,8 @@ function main() {
     }
   })
 
-  const checksums = artifacts.map((artifact) => `${artifact.sha256}  ${artifact.name}`).join('\n') + '\n'
+  const checksums =
+    artifacts.map((artifact) => `${artifact.sha256}  ${artifact.name}`).join('\n') + '\n'
 
   const manifest = {
     schemaVersion: 1,

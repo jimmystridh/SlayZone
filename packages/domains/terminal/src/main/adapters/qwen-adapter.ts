@@ -1,4 +1,11 @@
-import { defaultEncodeSubmit, type TerminalAdapter, type PromptInfo, type ActivityState, type ErrorInfo, type ValidationResult } from './types'
+import {
+  defaultEncodeSubmit,
+  type TerminalAdapter,
+  type PromptInfo,
+  type ActivityState,
+  type ErrorInfo,
+  type ValidationResult
+} from './types'
 import { whichBinary, validateShellEnv } from '../shell-env'
 
 /**
@@ -41,7 +48,7 @@ export class QwenAdapter implements TerminalAdapter {
       return {
         code: 'NOT_AUTHENTICATED',
         message: 'Not authenticated — run `qwen` once to log in',
-        recoverable: false,
+        recoverable: false
       }
     }
 
@@ -81,7 +88,7 @@ export class QwenAdapter implements TerminalAdapter {
       check: 'Binary found',
       ok: !!found,
       detail: found ?? 'qwen not found in PATH',
-      fix: found ? undefined : 'Install qwen-code (e.g. npm install -g @qwen-code/qwen-code)',
+      fix: found ? undefined : 'Install qwen-code (e.g. npm install -g @qwen-code/qwen-code)'
     })
     return results
   }

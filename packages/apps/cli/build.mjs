@@ -10,5 +10,5 @@ await build({
   outfile: 'dist/slay.js',
   banner: { js: '#!/usr/bin/env node' },
   external: ['node:sqlite'],
-  define: { __APP_VERSION__: JSON.stringify(appPkg.version) },
+  define: { __APP_VERSION__: JSON.stringify(appPkg.version) }
 })

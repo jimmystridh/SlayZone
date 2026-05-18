@@ -7,7 +7,12 @@ import Database from 'better-sqlite3'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as os from 'node:os'
-import { registerDiagnosticsHandlers, recordDiagnosticEvent, flushWriteQueue, stopDiagnostics } from './service.js'
+import {
+  registerDiagnosticsHandlers,
+  recordDiagnosticEvent,
+  flushWriteQueue,
+  stopDiagnostics
+} from './service.js'
 
 const DIAG_SCHEMA = `
   CREATE TABLE diagnostics_events (
@@ -36,7 +41,10 @@ const SETTINGS_SCHEMA = `
 function makeHarness(): {
   settingsDb: Database.Database
   eventsDb: Database.Database
-  ipcMain: { handle: (c: string, h: (...a: unknown[]) => unknown) => void; handlers: Map<string, (...a: unknown[]) => unknown> }
+  ipcMain: {
+    handle: (c: string, h: (...a: unknown[]) => unknown) => void
+    handlers: Map<string, (...a: unknown[]) => unknown>
+  }
   reset: () => void
 } {
   const settingsDb = new Database(':memory:')
@@ -45,7 +53,9 @@ function makeHarness(): {
   eventsDb.exec(DIAG_SCHEMA)
   const handlers = new Map<string, (...a: unknown[]) => unknown>()
   const ipcMain = {
-    handle(c: string, h: (...a: unknown[]) => unknown) { handlers.set(c, h) },
+    handle(c: string, h: (...a: unknown[]) => unknown) {
+      handlers.set(c, h)
+    },
     handlers
   }
   return {
@@ -72,7 +82,10 @@ async function run(): Promise<void> {
   {
     h.reset()
     recordDiagnosticEvent({
-      level: 'info', source: 'test', event: 'test.batch', message: 'one'
+      level: 'info',
+      source: 'test',
+      event: 'test.batch',
+      message: 'one'
     })
     expect(countRows(h.eventsDb)).toBe(0)
     console.log('  ✓ recordDiagnosticEvent does not write synchronously')
@@ -89,7 +102,10 @@ async function run(): Promise<void> {
   {
     h.reset()
     recordDiagnosticEvent({
-      level: 'error', source: 'test', event: 'test.err', message: 'boom'
+      level: 'error',
+      source: 'test',
+      event: 'test.err',
+      message: 'boom'
     })
     expect(countRows(h.eventsDb)).toBe(1)
     console.log('  ✓ error-level events flush synchronously')
@@ -101,14 +117,20 @@ async function run(): Promise<void> {
     // Enqueue 999 — below batch threshold (1000)
     for (let i = 0; i < 999; i++) {
       recordDiagnosticEvent({
-        level: 'info', source: 'test', event: 'test.batch', message: `n-${i}`
+        level: 'info',
+        source: 'test',
+        event: 'test.batch',
+        message: `n-${i}`
       })
     }
     expect(countRows(h.eventsDb)).toBe(0)
 
     // 1000th triggers flush
     recordDiagnosticEvent({
-      level: 'info', source: 'test', event: 'test.batch', message: 'n-999'
+      level: 'info',
+      source: 'test',
+      event: 'test.batch',
+      message: 'n-999'
     })
     expect(countRows(h.eventsDb)).toBe(1000)
     console.log('  ✓ flushes on reaching WRITE_BATCH_SIZE (1000)')
@@ -117,7 +139,7 @@ async function run(): Promise<void> {
   // 5. queue cap drops events under runaway load
   {
     h.reset()
-    flushWriteQueue()  // clear any residue
+    flushWriteQueue() // clear any residue
 
     // Push WAY past the cap without flushing. We achieve this by using
     // info-level events and never flushing manually — each enqueue without
@@ -130,7 +152,10 @@ async function run(): Promise<void> {
     const TOTAL = 3500
     for (let i = 0; i < TOTAL; i++) {
       recordDiagnosticEvent({
-        level: 'info', source: 'test', event: 'test.bulk', message: `b-${i}`
+        level: 'info',
+        source: 'test',
+        event: 'test.bulk',
+        message: `b-${i}`
       })
     }
     flushWriteQueue()
@@ -142,7 +167,10 @@ async function run(): Promise<void> {
   {
     h.reset()
     recordDiagnosticEvent({
-      level: 'debug', source: 'test', event: 'test.debug', message: 'should-drop'
+      level: 'debug',
+      source: 'test',
+      event: 'test.debug',
+      message: 'should-drop'
     })
     flushWriteQueue()
     expect(countRows(h.eventsDb)).toBe(0)
@@ -152,7 +180,9 @@ async function run(): Promise<void> {
   // 7. debug events kept when verbose
   {
     h.reset()
-    h.settingsDb.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('diagnostics_verbose', '1')
+    h.settingsDb
+      .prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
+      .run('diagnostics_verbose', '1')
     // bust cache by calling setConfig path: easiest = directly poke via the public API
     // The cachedConfig invalidates only via saveDiagnosticsConfig. Without that, the
     // cache returns the old verbose=false value. Use the IPC handler to invalidate.
@@ -160,10 +190,13 @@ async function run(): Promise<void> {
     await setConfig({}, { verbose: true })
 
     recordDiagnosticEvent({
-      level: 'debug', source: 'test', event: 'test.debug', message: 'should-keep'
+      level: 'debug',
+      source: 'test',
+      event: 'test.debug',
+      message: 'should-keep'
     })
     flushWriteQueue()
-    expect(countRows(h.eventsDb)).toBe(2)  // setConfig records db.mutation too
+    expect(countRows(h.eventsDb)).toBe(2) // setConfig records db.mutation too
     console.log('  ✓ debug events kept when verbose=true')
   }
 
@@ -175,15 +208,18 @@ async function run(): Promise<void> {
     const setConfig = h.ipcMain.handlers.get('diagnostics:setConfig')!
     await setConfig({}, { verbose: false })
     flushWriteQueue()
-    h.reset()  // wipe eventsDb rows
+    h.reset() // wipe eventsDb rows
 
     // Close the events DB so flushes no-op and the queue accumulates.
     h.eventsDb.close()
 
-    const OVERFLOW = 6_000  // 1000 over the 5000 cap
+    const OVERFLOW = 6_000 // 1000 over the 5000 cap
     for (let i = 0; i < OVERFLOW; i++) {
       recordDiagnosticEvent({
-        level: 'info', source: 'test', event: 'test.overflow', message: `o-${i}`
+        level: 'info',
+        source: 'test',
+        event: 'test.overflow',
+        message: `o-${i}`
       })
     }
 
@@ -197,14 +233,19 @@ async function run(): Promise<void> {
     // 5000 buffered + 1 synthetic diag.dropped event = 5001
     expect(countRows(fresh)).toBe(5001)
 
-    const dropEvent = fresh.prepare(
-      `SELECT level, source, event, payload_json FROM diagnostics_events WHERE event = 'diag.dropped'`
-    ).get() as { level: string; source: string; event: string; payload_json: string } | undefined
+    const dropEvent = fresh
+      .prepare(
+        `SELECT level, source, event, payload_json FROM diagnostics_events WHERE event = 'diag.dropped'`
+      )
+      .get() as { level: string; source: string; event: string; payload_json: string } | undefined
 
     expect(dropEvent).toBeTruthy()
     expect(dropEvent!.level).toBe('warn')
     expect(dropEvent!.source).toBe('diagnostics')
-    const payload = JSON.parse(dropEvent!.payload_json) as { droppedCount: number; queueCap: number }
+    const payload = JSON.parse(dropEvent!.payload_json) as {
+      droppedCount: number
+      queueCap: number
+    }
     expect(payload.droppedCount).toBe(1000)
     expect(payload.queueCap).toBe(5000)
 

@@ -7,12 +7,15 @@ interface ArtifactSearchPanelProps {
   artifacts: TaskArtifact[]
   readContent: (id: string) => Promise<string | null>
   getArtifactPath: (artifact: TaskArtifact) => string
-  onSelectResult: (artifactId: string, payload: {
-    query: string
-    matchCase: boolean
-    useRegex: boolean
-    matchIndex: number
-  }) => void
+  onSelectResult: (
+    artifactId: string,
+    payload: {
+      query: string
+      matchCase: boolean
+      useRegex: boolean
+      matchIndex: number
+    }
+  ) => void
 }
 
 interface SearchMatch {
@@ -28,7 +31,12 @@ interface ArtifactResult {
   matches: SearchMatch[]
 }
 
-export function ArtifactSearchPanel({ artifacts, readContent, getArtifactPath, onSelectResult }: ArtifactSearchPanelProps) {
+export function ArtifactSearchPanel({
+  artifacts,
+  readContent,
+  getArtifactPath,
+  onSelectResult
+}: ArtifactSearchPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
   const [matchCase, setMatchCase] = useState(false)
@@ -39,12 +47,21 @@ export function ArtifactSearchPanel({ artifacts, readContent, getArtifactPath, o
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const contentCache = useRef<Map<string, string>>(new Map())
 
-  useEffect(() => { inputRef.current?.focus() }, [])
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
 
   // Invalidate cache when artifacts change
-  const artifactIds = useMemo(() => artifacts.map(a => a.id).sort().join(','), [artifacts])
+  const artifactIds = useMemo(
+    () =>
+      artifacts
+        .map((a) => a.id)
+        .sort()
+        .join(','),
+    [artifacts]
+  )
   useEffect(() => {
-    const current = new Set(artifacts.map(a => a.id))
+    const current = new Set(artifacts.map((a) => a.id))
     for (const key of contentCache.current.keys()) {
       if (!current.has(key)) contentCache.current.delete(key)
     }
@@ -52,8 +69,9 @@ export function ArtifactSearchPanel({ artifacts, readContent, getArtifactPath, o
 
   // Text artifacts only
   const textArtifacts = useMemo(
-    () => artifacts.filter(a => !isBinaryRenderMode(getEffectiveRenderMode(a.title, a.render_mode))),
-    [artifacts],
+    () =>
+      artifacts.filter((a) => !isBinaryRenderMode(getEffectiveRenderMode(a.title, a.render_mode))),
+    [artifacts]
   )
 
   // Debounced search
@@ -74,12 +92,14 @@ export function ArtifactSearchPanel({ artifacts, readContent, getArtifactPath, o
         void new RegExp(escaped, flags)
 
         // Load content for all text artifacts (cached)
-        await Promise.all(textArtifacts.map(async (a) => {
-          if (!contentCache.current.has(a.id)) {
-            const c = await readContent(a.id)
-            if (c != null) contentCache.current.set(a.id, c)
-          }
-        }))
+        await Promise.all(
+          textArtifacts.map(async (a) => {
+            if (!contentCache.current.has(a.id)) {
+              const c = await readContent(a.id)
+              if (c != null) contentCache.current.set(a.id, c)
+            }
+          })
+        )
 
         const res: ArtifactResult[] = []
         for (const artifact of textArtifacts) {
@@ -95,7 +115,10 @@ export function ArtifactSearchPanel({ artifacts, readContent, getArtifactPath, o
             let n = 0
             let m: RegExpExecArray | null
             while ((m = lineRe.exec(lines[i])) !== null) {
-              if (m[0].length === 0) { lineRe.lastIndex++; continue }
+              if (m[0].length === 0) {
+                lineRe.lastIndex++
+                continue
+              }
               n++
             }
             if (n > 0) {
@@ -115,13 +138,15 @@ export function ArtifactSearchPanel({ artifacts, readContent, getArtifactPath, o
         setSearching(false)
       }
     }, 300)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
   }, [query, matchCase, useRegex, textArtifacts, readContent, getArtifactPath])
 
   const totalMatches = results.reduce((n, r) => n + r.matches.length, 0)
 
   const toggleCollapse = useCallback((id: string) => {
-    setCollapsed(prev => {
+    setCollapsed((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -160,7 +185,9 @@ export function ArtifactSearchPanel({ artifacts, readContent, getArtifactPath, o
         {query.trim() && (
           <div className="text-[10px] text-muted-foreground px-0.5">
             {searching ? (
-              <span className="flex items-center gap-1"><Loader2 className="size-3 animate-spin" /> Searching...</span>
+              <span className="flex items-center gap-1">
+                <Loader2 className="size-3 animate-spin" /> Searching...
+              </span>
             ) : (
               `${totalMatches} result${totalMatches !== 1 ? 's' : ''} in ${results.length} file${results.length !== 1 ? 's' : ''}`
             )}
@@ -178,24 +205,42 @@ export function ArtifactSearchPanel({ artifacts, readContent, getArtifactPath, o
                 className="flex items-center gap-1.5 w-full px-2 py-0.5 hover:bg-muted/50 text-left"
                 onClick={() => toggleCollapse(file.artifact.id)}
               >
-                {isCollapsed
-                  ? <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
-                  : <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
-                }
+                {isCollapsed ? (
+                  <ChevronRight className="size-3.5 text-muted-foreground shrink-0" />
+                ) : (
+                  <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
+                )}
                 <span className="truncate text-xs text-foreground">{file.path}</span>
-                <span className="text-[10px] text-muted-foreground ml-auto shrink-0 tabular-nums">{file.matches.length}</span>
+                <span className="text-[10px] text-muted-foreground ml-auto shrink-0 tabular-nums">
+                  {file.matches.length}
+                </span>
               </button>
 
-              {!isCollapsed && file.matches.map((match, i) => (
-                <button
-                  key={i}
-                  className="flex items-center gap-2 w-full pl-7 pr-2 py-0.5 hover:bg-muted/50 text-left"
-                  onClick={() => onSelectResult(file.artifact.id, { query, matchCase, useRegex, matchIndex: match.matchIndex })}
-                >
-                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 w-6 text-right">{match.line}</span>
-                  <HighlightedLine text={match.lineText} query={query} matchCase={matchCase} useRegex={useRegex} />
-                </button>
-              ))}
+              {!isCollapsed &&
+                file.matches.map((match, i) => (
+                  <button
+                    key={i}
+                    className="flex items-center gap-2 w-full pl-7 pr-2 py-0.5 hover:bg-muted/50 text-left"
+                    onClick={() =>
+                      onSelectResult(file.artifact.id, {
+                        query,
+                        matchCase,
+                        useRegex,
+                        matchIndex: match.matchIndex
+                      })
+                    }
+                  >
+                    <span className="text-[10px] text-muted-foreground tabular-nums shrink-0 w-6 text-right">
+                      {match.line}
+                    </span>
+                    <HighlightedLine
+                      text={match.lineText}
+                      query={query}
+                      matchCase={matchCase}
+                      useRegex={useRegex}
+                    />
+                  </button>
+                ))}
             </div>
           )
         })}
@@ -204,7 +249,17 @@ export function ArtifactSearchPanel({ artifacts, readContent, getArtifactPath, o
   )
 }
 
-function HighlightedLine({ text, query, matchCase, useRegex }: { text: string; query: string; matchCase: boolean; useRegex: boolean }) {
+function HighlightedLine({
+  text,
+  query,
+  matchCase,
+  useRegex
+}: {
+  text: string
+  query: string
+  matchCase: boolean
+  useRegex: boolean
+}) {
   const trimmed = text.trimStart()
   const parts: { text: string; highlight: boolean }[] = []
 
@@ -216,10 +271,14 @@ function HighlightedLine({ text, query, matchCase, useRegex }: { text: string; q
     let lastIndex = 0
     let m: RegExpExecArray | null
     while ((m = re.exec(trimmed)) !== null) {
-      if (m.index > lastIndex) parts.push({ text: trimmed.slice(lastIndex, m.index), highlight: false })
+      if (m.index > lastIndex)
+        parts.push({ text: trimmed.slice(lastIndex, m.index), highlight: false })
       parts.push({ text: m[0], highlight: true })
       lastIndex = re.lastIndex
-      if (m[0].length === 0) { re.lastIndex++; break }
+      if (m[0].length === 0) {
+        re.lastIndex++
+        break
+      }
     }
     if (lastIndex < trimmed.length) parts.push({ text: trimmed.slice(lastIndex), highlight: false })
   } catch {
@@ -229,9 +288,13 @@ function HighlightedLine({ text, query, matchCase, useRegex }: { text: string; q
   return (
     <span className="truncate text-[10px] text-muted-foreground">
       {parts.map((p, i) =>
-        p.highlight
-          ? <span key={i} className="text-foreground bg-amber-500/30 rounded-sm">{p.text}</span>
-          : <span key={i}>{p.text}</span>
+        p.highlight ? (
+          <span key={i} className="text-foreground bg-amber-500/30 rounded-sm">
+            {p.text}
+          </span>
+        ) : (
+          <span key={i}>{p.text}</span>
+        )
       )}
     </span>
   )

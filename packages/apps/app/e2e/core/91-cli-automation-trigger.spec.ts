@@ -43,7 +43,7 @@ test.describe('CLI: automation triggers (end-to-end)', () => {
   const runCli = (...args: string[]) =>
     spawnSync('node', [SLAY_JS, ...args], {
       env: { ...process.env, SLAYZONE_DB_PATH: dbPath, SLAYZONE_MCP_PORT: String(mcpPort) },
-      encoding: 'utf8',
+      encoding: 'utf8'
     })
 
   const openDb = () => new DatabaseSync(dbPath)
@@ -74,7 +74,12 @@ test.describe('CLI: automation triggers (end-to-end)', () => {
         .prepare(
           `SELECT id, status, error, completed_at FROM automation_runs WHERE automation_id = ? ORDER BY started_at DESC`
         )
-        .all(automationId) as { id: string; status: string; error: string | null; completed_at: string | null }[]
+        .all(automationId) as {
+        id: string
+        status: string
+        error: string | null
+        completed_at: string | null
+      }[]
       db.close()
       if (rows.length > 0 && rows[0].status !== 'running') return rows[0]
       await new Promise((r) => setTimeout(r, 100))
@@ -82,23 +87,33 @@ test.describe('CLI: automation triggers (end-to-end)', () => {
     throw new Error(`Timed out waiting for automation run for ${automationId}`)
   }
 
-  const cleanup = (opts: { automationId?: string; tmpFile?: string; taskTitle?: string; taskId?: string }) => {
+  const cleanup = (opts: {
+    automationId?: string
+    tmpFile?: string
+    taskTitle?: string
+    taskId?: string
+  }) => {
     if (opts.tmpFile && fs.existsSync(opts.tmpFile)) fs.unlinkSync(opts.tmpFile)
     const db = openDb()
     if (opts.automationId) db.prepare('DELETE FROM automations WHERE id = ?').run(opts.automationId)
     if (opts.taskId) db.prepare('DELETE FROM tasks WHERE id = ?').run(opts.taskId)
-    if (opts.taskTitle) db.prepare('DELETE FROM tasks WHERE title = ? AND project_id = ?').run(opts.taskTitle, projectId)
+    if (opts.taskTitle)
+      db.prepare('DELETE FROM tasks WHERE title = ? AND project_id = ?').run(
+        opts.taskTitle,
+        projectId
+      )
     db.close()
   }
 
-  const tmpPath = (label: string) => path.join(os.tmpdir(), `auto-${label}-${crypto.randomUUID()}.txt`)
+  const tmpPath = (label: string) =>
+    path.join(os.tmpdir(), `auto-${label}-${crypto.randomUUID()}.txt`)
 
   test('task_archived: slay tasks archive fires automation', async ({ mainWindow }) => {
     const tmpFile = tmpPath('archive')
     const automationId = insertAutomation({
       name: 'archive auto',
       trigger: { type: 'task_archived', params: {} },
-      actions: [{ type: 'run_command', params: { command: `echo fired > ${tmpFile}` } }],
+      actions: [{ type: 'run_command', params: { command: `echo fired > ${tmpFile}` } }]
     })
 
     const s = seed(mainWindow)
@@ -124,7 +139,7 @@ test.describe('CLI: automation triggers (end-to-end)', () => {
     const automationId = insertAutomation({
       name: 'create auto',
       trigger: { type: 'task_created', params: {} },
-      actions: [{ type: 'run_command', params: { command: `echo fired > ${tmpFile}` } }],
+      actions: [{ type: 'run_command', params: { command: `echo fired > ${tmpFile}` } }]
     })
 
     const title = `auto-create-${Date.now()}`
@@ -147,7 +162,7 @@ test.describe('CLI: automation triggers (end-to-end)', () => {
     const automationId = insertAutomation({
       name: 'status auto',
       trigger: { type: 'task_status_change', params: { fromStatus: 'todo', toStatus: 'done' } },
-      actions: [{ type: 'run_command', params: { command: `echo fired > ${tmpFile}` } }],
+      actions: [{ type: 'run_command', params: { command: `echo fired > ${tmpFile}` } }]
     })
 
     const s = seed(mainWindow)

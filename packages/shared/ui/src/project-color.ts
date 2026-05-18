@@ -1,7 +1,7 @@
 const ALPHA = {
-  page: '08',      // full-page background tint
-  tab: '28',       // inactive tab
-  tabActive: '40', // active tab
+  page: '08', // full-page background tint
+  tab: '28', // inactive tab
+  tabActive: '40' // active tab
 } as const
 
 export type ProjectColorVariant = keyof typeof ALPHA

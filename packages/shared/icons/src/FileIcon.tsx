@@ -21,17 +21,18 @@ export function FileIcon({ fileName, className }: FileIconProps) {
   useEffect(() => {
     if (svg !== null) return
     let cancelled = false
-    getFileIconSvgAsync(fileName).then((s) => {
-      if (!cancelled) setSvg(s)
-    }).catch(() => {/* keep placeholder */})
-    return () => { cancelled = true }
+    getFileIconSvgAsync(fileName)
+      .then((s) => {
+        if (!cancelled) setSvg(s)
+      })
+      .catch(() => {
+        /* keep placeholder */
+      })
+    return () => {
+      cancelled = true
+    }
   }, [fileName, svg])
 
   if (svg === null) return <span className={className} />
-  return (
-    <span
-      className={className}
-      dangerouslySetInnerHTML={{ __html: sanitizeSvg(svg) }}
-    />
-  )
+  return <span className={className} dangerouslySetInnerHTML={{ __html: sanitizeSvg(svg) }} />
 }

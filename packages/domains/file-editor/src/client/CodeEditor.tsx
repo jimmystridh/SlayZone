@@ -22,7 +22,9 @@ import { parser as tomlParser } from 'lezer-toml'
 import { buildCodeMirrorTheme } from './codemirror-theme'
 
 const tomlLanguage = LRLanguage.define({ parser: tomlParser })
-function toml() { return new LanguageSupport(tomlLanguage) }
+function toml() {
+  return new LanguageSupport(tomlLanguage)
+}
 
 function getLanguage(filePath: string) {
   const ext = filePath.split('.').pop()?.toLowerCase()
@@ -64,7 +66,6 @@ function getLanguage(filePath: string) {
   }
 }
 
-
 interface CodeEditorProps {
   filePath: string
   content: string
@@ -81,10 +82,24 @@ interface CodeEditorProps {
   viewHandleRef?: MutableRefObject<EditorView | null>
 }
 
-export function CodeEditor({ filePath, content, onChange, onSave, version, goToPosition, onGoToPositionApplied, minimap, viewHandleRef }: CodeEditorProps) {
+export function CodeEditor({
+  filePath,
+  content,
+  onChange,
+  onSave,
+  version,
+  goToPosition,
+  onGoToPositionApplied,
+  minimap,
+  viewHandleRef
+}: CodeEditorProps) {
   const { editorThemeId, contentVariant } = useTheme()
   const {
-    editorFontSize, editorWordWrap, editorTabSize, editorIndentTabs, editorRenderWhitespace,
+    editorFontSize,
+    editorWordWrap,
+    editorTabSize,
+    editorIndentTabs,
+    editorRenderWhitespace
   } = useAppearance()
 
   const resolvedEditorColors = getThemeEditorColors(editorThemeId, contentVariant)
@@ -93,10 +108,14 @@ export function CodeEditor({ filePath, content, onChange, onSave, version, goToP
     [editorThemeId, contentVariant]
   )
 
-  const sizeTheme = useMemo(() => EditorView.theme({
-    '&': { height: '100%', fontSize: `${editorFontSize}px` },
-    '.cm-content': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' },
-  }), [editorFontSize])
+  const sizeTheme = useMemo(
+    () =>
+      EditorView.theme({
+        '&': { height: '100%', fontSize: `${editorFontSize}px` },
+        '.cm-content': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }
+      }),
+    [editorFontSize]
+  )
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const onChangeRef = useRef(onChange)
@@ -129,12 +148,16 @@ export function CodeEditor({ filePath, content, onChange, onSave, version, goToP
         {
           key: 'Tab',
           run: (view) => {
-            if (view.state.selection.ranges.some(r => !r.empty))
-              return indentMore(view)
+            if (view.state.selection.ranges.some((r) => !r.empty)) return indentMore(view)
             const unit = view.state.facet(indentUnit)
-            view.dispatch(view.state.update(view.state.replaceSelection(unit), { scrollIntoView: true, userEvent: 'input' }))
+            view.dispatch(
+              view.state.update(view.state.replaceSelection(unit), {
+                scrollIntoView: true,
+                userEvent: 'input'
+              })
+            )
             return true
-          },
+          }
         },
         { key: 'Shift-Tab', run: indentLess },
         {
@@ -154,7 +177,7 @@ export function CodeEditor({ filePath, content, onChange, onSave, version, goToP
       indentComp.current.of(indentUnit.of(editorIndentTabs ? '\t' : ' '.repeat(editorTabSize))),
       wrapComp.current.of(editorWordWrap === 'on' ? EditorView.lineWrapping : []),
       whitespaceComp.current.of(editorRenderWhitespace !== 'none' ? highlightWhitespace() : []),
-      minimapComp.current.of(minimap ? buildMinimap() : []),
+      minimapComp.current.of(minimap ? buildMinimap() : [])
     ]
     if (lang) extensions.splice(1, 0, lang)
 
@@ -183,7 +206,7 @@ export function CodeEditor({ filePath, content, onChange, onSave, version, goToP
     const pos = lineObj.from + col
     view.dispatch({
       selection: { anchor: pos },
-      scrollIntoView: true,
+      scrollIntoView: true
     })
     view.focus()
     onGoToRef.current?.()
@@ -210,9 +233,13 @@ export function CodeEditor({ filePath, content, onChange, onSave, version, goToP
     view.dispatch({
       effects: [
         tabSizeComp.current.reconfigure(EditorState.tabSize.of(editorTabSize)),
-        indentComp.current.reconfigure(indentUnit.of(editorIndentTabs ? '\t' : ' '.repeat(editorTabSize))),
+        indentComp.current.reconfigure(
+          indentUnit.of(editorIndentTabs ? '\t' : ' '.repeat(editorTabSize))
+        ),
         wrapComp.current.reconfigure(editorWordWrap === 'on' ? EditorView.lineWrapping : []),
-        whitespaceComp.current.reconfigure(editorRenderWhitespace !== 'none' ? highlightWhitespace() : []),
+        whitespaceComp.current.reconfigure(
+          editorRenderWhitespace !== 'none' ? highlightWhitespace() : []
+        )
       ]
     })
   }, [editorWordWrap, editorTabSize, editorIndentTabs, editorRenderWhitespace])

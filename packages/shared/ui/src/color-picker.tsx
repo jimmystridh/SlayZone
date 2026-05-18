@@ -18,10 +18,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
         <Button
           type="button"
           variant="outline"
-          className={cn(
-            'w-full justify-start text-left font-normal',
-            'h-10 px-3'
-          )}
+          className={cn('w-full justify-start text-left font-normal', 'h-10 px-3')}
         >
           <div className="flex items-center gap-2 w-full">
             <div

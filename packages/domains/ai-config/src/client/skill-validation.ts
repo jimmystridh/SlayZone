@@ -8,7 +8,9 @@ export function getSkillValidation(
   return deriveSkillValidation(item.slug, item.content)
 }
 
-export function getMarketplaceProvenance(item: Pick<AiConfigItem, 'metadata_json'>): MarketplaceProvenance | null {
+export function getMarketplaceProvenance(
+  item: Pick<AiConfigItem, 'metadata_json'>
+): MarketplaceProvenance | null {
   try {
     const meta = JSON.parse(item.metadata_json)
     return meta?.marketplace ?? null
@@ -17,7 +19,9 @@ export function getMarketplaceProvenance(item: Pick<AiConfigItem, 'metadata_json
   }
 }
 
-export function getSkillFrontmatterActionLabel(validation: SkillValidationState | null | undefined): string | null {
+export function getSkillFrontmatterActionLabel(
+  validation: SkillValidationState | null | undefined
+): string | null {
   if (!validation || validation.status === 'valid') return null
   return validation.issues.some((issue) => issue.code === 'frontmatter_missing')
     ? 'Add frontmatter'

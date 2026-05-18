@@ -1,5 +1,14 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Settings, Keyboard, ChevronDown, Megaphone, Check, CheckCheck, Trophy, BarChart3 } from 'lucide-react'
+import {
+  Settings,
+  Keyboard,
+  ChevronDown,
+  Megaphone,
+  Check,
+  CheckCheck,
+  Trophy,
+  BarChart3
+} from 'lucide-react'
 import { FaRegHandshake } from 'react-icons/fa'
 import * as Collapsible from '@radix-ui/react-collapsible'
 import { isConvexConfigured } from '@/lib/convexAuth'
@@ -52,7 +61,7 @@ function ShortcutRow({
   shadowAction,
   onConfirmReassign,
   onCancelConflict,
-  onDismissShadow,
+  onDismissShadow
 }: {
   def: ShortcutDefinition
   effectiveKeys: string | null
@@ -109,8 +118,8 @@ function ShortcutRow({
                 Unbound
               </span>
             )}
-            {isBound && (
-              customizable ? (
+            {isBound &&
+              (customizable ? (
                 <button
                   type="button"
                   onClick={onClear}
@@ -132,8 +141,7 @@ function ShortcutRow({
                   </TooltipTrigger>
                   <TooltipContent side="left">This shortcut cannot be removed</TooltipContent>
                 </Tooltip>
-              )
-            )}
+              ))}
           </div>
         )}
       </div>
@@ -187,18 +195,31 @@ export function SidebarFooterIcons({
   onLeaderboard,
   onboardingChecklist,
   trailing,
-  actions,
+  actions
 }: SidebarFooterIconsProps) {
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
-  const [openShortcutGroup, setOpenShortcutGroup] = useState<string | null>(() => shortcutDefinitions[0]?.group ?? null)
+  const [openShortcutGroup, setOpenShortcutGroup] = useState<string | null>(
+    () => shortcutDefinitions[0]?.group ?? null
+  )
   const [checklistOpen, setChecklistOpen] = useState(false)
   const [recordingId, setRecordingId] = useState<string | null>(null)
   const [pendingKeys, setPendingKeys] = useState<string | null>(null)
   const [pendingConflict, setPendingConflict] = useState<ShortcutDefinition | null>(null)
-  const [shadowWarning, setShadowWarning] = useState<{ defId: string; shadow: ShortcutDefinition } | null>(null)
+  const [shadowWarning, setShadowWarning] = useState<{
+    defId: string
+    shadow: ShortcutDefinition
+  } | null>(null)
 
   const overrides = useShortcutStore((s) => s.overrides)
-  const { getKeys, findConflict, findShadow, setOverride, batchSetOverrides, resetAll, setRecording } = useShortcutStore()
+  const {
+    getKeys,
+    findConflict,
+    findShadow,
+    setOverride,
+    batchSetOverrides,
+    resetAll,
+    setRecording
+  } = useShortcutStore()
 
   const effectiveKeysMap = useMemo(() => {
     const map: Record<string, string | null> = {}
@@ -221,32 +242,35 @@ export function SidebarFooterIcons({
     return groups
   }, [])
 
-  const handleCapture = useCallback((keys: string) => {
-    if (!recordingId) return
-    const def = shortcutDefinitions.find((d) => d.id === recordingId)
-    if (!def) return
+  const handleCapture = useCallback(
+    (keys: string) => {
+      if (!recordingId) return
+      const def = shortcutDefinitions.find((d) => d.id === recordingId)
+      if (!def) return
 
-    const conflict = findConflict(keys, def.scope)
-    if (conflict && conflict.id !== recordingId) {
-      setPendingKeys(keys)
-      setPendingConflict(conflict)
-      return
-    }
+      const conflict = findConflict(keys, def.scope)
+      if (conflict && conflict.id !== recordingId) {
+        setPendingKeys(keys)
+        setPendingConflict(conflict)
+        return
+      }
 
-    const shadow = findShadow(keys, def.scope)
+      const shadow = findShadow(keys, def.scope)
 
-    setOverride(recordingId, keys)
-    setRecording(false)
-    setPendingKeys(null)
-    setPendingConflict(null)
+      setOverride(recordingId, keys)
+      setRecording(false)
+      setPendingKeys(null)
+      setPendingConflict(null)
 
-    if (shadow && shadow.id !== recordingId) {
-      setShadowWarning({ defId: recordingId, shadow })
-      setRecordingId(null)
-    } else {
-      setRecordingId(null)
-    }
-  }, [recordingId, findConflict, findShadow, setOverride, setRecording])
+      if (shadow && shadow.id !== recordingId) {
+        setShadowWarning({ defId: recordingId, shadow })
+        setRecordingId(null)
+      } else {
+        setRecordingId(null)
+      }
+    },
+    [recordingId, findConflict, findShadow, setOverride, setRecording]
+  )
 
   const handleCancelRecording = useCallback(() => {
     setRecordingId(null)
@@ -435,10 +459,13 @@ export function SidebarFooterIcons({
         <TooltipContent side={tooltipSide}>Keyboard Shortcuts</TooltipContent>
       </Tooltip>
       {isConvexConfigured && <FeedbackDialog />}
-      <Dialog open={shortcutsOpen} onOpenChange={(open) => {
-        setShortcutsOpen(open)
-        if (!open) handleCancelRecording()
-      }}>
+      <Dialog
+        open={shortcutsOpen}
+        onOpenChange={(open) => {
+          setShortcutsOpen(open)
+          if (!open) handleCancelRecording()
+        }}
+      >
         <DialogContent className="max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Keyboard Shortcuts</DialogTitle>
@@ -457,7 +484,9 @@ export function SidebarFooterIcons({
                 onOpenChange={(open) => setOpenShortcutGroup(open ? group.heading : null)}
               >
                 <Collapsible.Trigger className="flex w-full items-center justify-between px-3 py-2 rounded-lg bg-muted hover:bg-accent hover:text-accent-foreground transition-colors group/trigger">
-                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">{group.heading}</p>
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                    {group.heading}
+                  </p>
                   <ChevronDown className="size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]/trigger:rotate-180" />
                 </Collapsible.Trigger>
                 <Collapsible.Content className="data-[state=closed]:hidden">

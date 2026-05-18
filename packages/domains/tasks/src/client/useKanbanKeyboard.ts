@@ -94,7 +94,9 @@ export function useKanbanKeyboard({
     for (const col of columns) {
       if (col.tasks.length > 0) {
         setFocusedTaskId(col.tasks[0].id)
-        cardRefs.current.get(col.tasks[0].id)?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+        cardRefs.current
+          .get(col.tasks[0].id)
+          ?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
         return
       }
     }
@@ -155,83 +157,149 @@ export function useKanbanKeyboard({
 
   const enabled = isActive && !pickerState && !isDragging
 
-  useGuardedHotkeys('j, ArrowDown', (e) => { e.preventDefault(); navigate('down') }, { enabled })
-  useGuardedHotkeys('k, ArrowUp', (e) => { e.preventDefault(); navigate('up') }, { enabled })
-  useGuardedHotkeys('h, ArrowLeft', (e) => { e.preventDefault(); navigate('left') }, { enabled })
-  useGuardedHotkeys('l, ArrowRight', (e) => { e.preventDefault(); navigate('right') }, { enabled })
-
-  useGuardedHotkeys('enter', (e) => {
-    if (!focusedTaskId) return
-    e.preventDefault()
-    const task = findTask(focusedTaskId)
-    if (task) onTaskClick?.(task, { metaKey: false })
-  }, { enabled })
-
-  useGuardedHotkeys('mod+enter', (e) => {
-    if (!focusedTaskId) return
-    e.preventDefault()
-    const task = findTask(focusedTaskId)
-    if (task) onTaskClick?.(task, { metaKey: true })
-  }, { enabled })
-
-  useGuardedHotkeys('s', (e) => {
-    if (!focusedTaskId || !onUpdateTask) return
-    e.preventDefault()
-    setPickerState({ type: 'status', taskId: focusedTaskId })
-  }, { enabled })
-
-  useGuardedHotkeys('p', (e) => {
-    if (!focusedTaskId || !onUpdateTask) return
-    e.preventDefault()
-    setPickerState({ type: 'priority', taskId: focusedTaskId })
-  }, { enabled })
-
-  useGuardedHotkeys('b', (e) => {
-    if (!focusedTaskId || !onUpdateTask) return
-    e.preventDefault()
-    const task = findTask(focusedTaskId)
-    if (task) {
-      onUpdateTask(focusedTaskId, {
-        is_blocked: !task.is_blocked,
-        ...(task.is_blocked ? { blocked_comment: null } : {})
-      } as Partial<Task>)
-    }
-  }, { enabled })
-
-  useGuardedHotkeys('shift+b', (e) => {
-    if (!focusedTaskId) return
-    e.preventDefault()
-    setBlockerDialogTaskId(focusedTaskId)
-  }, { enabled })
-
-  useGuardedHotkeys('escape', (e) => {
-    if (pickerState) {
+  useGuardedHotkeys(
+    'j, ArrowDown',
+    (e) => {
       e.preventDefault()
-      pickerClosingRef.current = true
-      setPickerState(null)
-      requestAnimationFrame(() => { pickerClosingRef.current = false })
-    } else if (selection && selection.size > 0) {
+      navigate('down')
+    },
+    { enabled }
+  )
+  useGuardedHotkeys(
+    'k, ArrowUp',
+    (e) => {
       e.preventDefault()
-      selection.clear()
-    } else if (focusedTaskId && !pickerClosingRef.current) {
+      navigate('up')
+    },
+    { enabled }
+  )
+  useGuardedHotkeys(
+    'h, ArrowLeft',
+    (e) => {
       e.preventDefault()
-      setFocusedTaskId(null)
-    }
-  }, { enabled: isActive })
+      navigate('left')
+    },
+    { enabled }
+  )
+  useGuardedHotkeys(
+    'l, ArrowRight',
+    (e) => {
+      e.preventDefault()
+      navigate('right')
+    },
+    { enabled }
+  )
 
-  useGuardedHotkeys('mod+a', (e) => {
-    if (!selection) return
-    e.preventDefault()
-    const ids: string[] = []
-    for (const c of columns) for (const t of c.tasks) ids.push(t.id)
-    selection.selectAll(ids)
-  }, { enabled })
+  useGuardedHotkeys(
+    'enter',
+    (e) => {
+      if (!focusedTaskId) return
+      e.preventDefault()
+      const task = findTask(focusedTaskId)
+      if (task) onTaskClick?.(task, { metaKey: false })
+    },
+    { enabled }
+  )
 
-  useGuardedHotkeys('x', (e) => {
-    if (!selection || !focusedTaskId) return
-    e.preventDefault()
-    selection.toggle(focusedTaskId)
-  }, { enabled })
+  useGuardedHotkeys(
+    'mod+enter',
+    (e) => {
+      if (!focusedTaskId) return
+      e.preventDefault()
+      const task = findTask(focusedTaskId)
+      if (task) onTaskClick?.(task, { metaKey: true })
+    },
+    { enabled }
+  )
+
+  useGuardedHotkeys(
+    's',
+    (e) => {
+      if (!focusedTaskId || !onUpdateTask) return
+      e.preventDefault()
+      setPickerState({ type: 'status', taskId: focusedTaskId })
+    },
+    { enabled }
+  )
+
+  useGuardedHotkeys(
+    'p',
+    (e) => {
+      if (!focusedTaskId || !onUpdateTask) return
+      e.preventDefault()
+      setPickerState({ type: 'priority', taskId: focusedTaskId })
+    },
+    { enabled }
+  )
+
+  useGuardedHotkeys(
+    'b',
+    (e) => {
+      if (!focusedTaskId || !onUpdateTask) return
+      e.preventDefault()
+      const task = findTask(focusedTaskId)
+      if (task) {
+        onUpdateTask(focusedTaskId, {
+          is_blocked: !task.is_blocked,
+          ...(task.is_blocked ? { blocked_comment: null } : {})
+        } as Partial<Task>)
+      }
+    },
+    { enabled }
+  )
+
+  useGuardedHotkeys(
+    'shift+b',
+    (e) => {
+      if (!focusedTaskId) return
+      e.preventDefault()
+      setBlockerDialogTaskId(focusedTaskId)
+    },
+    { enabled }
+  )
+
+  useGuardedHotkeys(
+    'escape',
+    (e) => {
+      if (pickerState) {
+        e.preventDefault()
+        pickerClosingRef.current = true
+        setPickerState(null)
+        requestAnimationFrame(() => {
+          pickerClosingRef.current = false
+        })
+      } else if (selection && selection.size > 0) {
+        e.preventDefault()
+        selection.clear()
+      } else if (focusedTaskId && !pickerClosingRef.current) {
+        e.preventDefault()
+        setFocusedTaskId(null)
+      }
+    },
+    { enabled: isActive }
+  )
+
+  useGuardedHotkeys(
+    'mod+a',
+    (e) => {
+      if (!selection) return
+      e.preventDefault()
+      const ids: string[] = []
+      for (const c of columns) for (const t of c.tasks) ids.push(t.id)
+      selection.selectAll(ids)
+    },
+    { enabled }
+  )
+
+  useGuardedHotkeys(
+    'x',
+    (e) => {
+      if (!selection || !focusedTaskId) return
+      e.preventDefault()
+      selection.toggle(focusedTaskId)
+    },
+    { enabled }
+  )
 
   const setHoveredTaskId = useCallback((id: string | null) => {
     hoveredTaskIdRef.current = id
@@ -244,7 +312,9 @@ export function useKanbanKeyboard({
     closePickerState: useCallback(() => {
       pickerClosingRef.current = true
       setPickerState(null)
-      requestAnimationFrame(() => { pickerClosingRef.current = false })
+      requestAnimationFrame(() => {
+        pickerClosingRef.current = false
+      })
     }, []),
     blockerDialogTaskId,
     closeBlockerDialog: useCallback(() => setBlockerDialogTaskId(null), []),

@@ -43,7 +43,10 @@ export class RingBuffer {
     // If single chunk still exceeds max, truncate it
     if (this.totalSize > this.maxSize && this.chunks.length === 1) {
       // Prepend ANSI reset in case truncation cuts mid-sequence
-      this.chunks[0] = { seq: this.chunks[0].seq, data: '\x1b[0m' + this.chunks[0].data.slice(-this.maxSize) }
+      this.chunks[0] = {
+        seq: this.chunks[0].seq,
+        data: '\x1b[0m' + this.chunks[0].data.slice(-this.maxSize)
+      }
       this.totalSize = this.chunks[0].data.length
     }
 
@@ -55,7 +58,7 @@ export class RingBuffer {
    * Returns empty array if afterSeq >= latest seq.
    */
   getChunksSince(afterSeq: number): BufferChunk[] {
-    return this.chunks.filter(c => c.seq > afterSeq)
+    return this.chunks.filter((c) => c.seq > afterSeq)
   }
 
   /**
@@ -70,7 +73,7 @@ export class RingBuffer {
    * Get the full buffer contents as a string.
    */
   toString(): string {
-    return this.chunks.map(c => c.data).join('')
+    return this.chunks.map((c) => c.data).join('')
   }
 
   /**

@@ -33,7 +33,9 @@ async function createEditor(markdown: string): Promise<{ editor: Editor; contain
 }
 
 /** Full editor — matches the plugin set from RichTextEditor */
-async function createFullEditor(markdown: string): Promise<{ editor: Editor; container: HTMLElement }> {
+async function createFullEditor(
+  markdown: string
+): Promise<{ editor: Editor; container: HTMLElement }> {
   const container = document.createElement('div')
   document.body.appendChild(container)
 

@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  cn,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@slayzone/ui'
+import { cn, Popover, PopoverContent, PopoverTrigger } from '@slayzone/ui'
 
 const PROMO_END = new Date('2026-03-29T07:59:00Z') // March 28 11:59 PM PT
 const PEAK_START = 5 // 5 AM PT
-const PEAK_END = 11  // 11 AM PT
+const PEAK_END = 11 // 11 AM PT
 const MAX_TIMER = 60 * 60_000 // 60 min cap to avoid drift
 
 const theme = {
@@ -17,7 +12,7 @@ const theme = {
   barBoosted: 'bg-orange-700',
   barPeak: 'bg-muted',
   legendBoosted: 'bg-orange-700',
-  legendPeak: 'bg-muted',
+  legendPeak: 'bg-muted'
 } as const
 
 interface BoostStatus {
@@ -33,13 +28,13 @@ function getPtTime(now: Date) {
     hour: 'numeric',
     minute: 'numeric',
     weekday: 'short',
-    hour12: false,
+    hour12: false
   })
   const parts = fmt.formatToParts(now)
   return {
     hour: Number(parts.find((p) => p.type === 'hour')?.value),
     minute: Number(parts.find((p) => p.type === 'minute')?.value),
-    weekday: parts.find((p) => p.type === 'weekday')?.value ?? '',
+    weekday: parts.find((p) => p.type === 'weekday')?.value ?? ''
   }
 }
 
@@ -49,7 +44,8 @@ function getBoostStatus(now: Date): BoostStatus {
 
   if (isWeekend) {
     const daysUntilMon = weekday === 'Sat' ? 2 : 1
-    const msLeft = daysUntilMon * 24 * 60 * 60_000 - (hour * 60 + minute) * 60_000 + PEAK_START * 60 * 60_000
+    const msLeft =
+      daysUntilMon * 24 * 60 * 60_000 - (hour * 60 + minute) * 60_000 + PEAK_START * 60 * 60_000
     return { isBoosted: true, msUntilChange: Math.min(msLeft, MAX_TIMER), ptHour: hour, isWeekend }
   }
 
@@ -73,7 +69,7 @@ function getBoostStatus(now: Date): BoostStatus {
 function buildTimeline(ptHour: number, isWeekend: boolean) {
   return Array.from({ length: 24 }, (_, i) => ({
     isBoosted: isWeekend || i < PEAK_START || i >= PEAK_END,
-    isCurrent: i === ptHour,
+    isCurrent: i === ptHour
   }))
 }
 
@@ -89,7 +85,12 @@ function formatCountdown(ms: number): string {
 
 function useBoostStatus() {
   const [visible, setVisible] = useState(false)
-  const [status, setStatus] = useState<BoostStatus>({ isBoosted: false, msUntilChange: 0, ptHour: 0, isWeekend: false })
+  const [status, setStatus] = useState<BoostStatus>({
+    isBoosted: false,
+    msUntilChange: 0,
+    ptHour: 0,
+    isWeekend: false
+  })
   const timerRef = useRef<ReturnType<typeof setTimeout>>(null)
 
   useEffect(() => {
@@ -132,19 +133,27 @@ function Timeline({ ptHour, isWeekend }: { ptHour: number; isWeekend: boolean })
             {s.isCurrent && (
               <div className="absolute -top-2.5 size-0 border-l-[4px] border-r-[4px] border-t-[5px] border-transparent border-t-foreground" />
             )}
-            <div className={cn('w-full h-2 rounded-sm', s.isBoosted ? theme.barBoosted : theme.barPeak)} />
+            <div
+              className={cn(
+                'w-full h-2 rounded-sm',
+                s.isBoosted ? theme.barBoosted : theme.barPeak
+              )}
+            />
           </div>
         ))}
       </div>
       <div className="relative w-full h-3 text-[10px] text-muted-foreground">
         {HOUR_LABELS.map((h) => (
-          <span key={h} className="absolute -translate-x-1/2" style={{ left: `${(h / 24) * 100}%` }}>
+          <span
+            key={h}
+            className="absolute -translate-x-1/2"
+            style={{ left: `${(h / 24) * 100}%` }}
+          >
             {h}:00
           </span>
         ))}
         <span className="absolute right-0 translate-x-1/2">24:00</span>
       </div>
-
     </div>
   )
 }
@@ -172,7 +181,7 @@ export function BoostPill() {
           onMouseLeave={handleLeave}
           className={cn(
             'h-6 px-2 text-xs font-medium rounded-full border transition-colors inline-flex items-center',
-            isBoosted ? theme.boosted : theme.regular,
+            isBoosted ? theme.boosted : theme.regular
           )}
         >
           {isBoosted ? '2× Usage' : 'Regular Usage'}
@@ -190,20 +199,24 @@ export function BoostPill() {
             {isBoosted ? '2× Boost Active' : 'Peak Hours (1×)'}
           </span>
           <div className="flex gap-2 text-[10px] text-muted-foreground">
-            <span className="flex items-center gap-1"><span className={cn('inline-block w-2 h-2 rounded-sm', theme.legendBoosted)} /> 2×</span>
-            {!isWeekend && <span className="flex items-center gap-1"><span className={cn('inline-block w-2 h-2 rounded-sm', theme.legendPeak)} /> 1×</span>}
+            <span className="flex items-center gap-1">
+              <span className={cn('inline-block w-2 h-2 rounded-sm', theme.legendBoosted)} /> 2×
+            </span>
+            {!isWeekend && (
+              <span className="flex items-center gap-1">
+                <span className={cn('inline-block w-2 h-2 rounded-sm', theme.legendPeak)} /> 1×
+              </span>
+            )}
           </div>
         </div>
         <Timeline ptHour={ptHour} isWeekend={isWeekend} />
         <p className="text-xs text-muted-foreground">
           {isWeekend
             ? 'Weekends are always 2×.'
-            : 'Anthropic doubles Claude usage outside peak hours (5–11 AM PT weekdays).'}
-          {' '}
+            : 'Anthropic doubles Claude usage outside peak hours (5–11 AM PT weekdays).'}{' '}
           {isBoosted
             ? `Peak starts in ${formatCountdown(msUntilChange)}.`
-            : `Boost resumes in ${formatCountdown(msUntilChange)}.`}
-          {' '}
+            : `Boost resumes in ${formatCountdown(msUntilChange)}.`}{' '}
           <a
             href="https://support.claude.com/en/articles/14063676-claude-march-2026-usage-promotion"
             target="_blank"

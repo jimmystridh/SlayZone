@@ -29,7 +29,7 @@ function expect(actual: unknown) {
     },
     toBeTruthy() {
       if (!actual) throw new Error(`Expected truthy, got ${JSON.stringify(actual)}`)
-    },
+    }
   }
 }
 
@@ -42,12 +42,16 @@ function createDb(): Database.Database {
 }
 
 function hasTable(db: Database.Database, name: string): boolean {
-  const row = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(name) as { 1: number } | undefined
+  const row = db
+    .prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?")
+    .get(name) as { 1: number } | undefined
   return Boolean(row)
 }
 
 function hasIndex(db: Database.Database, name: string): boolean {
-  const row = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = ?").get(name) as { 1: number } | undefined
+  const row = db
+    .prepare("SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = ?")
+    .get(name) as { 1: number } | undefined
   return Boolean(row)
 }
 

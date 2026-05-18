@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Settings, RefreshCw, ChevronRight } from 'lucide-react'
 import { Button, Card, Collapsible, CollapsibleTrigger, CollapsibleContent } from '@slayzone/ui'
-import type { TestCategory, ScanResult, TestLabel, TestFileLabel, TestFileNote } from '../shared/types'
+import type {
+  TestCategory,
+  ScanResult,
+  TestLabel,
+  TestFileLabel,
+  TestFileNote
+} from '../shared/types'
 import { TestFileRow } from './TestFileRow'
 
 interface TestPanelProps {
@@ -50,7 +56,12 @@ function collapseTree(node: DirNode): DirNode {
   return { ...node, children: collapsed }
 }
 
-export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: TestPanelProps): React.JSX.Element {
+export function TestPanel({
+  projectId,
+  projectPath,
+  groupBy,
+  onOpenSettings
+}: TestPanelProps): React.JSX.Element {
   const [categories, setCategories] = useState<TestCategory[]>([])
   const [scanResult, setScanResult] = useState<ScanResult | null>(null)
   const [loading, setLoading] = useState(false)
@@ -113,7 +124,9 @@ export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: T
     }
   }, [projectId, projectPath])
 
-  useEffect(() => { rescanFiles() }, [rescanFiles])
+  useEffect(() => {
+    rescanFiles()
+  }, [rescanFiles])
 
   const filesByCategory = new Map<string, string[]>()
   if (scanResult) {
@@ -198,7 +211,9 @@ export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: T
     return (
       <>
         {sortedGroups.map((group) => {
-          const groupLabels = group.labelIds.map((id) => labelIndex.get(id)).filter(Boolean) as TestLabel[]
+          const groupLabels = group.labelIds
+            .map((id) => labelIndex.get(id))
+            .filter(Boolean) as TestLabel[]
           const name = groupLabels.map((l) => l.name).join(' + ')
           const key = group.labelIds.join('+')
           return (
@@ -208,7 +223,11 @@ export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: T
                   <ChevronRight className="h-3 w-3 shrink-0 transition-transform group-data-[state=open]/trigger:rotate-90" />
                   <div className="flex items-center gap-1">
                     {groupLabels.map((l) => (
-                      <div key={l.id} className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: l.color }} />
+                      <div
+                        key={l.id}
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: l.color }}
+                      />
                     ))}
                   </div>
                   <span className="text-xs font-medium">{name}</span>
@@ -250,7 +269,8 @@ export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: T
     }
 
     if (groupBy === 'none') return <div className="flex flex-col gap-2">{renderFiles(files)}</div>
-    if (groupBy === 'label') return <div className="flex flex-col gap-2">{renderLabelComboGroups(files)}</div>
+    if (groupBy === 'label')
+      return <div className="flex flex-col gap-2">{renderLabelComboGroups(files)}</div>
 
     // Path grouping
     const tree = collapseTree(buildPathTree(files))
@@ -260,7 +280,9 @@ export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: T
   const renderDirNode = (node: DirNode, isRoot: boolean): React.ReactNode => {
     const leafContent = (
       <div className="flex flex-col gap-2">
-        {node.files.length > 0 && <div className="flex flex-col gap-2">{renderFiles(node.files)}</div>}
+        {node.files.length > 0 && (
+          <div className="flex flex-col gap-2">{renderFiles(node.files)}</div>
+        )}
         {Array.from(node.children.values()).map((child) => renderDirNode(child, false))}
       </div>
     )
@@ -276,9 +298,7 @@ export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: T
           </Card>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="ml-3 border-l border-border pl-3 pt-2 pb-1">
-            {leafContent}
-          </div>
+          <div className="ml-3 border-l border-border pl-3 pt-2 pb-1">{leafContent}</div>
         </CollapsibleContent>
       </Collapsible>
     )
@@ -298,7 +318,13 @@ export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: T
           )}
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={rescanFiles} disabled={loading}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={rescanFiles}
+            disabled={loading}
+          >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onOpenSettings}>
@@ -328,7 +354,10 @@ export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: T
                 <CollapsibleTrigger asChild>
                   <Card className="flex-row items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-muted/50 group/trigger">
                     <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform group-data-[state=open]/trigger:rotate-90" />
-                    <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                    <div
+                      className="h-2.5 w-2.5 rounded-full shrink-0"
+                      style={{ backgroundColor: cat.color }}
+                    />
                     <span className="text-sm font-medium">{cat.name}</span>
                     <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                       {files.length}
@@ -345,7 +374,6 @@ export function TestPanel({ projectId, projectPath, groupBy, onOpenSettings }: T
           })}
         </div>
       )}
-
     </div>
   )
 }

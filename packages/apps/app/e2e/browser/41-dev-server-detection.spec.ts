@@ -1,4 +1,4 @@
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import {
   getMainSessionId,
@@ -6,7 +6,7 @@ import {
   runCommand,
   waitForBufferContains,
   waitForPtySession,
-  waitForPtyState,
+  waitForPtyState
 } from '../fixtures/terminal'
 
 const urlInput = (page: import('@playwright/test').Page) =>
@@ -21,7 +21,10 @@ const focusForAppShortcut = async (page: import('@playwright/test').Page) => {
   if (await sidebar.isVisible().catch(() => false)) {
     await sidebar.click({ position: { x: 12, y: 12 } }).catch(() => {})
   } else {
-    await page.locator('#root').click({ position: { x: 12, y: 12 } }).catch(() => {})
+    await page
+      .locator('#root')
+      .click({ position: { x: 12, y: 12 } })
+      .catch(() => {})
   }
 }
 
@@ -40,14 +43,25 @@ test.describe('Dev server URL detection', () => {
     await s.setSetting('dev_server_toast_enabled', '1')
     await s.setSetting('dev_server_auto_open_browser', '0')
 
-    const p = await s.createProject({ name: 'Dev Detect', color: '#06b6d4', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Dev Detect',
+      color: '#06b6d4',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({ projectId: p.id, title: 'Dev server task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Dev server task',
+      status: 'in_progress'
+    })
     taskId = t.id
     sessionId = getMainSessionId(taskId)
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
 
     await openTaskTerminal(mainWindow, { projectAbbrev, taskTitle: 'Dev server task' })
@@ -119,11 +133,18 @@ test.describe('Dev server detection — toast disabled', () => {
     // Disable toast BEFORE task mounts (settings loaded on mount)
     await s.setSetting('dev_server_toast_enabled', '0')
 
-    const p = await s.createProject({ name: 'NoToast Proj', color: '#f59e0b', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'NoToast Proj',
+      color: '#f59e0b',
+      path: TEST_PROJECT_PATH
+    })
     const t = await s.createTask({ projectId: p.id, title: 'No toast task', status: 'in_progress' })
     sessionId = getMainSessionId(t.id)
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), t.id)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      t.id
+    )
     await s.refreshData()
 
     await openTaskTerminal(mainWindow, { projectAbbrev: 'NO', taskTitle: 'No toast task' })
@@ -155,11 +176,22 @@ test.describe('Dev server detection — auto-open browser', () => {
     // Enable auto-open BEFORE task mounts
     await s.setSetting('dev_server_auto_open_browser', '1')
 
-    const p = await s.createProject({ name: 'AutoOpen Proj', color: '#10b981', path: TEST_PROJECT_PATH })
-    const t = await s.createTask({ projectId: p.id, title: 'Auto open task', status: 'in_progress' })
+    const p = await s.createProject({
+      name: 'AutoOpen Proj',
+      color: '#10b981',
+      path: TEST_PROJECT_PATH
+    })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Auto open task',
+      status: 'in_progress'
+    })
     sessionId = getMainSessionId(t.id)
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), t.id)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      t.id
+    )
     await s.refreshData()
 
     await openTaskTerminal(mainWindow, { projectAbbrev: 'AU', taskTitle: 'Auto open task' })

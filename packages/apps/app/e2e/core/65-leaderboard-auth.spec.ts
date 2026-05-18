@@ -3,7 +3,9 @@ import { test, expect, resetApp } from '../fixtures/electron'
 const OAUTH_REDIRECT_URI = 'slayzone://auth/callback'
 
 test.describe('Leaderboard auth transport', () => {
-  test.beforeAll(async ({ mainWindow }) => { await resetApp(mainWindow) })
+  test.beforeAll(async ({ mainWindow }) => {
+    await resetApp(mainWindow)
+  })
 
   test('uses system deep-link auth transport', async ({ electronApp, mainWindow }) => {
     await mainWindow.evaluate(async () => {
@@ -42,15 +44,20 @@ test.describe('Leaderboard auth transport', () => {
     await expect(leaderboardTabButton).toBeVisible({ timeout: 5_000 })
     await leaderboardTabButton.click()
 
-    await expect(mainWindow.getByRole('heading', { name: 'Leaderboard' })).toBeVisible({ timeout: 5_000 })
-    await expect(mainWindow.getByText('Leaderboard unavailable (Convex not configured)')).not.toBeVisible()
+    await expect(mainWindow.getByRole('heading', { name: 'Leaderboard' })).toBeVisible({
+      timeout: 5_000
+    })
+    await expect(
+      mainWindow.getByText('Leaderboard unavailable (Convex not configured)')
+    ).not.toBeVisible()
 
     const clicked = await mainWindow.evaluate(() => {
-      const buttons = Array.from(document.querySelectorAll('button')).filter((button) =>
-        button.textContent?.trim() === 'Sign in with GitHub' &&
-        button instanceof HTMLButtonElement &&
-        button.offsetParent !== null &&
-        !button.disabled
+      const buttons = Array.from(document.querySelectorAll('button')).filter(
+        (button) =>
+          button.textContent?.trim() === 'Sign in with GitHub' &&
+          button instanceof HTMLButtonElement &&
+          button.offsetParent !== null &&
+          !button.disabled
       ) as HTMLButtonElement[]
       const button = buttons[0]
       if (!button) return false
@@ -59,25 +66,30 @@ test.describe('Leaderboard auth transport', () => {
     })
     expect(clicked).toBe(true)
 
-    await expect.poll(async () => {
-      return await electronApp.evaluate(() => {
-        const state = (globalThis as Record<string, unknown>).__leaderboardSystemAuthMock as
-          | {
-              calls: number
-              lastConvexUrl: string | null
-              lastRedirectTo: string | null
+    await expect
+      .poll(
+        async () => {
+          return await electronApp.evaluate(() => {
+            const state = (globalThis as Record<string, unknown>).__leaderboardSystemAuthMock as
+              | {
+                  calls: number
+                  lastConvexUrl: string | null
+                  lastRedirectTo: string | null
+                }
+              | undefined
+            return {
+              calls: state?.calls ?? 0,
+              lastConvexUrl: state?.lastConvexUrl ?? null,
+              lastRedirectTo: state?.lastRedirectTo ?? null
             }
-          | undefined
-        return {
-          calls: state?.calls ?? 0,
-          lastConvexUrl: state?.lastConvexUrl ?? null,
-          lastRedirectTo: state?.lastRedirectTo ?? null
-        }
+          })
+        },
+        { timeout: 10_000 }
+      )
+      .toEqual({
+        calls: 1,
+        lastConvexUrl: expect.stringContaining('.convex.cloud'),
+        lastRedirectTo: OAUTH_REDIRECT_URI
       })
-    }, { timeout: 10_000 }).toEqual({
-      calls: 1,
-      lastConvexUrl: expect.stringContaining('.convex.cloud'),
-      lastRedirectTo: OAUTH_REDIRECT_URI
-    })
   })
 })

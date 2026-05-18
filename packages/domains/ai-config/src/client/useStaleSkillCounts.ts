@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-export function useStaleSkillCounts(
-  projects: ReadonlyArray<{ id: string; path: string | null }>
-): { counts: Map<string, number>; refresh: () => void } {
+export function useStaleSkillCounts(projects: ReadonlyArray<{ id: string; path: string | null }>): {
+  counts: Map<string, number>
+  refresh: () => void
+} {
   const [counts, setCounts] = useState<Map<string, number>>(() => new Map())
   const reqIdRef = useRef(0)
 

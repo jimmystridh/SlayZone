@@ -12,7 +12,13 @@ interface TagSelectorProps {
   onTagCreated?: (tag: Tag) => void
 }
 
-export function TagSelector({ tags, selectedTagIds, projectId, onToggle, onTagCreated }: TagSelectorProps) {
+export function TagSelector({
+  tags,
+  selectedTagIds,
+  projectId,
+  onToggle,
+  onTagCreated
+}: TagSelectorProps) {
   const [tagDialogOpen, setTagDialogOpen] = useState(false)
   const [editingTag, setEditingTag] = useState<Tag | null>(null)
 
@@ -21,7 +27,10 @@ export function TagSelector({ tags, selectedTagIds, projectId, onToggle, onTagCr
       {tags.length > 0 && (
         <div className="space-y-0.5">
           {tags.map((tag) => (
-            <label key={tag.id} className="group flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 hover:bg-muted/50">
+            <label
+              key={tag.id}
+              className="group flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 hover:bg-muted/50"
+            >
               <Checkbox
                 checked={selectedTagIds.includes(tag.id)}
                 onCheckedChange={(checked) => onToggle(tag.id, checked === true)}
@@ -34,7 +43,12 @@ export function TagSelector({ tags, selectedTagIds, projectId, onToggle, onTagCr
                 <button
                   type="button"
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingTag(tag); setTagDialogOpen(true) }}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setEditingTag(tag)
+                    setTagDialogOpen(true)
+                  }}
                 >
                   <Pencil className="h-3 w-3" />
                 </button>
@@ -48,7 +62,10 @@ export function TagSelector({ tags, selectedTagIds, projectId, onToggle, onTagCr
           variant="ghost"
           size="sm"
           className="w-full justify-start text-muted-foreground h-7 px-1.5"
-          onClick={() => { setEditingTag(null); setTagDialogOpen(true) }}
+          onClick={() => {
+            setEditingTag(null)
+            setTagDialogOpen(true)
+          }}
         >
           <Plus className="h-3.5 w-3.5 mr-1.5" />
           New tag

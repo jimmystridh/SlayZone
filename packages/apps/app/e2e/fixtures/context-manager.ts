@@ -15,7 +15,9 @@ function projectSettingsDialog(mainWindow: Page): Locator {
 }
 
 export async function closeTopDialog(mainWindow: Page): Promise<void> {
-  const openDialogs = mainWindow.locator('[role="dialog"][data-state="open"], [role="dialog"][aria-modal="true"]')
+  const openDialogs = mainWindow.locator(
+    '[role="dialog"][data-state="open"], [role="dialog"][aria-modal="true"]'
+  )
   for (let attempt = 0; attempt < 10; attempt += 1) {
     if ((await openDialogs.count()) === 0) return
 
@@ -97,25 +99,49 @@ async function ensureProjectConfigTabSelected(
 
 async function isProjectSectionVisible(dialog: Locator, section: ProjectSection): Promise<boolean> {
   if (section === 'instructions') {
-    return dialog.getByTestId('instructions-textarea').isVisible({ timeout: 300 }).catch(() => false)
+    return dialog
+      .getByTestId('instructions-textarea')
+      .isVisible({ timeout: 300 })
+      .catch(() => false)
   }
   if (section === 'skills') {
-    if (await dialog.getByTestId('project-context-add-skill').isVisible({ timeout: 300 }).catch(() => false)) return true
-    const anySkillRows = dialog.locator('[data-testid^="project-context-item-skill-"], [data-testid^="project-context-item-unmanaged-skill-"]')
+    if (
+      await dialog
+        .getByTestId('project-context-add-skill')
+        .isVisible({ timeout: 300 })
+        .catch(() => false)
+    )
+      return true
+    const anySkillRows = dialog.locator(
+      '[data-testid^="project-context-item-skill-"], [data-testid^="project-context-item-unmanaged-skill-"]'
+    )
     return (await anySkillRows.count()) > 0
   }
   if (section === 'mcp') {
-    return dialog.getByText('Add MCP server', { exact: false }).isVisible({ timeout: 300 }).catch(() => false)
+    return dialog
+      .getByText('Add MCP server', { exact: false })
+      .isVisible({ timeout: 300 })
+      .catch(() => false)
   }
-  return dialog.getByRole('button', { name: /claude|codex|cursor|gemini|opencode/i }).first().isVisible({ timeout: 300 }).catch(() => false)
+  return dialog
+    .getByRole('button', { name: /claude|codex|cursor|gemini|opencode/i })
+    .first()
+    .isVisible({ timeout: 300 })
+    .catch(() => false)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function openUserContextManager(mainWindow: Page, electronApp?: any): Promise<Locator> {
+export async function openUserContextManager(
+  mainWindow: Page,
+  electronApp?: any
+): Promise<Locator> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sendOpenSettingsShortcut = async (electronApp: any): Promise<void> => {
     await electronApp.evaluate(
-      ({ BrowserWindow }: { BrowserWindow: typeof Electron.CrossProcessExports.BrowserWindow }, ch: string) => {
+      (
+        { BrowserWindow }: { BrowserWindow: typeof Electron.CrossProcessExports.BrowserWindow },
+        ch: string
+      ) => {
         BrowserWindow.getAllWindows()
           .find((w) => !w.isDestroyed() && !w.webContents.getURL().startsWith('data:'))
           ?.webContents.send(ch)
@@ -135,9 +161,11 @@ export async function openUserContextManager(mainWindow: Page, electronApp?: any
       if (await dialog.isVisible({ timeout: 500 }).catch(() => false)) break
 
       // In long serial runs, stale Radix overlays can survive and block pointer events.
-      const blockingOverlay = mainWindow.locator(
-        '[data-slot="alert-dialog-overlay"][data-state="open"], [data-slot="dialog-overlay"][data-state="open"]'
-      ).first()
+      const blockingOverlay = mainWindow
+        .locator(
+          '[data-slot="alert-dialog-overlay"][data-state="open"], [data-slot="dialog-overlay"][data-state="open"]'
+        )
+        .first()
       if (await blockingOverlay.isVisible({ timeout: 120 }).catch(() => false)) {
         await mainWindow.keyboard.press('Escape').catch(() => {})
       }
@@ -153,7 +181,9 @@ export async function openUserContextManager(mainWindow: Page, electronApp?: any
       await mainWindow.keyboard.press('Meta+,').catch(() => {})
       if (await dialog.isVisible({ timeout: 1_500 }).catch(() => false)) break
 
-      const sidebarSettingsButton = mainWindow.getByRole('button', { name: 'Settings', exact: true }).first()
+      const sidebarSettingsButton = mainWindow
+        .getByRole('button', { name: 'Settings', exact: true })
+        .first()
       if (await sidebarSettingsButton.isVisible({ timeout: 600 }).catch(() => false)) {
         await sidebarSettingsButton.click({ force: true }).catch(() => {})
         if (await dialog.isVisible({ timeout: 1_500 }).catch(() => false)) break
@@ -186,10 +216,15 @@ export async function openUserContextManager(mainWindow: Page, electronApp?: any
   return dialog
 }
 
-export async function openProjectContextManager(mainWindow: Page, projectAbbrev: string): Promise<Locator> {
+export async function openProjectContextManager(
+  mainWindow: Page,
+  projectAbbrev: string
+): Promise<Locator> {
   await closeTopDialog(mainWindow)
   const dialog = await openProjectSettings(mainWindow, projectAbbrev)
-  await expect(projectSettingsDialog(mainWindow).getByRole('heading', { name: 'Project Settings' })).toBeVisible({ timeout: 5_000 })
+  await expect(
+    projectSettingsDialog(mainWindow).getByRole('heading', { name: 'Project Settings' })
+  ).toBeVisible({ timeout: 5_000 })
   await openSettingsTabWithRetry(
     mainWindow,
     dialog,
@@ -225,7 +260,9 @@ export async function openProjectContextSection(
         if (await isProjectSectionVisible(dialog, section)) return dialog
       }
 
-      const backToOverview = dialog.getByRole('button', { name: /^(Providers|Instructions|Skills|MCP Servers)$/ }).first()
+      const backToOverview = dialog
+        .getByRole('button', { name: /^(Providers|Instructions|Skills|MCP Servers)$/ })
+        .first()
       if (await backToOverview.isVisible({ timeout: 400 }).catch(() => false)) {
         await backToOverview.click().catch(() => {})
       }
@@ -236,7 +273,9 @@ export async function openProjectContextSection(
   }
 
   const dialog = await openProjectContextManager(mainWindow, projectAbbrev)
-  await expect(dialog.getByTestId(sectionTestIdMap[section]).first()).toBeVisible({ timeout: 5_000 })
+  await expect(dialog.getByTestId(sectionTestIdMap[section]).first()).toBeVisible({
+    timeout: 5_000
+  })
   await dialog.getByTestId(sectionTestIdMap[section]).first().click()
   return dialog
 }

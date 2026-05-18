@@ -26,10 +26,10 @@ export type LockOutcome =
   | { kind: 'retry_failed'; pid: number }
 
 function readLockHolderPid(userData: string): number | null {
-  if (process.platform === 'win32') return null  // Windows uses file-handle lock, no PID
+  if (process.platform === 'win32') return null // Windows uses file-handle lock, no PID
   try {
     const target = readlinkSync(join(userData, 'SingletonLock'))
-    const m = /-(\d+)$/.exec(target)              // format: "<hostname>-<pid>"
+    const m = /-(\d+)$/.exec(target) // format: "<hostname>-<pid>"
     return m ? Number(m[1]) : null
   } catch {
     return null
@@ -42,7 +42,7 @@ function isPidAlive(pid: number): boolean {
     return true
   } catch (err) {
     const code = (err as NodeJS.ErrnoException).code
-    return code === 'EPERM'  // EPERM = exists but no perms (different user)
+    return code === 'EPERM' // EPERM = exists but no perms (different user)
   }
 }
 
@@ -52,7 +52,9 @@ function unlinkLockFiles(userData: string): boolean {
     try {
       unlinkSync(join(userData, name))
       if (name === 'SingletonLock') mainUnlinked = true
-    } catch { /* sibling files may not exist; only main lock matters */ }
+    } catch {
+      /* sibling files may not exist; only main lock matters */
+    }
   }
   return mainUnlinked
 }

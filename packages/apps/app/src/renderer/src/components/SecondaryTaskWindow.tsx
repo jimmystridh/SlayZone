@@ -14,7 +14,13 @@ interface Props {
 }
 
 const DEFAULT_PANEL_VIS: PanelVisibility = {
-  terminal: false, browser: false, diff: false, settings: false, editor: false, artifacts: false, processes: false,
+  terminal: false,
+  browser: false,
+  diff: false,
+  settings: false,
+  editor: false,
+  artifacts: false,
+  processes: false
 }
 
 export function SecondaryTaskWindow({ taskId: initialTaskId }: Props) {
@@ -34,13 +40,19 @@ export function SecondaryTaskWindow({ taskId: initialTaskId }: Props) {
     const unsub = window.api.taskWindow.onPrimaryActiveChanged((id) => {
       if (id) setTaskId(id)
     })
-    return () => { alive = false; unsub() }
+    return () => {
+      alive = false
+      unsub()
+    }
   }, [followPrimary]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadTask = useCallback(async () => {
     try {
       const detail = await fetchTaskDetail(taskId)
-      if (!detail) { setError(`Task not found: ${taskId}`); return }
+      if (!detail) {
+        setError(`Task not found: ${taskId}`)
+        return
+      }
       setError(null)
       setData(detail)
       document.title = `${detail.task.title} — SlayZone`
@@ -49,10 +61,12 @@ export function SecondaryTaskWindow({ taskId: initialTaskId }: Props) {
     }
   }, [taskId])
 
-  useEffect(() => { loadTask() }, [loadTask])
+  useEffect(() => {
+    loadTask()
+  }, [loadTask])
 
   const handleTaskUpdated = useCallback((updated: Task) => {
-    setData((prev) => prev ? { ...prev, task: updated } : prev)
+    setData((prev) => (prev ? { ...prev, task: updated } : prev))
     if (updated.title) document.title = `${updated.title} — SlayZone`
   }, [])
 
@@ -114,7 +128,10 @@ export function SecondaryTaskWindow({ taskId: initialTaskId }: Props) {
         </div>
       </div>
       <div className="flex-1 min-h-0 flex">
-        <div id="main-area" className="flex-1 min-w-0 min-h-0 rounded-lg bg-surface-0 flex overflow-hidden p-4 mx-2 mb-2">
+        <div
+          id="main-area"
+          className="flex-1 min-w-0 min-h-0 rounded-lg bg-surface-0 flex overflow-hidden p-4 mx-2 mb-2"
+        >
           <div className="flex-1 min-w-0 min-h-0 rounded-lg overflow-hidden relative">
             <div className="h-full">
               <TaskDetailPage
@@ -134,7 +151,9 @@ export function SecondaryTaskWindow({ taskId: initialTaskId }: Props) {
                   await window.api.db.deleteTask(id)
                   handleClose()
                 }}
-                onNavigateToTask={(id) => { window.api.taskWindow.open(id) }}
+                onNavigateToTask={(id) => {
+                  window.api.taskWindow.open(id)
+                }}
                 onCloseTab={handleClose}
                 initialData={initialDataForPage}
                 isSidePanelResizing={false}

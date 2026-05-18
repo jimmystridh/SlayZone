@@ -6,7 +6,7 @@ import {
   renameVersion,
   readVersionContent,
   saveCurrent,
-  setCurrentVersion,
+  setCurrentVersion
 } from './mutations'
 import { getCurrentVersion, getLatestVersion, isLocked, listVersions } from './resolve'
 import { isVersionError } from './errors'
@@ -51,7 +51,7 @@ describe('createVersion', () => {
     const v = createVersion(env.db, env.txn, env.blobStore, {
       artifactId: 'a1',
       bytes: 'x',
-      author: { type: 'agent', id: 'claude-code' },
+      author: { type: 'agent', id: 'claude-code' }
     })
     expect(v.author_type).toBe('agent')
     expect(v.author_id).toBe('claude-code')
@@ -82,7 +82,9 @@ describe('saveCurrent', () => {
 
   it('auto-branches when current is named (locked)', () => {
     const v1 = createVersion(env.db, env.txn, env.blobStore, {
-      artifactId: 'a1', bytes: 'pinned', name: 'milestone',
+      artifactId: 'a1',
+      bytes: 'pinned',
+      name: 'milestone'
     })
     const v2 = saveCurrent(env.db, env.txn, env.blobStore, { artifactId: 'a1', bytes: 'changed' })
     expect(v2.id).not.toBe(v1.id)
@@ -167,7 +169,9 @@ describe('isLocked', () => {
 
   it('named = locked', () => {
     const v = createVersion(env.db, env.txn, env.blobStore, {
-      artifactId: 'a1', bytes: 'x', name: 'pin',
+      artifactId: 'a1',
+      bytes: 'x',
+      name: 'pin'
     })
     expect(isLocked(env.db, v)).toBe(true)
   })
@@ -189,10 +193,14 @@ describe('mutateVersion (CLI escape hatch)', () => {
 
   it('mutates a named (locked) version in place', () => {
     const v = createVersion(env.db, env.txn, env.blobStore, {
-      artifactId: 'a1', bytes: 'pinned', name: 'milestone',
+      artifactId: 'a1',
+      bytes: 'pinned',
+      name: 'milestone'
     })
     const mutated = mutateVersion(env.db, env.txn, env.blobStore, {
-      artifactId: 'a1', ref: v.version_num, bytes: 'patched',
+      artifactId: 'a1',
+      ref: v.version_num,
+      bytes: 'patched'
     })
     expect(mutated.id).toBe(v.id)
     expect(readVersionContent(env.blobStore, mutated).toString()).toBe('patched')
@@ -202,7 +210,9 @@ describe('mutateVersion (CLI escape hatch)', () => {
     const v1 = createVersion(env.db, env.txn, env.blobStore, { artifactId: 'a1', bytes: '1' })
     createVersion(env.db, env.txn, env.blobStore, { artifactId: 'a1', bytes: '2' })
     const mutated = mutateVersion(env.db, env.txn, env.blobStore, {
-      artifactId: 'a1', ref: v1.version_num, bytes: '1-patched',
+      artifactId: 'a1',
+      ref: v1.version_num,
+      bytes: '1-patched'
     })
     expect(mutated.id).toBe(v1.id)
     expect(readVersionContent(env.blobStore, mutated).toString()).toBe('1-patched')
@@ -222,7 +232,7 @@ describe('createVersion (named / honorUnchanged)', () => {
     createVersion(env.db, env.txn, env.blobStore, {
       artifactId: 'a1',
       bytes: 'same',
-      name: 'snap',
+      name: 'snap'
     })
     expect(listVersions(env.db, 'a1')).toHaveLength(2)
   })
@@ -232,7 +242,7 @@ describe('createVersion (named / honorUnchanged)', () => {
     createVersion(env.db, env.txn, env.blobStore, {
       artifactId: 'a1',
       bytes: 'same',
-      honorUnchanged: true,
+      honorUnchanged: true
     })
     expect(listVersions(env.db, 'a1')).toHaveLength(2)
   })
@@ -242,7 +252,7 @@ describe('createVersion (named / honorUnchanged)', () => {
       createVersion(env.db, env.txn, env.blobStore, {
         artifactId: 'a1',
         bytes: 'x',
-        name: 'HEAD',
+        name: 'HEAD'
       })
       throw new Error('expected throw')
     } catch (e) {
@@ -254,13 +264,13 @@ describe('createVersion (named / honorUnchanged)', () => {
     createVersion(env.db, env.txn, env.blobStore, {
       artifactId: 'a1',
       bytes: 'a',
-      name: 'pin',
+      name: 'pin'
     })
     try {
       createVersion(env.db, env.txn, env.blobStore, {
         artifactId: 'a1',
         bytes: 'b',
-        name: 'pin',
+        name: 'pin'
       })
       throw new Error('expected throw')
     } catch (e) {

@@ -10,8 +10,10 @@ export function AboutSettingsTab() {
   const [cliMessage, setCliMessage] = useState('')
 
   useEffect(() => {
-    window.api.settings.get('database_path').then(path => setDbPath(path ?? 'Default location (userData)'))
-    window.api.app.cliStatus().then(status => {
+    window.api.settings
+      .get('database_path')
+      .then((path) => setDbPath(path ?? 'Default location (userData)'))
+    window.api.app.cliStatus().then((status) => {
       setCliInstalled(status.installed)
       if (status.path) setCliPath(status.path)
     })
@@ -26,7 +28,9 @@ export function AboutSettingsTab() {
         setCliInstalled(true)
         if (result.path) setCliPath(result.path)
         let msg = 'Installed successfully.'
-        if (result.pathNotInPATH) msg += ' Note: the install directory is not in your PATH. Add it to use \'slay\' from any terminal.'
+        if (result.pathNotInPATH)
+          msg +=
+            " Note: the install directory is not in your PATH. Add it to use 'slay' from any terminal."
         setCliMessage(msg)
       } else if (result.elevationCancelled) {
         setCliMessage('Install cancelled. You can try again later from Settings.')
@@ -52,7 +56,9 @@ export function AboutSettingsTab() {
         <Label className="text-base font-semibold">Database</Label>
         <div className="text-sm text-muted-foreground">
           <p>Location: {dbPath}</p>
-          <p className="text-xs mt-1">Database path can be changed via command line. Restart required.</p>
+          <p className="text-xs mt-1">
+            Database path can be changed via command line. Restart required.
+          </p>
         </div>
       </div>
 
@@ -63,12 +69,7 @@ export function AboutSettingsTab() {
             <span className={cliInstalled ? 'text-green-500' : 'text-muted-foreground'}>●</span>
             {cliInstalled ? `Installed at ${cliPath || 'unknown path'}` : 'Not installed'}
           </span>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={cliInstalling}
-            onClick={handleInstallCli}
-          >
+          <Button size="sm" variant="outline" disabled={cliInstalling} onClick={handleInstallCli}>
             {cliInstalling ? 'Installing…' : cliInstalled ? 'Reinstall' : 'Install'}
           </Button>
         </div>

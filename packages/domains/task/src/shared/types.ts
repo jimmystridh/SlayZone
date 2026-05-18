@@ -3,7 +3,15 @@ import type { BrowserTabsState } from '@slayzone/task-browser/shared'
 import type { EditorOpenFilesState } from '@slayzone/file-editor/shared'
 
 // Built-in starter statuses used as defaults for new projects.
-export const BUILTIN_STATUSES = ['inbox', 'backlog', 'todo', 'in_progress', 'review', 'done', 'canceled'] as const
+export const BUILTIN_STATUSES = [
+  'inbox',
+  'backlog',
+  'todo',
+  'in_progress',
+  'review',
+  'done',
+  'canceled'
+] as const
 export const TASK_STATUSES = BUILTIN_STATUSES
 export type TaskStatus = string
 
@@ -35,7 +43,10 @@ export interface ProviderConfig {
   }
 }
 
-export function getProviderConversationId(cfg: ProviderConfig | undefined | null, mode: string): string | null {
+export function getProviderConversationId(
+  cfg: ProviderConfig | undefined | null,
+  mode: string
+): string | null {
   return cfg?.[mode]?.conversationId ?? null
 }
 
@@ -43,19 +54,34 @@ export function getProviderFlags(cfg: ProviderConfig | undefined | null, mode: s
   return cfg?.[mode]?.flags ?? ''
 }
 
-export function getProviderLastKilledAt(cfg: ProviderConfig | undefined | null, mode: string): number | null {
+export function getProviderLastKilledAt(
+  cfg: ProviderConfig | undefined | null,
+  mode: string
+): number | null {
   return cfg?.[mode]?.lastPtyKilledAt ?? null
 }
 
-export function setProviderConversationId(cfg: ProviderConfig | undefined | null, mode: string, val: string | null): ProviderConfig {
+export function setProviderConversationId(
+  cfg: ProviderConfig | undefined | null,
+  mode: string,
+  val: string | null
+): ProviderConfig {
   return { ...cfg, [mode]: { ...cfg?.[mode], conversationId: val } }
 }
 
-export function setProviderFlags(cfg: ProviderConfig | undefined | null, mode: string, val: string): ProviderConfig {
+export function setProviderFlags(
+  cfg: ProviderConfig | undefined | null,
+  mode: string,
+  val: string
+): ProviderConfig {
   return { ...cfg, [mode]: { ...cfg?.[mode], flags: val } }
 }
 
-export function setProviderLastKilledAt(cfg: ProviderConfig | undefined | null, mode: string, val: number | null): ProviderConfig {
+export function setProviderLastKilledAt(
+  cfg: ProviderConfig | undefined | null,
+  mode: string,
+  val: number | null
+): ProviderConfig {
   return { ...cfg, [mode]: { ...cfg?.[mode], lastPtyKilledAt: val } }
 }
 
@@ -93,12 +119,12 @@ export interface DesktopHandoffPolicy {
 
 // Web panel definition (custom or predefined)
 export interface WebPanelDefinition {
-  id: string           // 'web:<uuid>' for custom, 'web:figma' for predefined
+  id: string // 'web:<uuid>' for custom, 'web:figma' for predefined
   name: string
   baseUrl: string
-  shortcut?: string    // single letter, e.g. 'm' → Cmd+M
+  shortcut?: string // single letter, e.g. 'm' → Cmd+M
   predefined?: boolean // true = shipped with app (can still be deleted)
-  favicon?: string     // cached favicon URL
+  favicon?: string // cached favicon URL
   // Legacy toggle. Prefer handoffProtocol + handoffHostScope.
   blockDesktopHandoff?: boolean
   // Custom protocol to block in encoded desktop-handoff URLs (for example "figma").
@@ -129,12 +155,28 @@ export function isPanelEnabled(config: PanelConfig, id: string, view: PanelView)
 // Per-task URL state (panelId → current URL)
 export type WebPanelUrls = Record<string, string>
 
-export const BUILTIN_PANEL_IDS = ['terminal', 'browser', 'editor', 'artifacts', 'diff', 'settings', 'processes'] as const
+export const BUILTIN_PANEL_IDS = [
+  'terminal',
+  'browser',
+  'editor',
+  'artifacts',
+  'diff',
+  'settings',
+  'processes'
+] as const
 
 // IDs used in PanelConfig.order (settings-modal style). 'git' is the shared row that
 // maps to 'diff' on task view and 'git' on home view.
-export const PANEL_ORDER_IDS = ['terminal', 'browser', 'editor', 'artifacts', 'git', 'settings', 'processes'] as const
-export type PanelOrderId = typeof PANEL_ORDER_IDS[number] | `web:${string}`
+export const PANEL_ORDER_IDS = [
+  'terminal',
+  'browser',
+  'editor',
+  'artifacts',
+  'git',
+  'settings',
+  'processes'
+] as const
+export type PanelOrderId = (typeof PANEL_ORDER_IDS)[number] | `web:${string}`
 
 /** Map a PanelConfig.order ID to its task-view panel ID. */
 export function orderIdToTaskId(id: string): string {
@@ -156,24 +198,59 @@ export const PREDEFINED_WEB_PANELS: WebPanelDefinition[] = [
     predefined: true,
     blockDesktopHandoff: true,
     handoffProtocol: 'figma',
-    handoffHostScope: 'figma.com',
+    handoffHostScope: 'figma.com'
   },
-  { id: 'web:notion', name: 'Notion', baseUrl: 'https://notion.so', shortcut: 'n', predefined: true },
-  { id: 'web:github', name: 'GitHub', baseUrl: 'https://github.com', shortcut: 'h', predefined: true },
-  { id: 'web:excalidraw', name: 'Excalidraw', baseUrl: 'https://excalidraw.com', shortcut: 'x', predefined: true },
-  { id: 'web:monosketch', name: 'Monosketch', baseUrl: 'https://app.monosketch.io', shortcut: 'u', predefined: true }
+  {
+    id: 'web:notion',
+    name: 'Notion',
+    baseUrl: 'https://notion.so',
+    shortcut: 'n',
+    predefined: true
+  },
+  {
+    id: 'web:github',
+    name: 'GitHub',
+    baseUrl: 'https://github.com',
+    shortcut: 'h',
+    predefined: true
+  },
+  {
+    id: 'web:excalidraw',
+    name: 'Excalidraw',
+    baseUrl: 'https://excalidraw.com',
+    shortcut: 'x',
+    predefined: true
+  },
+  {
+    id: 'web:monosketch',
+    name: 'Monosketch',
+    baseUrl: 'https://app.monosketch.io',
+    shortcut: 'u',
+    predefined: true
+  }
 ]
 
 export const DEFAULT_PANEL_ORDER: string[] = [
-  'terminal', 'browser', 'editor', 'artifacts', 'git', 'settings', 'processes',
-  ...PREDEFINED_WEB_PANELS.map(wp => wp.id),
+  'terminal',
+  'browser',
+  'editor',
+  'artifacts',
+  'git',
+  'settings',
+  'processes',
+  ...PREDEFINED_WEB_PANELS.map((wp) => wp.id)
 ]
 
 // Git panel sub-tabs (rendered inside UnifiedGitPanel).
 export type GitTabId = 'general' | 'changes' | 'conflicts' | 'worktrees' | 'pr' | 'stash'
 
 export const DEFAULT_GIT_TAB_ORDER: readonly GitTabId[] = [
-  'general', 'changes', 'stash', 'worktrees', 'conflicts', 'pr',
+  'general',
+  'changes',
+  'stash',
+  'worktrees',
+  'conflicts',
+  'pr'
 ]
 
 export const GIT_TAB_LABELS: Record<GitTabId, string> = {
@@ -182,7 +259,7 @@ export const GIT_TAB_LABELS: Record<GitTabId, string> = {
   stash: 'Stash',
   worktrees: 'Worktrees',
   conflicts: 'Conflicts',
-  pr: 'Pull request',
+  pr: 'Pull request'
 }
 
 /** Per-tab enable/disable. Missing key = enabled (default on). */
@@ -203,7 +280,9 @@ export function normalizeGitTabVisibility(raw: string | null | undefined): GitTa
       if (k in GIT_TAB_LABELS && typeof v === 'boolean') out[k as GitTabId] = v
     }
     return out
-  } catch { return {} }
+  } catch {
+    return {}
+  }
 }
 
 /** Parse persisted `git_tab_order` value, tolerating unknown/missing ids. */
@@ -232,97 +311,160 @@ export const DEFAULT_PANEL_CONFIG: PanelConfig = {
   viewEnabled: {
     home: { git: true, editor: true, processes: true, tests: true, automations: true },
     task: {
-      ...Object.fromEntries(BUILTIN_PANEL_IDS.map(id => [id, true])),
-      ...Object.fromEntries(PREDEFINED_WEB_PANELS.map(wp => [wp.id, false]))
-    },
+      ...Object.fromEntries(BUILTIN_PANEL_IDS.map((id) => [id, true])),
+      ...Object.fromEntries(PREDEFINED_WEB_PANELS.map((wp) => [wp.id, false]))
+    }
   },
   webPanels: [...PREDEFINED_WEB_PANELS],
-  order: [...DEFAULT_PANEL_ORDER],
+  order: [...DEFAULT_PANEL_ORDER]
 }
 
 // --- Task Artifacts ---
 
-export type RenderMode = 'markdown' | 'code' | 'html-preview' | 'svg-preview' | 'mermaid-preview' | 'image' | 'pdf'
+export type RenderMode =
+  | 'markdown'
+  | 'code'
+  | 'html-preview'
+  | 'svg-preview'
+  | 'mermaid-preview'
+  | 'image'
+  | 'pdf'
 
 /** Maps file extensions → default render mode. Unlisted/no extension defaults to 'markdown'. */
 export const EXTENSION_RENDER_MODES: Record<string, RenderMode> = {
   // Markdown
-  '.md': 'markdown', '.mdx': 'markdown', '.markdown': 'markdown',
+  '.md': 'markdown',
+  '.mdx': 'markdown',
+  '.markdown': 'markdown',
 
   // HTML
-  '.html': 'html-preview', '.htm': 'html-preview',
+  '.html': 'html-preview',
+  '.htm': 'html-preview',
 
   // SVG
   '.svg': 'svg-preview',
 
   // Mermaid
-  '.mmd': 'mermaid-preview', '.mermaid': 'mermaid-preview',
+  '.mmd': 'mermaid-preview',
+  '.mermaid': 'mermaid-preview',
 
   // Images
-  '.png': 'image', '.jpg': 'image', '.jpeg': 'image',
-  '.gif': 'image', '.webp': 'image', '.avif': 'image', '.bmp': 'image',
-  '.ico': 'image', '.tiff': 'image', '.tif': 'image', '.heic': 'image', '.heif': 'image',
+  '.png': 'image',
+  '.jpg': 'image',
+  '.jpeg': 'image',
+  '.gif': 'image',
+  '.webp': 'image',
+  '.avif': 'image',
+  '.bmp': 'image',
+  '.ico': 'image',
+  '.tiff': 'image',
+  '.tif': 'image',
+  '.heic': 'image',
+  '.heif': 'image',
 
   // PDF
   '.pdf': 'pdf',
 
   // Code — programming languages
-  '.ts': 'code', '.tsx': 'code', '.js': 'code', '.jsx': 'code', '.mjs': 'code', '.cjs': 'code',
-  '.py': 'code', '.pyw': 'code',
+  '.ts': 'code',
+  '.tsx': 'code',
+  '.js': 'code',
+  '.jsx': 'code',
+  '.mjs': 'code',
+  '.cjs': 'code',
+  '.py': 'code',
+  '.pyw': 'code',
   '.rs': 'code',
   '.go': 'code',
-  '.java': 'code', '.kt': 'code', '.kts': 'code',
-  '.c': 'code', '.h': 'code', '.cpp': 'code', '.cc': 'code', '.cxx': 'code', '.hpp': 'code', '.hh': 'code',
+  '.java': 'code',
+  '.kt': 'code',
+  '.kts': 'code',
+  '.c': 'code',
+  '.h': 'code',
+  '.cpp': 'code',
+  '.cc': 'code',
+  '.cxx': 'code',
+  '.hpp': 'code',
+  '.hh': 'code',
   '.cs': 'code',
   '.swift': 'code',
-  '.m': 'code', '.mm': 'code',
+  '.m': 'code',
+  '.mm': 'code',
   '.rb': 'code',
   '.php': 'code',
   '.dart': 'code',
   '.lua': 'code',
   '.r': 'code',
   '.scala': 'code',
-  '.clj': 'code', '.cljs': 'code',
-  '.ex': 'code', '.exs': 'code',
+  '.clj': 'code',
+  '.cljs': 'code',
+  '.ex': 'code',
+  '.exs': 'code',
   '.erl': 'code',
   '.hs': 'code',
-  '.ml': 'code', '.mli': 'code',
-  '.fs': 'code', '.fsx': 'code',
+  '.ml': 'code',
+  '.mli': 'code',
+  '.fs': 'code',
+  '.fsx': 'code',
   '.zig': 'code',
   '.nim': 'code',
   '.sol': 'code',
-  '.vue': 'code', '.svelte': 'code', '.astro': 'code',
+  '.vue': 'code',
+  '.svelte': 'code',
+  '.astro': 'code',
 
   // Code — shells
-  '.sh': 'code', '.bash': 'code', '.zsh': 'code', '.fish': 'code', '.ps1': 'code', '.bat': 'code', '.cmd': 'code',
+  '.sh': 'code',
+  '.bash': 'code',
+  '.zsh': 'code',
+  '.fish': 'code',
+  '.ps1': 'code',
+  '.bat': 'code',
+  '.cmd': 'code',
 
   // Code — config / data
-  '.json': 'code', '.jsonc': 'code', '.json5': 'code',
-  '.yaml': 'code', '.yml': 'code',
+  '.json': 'code',
+  '.jsonc': 'code',
+  '.json5': 'code',
+  '.yaml': 'code',
+  '.yml': 'code',
   '.toml': 'code',
-  '.ini': 'code', '.cfg': 'code', '.conf': 'code',
+  '.ini': 'code',
+  '.cfg': 'code',
+  '.conf': 'code',
   '.xml': 'code',
-  '.csv': 'code', '.tsv': 'code',
+  '.csv': 'code',
+  '.tsv': 'code',
   '.env': 'code',
 
   // Code — styles
-  '.css': 'code', '.scss': 'code', '.sass': 'code', '.less': 'code', '.styl': 'code',
+  '.css': 'code',
+  '.scss': 'code',
+  '.sass': 'code',
+  '.less': 'code',
+  '.styl': 'code',
 
   // Code — queries / schema
-  '.sql': 'code', '.graphql': 'code', '.gql': 'code', '.proto': 'code',
+  '.sql': 'code',
+  '.graphql': 'code',
+  '.gql': 'code',
+  '.proto': 'code',
 
   // Code — build / patch / log
-  '.tex': 'code', '.diff': 'code', '.patch': 'code', '.log': 'code',
+  '.tex': 'code',
+  '.diff': 'code',
+  '.patch': 'code',
+  '.log': 'code'
 }
 
 export const RENDER_MODE_INFO: Record<RenderMode, { label: string }> = {
-  'markdown': { label: 'Rich Text' },
-  'code': { label: 'Code' },
+  markdown: { label: 'Rich Text' },
+  code: { label: 'Code' },
   'html-preview': { label: 'HTML Preview' },
   'svg-preview': { label: 'SVG Preview' },
   'mermaid-preview': { label: 'Mermaid Preview' },
-  'image': { label: 'Image' },
-  'pdf': { label: 'PDF' },
+  image: { label: 'Image' },
+  pdf: { label: 'PDF' }
 }
 
 /** Whether a render mode represents a binary (non-text) artifact. */
@@ -332,7 +474,13 @@ export function isBinaryRenderMode(mode: RenderMode): boolean {
 
 /** Render modes that support "Download as PDF" conversion. */
 export function canExportAsPdf(mode: RenderMode): boolean {
-  return mode === 'markdown' || mode === 'code' || mode === 'html-preview' || mode === 'svg-preview' || mode === 'mermaid-preview'
+  return (
+    mode === 'markdown' ||
+    mode === 'code' ||
+    mode === 'html-preview' ||
+    mode === 'svg-preview' ||
+    mode === 'mermaid-preview'
+  )
 }
 
 /** Render modes that support "Download as PNG" capture. */

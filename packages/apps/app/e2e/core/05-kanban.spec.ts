@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 test.describe('Kanban board', () => {
@@ -7,7 +7,11 @@ test.describe('Kanban board', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Board Test', color: '#8b5cf6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Board Test',
+      color: '#8b5cf6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
     await s.createTask({ projectId: p.id, title: 'Inbox task', status: 'inbox' })

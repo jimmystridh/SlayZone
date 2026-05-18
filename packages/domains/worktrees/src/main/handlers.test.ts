@@ -2,7 +2,12 @@
  * Git/worktree handler contract tests (uses real git repos in tmp dirs)
  * Run with: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/worktrees/src/main/handlers.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerWorktreeHandlers } from './handlers.js'
 import { createWorktree, runWorktreeSetupScriptSync, initSubmodulesSync } from './git-worktree.js'
 import { resolveSubmoduleInitBehavior } from './handlers.js'
@@ -19,7 +24,17 @@ fs.mkdirSync(repoPath)
 
 // Helper to run git commands in the repo
 function git(cmd: string, cwd = repoPath) {
-  return execSync(cmd, { cwd, encoding: 'utf-8', env: { ...process.env, GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@test.com', GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@test.com' } }).trim()
+  return execSync(cmd, {
+    cwd,
+    encoding: 'utf-8',
+    env: {
+      ...process.env,
+      GIT_AUTHOR_NAME: 'Test',
+      GIT_AUTHOR_EMAIL: 'test@test.com',
+      GIT_COMMITTER_NAME: 'Test',
+      GIT_COMMITTER_EMAIL: 'test@test.com'
+    }
+  }).trim()
 }
 
 // --- git:init ---
@@ -78,9 +93,13 @@ await describe('git:hasUncommittedChanges', () => {
 
 await describe('git:detectWorktrees', () => {
   test('detects main worktree', async () => {
-    const worktrees = await h.invoke('git:detectWorktrees', repoPath) as { path: string; branch: string | null; isMain: boolean }[]
+    const worktrees = (await h.invoke('git:detectWorktrees', repoPath)) as {
+      path: string
+      branch: string | null
+      isMain: boolean
+    }[]
     expect(worktrees.length).toBeGreaterThan(0)
-    const main = worktrees.find(w => w.isMain)
+    const main = worktrees.find((w) => w.isMain)
     expect(main).toBeTruthy()
   })
 })
@@ -168,15 +187,27 @@ await describe('resolveSubmoduleInitBehavior', () => {
   })
 
   test('uses global setting when project has no override', () => {
-    h.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_submodule_init', 'skip')").run()
+    h.db
+      .prepare(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_submodule_init', 'skip')"
+      )
+      .run()
     expect(resolveSubmoduleInitBehavior(h.db as never)).toBe('skip')
     h.db.prepare("DELETE FROM settings WHERE key = 'worktree_submodule_init'").run()
   })
 
   test('project override beats global', () => {
-    h.db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_submodule_init', 'skip')").run()
+    h.db
+      .prepare(
+        "INSERT OR REPLACE INTO settings (key, value) VALUES ('worktree_submodule_init', 'skip')"
+      )
+      .run()
     const pid = 'proj-submod-test'
-    h.db.prepare("INSERT INTO projects (id, name, color, sort_order, created_at, updated_at, worktree_submodule_init) VALUES (?, 'test', '#fff', 0, datetime('now'), datetime('now'), 'auto')").run(pid)
+    h.db
+      .prepare(
+        "INSERT INTO projects (id, name, color, sort_order, created_at, updated_at, worktree_submodule_init) VALUES (?, 'test', '#fff', 0, datetime('now'), datetime('now'), 'auto')"
+      )
+      .run(pid)
     expect(resolveSubmoduleInitBehavior(h.db as never, pid)).toBe('auto')
     h.db.prepare('DELETE FROM projects WHERE id = ?').run(pid)
     h.db.prepare("DELETE FROM settings WHERE key = 'worktree_submodule_init'").run()
@@ -281,7 +312,7 @@ await describe('git:getWorkingDiff', () => {
   test('returns diff snapshot', async () => {
     // Make a change
     fs.writeFileSync(path.join(repoPath, 'staged.txt'), 'diff test')
-    const diff = await h.invoke('git:getWorkingDiff', repoPath) as {
+    const diff = (await h.invoke('git:getWorkingDiff', repoPath)) as {
       targetPath: string
       files: string[]
       stagedFiles: string[]
@@ -299,7 +330,7 @@ await describe('git:getWorkingDiff', () => {
   test('lists untracked files with unicode names', async () => {
     const name = 'ändringar.txt'
     fs.writeFileSync(path.join(repoPath, name), 'swedish chars')
-    const diff = await h.invoke('git:getWorkingDiff', repoPath) as {
+    const diff = (await h.invoke('git:getWorkingDiff', repoPath)) as {
       untrackedFiles: string[]
       files: string[]
     }
@@ -312,20 +343,28 @@ await describe('git:getWorkingDiff', () => {
 await describe('git:getUntrackedFileDiff', () => {
   test('returns diff for untracked file', async () => {
     fs.writeFileSync(path.join(repoPath, 'new-untracked.txt'), 'hello')
-    const diff = await h.invoke('git:getUntrackedFileDiff', repoPath, 'new-untracked.txt') as string
+    const diff = (await h.invoke(
+      'git:getUntrackedFileDiff',
+      repoPath,
+      'new-untracked.txt'
+    )) as string
     expect(diff.includes('hello')).toBe(true)
     fs.unlinkSync(path.join(repoPath, 'new-untracked.txt'))
   })
 
   test('returns empty string for null filePath', async () => {
-    const diff = await h.invoke('git:getUntrackedFileDiff', repoPath, null as unknown as string) as string
+    const diff = (await h.invoke(
+      'git:getUntrackedFileDiff',
+      repoPath,
+      null as unknown as string
+    )) as string
     expect(diff).toBe('')
   })
 
   test('returns diff for file with unicode name', async () => {
     const name = 'protokoll från möte.txt'
     fs.writeFileSync(path.join(repoPath, name), 'unicode content')
-    const diff = await h.invoke('git:getUntrackedFileDiff', repoPath, name) as string
+    const diff = (await h.invoke('git:getUntrackedFileDiff', repoPath, name)) as string
     expect(diff.includes('unicode content')).toBe(true)
     fs.unlinkSync(path.join(repoPath, name))
   })
@@ -361,8 +400,15 @@ git(`git checkout ${mainBranch}`)
 
 await describe('git:mergeIntoParent', () => {
   test('merges clean branch', async () => {
-    const result = await h.invoke('git:mergeIntoParent', repoPath, mainBranch, 'merge-source') as {
-      success: boolean; merged: boolean; conflicted: boolean
+    const result = (await h.invoke(
+      'git:mergeIntoParent',
+      repoPath,
+      mainBranch,
+      'merge-source'
+    )) as {
+      success: boolean
+      merged: boolean
+      conflicted: boolean
     }
     expect(result.success).toBe(true)
     expect(result.merged).toBe(true)
@@ -386,8 +432,15 @@ git('git checkout conflict-a')
 
 await describe('git:mergeIntoParent (conflict)', () => {
   test('detects merge conflicts', async () => {
-    const result = await h.invoke('git:mergeIntoParent', repoPath, 'conflict-a', 'conflict-b') as {
-      success: boolean; conflicted: boolean; error?: string
+    const result = (await h.invoke(
+      'git:mergeIntoParent',
+      repoPath,
+      'conflict-a',
+      'conflict-b'
+    )) as {
+      success: boolean
+      conflicted: boolean
+      error?: string
     }
     expect(result.conflicted).toBe(true)
     expect(result.success).toBe(false)
@@ -396,15 +449,19 @@ await describe('git:mergeIntoParent (conflict)', () => {
 
 await describe('git:getConflictedFiles', () => {
   test('lists conflicted files', async () => {
-    const files = await h.invoke('git:getConflictedFiles', repoPath) as string[]
+    const files = (await h.invoke('git:getConflictedFiles', repoPath)) as string[]
     expect(files).toContain('conflict.txt')
   })
 })
 
 await describe('git:getConflictContent', () => {
   test('returns base/ours/theirs/merged', async () => {
-    const content = await h.invoke('git:getConflictContent', repoPath, 'conflict.txt') as {
-      path: string; base: string | null; ours: string | null; theirs: string | null; merged: string | null
+    const content = (await h.invoke('git:getConflictContent', repoPath, 'conflict.txt')) as {
+      path: string
+      base: string | null
+      ours: string | null
+      theirs: string | null
+      merged: string | null
     }
     expect(content.path).toBe('conflict.txt')
     expect(content.ours).toBeTruthy()
@@ -440,8 +497,15 @@ await describe('git:mergeWithAI', () => {
     git('git commit -m "clean merge source"')
     git(`git checkout ${mainBranch}`)
 
-    const result = await h.invoke('git:mergeWithAI', repoPath, repoPath, mainBranch, 'clean-merge-src') as {
-      success?: boolean; resolving?: boolean
+    const result = (await h.invoke(
+      'git:mergeWithAI',
+      repoPath,
+      repoPath,
+      mainBranch,
+      'clean-merge-src'
+    )) as {
+      success?: boolean
+      resolving?: boolean
     }
     expect(result.success).toBe(true)
   })
@@ -461,8 +525,16 @@ await describe('git:mergeWithAI', () => {
     git('git add ai-conflict.txt')
     git('git commit -m "ai mine"')
 
-    const result = await h.invoke('git:mergeWithAI', repoPath, repoPath, 'ai-base', 'ai-other') as {
-      resolving?: boolean; prompt?: string; conflictedFiles?: string[]
+    const result = (await h.invoke(
+      'git:mergeWithAI',
+      repoPath,
+      repoPath,
+      'ai-base',
+      'ai-other'
+    )) as {
+      resolving?: boolean
+      prompt?: string
+      conflictedFiles?: string[]
     }
     expect(result.resolving).toBe(true)
     expect(result.prompt).toBeTruthy()
@@ -483,11 +555,17 @@ await describe('git:getWorkingDiff range mode', () => {
     git('git commit -m "range turn a"')
     const sha2 = git('git rev-parse HEAD')
 
-    const snap = await h.invoke('git:getWorkingDiff', repoPath, {
+    const snap = (await h.invoke('git:getWorkingDiff', repoPath, {
       contextLines: 'all',
       fromSha: sha1,
-      toSha: sha2,
-    }) as { files: string[]; unstagedPatch: string; stagedPatch: string; stagedFiles: string[]; untrackedFiles: string[] }
+      toSha: sha2
+    })) as {
+      files: string[]
+      unstagedPatch: string
+      stagedPatch: string
+      stagedFiles: string[]
+      untrackedFiles: string[]
+    }
 
     expect(snap.files).toContain('range-a.txt')
     expect(snap.unstagedPatch.includes('first turn change')).toBe(true)
@@ -499,19 +577,19 @@ await describe('git:getWorkingDiff range mode', () => {
 
   test('diff between identical SHAs returns empty', async () => {
     const sha = git('git rev-parse HEAD')
-    const snap = await h.invoke('git:getWorkingDiff', repoPath, {
+    const snap = (await h.invoke('git:getWorkingDiff', repoPath, {
       fromSha: sha,
-      toSha: sha,
-    }) as { files: string[]; unstagedPatch: string }
+      toSha: sha
+    })) as { files: string[]; unstagedPatch: string }
     expect(snap.files).toHaveLength(0)
     expect(snap.unstagedPatch).toBe('')
   })
 
   test('without fromSha/toSha falls back to HEAD-based working diff', async () => {
     fs.writeFileSync(path.join(repoPath, 'unstaged-edit.txt'), 'live change')
-    const snap = await h.invoke('git:getWorkingDiff', repoPath, {
-      contextLines: 'all',
-    }) as { untrackedFiles: string[] }
+    const snap = (await h.invoke('git:getWorkingDiff', repoPath, {
+      contextLines: 'all'
+    })) as { untrackedFiles: string[] }
     // Untracked file appears (unique to non-range mode)
     expect(snap.untrackedFiles.includes('unstaged-edit.txt')).toBe(true)
     fs.unlinkSync(path.join(repoPath, 'unstaged-edit.txt'))

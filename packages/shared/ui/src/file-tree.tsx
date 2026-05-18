@@ -66,17 +66,19 @@ function compressTree<T>(nodes: TreeNode<T>[]): TreeNode<T>[] {
     let n = node
     while (n.children.length === 1 && n.children[0].type === 'folder') {
       const child = n.children[0] as TreeFolder
-      n = { type: 'folder', name: `${n.name}/${child.name}`, path: child.path, children: child.children }
+      n = {
+        type: 'folder',
+        name: `${n.name}/${child.name}`,
+        path: child.path,
+        children: child.children
+      }
     }
     return { ...n, children: compressTree(n.children) }
   })
 }
 
 /** Flatten tree to items respecting collapsed folders */
-export function flattenFileTree<T>(
-  nodes: TreeNode<T>[],
-  collapsed: Set<string>
-): T[] {
+export function flattenFileTree<T>(nodes: TreeNode<T>[], collapsed: Set<string>): T[] {
   const result: T[] = []
   for (const node of nodes) {
     if (node.type === 'file') {
@@ -113,12 +115,16 @@ function FolderRow({
       onClick={onClick}
     >
       <span className="relative size-4 shrink-0">
-        {expanded
-          ? <FolderOpen className="size-4 text-muted-foreground transition-opacity group-hover/folder:opacity-0" />
-          : <Folder className="size-4 text-muted-foreground transition-opacity group-hover/folder:opacity-0" />}
-        {expanded
-          ? <ChevronDown className="absolute inset-0 m-auto size-3 opacity-0 transition-opacity group-hover/folder:opacity-100" />
-          : <ChevronRight className="absolute inset-0 m-auto size-3 opacity-0 transition-opacity group-hover/folder:opacity-100" />}
+        {expanded ? (
+          <FolderOpen className="size-4 text-muted-foreground transition-opacity group-hover/folder:opacity-0" />
+        ) : (
+          <Folder className="size-4 text-muted-foreground transition-opacity group-hover/folder:opacity-0" />
+        )}
+        {expanded ? (
+          <ChevronDown className="absolute inset-0 m-auto size-3 opacity-0 transition-opacity group-hover/folder:opacity-100" />
+        ) : (
+          <ChevronRight className="absolute inset-0 m-auto size-3 opacity-0 transition-opacity group-hover/folder:opacity-100" />
+        )}
       </span>
       <span className="truncate font-mono flex-1 text-left">{name}</span>
       {actions}
@@ -168,11 +174,7 @@ function TreeBranch<T>({
             </div>
           )
         }
-        return (
-          <div key={`f:${node.name}`}>
-            {renderFile(node.item, { name: node.name, depth })}
-          </div>
-        )
+        return <div key={`f:${node.name}`}>{renderFile(node.item, { name: node.name, depth })}</div>
       })}
     </>
   )
@@ -237,18 +239,21 @@ export function FileTree<T>({
   const isControlled = controlledExpanded !== undefined
   const expandedFolders = isControlled ? controlledExpanded : internalExpanded
 
-  const toggleFolder = useCallback((path: string) => {
-    if (controlledToggle) {
-      controlledToggle(path)
-      return
-    }
-    setInternalExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(path)) next.delete(path)
-      else next.add(path)
-      return next
-    })
-  }, [controlledToggle])
+  const toggleFolder = useCallback(
+    (path: string) => {
+      if (controlledToggle) {
+        controlledToggle(path)
+        return
+      }
+      setInternalExpanded((prev) => {
+        const next = new Set(prev)
+        if (next.has(path)) next.delete(path)
+        else next.add(path)
+        return next
+      })
+    },
+    [controlledToggle]
+  )
 
   if (tree.length === 0) return null
 

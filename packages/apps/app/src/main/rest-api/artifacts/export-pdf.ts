@@ -9,21 +9,37 @@ import type { RestApiDeps } from '../types'
 export function registerArtifactsExportPdfRoute(app: Express, deps: RestApiDeps): void {
   app.post('/api/artifacts/:id/export/pdf', async (req, res) => {
     const { outputPath } = req.body ?? {}
-    if (!outputPath) { res.status(400).json({ error: 'outputPath required' }); return }
+    if (!outputPath) {
+      res.status(400).json({ error: 'outputPath required' })
+      return
+    }
 
-    const existing = deps.db.prepare('SELECT * FROM task_artifacts WHERE id = ?').get(req.params.id) as Record<string, unknown> | undefined
-    if (!existing) { res.status(404).json({ error: 'Artifact not found' }); return }
+    const existing = deps.db
+      .prepare('SELECT * FROM task_artifacts WHERE id = ?')
+      .get(req.params.id) as Record<string, unknown> | undefined
+    if (!existing) {
+      res.status(404).json({ error: 'Artifact not found' })
+      return
+    }
 
     const title = existing.title as string
-    const mode = getEffectiveRenderMode(title, (existing.render_mode as string | null) as any)
-    if (!canExportAsPdf(mode)) { res.status(400).json({ error: `Cannot export ${mode} as pdf` }); return }
+    const mode = getEffectiveRenderMode(title, existing.render_mode as string | null as any)
+    if (!canExportAsPdf(mode)) {
+      res.status(400).json({ error: `Cannot export ${mode} as pdf` })
+      return
+    }
 
     const srcPath = getArtifactFilePath(existing.task_id as string, req.params.id, title)
-    if (!existsSync(srcPath)) { res.status(404).json({ error: 'Artifact file not found' }); return }
+    if (!existsSync(srcPath)) {
+      res.status(404).json({ error: 'Artifact file not found' })
+      return
+    }
     const content = readFileSync(srcPath, 'utf-8')
 
     const isMermaid = mode === 'mermaid-preview'
-    const html = isMermaid ? buildMermaidPdfHtml(content, title) : buildPdfHtml(content, mode, title)
+    const html = isMermaid
+      ? buildMermaidPdfHtml(content, title)
+      : buildPdfHtml(content, mode, title)
 
     try {
       const pdfBuffer = await renderToPdf(html, isMermaid)

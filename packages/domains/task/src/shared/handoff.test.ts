@@ -10,7 +10,7 @@ import {
   isEncodedDesktopHandoffUrl,
   isLoopbackUrl,
   isUrlWithinHostScope,
-  normalizeDesktopProtocol,
+  normalizeDesktopProtocol
 } from './handoff.js'
 
 let passed = 0
@@ -31,8 +31,9 @@ function test(name: string, fn: () => void) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${String(actual)} to be ${String(expected)}`)
-    },
+      if (actual !== expected)
+        throw new Error(`Expected ${String(actual)} to be ${String(expected)}`)
+    }
   }
 }
 
@@ -45,13 +46,13 @@ test('blocks encoded desktop handoff URLs for configured protocol', () => {
   expect(
     isEncodedDesktopHandoffUrl('https://www.figma.com/exit?url=figma%3A%2F%2Fopen', {
       protocol: 'figma',
-      hostScope: 'figma.com',
+      hostScope: 'figma.com'
     })
   ).toBe(true)
   expect(
     isEncodedDesktopHandoffUrl('https://www.figma.com/file/123?target=figma%3A%2F%2Fopen', {
       protocol: 'figma',
-      hostScope: 'figma.com',
+      hostScope: 'figma.com'
     })
   ).toBe(true)
 })
@@ -60,13 +61,13 @@ test('does not block normal figma auth or web URLs', () => {
   expect(
     isEncodedDesktopHandoffUrl('https://www.figma.com/oauth/authorize?client_id=test', {
       protocol: 'figma',
-      hostScope: 'figma.com',
+      hostScope: 'figma.com'
     })
   ).toBe(false)
   expect(
     isEncodedDesktopHandoffUrl('https://www.figma.com/design/abc', {
       protocol: 'figma',
-      hostScope: 'figma.com',
+      hostScope: 'figma.com'
     })
   ).toBe(false)
 })
@@ -75,13 +76,15 @@ test('does not overblock outside host scope', () => {
   expect(
     isEncodedDesktopHandoffUrl('https://accounts.example.com/login?next=slack%3A%2F%2Fopen', {
       protocol: 'slack',
-      hostScope: 'slack.com',
+      hostScope: 'slack.com'
     })
   ).toBe(false)
 })
 
 test('does not match encoded handoff URLs when no explicit policy is provided', () => {
-  expect(isEncodedDesktopHandoffUrl('https://www.figma.com/exit?url=figma%3A%2F%2Fopen')).toBe(false)
+  expect(isEncodedDesktopHandoffUrl('https://www.figma.com/exit?url=figma%3A%2F%2Fopen')).toBe(
+    false
+  )
 })
 
 test('combined matcher keeps direct protocol + encoded behavior', () => {
@@ -89,13 +92,13 @@ test('combined matcher keeps direct protocol + encoded behavior', () => {
   expect(
     isBlockedExternalHandoffUrl('https://www.figma.com/exit?url=figma%3A%2F%2Fopen', {
       protocol: 'figma',
-      hostScope: 'figma.com',
+      hostScope: 'figma.com'
     })
   ).toBe(true)
   expect(
     isBlockedExternalHandoffUrl('https://www.figma.com/oauth/authorize?client_id=test', {
       protocol: 'figma',
-      hostScope: 'figma.com',
+      hostScope: 'figma.com'
     })
   ).toBe(false)
 })

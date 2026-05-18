@@ -1,4 +1,10 @@
-import { app, BrowserWindow, ipcMain, powerMonitor, autoUpdater as nativeAutoUpdater } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  powerMonitor,
+  autoUpdater as nativeAutoUpdater
+} from 'electron'
 import { is } from '@electron-toolkit/utils'
 // electron-updater is CJS. electron-vite v5 outputs ESM for main, and Node's
 // CJS→ESM interop doesn't detect Object.defineProperty getters as named exports.
@@ -25,7 +31,9 @@ function getAutoUpdater() {
       console.error('[updater] error:', err.message)
       sendUpdateStatus({ type: 'error', message: err.message })
     })
-    autoUpdater.on('update-available', (info) => console.log('[updater] update available:', info.version))
+    autoUpdater.on('update-available', (info) =>
+      console.log('[updater] update available:', info.version)
+    )
     autoUpdater.on('download-progress', (p) => {
       BrowserWindow.getAllWindows()[0]?.setProgressBar(p.percent / 100)
       sendUpdateStatus({ type: 'downloading', percent: Math.round(p.percent) })
@@ -63,16 +71,20 @@ export function initAutoUpdater(): void {
   }
   setInterval(() => {
     console.log('[updater] periodic check')
-    getAutoUpdater().checkForUpdatesAndNotify().catch((err) => {
-      console.error('[updater] periodic check failed:', err instanceof Error ? err.message : err)
-    })
+    getAutoUpdater()
+      .checkForUpdatesAndNotify()
+      .catch((err) => {
+        console.error('[updater] periodic check failed:', err instanceof Error ? err.message : err)
+      })
   }, CHECK_INTERVAL_MS)
 
   powerMonitor.on('resume', () => {
     console.log('[updater] resume check')
-    getAutoUpdater().checkForUpdatesAndNotify().catch((err) => {
-      console.error('[updater] resume check failed:', err instanceof Error ? err.message : err)
-    })
+    getAutoUpdater()
+      .checkForUpdatesAndNotify()
+      .catch((err) => {
+        console.error('[updater] resume check failed:', err instanceof Error ? err.message : err)
+      })
   })
 }
 
@@ -110,7 +122,9 @@ export async function restartForUpdate(): Promise<void> {
     }
 
     recordDiagnosticEvent({
-      level: 'info', source: 'main', event: 'app.update.installing',
+      level: 'info',
+      source: 'main',
+      event: 'app.update.installing',
       payload: {
         from: app.getVersion(),
         to: downloadedVersion,
@@ -127,7 +141,9 @@ export async function restartForUpdate(): Promise<void> {
 
     const drainResult = await waitForRendererDrain()
     recordDiagnosticEvent({
-      level: 'info', source: 'main', event: 'app.update.drain',
+      level: 'info',
+      source: 'main',
+      event: 'app.update.drain',
       payload: { result: drainResult }
     })
 

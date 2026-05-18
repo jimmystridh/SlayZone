@@ -17,9 +17,14 @@ export async function tagAction(taskId: string | undefined, opts: TagOpts): Prom
     `SELECT id, project_id FROM tasks WHERE id LIKE :prefix || '%' LIMIT 2`,
     { ':prefix': taskId }
   )
-  if (tasks.length === 0) { console.error(`Task not found: ${taskId}`); process.exit(1) }
+  if (tasks.length === 0) {
+    console.error(`Task not found: ${taskId}`)
+    process.exit(1)
+  }
   if (tasks.length > 1) {
-    console.error(`Ambiguous id prefix "${taskId}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${taskId}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
 
@@ -46,17 +51,23 @@ export async function tagAction(taskId: string | undefined, opts: TagOpts): Prom
         const tagIds = opts.set.map(resolveTagByName)
         db.run(`DELETE FROM task_tags WHERE task_id = :tid`, { ':tid': task.id })
         for (const tagId of tagIds) {
-          db.run(`INSERT INTO task_tags (task_id, tag_id) VALUES (:tid, :tagId)`, { ':tid': task.id, ':tagId': tagId })
+          db.run(`INSERT INTO task_tags (task_id, tag_id) VALUES (:tid, :tagId)`, {
+            ':tid': task.id,
+            ':tagId': tagId
+          })
         }
       } else if (opts.add) {
         const tagId = resolveTagByName(opts.add)
-        db.run(
-          `INSERT OR IGNORE INTO task_tags (task_id, tag_id) VALUES (:tid, :tagId)`,
-          { ':tid': task.id, ':tagId': tagId }
-        )
+        db.run(`INSERT OR IGNORE INTO task_tags (task_id, tag_id) VALUES (:tid, :tagId)`, {
+          ':tid': task.id,
+          ':tagId': tagId
+        })
       } else if (opts.remove) {
         const tagId = resolveTagByName(opts.remove)
-        db.run(`DELETE FROM task_tags WHERE task_id = :tid AND tag_id = :tagId`, { ':tid': task.id, ':tagId': tagId })
+        db.run(`DELETE FROM task_tags WHERE task_id = :tid AND tag_id = :tagId`, {
+          ':tid': task.id,
+          ':tagId': tagId
+        })
       } else if (opts.clear) {
         db.run(`DELETE FROM task_tags WHERE task_id = :tid`, { ':tid': task.id })
       }
@@ -68,11 +79,13 @@ export async function tagAction(taskId: string | undefined, opts: TagOpts): Prom
   }
 
   // Show current tags
-  const tagNames = db.query<{ name: string }>(
-    `SELECT tg.name FROM tags tg JOIN task_tags tt ON tg.id = tt.tag_id
+  const tagNames = db
+    .query<{ name: string }>(
+      `SELECT tg.name FROM tags tg JOIN task_tags tt ON tg.id = tt.tag_id
      WHERE tt.task_id = :tid ORDER BY tg.sort_order, tg.name`,
-    { ':tid': task.id }
-  ).map((r) => r.name)
+      { ':tid': task.id }
+    )
+    .map((r) => r.name)
   db.close()
 
   if (isWrite) await notifyApp()

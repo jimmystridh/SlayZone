@@ -1,5 +1,10 @@
 import { validateColumns, type ColumnConfig, type WorkflowCategory } from '@slayzone/workflow'
-import { slugifyStatusName, type IntegrationProvider, type ProviderStatus, type StatusDiff } from '../shared'
+import {
+  slugifyStatusName,
+  type IntegrationProvider,
+  type ProviderStatus,
+  type StatusDiff
+} from '../shared'
 import { getAdapter } from './adapters'
 
 export interface StatusSyncResult {

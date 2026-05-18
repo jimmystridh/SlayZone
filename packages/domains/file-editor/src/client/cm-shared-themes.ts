@@ -10,19 +10,19 @@ export const cmScrollbarTheme = EditorView.theme({
   '.cm-scroller': {
     overflow: 'auto',
     scrollbarWidth: 'thin',
-    scrollbarColor: 'hsl(var(--muted-foreground) / 0.3) transparent',
+    scrollbarColor: 'hsl(var(--muted-foreground) / 0.3) transparent'
   },
   '.cm-scroller::-webkit-scrollbar': { width: '6px', height: '6px' },
   '.cm-scroller::-webkit-scrollbar-track': { background: 'transparent' },
   '.cm-scroller::-webkit-scrollbar-thumb': {
     background: 'hsl(var(--muted-foreground) / 0.3)',
-    borderRadius: '3px',
+    borderRadius: '3px'
   },
   '.cm-scroller::-webkit-scrollbar-thumb:hover': {
-    background: 'hsl(var(--muted-foreground) / 0.5)',
+    background: 'hsl(var(--muted-foreground) / 0.5)'
   },
   '.cm-scroller::-webkit-scrollbar-corner': { background: 'transparent' },
-  '.cm-scroller::-webkit-scrollbar-button': { display: 'none' },
+  '.cm-scroller::-webkit-scrollbar-button': { display: 'none' }
 })
 
 /** Minimap gutter styling: left-only border, surface-2 bg, padded canvas.
@@ -38,12 +38,12 @@ export const minimapCardTheme = EditorView.theme({
     borderLeftWidth: '2px !important',
     borderStyle: 'solid !important',
     borderColor: 'var(--border) !important',
-    background: 'var(--surface-2, var(--background)) !important',
+    background: 'var(--surface-2, var(--background)) !important'
   },
   '.cm-gutters.cm-minimap-gutter .cm-minimap-inner': {
     right: '6px !important',
-    left: '6px !important',
-  },
+    left: '6px !important'
+  }
 })
 
 export function buildMinimap() {
@@ -51,8 +51,8 @@ export function buildMinimap() {
     showMinimap.compute([], () => ({
       create: () => ({ dom: document.createElement('div') }),
       displayText: 'blocks' as const,
-      showOverlay: 'always' as const,
+      showOverlay: 'always' as const
     })),
-    minimapCardTheme,
+    minimapCardTheme
   ]
 }

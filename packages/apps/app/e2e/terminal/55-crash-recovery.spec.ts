@@ -7,14 +7,14 @@
  *
  * Doctor-menu tests use `claude-code` (binary must be installed).
  */
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH, goHome, clickProject } from '../fixtures/electron'
 import {
   getMainSessionId,
   openTaskTerminal,
   runCommand,
   switchTerminalMode,
-  waitForPtySession,
+  waitForPtySession
 } from '../fixtures/terminal'
 const crashModeId = 'crash-overlay-e2e'
 
@@ -24,124 +24,129 @@ const crashModeId = 'crash-overlay-e2e'
 // auto-spawns PTY; beforeAll's waitForPtySession times out. All 4 tests in
 // this describe depend on the spawned PTY. Skip until the mode contract is
 // updated.
-test.describe.skip('Terminal crash overlay', () => {
-  let projectAbbrev: string
-  let taskId: string
-  let sessionId: string
+test.describe
+  .skip('Terminal crash overlay', () => {
+    let projectAbbrev: string
+    let taskId: string
+    let sessionId: string
 
-  test.beforeAll(async ({ mainWindow }) => {
-    await resetApp(mainWindow)
-    await mainWindow.evaluate((id) => window.api.terminalModes.create({
-      id,
-      label: 'Crash Overlay E2E',
-      type: 'claude-code',
-      initialCommand: null,
-      resumeCommand: null,
-      defaultFlags: '',
-      enabled: true,
-      order: 999,
-    }), crashModeId)
-    const s = seed(mainWindow)
-    const p = await s.createProject({
-      name: 'CrashRec',
-      color: '#dc2626',
-      path: TEST_PROJECT_PATH,
+    test.beforeAll(async ({ mainWindow }) => {
+      await resetApp(mainWindow)
+      await mainWindow.evaluate(
+        (id) =>
+          window.api.terminalModes.create({
+            id,
+            label: 'Crash Overlay E2E',
+            type: 'claude-code',
+            initialCommand: null,
+            resumeCommand: null,
+            defaultFlags: '',
+            enabled: true,
+            order: 999
+          }),
+        crashModeId
+      )
+      const s = seed(mainWindow)
+      const p = await s.createProject({
+        name: 'CrashRec',
+        color: '#dc2626',
+        path: TEST_PROJECT_PATH
+      })
+      projectAbbrev = p.name.slice(0, 2).toUpperCase()
+
+      const t = await s.createTask({
+        projectId: p.id,
+        title: 'Crash overlay task',
+        status: 'in_progress'
+      })
+      taskId = t.id
+      sessionId = getMainSessionId(taskId)
+
+      // Set the task to the custom mode and open its terminal.
+      await mainWindow.evaluate(({ id, m }) => window.api.db.updateTask({ id, terminalMode: m }), {
+        id: taskId,
+        m: crashModeId
+      })
+      await s.refreshData()
+
+      await openTaskTerminal(mainWindow, { projectAbbrev, taskTitle: 'Crash overlay task' })
+      await waitForPtySession(mainWindow, sessionId)
     })
-    projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({
-      projectId: p.id,
-      title: 'Crash overlay task',
-      status: 'in_progress',
+    test.afterAll(async ({ mainWindow }) => {
+      await mainWindow.evaluate((id) => window.api.terminalModes.delete(id), crashModeId)
     })
-    taskId = t.id
-    sessionId = getMainSessionId(taskId)
 
-    // Set the task to the custom mode and open its terminal.
-    await mainWindow.evaluate(
-      ({ id, m }) => window.api.db.updateTask({ id, terminalMode: m }),
-      { id: taskId, m: crashModeId }
-    )
-    await s.refreshData()
-
-    await openTaskTerminal(mainWindow, { projectAbbrev, taskTitle: 'Crash overlay task' })
-    await waitForPtySession(mainWindow, sessionId)
-  })
-
-  test.afterAll(async ({ mainWindow }) => {
-    await mainWindow.evaluate((id) => window.api.terminalModes.delete(id), crashModeId)
-  })
-
-  const ensureLiveTerminal = async (mainWindow: import('@playwright/test').Page) => {
-    const retryButton = mainWindow.getByRole('button', { name: 'Retry' }).last()
-    if (await retryButton.isVisible({ timeout: 500 }).catch(() => false)) {
-      await retryButton.click()
-      await expect(retryButton).not.toBeVisible({ timeout: 3_000 })
+    const ensureLiveTerminal = async (mainWindow: import('@playwright/test').Page) => {
+      const retryButton = mainWindow.getByRole('button', { name: 'Retry' }).last()
+      if (await retryButton.isVisible({ timeout: 500 }).catch(() => false)) {
+        await retryButton.click()
+        await expect(retryButton).not.toBeVisible({ timeout: 3_000 })
+      }
+      await waitForPtySession(mainWindow, sessionId)
     }
-    await waitForPtySession(mainWindow, sessionId)
-  }
 
-  const crashTerminal = async (mainWindow: import('@playwright/test').Page) => {
-    await ensureLiveTerminal(mainWindow)
-    await runCommand(mainWindow, sessionId, 'exit 7')
-  }
+    const crashTerminal = async (mainWindow: import('@playwright/test').Page) => {
+      await ensureLiveTerminal(mainWindow)
+      await runCommand(mainWindow, sessionId, 'exit 7')
+    }
 
-  // QUARANTINED 2026-05-16: custom mode with initialCommand=null no longer
-  // auto-spawns PTY; beforeAll's waitForPtySession times out. Either provide
-  // an initialCommand (e.g. /bin/sh) or update fixture/source contract.
-  test.skip('overlay appears after terminal crash', async ({ mainWindow }) => {
-    await crashTerminal(mainWindow)
-    await expect(
-      mainWindow.getByText(/Process exited with code/i).last()
-    ).toBeVisible({ timeout: 10_000 })
+    // QUARANTINED 2026-05-16: custom mode with initialCommand=null no longer
+    // auto-spawns PTY; beforeAll's waitForPtySession times out. Either provide
+    // an initialCommand (e.g. /bin/sh) or update fixture/source contract.
+    test.skip('overlay appears after terminal crash', async ({ mainWindow }) => {
+      await crashTerminal(mainWindow)
+      await expect(mainWindow.getByText(/Process exited with code/i).last()).toBeVisible({
+        timeout: 10_000
+      })
+    })
+
+    test('overlay shows Retry and Doctor buttons', async ({ mainWindow }) => {
+      await crashTerminal(mainWindow)
+
+      await expect(mainWindow.getByRole('button', { name: 'Retry' }).last()).toBeVisible({
+        timeout: 3_000
+      })
+
+      await expect(mainWindow.getByRole('button', { name: 'Doctor' }).last()).toBeVisible({
+        timeout: 3_000
+      })
+    })
+
+    test('Doctor from overlay shows validation results', async ({ mainWindow }) => {
+      await crashTerminal(mainWindow)
+      await mainWindow.getByRole('button', { name: 'Doctor' }).last().click()
+
+      // Results should appear inline in the overlay.
+      await expect(mainWindow.locator('text=/Binary found|Shell detected/i').first()).toBeVisible({
+        timeout: 8_000
+      })
+
+      // Doctor cards render structured check output.
+      await expect(mainWindow.locator('.rounded-lg.border:visible').first()).toBeVisible({
+        timeout: 3_000
+      })
+    })
+
+    test('Retry clears overlay then it reappears after re-crash', async ({ mainWindow }) => {
+      await crashTerminal(mainWindow)
+      const exitText = mainWindow.getByText(/Process exited with code/i).last()
+      await expect(exitText).toBeVisible()
+
+      await mainWindow.getByRole('button', { name: 'Retry' }).last().click()
+
+      // Overlay clears immediately after Retry
+      await expect(exitText).not.toBeVisible({ timeout: 3_000 })
+
+      await waitForPtySession(mainWindow, sessionId)
+      await crashTerminal(mainWindow)
+
+      // Terminal respawns, then we force a second crash and the overlay reappears.
+      await expect(mainWindow.getByText(/Process exited with code/i).last()).toBeVisible({
+        timeout: 10_000
+      })
+    })
   })
-
-  test('overlay shows Retry and Doctor buttons', async ({ mainWindow }) => {
-    await crashTerminal(mainWindow)
-
-    await expect(
-      mainWindow.getByRole('button', { name: 'Retry' }).last()
-    ).toBeVisible({ timeout: 3_000 })
-
-    await expect(
-      mainWindow.getByRole('button', { name: 'Doctor' }).last()
-    ).toBeVisible({ timeout: 3_000 })
-  })
-
-  test('Doctor from overlay shows validation results', async ({ mainWindow }) => {
-    await crashTerminal(mainWindow)
-    await mainWindow.getByRole('button', { name: 'Doctor' }).last().click()
-
-    // Results should appear inline in the overlay.
-    await expect(
-      mainWindow.locator('text=/Binary found|Shell detected/i').first()
-    ).toBeVisible({ timeout: 8_000 })
-
-    // Doctor cards render structured check output.
-    await expect(
-      mainWindow.locator('.rounded-lg.border:visible').first()
-    ).toBeVisible({ timeout: 3_000 })
-  })
-
-  test('Retry clears overlay then it reappears after re-crash', async ({ mainWindow }) => {
-    await crashTerminal(mainWindow)
-    const exitText = mainWindow.getByText(/Process exited with code/i).last()
-    await expect(exitText).toBeVisible()
-
-    await mainWindow.getByRole('button', { name: 'Retry' }).last().click()
-
-    // Overlay clears immediately after Retry
-    await expect(exitText).not.toBeVisible({ timeout: 3_000 })
-
-    await waitForPtySession(mainWindow, sessionId)
-    await crashTerminal(mainWindow)
-
-    // Terminal respawns, then we force a second crash and the overlay reappears.
-    await expect(
-      mainWindow.getByText(/Process exited with code/i).last()
-    ).toBeVisible({ timeout: 10_000 })
-  })
-})
 
 // ─── Doctor from three-dots menu ─────────────────────────────────────────────
 
@@ -164,9 +169,13 @@ test.describe('Doctor from terminal menu', () => {
     // (see 22 quarantine). Bypass via DB write — the renderer re-renders
     // the mode trigger on tasks:changed, which is what these tests probe.
     if (mode === 'claude-code') {
-      await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'claude-code' }), taskId)
+      await mainWindow.evaluate(
+        (id) => window.api.db.updateTask({ id, terminalMode: 'claude-code' }),
+        taskId
+      )
       await mainWindow.evaluate(() => {
-        const refresh = (window as { __slayzone_refreshData?: () => Promise<void> | void }).__slayzone_refreshData
+        const refresh = (window as { __slayzone_refreshData?: () => Promise<void> | void })
+          .__slayzone_refreshData
         return refresh?.()
       })
       // Give the renderer a beat to reflect the mode change before the next
@@ -182,14 +191,14 @@ test.describe('Doctor from terminal menu', () => {
     const p = await s.createProject({
       name: 'DocMenu',
       color: '#2563eb',
-      path: TEST_PROJECT_PATH,
+      path: TEST_PROJECT_PATH
     })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
     const t = await s.createTask({
       projectId: p.id,
       title: 'Doctor menu task',
-      status: 'in_progress',
+      status: 'in_progress'
     })
     taskId = t.id
 
@@ -204,9 +213,7 @@ test.describe('Doctor from terminal menu', () => {
     // Open the three-dots menu
     await openTerminalMenu(mainWindow)
 
-    await expect(
-      doctorMenuItem(mainWindow)
-    ).toBeVisible({ timeout: 3_000 })
+    await expect(doctorMenuItem(mainWindow)).toBeVisible({ timeout: 3_000 })
 
     // Close the menu
     await mainWindow.keyboard.press('Escape')
@@ -225,14 +232,10 @@ test.describe('Doctor from terminal menu', () => {
     await expect(dialog).toContainText(/Environment check|Doctor/, { timeout: 2_000 })
 
     // Should show at least one check result
-    await expect(
-      dialog.locator('text=/Binary found/i').first()
-    ).toBeVisible({ timeout: 8_000 })
+    await expect(dialog.locator('text=/Binary found/i').first()).toBeVisible({ timeout: 8_000 })
 
     // claude is installed → check should report binary found path
-    await expect(
-      dialog.getByText(/Binary found/i).first()
-    ).toBeVisible({ timeout: 3_000 })
+    await expect(dialog.getByText(/Binary found/i).first()).toBeVisible({ timeout: 3_000 })
 
     // Close
     await mainWindow.keyboard.press('Escape')
@@ -245,9 +248,7 @@ test.describe('Doctor from terminal menu', () => {
 
     await openTerminalMenu(mainWindow)
 
-    await expect(
-      doctorMenuItem(mainWindow)
-    ).not.toBeVisible({ timeout: 2_000 })
+    await expect(doctorMenuItem(mainWindow)).not.toBeVisible({ timeout: 2_000 })
 
     await mainWindow.keyboard.press('Escape')
 

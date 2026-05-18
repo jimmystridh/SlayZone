@@ -5,7 +5,7 @@ import { describe, test, expect } from 'vitest'
 import {
   installClaudeHooks,
   CLAUDE_HOOK_EVENTS,
-  isManagedSlayzoneHook,
+  isManagedSlayzoneHook
 } from './claude-hook-installer'
 
 const SCRIPT = '/tmp/.slayzone/hooks/notify.sh'
@@ -16,7 +16,9 @@ function tmpSettings(): string {
 }
 
 function cleanup(p: string) {
-  try { fs.rmSync(path.dirname(path.dirname(p)), { recursive: true, force: true }) } catch {}
+  try {
+    fs.rmSync(path.dirname(path.dirname(p)), { recursive: true, force: true })
+  } catch {}
 }
 
 function readJson(p: string): { hooks?: Record<string, unknown[]>; [k: string]: unknown } {
@@ -55,7 +57,7 @@ describe('installClaudeHooks', () => {
       expect(stopList.length).toBe(2)
       // User entry preserved.
       const stillThere = stopList.some((e) =>
-        (e.hooks as Array<{ command?: string }>).some((h) => h.command === '/my/custom/script.sh'),
+        (e.hooks as Array<{ command?: string }>).some((h) => h.command === '/my/custom/script.sh')
       )
       expect(stillThere).toBe(true)
     } finally {
@@ -68,7 +70,9 @@ describe('installClaudeHooks', () => {
     fs.mkdirSync(path.dirname(target), { recursive: true })
     // Simulate a stale managed entry from a previous install at a different path.
     const stale = {
-      hooks: [{ type: 'command', command: '/old/.slayzone/hooks/notify.sh', _slayzoneManaged: true }],
+      hooks: [
+        { type: 'command', command: '/old/.slayzone/hooks/notify.sh', _slayzoneManaged: true }
+      ]
     }
     fs.writeFileSync(target, JSON.stringify({ hooks: { Stop: [stale] } }))
     try {
@@ -131,11 +135,15 @@ describe('installClaudeHooks', () => {
 
 describe('isManagedSlayzoneHook', () => {
   test('matches by marker', () => {
-    expect(isManagedSlayzoneHook({ type: 'command', command: 'x', _slayzoneManaged: true })).toBe(true)
+    expect(isManagedSlayzoneHook({ type: 'command', command: 'x', _slayzoneManaged: true })).toBe(
+      true
+    )
   })
 
   test('matches by script path substring', () => {
-    expect(isManagedSlayzoneHook({ type: 'command', command: '/home/x/.slayzone/hooks/notify.sh' })).toBe(true)
+    expect(
+      isManagedSlayzoneHook({ type: 'command', command: '/home/x/.slayzone/hooks/notify.sh' })
+    ).toBe(true)
   })
 
   test('does not match unrelated hooks', () => {

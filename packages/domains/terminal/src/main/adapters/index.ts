@@ -1,4 +1,16 @@
-export type { TerminalMode, TerminalAdapter, SpawnShellConfig, SpawnConfig, SpawnResult, SpawnBinaryInfo, PromptInfo, ActivityState, ErrorInfo, CLIState, ExecutionContext } from './types'
+export type {
+  TerminalMode,
+  TerminalAdapter,
+  SpawnShellConfig,
+  SpawnConfig,
+  SpawnResult,
+  SpawnBinaryInfo,
+  PromptInfo,
+  ActivityState,
+  ErrorInfo,
+  CLIState,
+  ExecutionContext
+} from './types'
 
 import type { TerminalAdapter } from './types'
 import { CcsAdapter } from './ccs-adapter'
@@ -12,15 +24,15 @@ import { CopilotAdapter } from './copilot-adapter'
 import { ShellAdapter } from './shell-adapter'
 
 const BUILTIN_ADAPTERS: Record<string, new () => TerminalAdapter> = {
-  'ccs': CcsAdapter,
+  ccs: CcsAdapter,
   'claude-code': ClaudeAdapter,
-  'codex': CodexAdapter,
+  codex: CodexAdapter,
   'cursor-agent': CursorAdapter,
-  'gemini': GeminiAdapter,
-  'opencode': OpencodeAdapter,
+  gemini: GeminiAdapter,
+  opencode: OpencodeAdapter,
   'qwen-code': QwenAdapter,
-  'copilot': CopilotAdapter,
-  'terminal': ShellAdapter
+  copilot: CopilotAdapter,
+  terminal: ShellAdapter
 }
 
 export interface GetAdapterOptions {

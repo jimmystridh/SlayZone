@@ -3,7 +3,10 @@ import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 /** Locate a home panel toggle button by label */
 const homePanelBtn = (page: import('@playwright/test').Page, label: string) =>
-  page.locator('.bg-surface-2.rounded-lg').filter({ has: page.locator(`button:has-text("Kanban")`) }).locator(`button:has-text("${label}")`)
+  page
+    .locator('.bg-surface-2.rounded-lg')
+    .filter({ has: page.locator(`button:has-text("Kanban")`) })
+    .locator(`button:has-text("${label}")`)
 
 test.describe('Home panel persistence', () => {
   let abbrevA: string
@@ -12,8 +15,16 @@ test.describe('Home panel persistence', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const pA = await s.createProject({ name: 'Alfa Panel', color: '#3b82f6', path: TEST_PROJECT_PATH })
-    const pB = await s.createProject({ name: 'Bravo Panel', color: '#ef4444', path: TEST_PROJECT_PATH })
+    const pA = await s.createProject({
+      name: 'Alfa Panel',
+      color: '#3b82f6',
+      path: TEST_PROJECT_PATH
+    })
+    const pB = await s.createProject({
+      name: 'Bravo Panel',
+      color: '#ef4444',
+      path: TEST_PROJECT_PATH
+    })
     abbrevA = pA.name.slice(0, 2).toUpperCase()
     abbrevB = pB.name.slice(0, 2).toUpperCase()
     await s.createTask({ projectId: pA.id, title: 'HP task A', status: 'todo' })

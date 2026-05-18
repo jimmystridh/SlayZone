@@ -1,7 +1,7 @@
 export {
   DEFAULT_WORKTREE_BASE_PATH_TEMPLATE,
   resolveWorktreeBasePathTemplate,
-  joinWorktreePath,
+  joinWorktreePath
 } from '../shared/path-template'
 
 /**

@@ -24,19 +24,25 @@ const variantStyles = {
   raised: {
     container: 'bg-muted',
     active: 'bg-muted-foreground/20 text-foreground shadow-sm',
-    activeDisabled: 'bg-muted-foreground/20 text-foreground/40 shadow-sm cursor-not-allowed',
+    activeDisabled: 'bg-muted-foreground/20 text-foreground/40 shadow-sm cursor-not-allowed'
   },
   flat: {
     container: 'bg-surface-2',
     active: 'bg-surface-3 text-foreground shadow-sm',
-    activeDisabled: 'bg-surface-3 text-foreground/40 shadow-sm cursor-not-allowed',
-  },
+    activeDisabled: 'bg-surface-3 text-foreground/40 shadow-sm cursor-not-allowed'
+  }
 }
 
 export function PanelToggle({ panels, onChange, variant = 'flat', className }: PanelToggleProps) {
   const styles = variantStyles[variant]
   return (
-    <div className={cn('flex items-center rounded-lg p-1 gap-1 overflow-x-auto scrollbar-hide', styles.container, className)}>
+    <div
+      className={cn(
+        'flex items-center rounded-lg p-1 gap-1 overflow-x-auto scrollbar-hide',
+        styles.container,
+        className
+      )}
+    >
       {panels.map((panel) => (
         <Tooltip key={panel.id}>
           <TooltipTrigger asChild>
@@ -57,10 +63,12 @@ export function PanelToggle({ panels, onChange, variant = 'flat', className }: P
               <panel.icon className="size-3.5" />
               {panel.label}
               {panel.shortcut && (
-                <span className={cn(
-                  'ml-1 text-[10px]',
-                  panel.active ? 'text-muted-foreground' : 'text-muted-foreground/60'
-                )}>
+                <span
+                  className={cn(
+                    'ml-1 text-[10px]',
+                    panel.active ? 'text-muted-foreground' : 'text-muted-foreground/60'
+                  )}
+                >
                   {panel.shortcut}
                 </span>
               )}
@@ -69,7 +77,10 @@ export function PanelToggle({ panels, onChange, variant = 'flat', className }: P
           <TooltipContent side="bottom">
             {panel.disabled
               ? `Select a project to use ${panel.label}`
-              : withShortcut(`${panel.active ? 'Hide' : 'Show'} ${panel.label} panel`, panel.shortcut ?? null)}
+              : withShortcut(
+                  `${panel.active ? 'Hide' : 'Show'} ${panel.label} panel`,
+                  panel.shortcut ?? null
+                )}
           </TooltipContent>
         </Tooltip>
       ))}

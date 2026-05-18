@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { openTaskTerminal, switchTerminalMode } from '../fixtures/terminal'
 
@@ -6,7 +6,10 @@ import { openTaskTerminal, switchTerminalMode } from '../fixtures/terminal'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendAppShortcut(electronApp: any, channel: string): Promise<void> {
   await electronApp.evaluate(
-    ({ BrowserWindow }: { BrowserWindow: typeof Electron.CrossProcessExports.BrowserWindow }, ch: string) => {
+    (
+      { BrowserWindow }: { BrowserWindow: typeof Electron.CrossProcessExports.BrowserWindow },
+      ch: string
+    ) => {
       BrowserWindow.getAllWindows()
         .find((w) => !w.isDestroyed() && !w.webContents.getURL().startsWith('data:'))
         ?.webContents.send(ch)
@@ -23,7 +26,11 @@ test.describe('Terminal mode switching', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Mode Switch', color: '#8b5cf6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Mode Switch',
+      color: '#8b5cf6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     projectId = p.id
     const t = await s.createTask({ projectId: p.id, title: 'Mode switch task', status: 'todo' })
@@ -70,8 +77,10 @@ test.describe('Terminal mode switching', () => {
     // Bypass the (flaky) ContextMenu fixture: switch mode by DB write, which
     // is what handleModeChange does under the hood. UI persistence is the
     // assertion here, not menu interaction.
-    await mainWindow.evaluate((id) =>
-      window.api.db.updateTask({ id, terminalMode: 'codex' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'codex' }),
+      taskId
+    )
     const s = seed(mainWindow)
     await s.refreshData()
 
@@ -100,12 +109,15 @@ test.describe('Terminal mode switching', () => {
   })
 
   test('conversation IDs cleared on mode switch', async ({ mainWindow }) => {
-    await mainWindow.evaluate((id) =>
-      window.api.db.updateTask({
-        id,
-        claudeConversationId: 'fake-convo-123',
-        codexConversationId: 'fake-codex-456',
-      }), taskId)
+    await mainWindow.evaluate(
+      (id) =>
+        window.api.db.updateTask({
+          id,
+          claudeConversationId: 'fake-convo-123',
+          codexConversationId: 'fake-codex-456'
+        }),
+      taskId
+    )
     await switchTerminalMode(mainWindow, 'codex')
     const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
     expect(task?.claude_conversation_id).toBeNull()
@@ -114,8 +126,10 @@ test.describe('Terminal mode switching', () => {
 
   test('switching back to a mode restores that mode default flags', async ({ mainWindow }) => {
     // Set custom flags for claude-code
-    await mainWindow.evaluate((id) =>
-      window.api.db.updateTask({ id, claudeFlags: '--custom-flag-test' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, claudeFlags: '--custom-flag-test' }),
+      taskId
+    )
 
     // Switch to codex then back
     await switchTerminalMode(mainWindow, 'codex')
@@ -139,7 +153,7 @@ test.describe('Terminal mode switching', () => {
       title: 'Mode switch temporary task',
       status: 'in_progress',
       isTemporary: true,
-      terminalMode: 'claude-code',
+      terminalMode: 'claude-code'
     })
     await s.refreshData()
 
@@ -149,41 +163,52 @@ test.describe('Terminal mode switching', () => {
     // The Select trigger click opens a Radix portal that, on temp tasks, races
     // with the auto-focus shift back to xterm and dismisses the dropdown
     // immediately. Bypass the UI: kill PTY then update task mode directly.
-    await mainWindow.evaluate(
-      async (id) => {
-        await window.api.pty.kill(`${id}:${id}`)
-        await new Promise((r) => setTimeout(r, 100))
-        await window.api.db.updateTask({ id, terminalMode: 'codex' } as never)
-      },
-      temp.id
-    )
+    await mainWindow.evaluate(async (id) => {
+      await window.api.pty.kill(`${id}:${id}`)
+      await new Promise((r) => setTimeout(r, 100))
+      await window.api.db.updateTask({ id, terminalMode: 'codex' } as never)
+    }, temp.id)
 
-    await expect.poll(
-      async () => (await mainWindow.evaluate((id) => window.api.db.getTask(id), temp.id))?.terminal_mode,
-      { timeout: 5_000 }
-    ).toBe('codex')
+    await expect
+      .poll(
+        async () =>
+          (await mainWindow.evaluate((id) => window.api.db.getTask(id), temp.id))?.terminal_mode,
+        { timeout: 5_000 }
+      )
+      .toBe('codex')
 
     const updated = await mainWindow.evaluate((id) => window.api.db.getTask(id), temp.id)
     expect(updated?.terminal_mode).toBe('codex')
   })
 
-  test('temporary terminal task is removed from active task list when tab is closed', async ({ mainWindow, electronApp }) => {
+  test('temporary terminal task is removed from active task list when tab is closed', async ({
+    mainWindow,
+    electronApp
+  }) => {
     const s = seed(mainWindow)
     const temp = await s.createTask({
       projectId,
       title: 'Mode switch temporary auto-delete',
       status: 'in_progress',
       isTemporary: true,
-      terminalMode: 'claude-code',
+      terminalMode: 'claude-code'
     })
     await s.refreshData()
 
-    await openTaskTerminal(mainWindow, { projectAbbrev, taskTitle: 'Mode switch temporary auto-delete' })
+    await openTaskTerminal(mainWindow, {
+      projectAbbrev,
+      taskTitle: 'Mode switch temporary auto-delete'
+    })
     await sendAppShortcut(electronApp, 'app:close-active-task')
 
-    await expect.poll(async () => {
-      const activeTasks = await mainWindow.evaluate(() => window.api.db.getTasks())
-      return !activeTasks.some((task) => task.id === temp.id)
-    }, { timeout: 15_000 }).toBe(true)
+    await expect
+      .poll(
+        async () => {
+          const activeTasks = await mainWindow.evaluate(() => window.api.db.getTasks())
+          return !activeTasks.some((task) => task.id === temp.id)
+        },
+        { timeout: 15_000 }
+      )
+      .toBe(true)
   })
 })

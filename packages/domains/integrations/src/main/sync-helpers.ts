@@ -31,20 +31,30 @@ export function normalizeMarkdown(value: string | null | undefined): string | nu
   return trimmed.length > 0 ? trimmed : null
 }
 
-export function localStatusToGitHubState(status: string, columns: ColumnConfig[] | null): 'open' | 'closed' {
+export function localStatusToGitHubState(
+  status: string,
+  columns: ColumnConfig[] | null
+): 'open' | 'closed' {
   const column = getColumnById(status, columns)
   if (!column) return 'open'
   return column.category === 'completed' || column.category === 'canceled' ? 'closed' : 'open'
 }
 
-export function githubStateToLocal(state: 'open' | 'closed', columns: ColumnConfig[] | null): string {
+export function githubStateToLocal(
+  state: 'open' | 'closed',
+  columns: ColumnConfig[] | null
+): string {
   if (state === 'closed') {
     return getStatusByCategories(['completed', 'canceled'], columns) ?? getDoneStatus(columns)
   }
-  return getStatusByCategories(['unstarted', 'triage', 'backlog'], columns) ?? getDefaultStatus(columns)
+  return (
+    getStatusByCategories(['unstarted', 'triage', 'backlog'], columns) ?? getDefaultStatus(columns)
+  )
 }
 
-export function parseGitHubExternalKey(externalKey: string): { owner: string; repo: string; number: number } | null {
+export function parseGitHubExternalKey(
+  externalKey: string
+): { owner: string; repo: string; number: number } | null {
   const match = externalKey.match(/^([^/]+)\/([^#]+)#(\d+)$/)
   if (!match) return null
   const number = Number.parseInt(match[3], 10)
@@ -52,7 +62,15 @@ export function parseGitHubExternalKey(externalKey: string): { owner: string; re
   return { owner: match[1], repo: match[2], number }
 }
 
-export function upsertFieldState(db: Database, externalLinkId: string, field: string, localValue: unknown, externalValue: unknown, localUpdatedAt: string, externalUpdatedAt: string): void {
+export function upsertFieldState(
+  db: Database,
+  externalLinkId: string,
+  field: string,
+  localValue: unknown,
+  externalValue: unknown,
+  localUpdatedAt: string,
+  externalUpdatedAt: string
+): void {
   db.prepare(`
     INSERT INTO external_field_state (
       id, external_link_id, field_name, last_local_value_json, last_external_value_json,
@@ -78,7 +96,10 @@ export function upsertFieldState(db: Database, externalLinkId: string, field: st
 export function linearStateToTaskStatus(stateType: string, columns: ColumnConfig[] | null): string {
   switch (stateType) {
     case 'backlog':
-      return getStatusByCategories(['backlog', 'unstarted', 'triage'], columns) ?? getDefaultStatus(columns)
+      return (
+        getStatusByCategories(['backlog', 'unstarted', 'triage'], columns) ??
+        getDefaultStatus(columns)
+      )
     case 'started':
       return getStatusByCategories(['started'], columns) ?? getDefaultStatus(columns)
     case 'completed':
@@ -86,9 +107,15 @@ export function linearStateToTaskStatus(stateType: string, columns: ColumnConfig
     case 'canceled':
       return getStatusByCategories(['canceled', 'completed'], columns) ?? getDoneStatus(columns)
     case 'unstarted':
-      return getStatusByCategories(['unstarted', 'triage', 'backlog'], columns) ?? getDefaultStatus(columns)
+      return (
+        getStatusByCategories(['unstarted', 'triage', 'backlog'], columns) ??
+        getDefaultStatus(columns)
+      )
     case 'triage':
-      return getStatusByCategories(['triage', 'unstarted', 'backlog'], columns) ?? getDefaultStatus(columns)
+      return (
+        getStatusByCategories(['triage', 'unstarted', 'backlog'], columns) ??
+        getDefaultStatus(columns)
+      )
     default:
       return getDefaultStatus(columns)
   }
@@ -112,17 +139,24 @@ export function localPriorityToLinear(priority: number): number {
   return 3
 }
 
-export function buildDefaultProviderConfig(db: Database): { json: string; claudeFlags: string; codexFlags: string } {
+export function buildDefaultProviderConfig(db: Database): {
+  json: string
+  claudeFlags: string
+  codexFlags: string
+} {
   let rows: Array<{ id: string; default_flags: string | null }> = []
   try {
-    rows = db.prepare('SELECT id, default_flags FROM terminal_modes WHERE enabled = 1').all() as Array<{ id: string; default_flags: string | null }>
+    rows = db
+      .prepare('SELECT id, default_flags FROM terminal_modes WHERE enabled = 1')
+      .all() as Array<{ id: string; default_flags: string | null }>
   } catch {
     rows = []
   }
   if (rows.length === 0) {
-    rows = DEFAULT_TERMINAL_MODES
-      .filter((mode) => mode.enabled)
-      .map((mode) => ({ id: mode.id, default_flags: mode.defaultFlags ?? '' }))
+    rows = DEFAULT_TERMINAL_MODES.filter((mode) => mode.enabled).map((mode) => ({
+      id: mode.id,
+      default_flags: mode.defaultFlags ?? ''
+    }))
   }
 
   const config: Record<string, { flags: string }> = {}

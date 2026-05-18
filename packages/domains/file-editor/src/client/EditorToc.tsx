@@ -37,7 +37,11 @@ function computeRows(headings: MarkdownHeading[]): TocRow[] {
   const minLevel = Math.min(...headings.map((h) => h.level))
 
   // Build tree.
-  interface Node { heading: MarkdownHeading; depth: number; children: Node[] }
+  interface Node {
+    heading: MarkdownHeading
+    depth: number
+    children: Node[]
+  }
   const root: Node = { heading: null as unknown as MarkdownHeading, depth: -1, children: [] }
   const stack: Node[] = [root]
   for (const h of headings) {
@@ -82,25 +86,33 @@ function TreeGuides({ depth, ancestorFlags }: { depth: number; ancestorFlags: bo
       width={svgWidth}
       height={ROW_HEIGHT}
     >
-      {ancestorFlags.slice(0, -1).map((flag, a) =>
-        flag ? (
-          <line
-            key={a}
-            x1={guideXForAncestor(a)}
-            x2={guideXForAncestor(a)}
-            y1={0}
-            y2={ROW_HEIGHT}
-            stroke="var(--border)"
-            strokeWidth={1}
-          />
-        ) : null
-      )}
+      {ancestorFlags
+        .slice(0, -1)
+        .map((flag, a) =>
+          flag ? (
+            <line
+              key={a}
+              x1={guideXForAncestor(a)}
+              x2={guideXForAncestor(a)}
+              y1={0}
+              y2={ROW_HEIGHT}
+              stroke="var(--border)"
+              strokeWidth={1}
+            />
+          ) : null
+        )}
       <path d={connector} fill="none" stroke="var(--border)" strokeWidth={1} />
     </svg>
   )
 }
 
-export function EditorToc({ content, width, onWidthChange, onJump, minimapVisible }: EditorTocProps) {
+export function EditorToc({
+  content,
+  width,
+  onWidthChange,
+  onJump,
+  minimapVisible
+}: EditorTocProps) {
   const headings = useMemo(() => parseMarkdownHeadings(content), [content])
   const rows = useMemo(() => computeRows(headings), [headings])
   const isDragging = useRef(false)
@@ -108,28 +120,31 @@ export function EditorToc({ content, width, onWidthChange, onJump, minimapVisibl
   const cardRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
 
-  const handleResizeStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    isDragging.current = true
-    const startX = e.clientX
-    const startWidth = width
-    const anchored = pos === null
+  const handleResizeStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      isDragging.current = true
+      const startX = e.clientX
+      const startWidth = width
+      const anchored = pos === null
 
-    const onMove = (ev: MouseEvent) => {
-      if (!isDragging.current) return
-      const delta = ev.clientX - startX
-      // Anchored right (default): drag-left widens. Free-positioned: drag-right widens (left edge fixed).
-      const next = anchored ? startWidth - delta : startWidth + delta
-      onWidthChange(Math.max(160, Math.min(480, next)))
-    }
-    const onUp = () => {
-      isDragging.current = false
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mouseup', onUp)
-    }
-    document.addEventListener('mousemove', onMove)
-    document.addEventListener('mouseup', onUp)
-  }, [width, onWidthChange, pos])
+      const onMove = (ev: MouseEvent) => {
+        if (!isDragging.current) return
+        const delta = ev.clientX - startX
+        // Anchored right (default): drag-left widens. Free-positioned: drag-right widens (left edge fixed).
+        const next = anchored ? startWidth - delta : startWidth + delta
+        onWidthChange(Math.max(160, Math.min(480, next)))
+      }
+      const onUp = () => {
+        isDragging.current = false
+        document.removeEventListener('mousemove', onMove)
+        document.removeEventListener('mouseup', onUp)
+      }
+      document.addEventListener('mousemove', onMove)
+      document.addEventListener('mouseup', onUp)
+    },
+    [width, onWidthChange, pos]
+  )
 
   const handleMoveStart = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -150,7 +165,7 @@ export function EditorToc({ content, width, onWidthChange, onJump, minimapVisibl
       const maxTop = parentRect.height - cardRect.height
       setPos({
         left: Math.max(0, Math.min(maxLeft, left)),
-        top: Math.max(0, Math.min(maxTop, top)),
+        top: Math.max(0, Math.min(maxTop, top))
       })
     }
     const onUp = () => {
@@ -172,7 +187,7 @@ export function EditorToc({ content, width, onWidthChange, onJump, minimapVisibl
           : {
               width,
               right: minimapVisible ? MINIMAP_GUTTER_PX + MINIMAP_GAP_PX : ANCHOR_INSET_PX,
-              bottom: ANCHOR_INSET_PX,
+              bottom: ANCHOR_INSET_PX
             }
       }
     >
@@ -190,7 +205,9 @@ export function EditorToc({ content, width, onWidthChange, onJump, minimapVisibl
                     className={cn(
                       'absolute inset-0 text-left truncate cursor-pointer transition-colors rounded-sm',
                       'hover:bg-accent hover:text-accent-foreground',
-                      depth === 0 ? 'font-semibold text-foreground' : 'text-muted-foreground hover:text-foreground'
+                      depth === 0
+                        ? 'font-semibold text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
                     )}
                     style={{ paddingLeft: textPad, paddingRight: 8 }}
                     title={heading.text}

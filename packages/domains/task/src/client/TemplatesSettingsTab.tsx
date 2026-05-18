@@ -1,20 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button, Label, Switch, Input, Tooltip, TooltipTrigger, TooltipContent } from '@slayzone/ui'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@slayzone/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@slayzone/ui'
 import { Plus, Pencil, Trash2, Star, Info } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from '@slayzone/ui'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@slayzone/ui'
 import type {
   TaskTemplate,
   CreateTaskTemplateInput,
@@ -31,7 +19,7 @@ const PANEL_LABELS: Record<string, string> = {
   editor: 'Editor',
   diff: 'Git',
   settings: 'Settings',
-  processes: 'Processes',
+  processes: 'Processes'
 }
 
 const DEFAULT_PANEL_VISIBILITY: PanelVisibility = {
@@ -41,7 +29,7 @@ const DEFAULT_PANEL_VISIBILITY: PanelVisibility = {
   settings: true,
   editor: false,
   artifacts: false,
-  processes: false,
+  processes: false
 }
 
 interface TemplatesSettingsTabProps {
@@ -57,7 +45,9 @@ export function TemplatesSettingsTab({ projectId }: TemplatesSettingsTabProps) {
     window.api.taskTemplates.getByProject(projectId).then(setTemplates)
   }, [projectId])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    load()
+  }, [load])
 
   const handleDelete = async (id: string) => {
     await window.api.taskTemplates.delete(id)
@@ -85,7 +75,9 @@ export function TemplatesSettingsTab({ projectId }: TemplatesSettingsTabProps) {
     if (t.default_priority != null) parts.push(`P${t.default_priority}`)
     if (t.default_status) parts.push(t.default_status)
     if (t.panel_visibility) {
-      const open = Object.entries(t.panel_visibility).filter(([, v]) => v).map(([k]) => PANEL_LABELS[k] ?? k)
+      const open = Object.entries(t.panel_visibility)
+        .filter(([, v]) => v)
+        .map(([k]) => PANEL_LABELS[k] ?? k)
       if (open.length) parts.push(open.join('+'))
     }
     return parts.join(' \u00b7 ')
@@ -97,7 +89,8 @@ export function TemplatesSettingsTab({ projectId }: TemplatesSettingsTabProps) {
         <div>
           <h3 className="text-base font-semibold">Task Templates</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Pre-configure defaults for new tasks. The default template auto-applies when creating tasks.
+            Pre-configure defaults for new tasks. The default template auto-applies when creating
+            tasks.
           </p>
         </div>
         <Button size="sm" variant="outline" className="shrink-0" onClick={openCreate}>
@@ -134,19 +127,28 @@ export function TemplatesSettingsTab({ projectId }: TemplatesSettingsTabProps) {
                   title={t.is_default ? 'Remove default' : 'Set as default'}
                   onClick={() => handleSetDefault(t.id, !t.is_default)}
                 >
-                  <Star className={`h-3.5 w-3.5 ${t.is_default ? 'fill-current text-primary' : ''}`} />
+                  <Star
+                    className={`h-3.5 w-3.5 ${t.is_default ? 'fill-current text-primary' : ''}`}
+                  />
                 </Button>
                 <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEdit(t)}>
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => handleDelete(t.id)}>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 text-destructive"
+                  onClick={() => handleDelete(t.id)}
+                >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
           ))}
           {templates.length === 0 && (
-            <p className="text-sm text-muted-foreground">No templates yet. Create one to pre-configure task defaults.</p>
+            <p className="text-sm text-muted-foreground">
+              No templates yet. Create one to pre-configure task defaults.
+            </p>
           )}
         </div>
       </div>
@@ -202,9 +204,13 @@ function TemplateFormDialog({ projectId, template, onClose, onSaved }: TemplateF
 
   const [modes, setModes] = useState<Array<{ id: string; label: string }>>([])
   useEffect(() => {
-    window.api.terminalModes.list().then((m) =>
-      setModes(m.filter(mode => mode.enabled).map(mode => ({ id: mode.id, label: mode.label })))
-    )
+    window.api.terminalModes
+      .list()
+      .then((m) =>
+        setModes(
+          m.filter((mode) => mode.enabled).map((mode) => ({ id: mode.id, label: mode.label }))
+        )
+      )
   }, [])
 
   const handleSave = async () => {
@@ -218,9 +224,10 @@ function TemplateFormDialog({ projectId, template, onClose, onSaved }: TemplateF
           description: description.trim() || null,
           terminalMode: terminalMode === NONE ? null : terminalMode || null,
           defaultStatus: defaultStatus || null,
-          defaultPriority: defaultPriority === NONE ? null : (defaultPriority ? Number(defaultPriority) : null),
+          defaultPriority:
+            defaultPriority === NONE ? null : defaultPriority ? Number(defaultPriority) : null,
           panelVisibility,
-          isDefault,
+          isDefault
         }
         await window.api.taskTemplates.update(data)
       } else {
@@ -230,9 +237,10 @@ function TemplateFormDialog({ projectId, template, onClose, onSaved }: TemplateF
           description: description.trim() || null,
           terminalMode: terminalMode === NONE ? null : terminalMode || null,
           defaultStatus: defaultStatus || null,
-          defaultPriority: defaultPriority === NONE ? null : (defaultPriority ? Number(defaultPriority) : null),
+          defaultPriority:
+            defaultPriority === NONE ? null : defaultPriority ? Number(defaultPriority) : null,
           panelVisibility,
-          isDefault,
+          isDefault
         }
         await window.api.taskTemplates.create(data)
       }
@@ -248,7 +256,12 @@ function TemplateFormDialog({ projectId, template, onClose, onSaved }: TemplateF
   }
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose()
+      }}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Edit template' : 'New template'}</DialogTitle>
@@ -256,17 +269,28 @@ function TemplateFormDialog({ projectId, template, onClose, onSaved }: TemplateF
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Frontend task" autoFocus />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Frontend task"
+              autoFocus
+            />
           </div>
 
           <div className="space-y-1.5">
             <Label>Description</Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional" />
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Optional"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <SettingLabel tip="Which AI provider to launch when opening the terminal panel.">Terminal mode</SettingLabel>
+              <SettingLabel tip="Which AI provider to launch when opening the terminal panel.">
+                Terminal mode
+              </SettingLabel>
               <Select value={terminalMode} onValueChange={setTerminalMode}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="System default" />
@@ -274,14 +298,18 @@ function TemplateFormDialog({ projectId, template, onClose, onSaved }: TemplateF
                 <SelectContent>
                   <SelectItem value={NONE}>System default</SelectItem>
                   {modes.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1.5">
-              <SettingLabel tip="Initial priority assigned to new tasks created with this template.">Default priority</SettingLabel>
+              <SettingLabel tip="Initial priority assigned to new tasks created with this template.">
+                Default priority
+              </SettingLabel>
               <Select value={defaultPriority} onValueChange={setDefaultPriority}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="System default" />
@@ -299,12 +327,20 @@ function TemplateFormDialog({ projectId, template, onClose, onSaved }: TemplateF
           </div>
 
           <div className="space-y-1.5">
-            <SettingLabel tip="Initial status column for new tasks. Must match a status ID in the project's task statuses.">Default status</SettingLabel>
-            <Input value={defaultStatus} onChange={(e) => setDefaultStatus(e.target.value)} placeholder="System default (e.g. inbox)" />
+            <SettingLabel tip="Initial status column for new tasks. Must match a status ID in the project's task statuses.">
+              Default status
+            </SettingLabel>
+            <Input
+              value={defaultStatus}
+              onChange={(e) => setDefaultStatus(e.target.value)}
+              placeholder="System default (e.g. inbox)"
+            />
           </div>
 
           <div className="space-y-2">
-            <SettingLabel tip="Which panels are visible when a task is first opened.">Panels open by default</SettingLabel>
+            <SettingLabel tip="Which panels are visible when a task is first opened.">
+              Panels open by default
+            </SettingLabel>
             <div className="rounded-lg border border-border p-3 grid grid-cols-2 gap-2">
               {BUILTIN_PANEL_IDS.map((id) => (
                 <label key={id} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -317,18 +353,18 @@ function TemplateFormDialog({ projectId, template, onClose, onSaved }: TemplateF
               ))}
             </div>
           </div>
-
         </div>
         <DialogFooter className="flex items-center justify-between sm:justify-between">
           <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <Switch
-              checked={isDefault}
-              onCheckedChange={setIsDefault}
-            />
-            <SettingLabel tip="Auto-apply this template when creating new tasks in this project.">Project default</SettingLabel>
+            <Switch checked={isDefault} onCheckedChange={setIsDefault} />
+            <SettingLabel tip="Auto-apply this template when creating new tasks in this project.">
+              Project default
+            </SettingLabel>
           </label>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
             <Button onClick={handleSave} disabled={!name.trim() || saving}>
               {isEdit ? 'Save' : 'Create'}
             </Button>

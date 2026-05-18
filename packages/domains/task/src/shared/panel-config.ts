@@ -12,7 +12,7 @@ function migrateLegacyId(id: string): string {
 /** Ensure config.order exists and contains every current panel ID (natives + web).
  *  Missing IDs are appended in their default position; removed web panels are pruned. */
 export function mergePanelOrder(config: PanelConfig): PanelConfig {
-  const validIds = new Set<string>([...PANEL_ORDER_IDS, ...config.webPanels.map(wp => wp.id)])
+  const validIds = new Set<string>([...PANEL_ORDER_IDS, ...config.webPanels.map((wp) => wp.id)])
   const prev = config.order ?? []
   const renamed = prev.map(migrateLegacyId)
   // Drop dups created by rename (e.g. legacy 'assets' + current 'artifacts' both present).
@@ -23,13 +23,15 @@ export function mergePanelOrder(config: PanelConfig): PanelConfig {
     seen.add(id)
     deduped.push(id)
   }
-  const filtered = deduped.filter(id => validIds.has(id))
+  const filtered = deduped.filter((id) => validIds.has(id))
   const present = new Set(filtered)
   const missing: string[] = []
   for (const id of DEFAULT_PANEL_ORDER) if (validIds.has(id) && !present.has(id)) missing.push(id)
-  for (const wp of config.webPanels) if (!present.has(wp.id) && !DEFAULT_PANEL_ORDER.includes(wp.id)) missing.push(wp.id)
+  for (const wp of config.webPanels)
+    if (!present.has(wp.id) && !DEFAULT_PANEL_ORDER.includes(wp.id)) missing.push(wp.id)
   const next = [...filtered, ...missing]
-  const changed = !config.order || next.length !== prev.length || next.some((id, i) => id !== prev[i])
+  const changed =
+    !config.order || next.length !== prev.length || next.some((id, i) => id !== prev[i])
 
   // Also migrate viewEnabled keys.
   let viewEnabled = config.viewEnabled
@@ -57,16 +59,23 @@ export function mergePanelOrder(config: PanelConfig): PanelConfig {
 export function mergePredefinedWebPanels(config: PanelConfig): PanelConfig {
   const existingIds = new Set(config.webPanels.map((wp) => wp.id))
   const deleted = new Set(config.deletedPredefined ?? [])
-  const missing = PREDEFINED_WEB_PANELS.filter((panel) => !existingIds.has(panel.id) && !deleted.has(panel.id))
+  const missing = PREDEFINED_WEB_PANELS.filter(
+    (panel) => !existingIds.has(panel.id) && !deleted.has(panel.id)
+  )
   const predefinedMap = new Map(PREDEFINED_WEB_PANELS.map((panel) => [panel.id, panel]))
 
   const synced = config.webPanels.map((panel) => {
     const predefined = predefinedMap.get(panel.id)
     const withShortcut =
-      predefined && panel.shortcut !== predefined.shortcut ? { ...panel, shortcut: predefined.shortcut } : panel
+      predefined && panel.shortcut !== predefined.shortcut
+        ? { ...panel, shortcut: predefined.shortcut }
+        : panel
 
     let migrated = withShortcut
-    if (migrated.blockDesktopHandoff === undefined && predefined?.blockDesktopHandoff !== undefined) {
+    if (
+      migrated.blockDesktopHandoff === undefined &&
+      predefined?.blockDesktopHandoff !== undefined
+    ) {
       migrated = { ...migrated, blockDesktopHandoff: predefined.blockDesktopHandoff }
     }
 
@@ -80,7 +89,8 @@ export function mergePredefinedWebPanels(config: PanelConfig): PanelConfig {
     if (migrated.handoffHostScope === undefined && migrated.blockDesktopHandoff === true) {
       const inferredHostScope = inferHostScopeFromUrl(migrated.baseUrl)
       if (inferredHostScope) migrated = { ...migrated, handoffHostScope: inferredHostScope }
-      else if (predefined?.handoffHostScope !== undefined) migrated = { ...migrated, handoffHostScope: predefined.handoffHostScope }
+      else if (predefined?.handoffHostScope !== undefined)
+        migrated = { ...migrated, handoffHostScope: predefined.handoffHostScope }
     }
 
     return migrated
@@ -103,8 +113,9 @@ export function validatePanelShortcut(
   if (!letter) return null
   const l = letter.toLowerCase()
   if (l.length !== 1 || !/^[a-z]$/.test(l)) return 'Must be a single letter'
-  if (RESERVED_PANEL_SHORTCUTS.has(l)) return `Cmd+${l.toUpperCase()} is reserved for a built-in panel`
-  const existing = existingPanels.find(wp => wp.shortcut === l && wp.id !== excludeId)
+  if (RESERVED_PANEL_SHORTCUTS.has(l))
+    return `Cmd+${l.toUpperCase()} is reserved for a built-in panel`
+  const existing = existingPanels.find((wp) => wp.shortcut === l && wp.id !== excludeId)
   if (existing) return `Cmd+${l.toUpperCase()} is already used by ${existing.name}`
   return null
 }

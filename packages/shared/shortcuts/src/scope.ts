@@ -5,5 +5,5 @@ export const SCOPE_PRIORITY: Record<ShortcutScope, number> = {
   terminal: 80,
   browser: 80,
   task: 40,
-  global: 20,
+  global: 20
 }

@@ -21,9 +21,25 @@ import type { RepoEntry, ListProjectReposOpts } from '../shared/types'
 
 const MAX_CHILD_DEPTH = 3
 const SKIP_DIRS = new Set([
-  'node_modules', 'dist', 'build', '.next', '.nuxt', '.svelte-kit',
-  'target', '.git', '.venv', 'venv', '__pycache__', 'vendor', '.cache',
-  '.turbo', 'out', 'coverage', '.parcel-cache', '.idea', '.vscode'
+  'node_modules',
+  'dist',
+  'build',
+  '.next',
+  '.nuxt',
+  '.svelte-kit',
+  'target',
+  '.git',
+  '.venv',
+  'venv',
+  '__pycache__',
+  'vendor',
+  '.cache',
+  '.turbo',
+  'out',
+  'coverage',
+  '.parcel-cache',
+  '.idea',
+  '.vscode'
 ])
 
 /**
@@ -37,23 +53,33 @@ async function walkForGitRoots(root: string, maxDepth: number): Promise<string[]
   async function walk(dir: string, depth: number): Promise<void> {
     if (depth > maxDepth) return
     let entries: string[]
-    try { entries = await readdir(dir) } catch { return }
+    try {
+      entries = await readdir(dir)
+    } catch {
+      return
+    }
 
-    await Promise.all(entries.map(async (entry) => {
-      if (SKIP_DIRS.has(entry) || entry.startsWith('.')) return
-      const full = path.join(dir, entry)
-      let s
-      try { s = await fsLstat(full) } catch { return }
-      // Skip symlinks entirely — they can form cycles (esp. on macOS user dirs)
-      // and following them risks infinite recursion or counting the same repo twice.
-      if (s.isSymbolicLink()) return
-      if (!s.isDirectory()) return
-      if (await isGitRepo(full)) {
-        found.push(full)
-        return // don't recurse into a repo
-      }
-      await walk(full, depth + 1)
-    }))
+    await Promise.all(
+      entries.map(async (entry) => {
+        if (SKIP_DIRS.has(entry) || entry.startsWith('.')) return
+        const full = path.join(dir, entry)
+        let s
+        try {
+          s = await fsLstat(full)
+        } catch {
+          return
+        }
+        // Skip symlinks entirely — they can form cycles (esp. on macOS user dirs)
+        // and following them risks infinite recursion or counting the same repo twice.
+        if (s.isSymbolicLink()) return
+        if (!s.isDirectory()) return
+        if (await isGitRepo(full)) {
+          found.push(full)
+          return // don't recurse into a repo
+        }
+        await walk(full, depth + 1)
+      })
+    )
   }
 
   await walk(root, 1)
@@ -85,7 +111,10 @@ async function listSubmodules(repoPath: string): Promise<string[]> {
 }
 
 /** Cache key = projectPath. TTL short — only paid on tab focus / strip render. */
-interface CacheEntry { repos: RepoEntry[]; expiresAt: number }
+interface CacheEntry {
+  repos: RepoEntry[]
+  expiresAt: number
+}
 const cache = new Map<string, CacheEntry>()
 const CACHE_TTL_MS = 5_000
 const CACHE_MAX = 50
@@ -126,30 +155,32 @@ export async function listProjectRepos(
 
   // For each top-level root, enumerate submodules (recursive).
   const entries: RepoEntry[] = []
-  await Promise.all(topLevelRoots.map(async (rootPath) => {
-    const kind = rootPath === projectPath ? 'project-root' : 'child-repo'
-    const hasGm = existsSync(path.join(rootPath, '.gitmodules'))
-    entries.push({
-      path: rootPath,
-      name: nameFor(projectPath, rootPath),
-      kind,
-      parentPath: null,
-      isTaskBound: rootPath === taskBoundPath,
-      hasGitmodules: hasGm
-    })
-
-    const subs = await listSubmodules(rootPath)
-    for (const subPath of subs) {
+  await Promise.all(
+    topLevelRoots.map(async (rootPath) => {
+      const kind = rootPath === projectPath ? 'project-root' : 'child-repo'
+      const hasGm = existsSync(path.join(rootPath, '.gitmodules'))
       entries.push({
-        path: subPath,
-        name: nameFor(projectPath, subPath),
-        kind: 'submodule',
-        parentPath: rootPath,
-        isTaskBound: subPath === taskBoundPath,
-        hasGitmodules: existsSync(path.join(subPath, '.gitmodules'))
+        path: rootPath,
+        name: nameFor(projectPath, rootPath),
+        kind,
+        parentPath: null,
+        isTaskBound: rootPath === taskBoundPath,
+        hasGitmodules: hasGm
       })
-    }
-  }))
+
+      const subs = await listSubmodules(rootPath)
+      for (const subPath of subs) {
+        entries.push({
+          path: subPath,
+          name: nameFor(projectPath, subPath),
+          kind: 'submodule',
+          parentPath: rootPath,
+          isTaskBound: subPath === taskBoundPath,
+          hasGitmodules: existsSync(path.join(subPath, '.gitmodules'))
+        })
+      }
+    })
+  )
 
   // Stable order: roots first (alpha), then submodules grouped under their root (alpha).
   entries.sort((a, b) => {
@@ -174,7 +205,9 @@ function nameFor(projectPath: string, repoPath: string): string {
 
 /** Re-flag isTaskBound on cached entries without re-walking the filesystem. */
 function reannotateTaskBound(entries: RepoEntry[], taskBoundPath: string | null): RepoEntry[] {
-  return entries.map(e => e.isTaskBound === (e.path === taskBoundPath)
-    ? e
-    : { ...e, isTaskBound: e.path === taskBoundPath })
+  return entries.map((e) =>
+    e.isTaskBound === (e.path === taskBoundPath)
+      ? e
+      : { ...e, isTaskBound: e.path === taskBoundPath }
+  )
 }

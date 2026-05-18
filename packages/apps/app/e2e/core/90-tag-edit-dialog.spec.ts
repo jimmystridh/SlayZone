@@ -17,12 +17,16 @@ test.describe('Tag create and edit dialog', () => {
     await s.refreshData()
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
-    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({
+      timeout: 5_000
+    })
   })
 
   test('open task and navigate to tags popover', async ({ mainWindow }) => {
     await mainWindow.getByText('Tag task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
 
     // Dismiss alert dialog if present
     const dialog = mainWindow.getByRole('alertdialog')
@@ -42,13 +46,18 @@ test.describe('Tag create and edit dialog', () => {
     await tagsButton.click()
 
     // Hover to reveal pencil, click it
-    const tagRow = mainWindow.locator('[role="dialog"]').locator('label').filter({ hasText: 'existing-tag' })
+    const tagRow = mainWindow
+      .locator('[role="dialog"]')
+      .locator('label')
+      .filter({ hasText: 'existing-tag' })
     await tagRow.hover()
     const editButton = tagRow.locator('button:not([role="checkbox"])')
     await editButton.click()
 
     // Must show "Edit Tag" heading
-    await expect(mainWindow.getByRole('heading', { name: 'Edit Tag' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('heading', { name: 'Edit Tag' })).toBeVisible({
+      timeout: 3_000
+    })
 
     // Must NOT show "New Tag" heading
     await expect(mainWindow.getByRole('heading', { name: 'New Tag' })).not.toBeVisible()
@@ -61,7 +70,9 @@ test.describe('Tag create and edit dialog', () => {
     await nameInput.clear()
     await nameInput.fill('renamed-tag')
     await mainWindow.getByRole('button', { name: 'Save' }).click()
-    await expect(mainWindow.getByRole('heading', { name: 'Edit Tag' })).not.toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('heading', { name: 'Edit Tag' })).not.toBeVisible({
+      timeout: 3_000
+    })
 
     // CRITICAL: tag count must NOT increase (edit, not create)
     const tagsAfter = await seed(mainWindow).getTags()

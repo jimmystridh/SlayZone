@@ -33,8 +33,12 @@ export function useProviderData(
   const [scopes, setScopes] = useState<ExternalScope[]>([])
   const [loadingGroups, setLoadingGroups] = useState(false)
   const [loadingScopes, setLoadingScopes] = useState(false)
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(options?.initialGroupId ?? null)
-  const [selectedScopeId, setSelectedScopeId] = useState<string | null>(options?.initialScopeId ?? null)
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(
+    options?.initialGroupId ?? null
+  )
+  const [selectedScopeId, setSelectedScopeId] = useState<string | null>(
+    options?.initialScopeId ?? null
+  )
   const [error, setError] = useState<string | null>(null)
   const [reloadCounter, setReloadCounter] = useState(0)
 
@@ -73,8 +77,10 @@ export function useProviderData(
       }
     )
 
-    return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectionId, reloadCounter])
 
   // Load scopes when group changes
@@ -106,8 +112,10 @@ export function useProviderData(
       }
     )
 
-    return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectionId, selectedGroupId, reloadCounter])
 
   return {

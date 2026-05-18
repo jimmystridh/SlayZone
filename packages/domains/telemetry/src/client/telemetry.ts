@@ -23,7 +23,12 @@ let phReady: Promise<typeof import('posthog-js').default | null> | null = null
 function ensurePosthogLoading(): Promise<typeof import('posthog-js').default | null> | null {
   if (!ENABLED) return null
   if (!phReady) {
-    phReady = import('posthog-js').then(m => { ph = m.default; return m.default }).catch(() => null)
+    phReady = import('posthog-js')
+      .then((m) => {
+        ph = m.default
+        return m.default
+      })
+      .catch(() => null)
   }
   return phReady
 }

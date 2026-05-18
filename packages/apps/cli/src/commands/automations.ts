@@ -5,8 +5,8 @@ import { openDb, notifyApp, resolveProject, resolveProjectArg } from '../db'
 import { apiPost } from '../api'
 
 function templateVarsHelp(): string {
-  const w = Math.max(...TEMPLATE_VARIABLES.map(v => v.name.length)) + 6
-  const lines = TEMPLATE_VARIABLES.map(v => `  {{${v.name}}}`.padEnd(w + 4) + v.desc)
+  const w = Math.max(...TEMPLATE_VARIABLES.map((v) => v.name.length)) + 6
+  const lines = TEMPLATE_VARIABLES.map((v) => `  {{${v.name}}}`.padEnd(w + 4) + v.desc)
   return `\nTemplate variables (use in --action-command):\n${lines.join('\n')}\n`
 }
 
@@ -43,14 +43,27 @@ function isCatchupRun(row: RunRow): boolean {
   try {
     const ev = JSON.parse(row.trigger_event) as { catchup?: boolean }
     return ev.catchup === true
-  } catch { return false }
+  } catch {
+    return false
+  }
 }
 
-const TRIGGER_TYPES = ['task_status_change', 'task_created', 'task_archived', 'task_tag_changed', 'cron', 'manual'] as const
+const TRIGGER_TYPES = [
+  'task_status_change',
+  'task_created',
+  'task_archived',
+  'task_tag_changed',
+  'cron',
+  'manual'
+] as const
 
 function safeJsonParse(s: string | null): unknown {
   if (!s) return null
-  try { return JSON.parse(s) } catch { return null }
+  try {
+    return JSON.parse(s)
+  } catch {
+    return null
+  }
 }
 
 function resolveAutomation(db: ReturnType<typeof openDb>, idPrefix: string) {
@@ -58,9 +71,14 @@ function resolveAutomation(db: ReturnType<typeof openDb>, idPrefix: string) {
     `SELECT * FROM automations WHERE id LIKE :prefix || '%' LIMIT 2`,
     { ':prefix': idPrefix }
   )
-  if (rows.length === 0) { console.error(`Automation not found: ${idPrefix}`); process.exit(1) }
+  if (rows.length === 0) {
+    console.error(`Automation not found: ${idPrefix}`)
+    process.exit(1)
+  }
   if (rows.length > 1) {
-    console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${idPrefix}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
   return rows[0]
@@ -73,7 +91,7 @@ function parseRow(row: AutomationRow) {
     catchup_on_start: Boolean(row.catchup_on_start),
     trigger_config: safeJsonParse(row.trigger_config),
     conditions: safeJsonParse(row.conditions) ?? [],
-    actions: safeJsonParse(row.actions) ?? [],
+    actions: safeJsonParse(row.actions) ?? []
   }
 }
 
@@ -112,8 +130,12 @@ export function automationsCommand(): Command {
       const idW = 9
       const nameW = 20
       const trigW = 20
-      console.log(`${'ID'.padEnd(idW)}  ${'NAME'.padEnd(nameW)}  ON   ${'TRIGGER'.padEnd(trigW)}  RUNS  LAST RUN`)
-      console.log(`${'-'.repeat(idW)}  ${'-'.repeat(nameW)}  ---  ${'-'.repeat(trigW)}  ----  ${'-'.repeat(19)}`)
+      console.log(
+        `${'ID'.padEnd(idW)}  ${'NAME'.padEnd(nameW)}  ON   ${'TRIGGER'.padEnd(trigW)}  RUNS  LAST RUN`
+      )
+      console.log(
+        `${'-'.repeat(idW)}  ${'-'.repeat(nameW)}  ---  ${'-'.repeat(trigW)}  ----  ${'-'.repeat(19)}`
+      )
       for (const r of rows) {
         const id = r.id.slice(0, 8).padEnd(idW)
         const name = r.name.slice(0, nameW).padEnd(nameW)
@@ -149,8 +171,10 @@ export function automationsCommand(): Command {
       if (row.description) console.log(`Description: ${row.description}`)
       console.log(`Trigger:     ${JSON.stringify(parsed.trigger_config)}`)
       const triggerType = (parsed.trigger_config as { type?: string } | null)?.type
-      if (triggerType === 'cron') console.log(`Catchup:     ${parsed.catchup_on_start ? 'yes' : 'no'}`)
-      if ((parsed.conditions as unknown[]).length > 0) console.log(`Conditions:  ${JSON.stringify(parsed.conditions)}`)
+      if (triggerType === 'cron')
+        console.log(`Catchup:     ${parsed.catchup_on_start ? 'yes' : 'no'}`)
+      if ((parsed.conditions as unknown[]).length > 0)
+        console.log(`Conditions:  ${JSON.stringify(parsed.conditions)}`)
       console.log(`Actions:     ${JSON.stringify(parsed.actions)}`)
       console.log(`Runs:        ${row.run_count}`)
       if (row.last_run_at) console.log(`Last run:    ${row.last_run_at}`)
@@ -167,7 +191,10 @@ export function automationsCommand(): Command {
     .option('--trigger-from-status <status>', 'From status (for task_status_change)')
     .option('--trigger-to-status <status>', 'To status (for task_status_change)')
     .option('--cron <expression>', 'Cron expression (for cron trigger)')
-    .option('--no-catchup', 'Do not run on startup if a scheduled cron fire was missed (default: catchup on)')
+    .option(
+      '--no-catchup',
+      'Do not run on startup if a scheduled cron fire was missed (default: catchup on)'
+    )
     .option('--description <text>', 'Automation description')
     .option('--config <file>', 'JSON config file (overrides flags)')
     .addHelpText('after', templateVarsHelp())
@@ -181,7 +208,11 @@ export function automationsCommand(): Command {
 
       if (opts.config) {
         const raw = fs.readFileSync(opts.config, 'utf-8')
-        const config = JSON.parse(raw) as { trigger_config?: unknown; conditions?: unknown[]; actions?: unknown[] }
+        const config = JSON.parse(raw) as {
+          trigger_config?: unknown
+          conditions?: unknown[]
+          actions?: unknown[]
+        }
         triggerConfig = config.trigger_config
         conditions = config.conditions ?? []
         actions = config.actions ?? []
@@ -190,8 +221,10 @@ export function automationsCommand(): Command {
           process.exit(1)
         }
       } else {
-        if (!TRIGGER_TYPES.includes(opts.trigger as typeof TRIGGER_TYPES[number])) {
-          console.error(`Invalid trigger type: ${opts.trigger}. Must be: ${TRIGGER_TYPES.join(', ')}`)
+        if (!TRIGGER_TYPES.includes(opts.trigger as (typeof TRIGGER_TYPES)[number])) {
+          console.error(
+            `Invalid trigger type: ${opts.trigger}. Must be: ${TRIGGER_TYPES.join(', ')}`
+          )
           process.exit(1)
         }
 
@@ -200,7 +233,10 @@ export function automationsCommand(): Command {
           if (opts.triggerFromStatus) params.fromStatus = opts.triggerFromStatus
           if (opts.triggerToStatus) params.toStatus = opts.triggerToStatus
         } else if (opts.trigger === 'cron') {
-          if (!opts.cron) { console.error('--cron <expression> required for cron trigger.'); process.exit(1) }
+          if (!opts.cron) {
+            console.error('--cron <expression> required for cron trigger.')
+            process.exit(1)
+          }
           params.expression = opts.cron
         }
         triggerConfig = { type: opts.trigger, params }
@@ -236,7 +272,7 @@ export function automationsCommand(): Command {
           ':actions': JSON.stringify(actions),
           ':sortOrder': nextOrder,
           ':catchup': catchupOnStart,
-          ':now': now,
+          ':now': now
         }
       )
 
@@ -261,10 +297,15 @@ export function automationsCommand(): Command {
     .option('--catchup', 'Enable run-on-startup-if-missed for cron triggers')
     .option('--no-catchup', 'Disable run-on-startup-if-missed for cron triggers')
     .action(async (idPrefix: string, opts) => {
-      if (opts.name === undefined && opts.description === undefined
-        && opts.enabled === undefined && opts.disabled === undefined
-        && opts.trigger === undefined && opts.actionCommand === undefined
-        && opts.catchup === undefined) {
+      if (
+        opts.name === undefined &&
+        opts.description === undefined &&
+        opts.enabled === undefined &&
+        opts.disabled === undefined &&
+        opts.trigger === undefined &&
+        opts.actionCommand === undefined &&
+        opts.catchup === undefined
+      ) {
         console.error('Provide at least one option to update.')
         process.exit(1)
       }
@@ -273,15 +314,28 @@ export function automationsCommand(): Command {
       const automation = resolveAutomation(db, idPrefix)
 
       const sets: string[] = ['updated_at = :now']
-      const params: Record<string, string | number | null> = { ':now': new Date().toISOString(), ':id': automation.id }
+      const params: Record<string, string | number | null> = {
+        ':now': new Date().toISOString(),
+        ':id': automation.id
+      }
 
-      if (opts.name !== undefined) { sets.push('name = :name'); params[':name'] = opts.name }
-      if (opts.description !== undefined) { sets.push('description = :desc'); params[':desc'] = opts.description || null }
-      if (opts.enabled) { sets.push('enabled = 1') }
-      if (opts.disabled) { sets.push('enabled = 0') }
+      if (opts.name !== undefined) {
+        sets.push('name = :name')
+        params[':name'] = opts.name
+      }
+      if (opts.description !== undefined) {
+        sets.push('description = :desc')
+        params[':desc'] = opts.description || null
+      }
+      if (opts.enabled) {
+        sets.push('enabled = 1')
+      }
+      if (opts.disabled) {
+        sets.push('enabled = 0')
+      }
 
       if (opts.trigger) {
-        if (!TRIGGER_TYPES.includes(opts.trigger as typeof TRIGGER_TYPES[number])) {
+        if (!TRIGGER_TYPES.includes(opts.trigger as (typeof TRIGGER_TYPES)[number])) {
           console.error(`Invalid trigger type: ${opts.trigger}`)
           process.exit(1)
         }
@@ -298,7 +352,9 @@ export function automationsCommand(): Command {
 
       if (opts.actionCommand) {
         sets.push('actions = :actions')
-        params[':actions'] = JSON.stringify([{ type: 'run_command', params: { command: opts.actionCommand } }])
+        params[':actions'] = JSON.stringify([
+          { type: 'run_command', params: { command: opts.actionCommand } }
+        ])
       }
 
       if (opts.catchup !== undefined) {
@@ -309,7 +365,9 @@ export function automationsCommand(): Command {
       db.run(`UPDATE automations SET ${sets.join(', ')} WHERE id = :id`, params)
       db.close()
       await notifyApp()
-      console.log(`Updated automation: ${automation.id.slice(0, 8)}  ${opts.name ?? automation.name}`)
+      console.log(
+        `Updated automation: ${automation.id.slice(0, 8)}  ${opts.name ?? automation.name}`
+      )
     })
 
   // slay automations delete
@@ -338,11 +396,13 @@ export function automationsCommand(): Command {
       db.run(`UPDATE automations SET enabled = :enabled, updated_at = :now WHERE id = :id`, {
         ':enabled': newEnabled,
         ':now': new Date().toISOString(),
-        ':id': automation.id,
+        ':id': automation.id
       })
       db.close()
       await notifyApp()
-      console.log(`${newEnabled ? 'Enabled' : 'Disabled'}: ${automation.id.slice(0, 8)}  ${automation.name}`)
+      console.log(
+        `${newEnabled ? 'Enabled' : 'Disabled'}: ${automation.id.slice(0, 8)}  ${automation.name}`
+      )
     })
 
   // slay automations run
@@ -354,14 +414,19 @@ export function automationsCommand(): Command {
       const automation = resolveAutomation(db, idPrefix)
       db.close()
 
-      const run = await apiPost<{ id: string; status: string; error?: string; duration_ms?: number }>(
-        `/api/automations/${automation.id}/run`, {}
-      )
+      const run = await apiPost<{
+        id: string
+        status: string
+        error?: string
+        duration_ms?: number
+      }>(`/api/automations/${automation.id}/run`, {})
       if (run.error) {
         console.error(`Run failed: ${run.error}`)
         process.exit(1)
       }
-      console.log(`Run: ${run.id?.slice(0, 8) ?? '?'}  ${run.status}  ${run.duration_ms != null ? `${run.duration_ms}ms` : ''}`)
+      console.log(
+        `Run: ${run.id?.slice(0, 8) ?? '?'}  ${run.status}  ${run.duration_ms != null ? `${run.duration_ms}ms` : ''}`
+      )
     })
 
   // slay automations runs
@@ -393,8 +458,12 @@ export function automationsCommand(): Command {
 
       const idW = 9
       const statusW = 8
-      console.log(`${'ID'.padEnd(idW)}  ${'STATUS'.padEnd(statusW)}  ${'DURATION'.padEnd(10)}  STARTED`)
-      console.log(`${'-'.repeat(idW)}  ${'-'.repeat(statusW)}  ${'-'.repeat(10)}  ${'-'.repeat(19)}`)
+      console.log(
+        `${'ID'.padEnd(idW)}  ${'STATUS'.padEnd(statusW)}  ${'DURATION'.padEnd(10)}  STARTED`
+      )
+      console.log(
+        `${'-'.repeat(idW)}  ${'-'.repeat(statusW)}  ${'-'.repeat(10)}  ${'-'.repeat(19)}`
+      )
       for (const r of runs) {
         const id = r.id.slice(0, 8).padEnd(idW)
         const status = r.status.padEnd(statusW)

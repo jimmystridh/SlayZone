@@ -26,13 +26,27 @@ interface DeviceWebviewProps {
   onLayout?: (layout: DeviceLayout) => void
 }
 
-export function DeviceWebview({ url, preset, partition, isResizing, reloadTrigger, forceReloadTrigger, onLayout }: DeviceWebviewProps) {
+export function DeviceWebview({
+  url,
+  preset,
+  partition,
+  isResizing,
+  reloadTrigger,
+  forceReloadTrigger,
+  onLayout
+}: DeviceWebviewProps) {
   const webviewRef = useRef<WebviewElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [webviewReady, setWebviewReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
-  const prevEmulationRef = useRef<{ w: number; h: number; dpr: number; mobile: boolean; ua?: string } | null>(null)
+  const prevEmulationRef = useRef<{
+    w: number
+    h: number
+    dpr: number
+    mobile: boolean
+    ua?: string
+  } | null>(null)
 
   const [initialSrc] = useState(() => (url || 'about:blank').replace(/^file:\/\//, 'slz-file://'))
   const loadedUrlRef = useRef(url)
@@ -52,7 +66,10 @@ export function DeviceWebview({ url, preset, partition, isResizing, reloadTrigge
   useEffect(() => {
     const wv = webviewRef.current
     if (!wv) return
-    const handleDomReady = () => { setWebviewReady(true); setLoadError(null) }
+    const handleDomReady = () => {
+      setWebviewReady(true)
+      setLoadError(null)
+    }
     const handleFailLoad = (e: Event) => {
       const detail = (e as CustomEvent).detail
       if ((detail?.errorCode ?? 0) === -3) return
@@ -78,23 +95,39 @@ export function DeviceWebview({ url, preset, partition, isResizing, reloadTrigge
     const wv = webviewRef.current
     if (!wv || !webviewReady) return
 
-    const cur = { w: preset.width, h: preset.height, dpr: preset.deviceScaleFactor, mobile: preset.mobile, ua: preset.userAgent }
+    const cur = {
+      w: preset.width,
+      h: preset.height,
+      dpr: preset.deviceScaleFactor,
+      mobile: preset.mobile,
+      ua: preset.userAgent
+    }
     const prev = prevEmulationRef.current
-    if (prev && cur.w === prev.w && cur.h === prev.h && cur.dpr === prev.dpr && cur.mobile === prev.mobile && cur.ua === prev.ua) return
+    if (
+      prev &&
+      cur.w === prev.w &&
+      cur.h === prev.h &&
+      cur.dpr === prev.dpr &&
+      cur.mobile === prev.mobile &&
+      cur.ua === prev.ua
+    )
+      return
 
     const prevUa = prev?.ua
     prevEmulationRef.current = cur
 
     const wcId = wv.getWebContentsId()
-    window.api.webview?.enableDeviceEmulation(wcId, {
-      screenSize: { width: preset.width, height: preset.height },
-      viewSize: { width: 0, height: 0 },
-      deviceScaleFactor: preset.deviceScaleFactor,
-      screenPosition: preset.mobile ? 'mobile' : 'desktop',
-      userAgent: preset.userAgent,
-    }).then(() => {
-      if (preset.userAgent !== prevUa) wv.reload()
-    })
+    window.api.webview
+      ?.enableDeviceEmulation(wcId, {
+        screenSize: { width: preset.width, height: preset.height },
+        viewSize: { width: 0, height: 0 },
+        deviceScaleFactor: preset.deviceScaleFactor,
+        screenPosition: preset.mobile ? 'mobile' : 'desktop',
+        userAgent: preset.userAgent
+      })
+      .then(() => {
+        if (preset.userAgent !== prevUa) wv.reload()
+      })
   }, [preset, webviewReady])
 
   // Navigate only when parent URL actually changes
@@ -132,7 +165,9 @@ export function DeviceWebview({ url, preset, partition, isResizing, reloadTrigge
         try {
           const wcId = wv.getWebContentsId()
           window.api.webview?.disableDeviceEmulation(wcId)
-        } catch { /* webview may be destroyed */ }
+        } catch {
+          /* webview may be destroyed */
+        }
       }
     }
   }, [])
@@ -150,7 +185,11 @@ export function DeviceWebview({ url, preset, partition, isResizing, reloadTrigge
   }, [topOffset, scaledHeight, containerW])
 
   return (
-    <div id="dw-container" ref={containerRef} className="relative flex-1 overflow-hidden bg-surface-0">
+    <div
+      id="dw-container"
+      ref={containerRef}
+      className="relative flex-1 overflow-hidden bg-surface-0"
+    >
       <div
         id="dw-viewport"
         className="absolute origin-top-left overflow-hidden"
@@ -161,7 +200,7 @@ export function DeviceWebview({ url, preset, partition, isResizing, reloadTrigge
           outline: `${1 / widthScale}px solid rgba(255, 255, 255, 0.7)`,
           transform: widthScale < 1 ? `scale(${widthScale})` : undefined,
           top: topOffset,
-          left: leftOffset,
+          left: leftOffset
         }}
       >
         {containerSize && (

@@ -11,12 +11,16 @@ interface LinkifiedTextProps {
 }
 
 function openExternal(url: string): void {
-  const api = (window as unknown as { api?: { shell?: { openExternal: (u: string) => Promise<unknown> } } }).api
+  const api = (
+    window as unknown as { api?: { shell?: { openExternal: (u: string) => Promise<unknown> } } }
+  ).api
   void api?.shell?.openExternal(url)
 }
 
 function defaultOpenFile(path: string): void {
-  const api = (window as unknown as { api?: { shell?: { openPath: (p: string) => Promise<string> } } }).api
+  const api = (
+    window as unknown as { api?: { shell?: { openPath: (p: string) => Promise<string> } } }
+  ).api
   void api?.shell?.openPath(path)
 }
 
@@ -39,7 +43,8 @@ export function LinkifiedText({ text, onOpenUrl, onOpenFile }: LinkifiedTextProp
   let cursor = 0
   let key = 0
   for (const m of matches) {
-    if (m.start > cursor) out.push(<React.Fragment key={`t${key++}`}>{text.slice(cursor, m.start)}</React.Fragment>)
+    if (m.start > cursor)
+      out.push(<React.Fragment key={`t${key++}`}>{text.slice(cursor, m.start)}</React.Fragment>)
     const isUrl = m.kind === 'url'
     const handleClick = (e: React.MouseEvent): void => {
       const mod = e.metaKey || e.ctrlKey
@@ -53,7 +58,9 @@ export function LinkifiedText({ text, onOpenUrl, onOpenFile }: LinkifiedTextProp
         ;(onOpenFile ?? defaultOpenFile)(m.filePath, m.line, m.col)
       }
     }
-    const label = isUrl ? m.text : `${m.filePath}${m.line ? `:${m.line}${m.col ? `:${m.col}` : ''}` : ''}`
+    const label = isUrl
+      ? m.text
+      : `${m.filePath}${m.line ? `:${m.line}${m.col ? `:${m.col}` : ''}` : ''}`
     out.push(
       <Tooltip key={`l${key++}`}>
         <TooltipTrigger asChild>
@@ -73,6 +80,7 @@ export function LinkifiedText({ text, onOpenUrl, onOpenFile }: LinkifiedTextProp
     )
     cursor = m.end
   }
-  if (cursor < text.length) out.push(<React.Fragment key={`t${key++}`}>{text.slice(cursor)}</React.Fragment>)
+  if (cursor < text.length)
+    out.push(<React.Fragment key={`t${key++}`}>{text.slice(cursor)}</React.Fragment>)
   return <>{out}</>
 }

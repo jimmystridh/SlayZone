@@ -1,6 +1,15 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { Home, X } from 'lucide-react'
-import { cn, TerminalProgressDot, Tooltip, TooltipTrigger, TooltipContent, projectColorBg, useShortcutDisplay, withShortcut } from '@slayzone/ui'
+import {
+  cn,
+  TerminalProgressDot,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  projectColorBg,
+  useShortcutDisplay,
+  withShortcut
+} from '@slayzone/ui'
 import type { TerminalState } from '@slayzone/terminal/shared'
 import {
   DndContext,
@@ -12,16 +21,19 @@ import {
   type DragEndEvent,
   type DragStartEvent
 } from '@dnd-kit/core'
-import {
-  SortableContext,
-  useSortable,
-  horizontalListSortingStrategy
-} from '@dnd-kit/sortable'
+import { SortableContext, useSortable, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 export type Tab =
   | { type: 'home' }
-  | { type: 'task'; taskId: string; title: string; terminalState?: TerminalState; isSubTask?: boolean; isTemporary?: boolean }
+  | {
+      type: 'task'
+      taskId: string
+      title: string
+      terminalState?: TerminalState
+      isSubTask?: boolean
+      isTemporary?: boolean
+    }
 
 interface TabBarProps {
   tabs: Tab[]
@@ -62,12 +74,32 @@ interface TabContentProps {
   inputRef?: React.RefObject<HTMLInputElement | null>
 }
 
-function TabContent({ title, isActive, isDragging, onClose, terminalState, needsAttention, isSubTask, isTemporary, projectColor, progress, isDone, isEditing, editValue, onEditChange, onEditSubmit, onEditCancel, inputRef }: TabContentProps): React.JSX.Element {
+function TabContent({
+  title,
+  isActive,
+  isDragging,
+  onClose,
+  terminalState,
+  needsAttention,
+  isSubTask,
+  isTemporary,
+  projectColor,
+  progress,
+  isDone,
+  isEditing,
+  editValue,
+  onEditChange,
+  onEditSubmit,
+  onEditCancel,
+  inputRef
+}: TabContentProps): React.JSX.Element {
   return (
     <div
       className={cn(
         'group relative flex items-center gap-1.5 h-7 px-3 rounded-md cursor-pointer transition-colors select-none flex-shrink-0',
-        !projectColor && !isActive && 'bg-surface-2 dark:bg-surface-2/50 hover:bg-accent/80 dark:hover:bg-accent/50',
+        !projectColor &&
+          !isActive &&
+          'bg-surface-2 dark:bg-surface-2/50 hover:bg-accent/80 dark:hover:bg-accent/50',
         !isActive && 'text-muted-foreground dark:text-muted-foreground',
         isTemporary && 'border border-dashed border-muted-foreground dark:border-border',
         'max-w-[300px]',
@@ -75,15 +107,25 @@ function TabContent({ title, isActive, isDragging, onClose, terminalState, needs
       )}
       style={{
         backgroundColor: isActive
-          ? (projectColor ? projectColor + '80' : 'var(--sidebar-accent)')
+          ? projectColor
+            ? projectColor + '80'
+            : 'var(--sidebar-accent)'
           : projectColorBg(projectColor, 'tab'),
         ...(isActive && {
-          boxShadow: '0 0 0 1px var(--sidebar-border), 0 1px 4px rgba(0,0,0,0.2)',
+          boxShadow: '0 0 0 1px var(--sidebar-border), 0 1px 4px rgba(0,0,0,0.2)'
         })
       }}
     >
-      {projectColor && <div className="pointer-events-none absolute inset-0 rounded-md opacity-0 transition-opacity group-hover:opacity-100 bg-black/10 dark:bg-white/10" />}
-      <TerminalProgressDot state={terminalState} progress={progress} isDone={isDone} needsAttention={needsAttention} tooltipSide="bottom" />
+      {projectColor && (
+        <div className="pointer-events-none absolute inset-0 rounded-md opacity-0 transition-opacity group-hover:opacity-100 bg-black/10 dark:bg-white/10" />
+      )}
+      <TerminalProgressDot
+        state={terminalState}
+        progress={progress}
+        isDone={isDone}
+        needsAttention={needsAttention}
+        tooltipSide="bottom"
+      />
       {isSubTask && <span className="text-[10px] text-muted-foreground/60 shrink-0">SUB</span>}
       {isEditing ? (
         <input
@@ -93,15 +135,23 @@ function TabContent({ title, isActive, isDragging, onClose, terminalState, needs
           onChange={(e) => onEditChange?.(e.target.value)}
           onBlur={() => onEditSubmit?.()}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') { e.preventDefault(); onEditSubmit?.() }
-            if (e.key === 'Escape') { e.preventDefault(); onEditCancel?.() }
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              onEditSubmit?.()
+            }
+            if (e.key === 'Escape') {
+              e.preventDefault()
+              onEditCancel?.()
+            }
             e.stopPropagation()
           }}
           onClick={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         />
       ) : (
-        <span className={cn('truncate text-sm', isTemporary && 'italic text-muted-foreground')}>{title}</span>
+        <span className={cn('truncate text-sm', isTemporary && 'italic text-muted-foreground')}>
+          {title}
+        </span>
       )}
       {onClose && (
         <button
@@ -187,9 +237,13 @@ function SortableTab({
     style.borderLeftWidth = groupPosition === 'first' || groupPosition === 'solo' ? bw : 0
     style.borderRightWidth = groupPosition === 'last' || groupPosition === 'solo' ? bw : 0
     style.borderRadius =
-      groupPosition === 'solo' ? 8 :
-      groupPosition === 'first' ? '8px 0 0 8px' :
-      groupPosition === 'last' ? '0 8px 8px 0' : 0
+      groupPosition === 'solo'
+        ? 8
+        : groupPosition === 'first'
+          ? '8px 0 0 8px'
+          : groupPosition === 'last'
+            ? '0 8px 8px 0'
+            : 0
     style.paddingTop = 2
     style.paddingBottom = 2
     style.paddingLeft = groupPosition === 'first' || groupPosition === 'solo' ? 4 : 0
@@ -265,14 +319,21 @@ export function TabBar({
     }
   }, [editingTaskId])
 
-  const handleDoubleClick = useCallback((tab: Tab & { type: 'task' }) => {
-    if (!onTabRename) return
-    setEditingTaskId(tab.taskId)
-    setEditValue(tab.title)
-  }, [onTabRename])
+  const handleDoubleClick = useCallback(
+    (tab: Tab & { type: 'task' }) => {
+      if (!onTabRename) return
+      setEditingTaskId(tab.taskId)
+      setEditValue(tab.title)
+    },
+    [onTabRename]
+  )
 
   const handleEditSubmit = useCallback(() => {
-    if (editCancelledRef.current) { editCancelledRef.current = false; setEditingTaskId(null); return }
+    if (editCancelledRef.current) {
+      editCancelledRef.current = false
+      setEditingTaskId(null)
+      return
+    }
     if (editingTaskId && editValue.trim()) {
       onTabRename?.(editingTaskId, editValue.trim())
     }
@@ -341,21 +402,26 @@ export function TabBar({
     <div className="flex items-center h-11 pr-2 gap-1 bg-sidebar window-drag-region">
       {/* Fixed static tabs (Home + Context Manager) — not affected by scroll */}
       <div className="flex items-center flex-shrink-0">
-        <Tooltip><TooltipTrigger asChild>
-          <div
-            className={cn(
-              'ml-1 flex items-center gap-1.5 h-7 px-3 rounded-md cursor-pointer transition-colors select-none flex-shrink-0 window-no-drag',
-              'hover:bg-accent/80 dark:hover:bg-accent/50',
-              'border',
-              activeIndex === homeIndex && activeView !== 'context'
-                ? 'bg-tab-active border-border'
-                : 'border-transparent text-muted-foreground dark:text-muted-foreground'
-            )}
-            onClick={() => onTabClick(homeIndex)}
-          >
-            <Home className="size-3.5" />
-          </div>
-        </TooltipTrigger><TooltipContent side="bottom" className="text-xs">{withShortcut('Home', goHomeShortcut)}</TooltipContent></Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(
+                'ml-1 flex items-center gap-1.5 h-7 px-3 rounded-md cursor-pointer transition-colors select-none flex-shrink-0 window-no-drag',
+                'hover:bg-accent/80 dark:hover:bg-accent/50',
+                'border',
+                activeIndex === homeIndex && activeView !== 'context'
+                  ? 'bg-tab-active border-border'
+                  : 'border-transparent text-muted-foreground dark:text-muted-foreground'
+              )}
+              onClick={() => onTabClick(homeIndex)}
+            >
+              <Home className="size-3.5" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">
+            {withShortcut('Home', goHomeShortcut)}
+          </TooltipContent>
+        </Tooltip>
         {leftContent && (
           <div className="flex items-center self-center window-no-drag">{leftContent}</div>
         )}
@@ -364,64 +430,69 @@ export function TabBar({
       {/* Scrollable task tabs area */}
       <div className="flex items-center overflow-x-auto scrollbar-hide flex-1 min-w-0">
         {!hideTabs && (
-        /* Task tabs - sortable, flat DOM for dnd-kit compatibility */
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext items={taskIds} strategy={horizontalListSortingStrategy}>
-            {taskTabs.map((tab) => {
-              const index = tabs.findIndex((t) => t.type === 'task' && t.taskId === tab.taskId)
-              return (
-                <SortableTab
-                  key={tab.taskId}
-                  tab={tab}
-                  index={index}
-                  isActive={index === activeIndex && activeView === 'tabs'}
-                  onTabClick={onTabClick}
-                  onTabClose={onTabClose}
-                  terminalState={terminalStates?.get(tab.taskId)}
-                  needsAttention={attentionTaskIds?.has(tab.taskId)}
-                  projectColor={projectColors?.get(tab.taskId)}
-                  worktreeColor={worktreeColors?.get(tab.taskId)}
-                  progress={taskProgress?.get(tab.taskId)}
-                  isDone={doneTaskIds?.has(tab.taskId)}
-                  groupPosition={groupPositions.get(tab.taskId)}
-                  isEditing={editingTaskId === tab.taskId}
-                  editValue={editValue}
-                  onEditChange={setEditValue}
-                  onEditSubmit={handleEditSubmit}
-                  onEditCancel={handleEditCancel}
-                  onDoubleClick={() => handleDoubleClick(tab)}
-                  inputRef={editInputRef}
+          /* Task tabs - sortable, flat DOM for dnd-kit compatibility */
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={taskIds} strategy={horizontalListSortingStrategy}>
+              {taskTabs.map((tab) => {
+                const index = tabs.findIndex((t) => t.type === 'task' && t.taskId === tab.taskId)
+                return (
+                  <SortableTab
+                    key={tab.taskId}
+                    tab={tab}
+                    index={index}
+                    isActive={index === activeIndex && activeView === 'tabs'}
+                    onTabClick={onTabClick}
+                    onTabClose={onTabClose}
+                    terminalState={terminalStates?.get(tab.taskId)}
+                    needsAttention={attentionTaskIds?.has(tab.taskId)}
+                    projectColor={projectColors?.get(tab.taskId)}
+                    worktreeColor={worktreeColors?.get(tab.taskId)}
+                    progress={taskProgress?.get(tab.taskId)}
+                    isDone={doneTaskIds?.has(tab.taskId)}
+                    groupPosition={groupPositions.get(tab.taskId)}
+                    isEditing={editingTaskId === tab.taskId}
+                    editValue={editValue}
+                    onEditChange={setEditValue}
+                    onEditSubmit={handleEditSubmit}
+                    onEditCancel={handleEditCancel}
+                    onDoubleClick={() => handleDoubleClick(tab)}
+                    inputRef={editInputRef}
+                  />
+                )
+              })}
+            </SortableContext>
+            <DragOverlay>
+              {activeTab && (
+                <TabContent
+                  title={activeTab.title}
+                  isActive={
+                    tabs.findIndex((t) => t.type === 'task' && t.taskId === activeTab.taskId) ===
+                    activeIndex
+                  }
+                  isDragging
+                  terminalState={terminalStates?.get(activeTab.taskId)}
+                  needsAttention={attentionTaskIds?.has(activeTab.taskId)}
+                  isTemporary={activeTab.isTemporary}
+                  projectColor={projectColors?.get(activeTab.taskId)}
+                  progress={taskProgress?.get(activeTab.taskId)}
+                  isDone={doneTaskIds?.has(activeTab.taskId)}
                 />
-              )
-            })}
-          </SortableContext>
-          <DragOverlay>
-            {activeTab && (
-              <TabContent
-                title={activeTab.title}
-                isActive={tabs.findIndex((t) => t.type === 'task' && t.taskId === activeTab.taskId) === activeIndex}
-                isDragging
-                terminalState={terminalStates?.get(activeTab.taskId)}
-                needsAttention={attentionTaskIds?.has(activeTab.taskId)}
-                isTemporary={activeTab.isTemporary}
-                projectColor={projectColors?.get(activeTab.taskId)}
-                progress={taskProgress?.get(activeTab.taskId)}
-                isDone={doneTaskIds?.has(activeTab.taskId)}
-              />
-            )}
-          </DragOverlay>
-        </DndContext>
+              )}
+            </DragOverlay>
+          </DndContext>
         )}
       </div>
 
       {/* Fixed right content */}
       {rightContent && (
-        <div className="flex items-center flex-shrink-0 self-center window-no-drag">{rightContent}</div>
+        <div className="flex items-center flex-shrink-0 self-center window-no-drag">
+          {rightContent}
+        </div>
       )}
     </div>
   )

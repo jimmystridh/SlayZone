@@ -13,7 +13,7 @@ function hunkToSideBySideRows(hunk: DiffHunk): SideDiffRow[] {
     for (let i = 0; i < max; i++) {
       rows.push({
         left: i < dels.length ? { kind: 'del', text: dels[i] } : { kind: 'empty', text: '' },
-        right: i < adds.length ? { kind: 'add', text: adds[i] } : { kind: 'empty', text: '' },
+        right: i < adds.length ? { kind: 'add', text: adds[i] } : { kind: 'empty', text: '' }
       })
     }
     dels = []
@@ -26,7 +26,7 @@ function hunkToSideBySideRows(hunk: DiffHunk): SideDiffRow[] {
       flush()
       rows.push({
         left: { kind: 'ctx', text: line.text },
-        right: { kind: 'ctx', text: line.text },
+        right: { kind: 'ctx', text: line.text }
       })
     }
   }
@@ -62,7 +62,7 @@ export function ArtifactVersionDiffView({ diff }: { diff: DiffResult }) {
                   'px-2 py-0.5 whitespace-pre-wrap break-words border-r border-border/30',
                   row.left.kind === 'del' && 'bg-red-500/10 text-red-700 dark:text-red-400',
                   row.left.kind === 'ctx' && 'opacity-70',
-                  row.left.kind === 'empty' && 'bg-muted-foreground/5',
+                  row.left.kind === 'empty' && 'bg-muted-foreground/5'
                 )}
               >
                 {row.left.kind !== 'empty' && row.left.text}
@@ -73,7 +73,7 @@ export function ArtifactVersionDiffView({ diff }: { diff: DiffResult }) {
                   'px-2 py-0.5 whitespace-pre-wrap break-words',
                   row.right.kind === 'add' && 'bg-green-500/10 text-green-700 dark:text-green-400',
                   row.right.kind === 'ctx' && 'opacity-70',
-                  row.right.kind === 'empty' && 'bg-muted-foreground/5',
+                  row.right.kind === 'empty' && 'bg-muted-foreground/5'
                 )}
               >
                 {row.right.kind !== 'empty' && row.right.text}

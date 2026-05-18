@@ -1,4 +1,4 @@
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import {
   getMainSessionId,
@@ -6,7 +6,7 @@ import {
   readFullBuffer,
   runCommand,
   waitForBufferContains,
-  waitForPtySession,
+  waitForPtySession
 } from '../fixtures/terminal'
 
 const panelBtn = (page: import('@playwright/test').Page, label: string) =>
@@ -22,13 +22,24 @@ test.describe('Terminal panel toggle continuity', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Panel Continuity', color: '#8b5cf6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Panel Continuity',
+      color: '#8b5cf6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const t = await s.createTask({ projectId: p.id, title: 'Panel continuity task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Panel continuity task',
+      status: 'in_progress'
+    })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
   })
 

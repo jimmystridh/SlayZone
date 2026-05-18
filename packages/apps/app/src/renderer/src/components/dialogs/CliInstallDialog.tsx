@@ -33,7 +33,9 @@ export function CliInstallDialog() {
       if (result.ok) {
         setInstalled(true)
         let msg = 'Installed successfully.'
-        if (result.pathNotInPATH) msg += " Note: the install directory is not in your PATH. Add it to use 'slay' from any terminal."
+        if (result.pathNotInPATH)
+          msg +=
+            " Note: the install directory is not in your PATH. Add it to use 'slay' from any terminal."
         setMessage(msg)
       } else if (result.elevationCancelled) {
         setMessage('Install cancelled. You can try again later from Settings.')
@@ -57,7 +59,12 @@ export function CliInstallDialog() {
   if (!open) return null
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) handleClose()
+      }}
+    >
       <DialogContent
         className="max-w-xl p-0 overflow-hidden border-none shadow-none bg-transparent"
         showCloseButton={false}
@@ -104,7 +111,9 @@ export function CliInstallDialog() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6 }}
                 >
-                  <Button onClick={handleClose} className="w-full">Done</Button>
+                  <Button onClick={handleClose} className="w-full">
+                    Done
+                  </Button>
                 </motion.div>
               </div>
             ) : (
@@ -113,7 +122,9 @@ export function CliInstallDialog() {
                   <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
                     <Terminal className="h-7 w-7 text-primary" />
                   </div>
-                  <h2 className="text-2xl font-semibold tracking-tight mb-2">Install the slay CLI</h2>
+                  <h2 className="text-2xl font-semibold tracking-tight mb-2">
+                    Install the slay CLI
+                  </h2>
                   <p className="text-muted-foreground text-balance">
                     Manage tasks and projects from the terminal, or let your AI agents do it.
                   </p>
@@ -126,7 +137,7 @@ export function CliInstallDialog() {
                         { cmd: 'slay tasks', desc: 'List and filter tasks' },
                         { cmd: 'slay tasks add', desc: 'Create tasks from the command line' },
                         { cmd: 'slay projects', desc: 'Switch between projects' },
-                        { cmd: 'slay init', desc: 'Set up AI config for a project' },
+                        { cmd: 'slay init', desc: 'Set up AI config for a project' }
                       ].map(({ cmd, desc }, i) => (
                         <tr key={cmd} className={i > 0 ? 'border-t' : ''}>
                           <td className="px-4 py-2.5">
@@ -140,7 +151,9 @@ export function CliInstallDialog() {
                 </div>
 
                 {message && (
-                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap mb-4">{message}</pre>
+                  <pre className="text-xs text-muted-foreground whitespace-pre-wrap mb-4">
+                    {message}
+                  </pre>
                 )}
 
                 <div className="flex items-center justify-between">

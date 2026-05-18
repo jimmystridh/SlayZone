@@ -2,7 +2,10 @@ import type { IpcMain, IpcMainInvokeEvent } from 'electron'
 import { BrowserWindow } from 'electron'
 import type { Database } from 'better-sqlite3'
 import { recordDiagnosticEvent } from '@slayzone/diagnostics/main'
-import { withResultDedup as withResultDedupBase, type SenderLifecycle } from '@slayzone/platform/ipc'
+import {
+  withResultDedup as withResultDedupBase,
+  type SenderLifecycle
+} from '@slayzone/platform/ipc'
 
 // Renderer-scoped dedup. Without this, main's cache survives renderer reloads
 // while preload's wipes — main returns IPC_UNCHANGED_SENTINEL to a preload
@@ -109,7 +112,19 @@ import {
   getGhUser,
   editPrComment
 } from './gh-cli'
-import type { CreateWorktreeOpts, MergeWithAIResult, ConflictAnalysis, CreatePrInput, MergePrInput, EditPrCommentInput, WorktreeSubmoduleResult, CreateWorktreePhase, CreateWorktreePhaseEvent, ResolvedGraph, ForkGraphResult } from '../shared/types'
+import type {
+  CreateWorktreeOpts,
+  MergeWithAIResult,
+  ConflictAnalysis,
+  CreatePrInput,
+  MergePrInput,
+  EditPrCommentInput,
+  WorktreeSubmoduleResult,
+  CreateWorktreePhase,
+  CreateWorktreePhaseEvent,
+  ResolvedGraph,
+  ForkGraphResult
+} from '../shared/types'
 
 import { readdir, stat as fsStat } from 'fs/promises'
 import path from 'path'
@@ -117,7 +132,10 @@ import type { WorktreeCopyBehavior, WorktreeSubmoduleInit } from '@slayzone/proj
 
 // Cache for detectChildRepos — avoids repeated readdir + git rev-parse on every tab switch
 const CHILD_REPO_CACHE_MAX = 50
-const childRepoCache = new Map<string, { repos: { name: string; path: string }[]; timestamp: number }>()
+const childRepoCache = new Map<
+  string,
+  { repos: { name: string; path: string }[]; timestamp: number }
+>()
 const CHILD_REPO_CACHE_TTL = 30_000 // 30s
 
 function evictStaleRepoCache(): void {
@@ -135,47 +153,73 @@ function evictStaleRepoCache(): void {
   }
 }
 
-export function resolveCopyBehavior(db: Database, projectId?: string): { behavior: WorktreeCopyBehavior; customPaths: string[] } {
+export function resolveCopyBehavior(
+  db: Database,
+  projectId?: string
+): { behavior: WorktreeCopyBehavior; customPaths: string[] } {
   // Check project-level override first (null = inherit from global)
   // Wrapped in try-catch: columns added in migration v70 may not exist on stale DBs
   if (projectId) {
     try {
-      const row = db.prepare('SELECT worktree_copy_behavior, worktree_copy_paths FROM projects WHERE id = ?')
-        .get(projectId) as { worktree_copy_behavior: string | null; worktree_copy_paths: string | null } | undefined
+      const row = db
+        .prepare('SELECT worktree_copy_behavior, worktree_copy_paths FROM projects WHERE id = ?')
+        .get(projectId) as
+        | { worktree_copy_behavior: string | null; worktree_copy_paths: string | null }
+        | undefined
       if (row?.worktree_copy_behavior) {
         const behavior = row.worktree_copy_behavior as WorktreeCopyBehavior
-        const customPaths = behavior === 'custom' && row.worktree_copy_paths
-          ? row.worktree_copy_paths.split(',').map(p => p.trim()).filter(Boolean)
-          : []
+        const customPaths =
+          behavior === 'custom' && row.worktree_copy_paths
+            ? row.worktree_copy_paths
+                .split(',')
+                .map((p) => p.trim())
+                .filter(Boolean)
+            : []
         return { behavior, customPaths }
       }
-    } catch { /* fall through to global setting */ }
+    } catch {
+      /* fall through to global setting */
+    }
   }
 
   // Fall back to global setting
-  const settingRow = db.prepare("SELECT value FROM settings WHERE key = 'worktree_copy_behavior'")
+  const settingRow = db
+    .prepare("SELECT value FROM settings WHERE key = 'worktree_copy_behavior'")
     .get() as { value: string } | undefined
   const behavior = (settingRow?.value as WorktreeCopyBehavior) || 'ask'
   let customPaths: string[] = []
   if (behavior === 'custom') {
-    const pathsRow = db.prepare("SELECT value FROM settings WHERE key = 'worktree_copy_paths'")
+    const pathsRow = db
+      .prepare("SELECT value FROM settings WHERE key = 'worktree_copy_paths'")
       .get() as { value: string } | undefined
-    customPaths = pathsRow?.value ? pathsRow.value.split(',').map(p => p.trim()).filter(Boolean) : []
+    customPaths = pathsRow?.value
+      ? pathsRow.value
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean)
+      : []
   }
 
   return { behavior, customPaths }
 }
 
-export function resolveSubmoduleInitBehavior(db: Database, projectId?: string): WorktreeSubmoduleInit {
+export function resolveSubmoduleInitBehavior(
+  db: Database,
+  projectId?: string
+): WorktreeSubmoduleInit {
   if (projectId) {
     try {
-      const row = db.prepare('SELECT worktree_submodule_init FROM projects WHERE id = ?')
+      const row = db
+        .prepare('SELECT worktree_submodule_init FROM projects WHERE id = ?')
         .get(projectId) as { worktree_submodule_init: string | null } | undefined
       if (row?.worktree_submodule_init) return row.worktree_submodule_init as WorktreeSubmoduleInit
-    } catch { /* column may not exist on stale DB — fall through */ }
+    } catch {
+      /* column may not exist on stale DB — fall through */
+    }
   }
 
-  const settingRow = db.prepare("SELECT value FROM settings WHERE key = 'worktree_submodule_init'")
+  const settingRow = db
+    .prepare("SELECT value FROM settings WHERE key = 'worktree_submodule_init'")
     .get() as { value: string } | undefined
   return (settingRow?.value as WorktreeSubmoduleInit) || 'auto'
 }
@@ -241,9 +285,12 @@ export function registerWorktreeHandlers(ipcMain: IpcMain, db: Database): void {
 
   const pendingDetections = new Map<string, Promise<{ name: string; path: string }[]>>()
 
-  ipcMain.handle('git:listProjectRepos', (_, projectPath: string, opts?: { taskBoundPath?: string | null }) => {
-    return listProjectRepos(projectPath, opts ?? {})
-  })
+  ipcMain.handle(
+    'git:listProjectRepos',
+    (_, projectPath: string, opts?: { taskBoundPath?: string | null }) => {
+      return listProjectRepos(projectPath, opts ?? {})
+    }
+  )
 
   ipcMain.handle('git:detectChildRepos', (_, projectPath: string) => {
     // Return cached result if fresh
@@ -267,17 +314,19 @@ export function registerWorktreeHandlers(ipcMain: IpcMain, db: Database): void {
         const entries = await readdir(projectPath)
         const repos: { name: string; path: string }[] = []
 
-        await Promise.all(entries.map(async (entry) => {
-          const fullPath = path.join(projectPath, entry)
-          try {
-            const s = await fsStat(fullPath)
-            if (s.isDirectory() && await isGitRepo(fullPath)) {
-              repos.push({ name: entry, path: fullPath })
+        await Promise.all(
+          entries.map(async (entry) => {
+            const fullPath = path.join(projectPath, entry)
+            try {
+              const s = await fsStat(fullPath)
+              if (s.isDirectory() && (await isGitRepo(fullPath))) {
+                repos.push({ name: entry, path: fullPath })
+              }
+            } catch {
+              // Skip inaccessible entries
             }
-          } catch {
-            // Skip inaccessible entries
-          }
-        }))
+          })
+        )
 
         repos.sort((a, b) => a.name.localeCompare(b.name))
         childRepoCache.set(projectPath, { repos, timestamp: Date.now() })
@@ -293,12 +342,15 @@ export function registerWorktreeHandlers(ipcMain: IpcMain, db: Database): void {
     return detection
   })
 
-  ipcMain.handle('git:detectWorktrees', withResultDedup(async (_, repoPath: string) => {
-    const detected = await detectWorktrees(repoPath)
-    const nonMainPaths = detected.filter(d => !d.isMain).map(d => d.path)
-    const colors = ensureColors(repoPath, nonMainPaths)
-    return detected.map(d => d.isMain ? d : { ...d, color: colors.get(d.path) })
-  }))
+  ipcMain.handle(
+    'git:detectWorktrees',
+    withResultDedup(async (_, repoPath: string) => {
+      const detected = await detectWorktrees(repoPath)
+      const nonMainPaths = detected.filter((d) => !d.isMain).map((d) => d.path)
+      const colors = ensureColors(repoPath, nonMainPaths)
+      return detected.map((d) => (d.isMain ? d : { ...d, color: colors.get(d.path) }))
+    })
+  )
 
   ipcMain.handle('git:createWorktree', async (event, opts: CreateWorktreeOpts) => {
     const { repoPath, targetPath, branch, sourceBranch, projectId, requestId } = opts
@@ -335,9 +387,12 @@ export function registerWorktreeHandlers(ipcMain: IpcMain, db: Database): void {
     return { setupResult, submoduleResult }
   })
 
-  ipcMain.handle('git:removeWorktree', (_, repoPath: string, worktreePath: string, branchHint?: string) => {
-    return removeWorktree(repoPath, worktreePath, branchHint)
-  })
+  ipcMain.handle(
+    'git:removeWorktree',
+    (_, repoPath: string, worktreePath: string, branchHint?: string) => {
+      return removeWorktree(repoPath, worktreePath, branchHint)
+    }
+  )
 
   ipcMain.handle('git:init', (_, path: string) => {
     return initRepo(path)
@@ -363,9 +418,12 @@ export function registerWorktreeHandlers(ipcMain: IpcMain, db: Database): void {
     return hasUncommittedChanges(path)
   })
 
-  ipcMain.handle('git:mergeIntoParent', (_, projectPath: string, parentBranch: string, sourceBranch: string) => {
-    return mergeIntoParent(projectPath, parentBranch, sourceBranch)
-  })
+  ipcMain.handle(
+    'git:mergeIntoParent',
+    (_, projectPath: string, parentBranch: string, sourceBranch: string) => {
+      return mergeIntoParent(projectPath, parentBranch, sourceBranch)
+    }
+  )
 
   ipcMain.handle('git:abortMerge', (_, path: string) => {
     return abortMerge(path)
@@ -373,7 +431,13 @@ export function registerWorktreeHandlers(ipcMain: IpcMain, db: Database): void {
 
   ipcMain.handle(
     'git:mergeWithAI',
-    async (_, projectPath: string, worktreePath: string, parentBranch: string, sourceBranch: string): Promise<MergeWithAIResult> => {
+    async (
+      _,
+      projectPath: string,
+      worktreePath: string,
+      parentBranch: string,
+      sourceBranch: string
+    ): Promise<MergeWithAIResult> => {
       try {
         // Check for uncommitted changes in worktree
         const hasChanges = await hasUncommittedChanges(worktreePath)
@@ -399,7 +463,7 @@ export function registerWorktreeHandlers(ipcMain: IpcMain, db: Database): void {
           const stepNum = hasChanges ? 2 : 1
           steps.push(`Step ${stepNum}: Resolve merge conflicts in ${projectPath}
 Conflicted files:
-${result.conflictedFiles.map(f => `- ${f}`).join('\n')}
+${result.conflictedFiles.map((f) => `- ${f}`).join('\n')}
 
 - cd "${projectPath}"
 - Read each conflicted file
@@ -449,9 +513,16 @@ ${steps.join('\n\n')}`
     return getConflictedFiles(path)
   })
 
-  ipcMain.handle('git:getWorkingDiff', (_, path: string, opts?: { contextLines?: string; ignoreWhitespace?: boolean; fromSha?: string; toSha?: string }) => {
-    return getWorkingDiff(path, opts)
-  })
+  ipcMain.handle(
+    'git:getWorkingDiff',
+    (
+      _,
+      path: string,
+      opts?: { contextLines?: string; ignoreWhitespace?: boolean; fromSha?: string; toSha?: string }
+    ) => {
+      return getWorkingDiff(path, opts)
+    }
+  )
 
   ipcMain.handle('git:stageFile', (_, path: string, filePath: string) => {
     return stageFile(path, filePath)
@@ -473,9 +544,18 @@ ${steps.join('\n\n')}`
     return unstageAll(path)
   })
 
-  ipcMain.handle('git:getFileDiff', (_, repoPath: string, filePath: string, staged: boolean, opts?: { contextLines?: string; ignoreWhitespace?: boolean }) => {
-    return getFileDiff(repoPath, filePath, staged, opts)
-  })
+  ipcMain.handle(
+    'git:getFileDiff',
+    (
+      _,
+      repoPath: string,
+      filePath: string,
+      staged: boolean,
+      opts?: { contextLines?: string; ignoreWhitespace?: boolean }
+    ) => {
+      return getFileDiff(repoPath, filePath, staged, opts)
+    }
+  )
 
   ipcMain.handle('git:getUntrackedFileDiff', (_, repoPath: string, filePath: string) => {
     return getUntrackedFileDiff(repoPath, filePath)
@@ -485,9 +565,12 @@ ${steps.join('\n\n')}`
     return getConflictContent(repoPath, filePath)
   })
 
-  ipcMain.handle('git:writeResolvedFile', (_, repoPath: string, filePath: string, content: string) => {
-    writeResolvedFile(repoPath, filePath, content)
-  })
+  ipcMain.handle(
+    'git:writeResolvedFile',
+    (_, repoPath: string, filePath: string, content: string) => {
+      writeResolvedFile(repoPath, filePath, content)
+    }
+  )
 
   ipcMain.handle('git:commitFiles', (_, repoPath: string, message: string) => {
     return commitFiles(repoPath, message)
@@ -495,7 +578,14 @@ ${steps.join('\n\n')}`
 
   ipcMain.handle(
     'git:analyzeConflict',
-    async (_, mode: string, filePath: string, base: string | null, ours: string | null, theirs: string | null): Promise<ConflictAnalysis> => {
+    async (
+      _,
+      mode: string,
+      filePath: string,
+      base: string | null,
+      ours: string | null,
+      theirs: string | null
+    ): Promise<ConflictAnalysis> => {
       const prompt = `Analyze this merge conflict for file "${filePath}".
 
 BASE (common ancestor):
@@ -525,7 +615,10 @@ SUMMARY: <2-3 sentences explaining what each branch changed and why they conflic
       if (sepIdx === -1) {
         return { summary: result, suggestion: '' }
       }
-      const summary = result.slice(0, sepIdx).replace(/^SUMMARY:\s*/i, '').trim()
+      const summary = result
+        .slice(0, sepIdx)
+        .replace(/^SUMMARY:\s*/i, '')
+        .trim()
       const suggestion = result.slice(sepIdx + '---RESOLUTION---'.length).trim()
       return { summary, suggestion }
     }
@@ -576,7 +669,7 @@ SUMMARY: <2-3 sentences explaining what each branch changed and why they conflic
 
   ipcMain.handle('git:isDirty', async (_, path: string) => {
     const summary = await getStatusSummary(path)
-    return (summary.staged + summary.unstaged + summary.untracked) > 0
+    return summary.staged + summary.unstaged + summary.untracked > 0
   })
 
   ipcMain.handle('git:getRemoteUrl', (_, path: string) => {
@@ -641,9 +734,12 @@ SUMMARY: <2-3 sentences explaining what each branch changed and why they conflic
     return mergeFrom(path, branch)
   })
 
-  ipcMain.handle('git:getDiffStats', withResultDedup((_, path: string, ref: string) => {
-    return getDiffStats(path, ref)
-  }))
+  ipcMain.handle(
+    'git:getDiffStats',
+    withResultDedup((_, path: string, ref: string) => {
+      return getDiffStats(path, ref)
+    })
+  )
 
   ipcMain.handle('git:getWorktreeMetadata', (_, path: string) => {
     return getWorktreeMetadata(path)
@@ -665,10 +761,17 @@ SUMMARY: <2-3 sentences explaining what each branch changed and why they conflic
     return getIgnoredFileTree(repoPath)
   })
 
-  ipcMain.handle('git:copyIgnoredFiles', (_, repoPath: string, worktreePath: string, paths: string[], mode?: 'all' | 'custom') => {
-    return copyIgnoredFiles(repoPath, worktreePath, mode ?? (paths.length > 0 ? 'custom' : 'all'), paths)
-  })
-
+  ipcMain.handle(
+    'git:copyIgnoredFiles',
+    (_, repoPath: string, worktreePath: string, paths: string[], mode?: 'all' | 'custom') => {
+      return copyIgnoredFiles(
+        repoPath,
+        worktreePath,
+        mode ?? (paths.length > 0 ? 'custom' : 'all'),
+        paths
+      )
+    }
+  )
 
   // Stable hash that excludes time-sensitive fields (relativeDate strings drift
   // over time even when commits are identical — would defeat dedup).
@@ -678,10 +781,15 @@ SUMMARY: <2-3 sentences explaining what each branch changed and why they conflic
       baseBranch: g.baseBranch,
       branches: g.branches,
       commits: g.commits.map((c) => ({
-        h: c.hash, p: c.parents, b: c.branch,
-        r: c.branchRefs, t: c.tags,
-        bt: c.isBranchTip, hd: c.isHead, m: c.mergedFrom ?? null,
-      })),
+        h: c.hash,
+        p: c.parents,
+        b: c.branch,
+        r: c.branchRefs,
+        t: c.tags,
+        bt: c.isBranchTip,
+        hd: c.isHead,
+        m: c.mergedFrom ?? null
+      }))
     })
   }
   const hashForkGraph = (r: ForkGraphResult | null): string => {
@@ -690,36 +798,65 @@ SUMMARY: <2-3 sentences explaining what each branch changed and why they conflic
       forkPoint: r.forkPoint,
       featureCount: r.featureCount,
       baseCount: r.baseCount,
-      graph: hashResolvedGraph(r.graph),
+      graph: hashResolvedGraph(r.graph)
     })
   }
 
-  ipcMain.handle('git:getResolvedCommitDag', withResultDedup(
-    (_, path: string, limit: number, branches: string[] | undefined, baseBranch: string) => getResolvedCommitDag(path, limit, branches, baseBranch),
-    { hashFn: hashResolvedGraph }
-  ))
+  ipcMain.handle(
+    'git:getResolvedCommitDag',
+    withResultDedup(
+      (_, path: string, limit: number, branches: string[] | undefined, baseBranch: string) =>
+        getResolvedCommitDag(path, limit, branches, baseBranch),
+      { hashFn: hashResolvedGraph }
+    )
+  )
 
-  ipcMain.handle('git:getResolvedForkGraph', withResultDedup(
-    (_, targetPath: string, repoPath: string, activeBranch: string, compareBranch: string, activeBranchLabel: string, compareBranchLabel: string) => getResolvedForkGraph(targetPath, repoPath, activeBranch, compareBranch, activeBranchLabel, compareBranchLabel),
-    { hashFn: hashForkGraph }
-  ))
+  ipcMain.handle(
+    'git:getResolvedForkGraph',
+    withResultDedup(
+      (
+        _,
+        targetPath: string,
+        repoPath: string,
+        activeBranch: string,
+        compareBranch: string,
+        activeBranchLabel: string,
+        compareBranchLabel: string
+      ) =>
+        getResolvedForkGraph(
+          targetPath,
+          repoPath,
+          activeBranch,
+          compareBranch,
+          activeBranchLabel,
+          compareBranchLabel
+        ),
+      { hashFn: hashForkGraph }
+    )
+  )
 
   ipcMain.handle('git:getResolvedUpstreamGraph', (_, repoPath: string, branch: string) => {
     return getResolvedUpstreamGraph(repoPath, branch)
   })
 
-  ipcMain.handle('git:getResolvedRecentCommits', (_, path: string, count: number, branchName: string) => {
-    return getResolvedRecentCommits(path, count, branchName)
-  })
+  ipcMain.handle(
+    'git:getResolvedRecentCommits',
+    (_, path: string, count: number, branchName: string) => {
+      return getResolvedRecentCommits(path, count, branchName)
+    }
+  )
 
   // Stash operations
   ipcMain.handle('git:listStashes', (_, repoPath: string) => {
     return listStashes(repoPath)
   })
 
-  ipcMain.handle('git:createStash', (_, repoPath: string, message: string, includeUntracked: boolean, keepIndex: boolean) => {
-    return createStash(repoPath, message, includeUntracked, keepIndex)
-  })
+  ipcMain.handle(
+    'git:createStash',
+    (_, repoPath: string, message: string, includeUntracked: boolean, keepIndex: boolean) => {
+      return createStash(repoPath, message, includeUntracked, keepIndex)
+    }
+  )
 
   ipcMain.handle('git:applyStash', (_, repoPath: string, index: number) => {
     return applyStash(repoPath, index)
@@ -733,9 +870,12 @@ SUMMARY: <2-3 sentences explaining what each branch changed and why they conflic
     return dropStash(repoPath, index)
   })
 
-  ipcMain.handle('git:branchFromStash', (_, repoPath: string, index: number, branchName: string) => {
-    return branchFromStash(repoPath, index, branchName)
-  })
+  ipcMain.handle(
+    'git:branchFromStash',
+    (_, repoPath: string, index: number, branchName: string) => {
+      return branchFromStash(repoPath, index, branchName)
+    }
+  )
 
   ipcMain.handle('git:getStashDiff', (_, repoPath: string, index: number) => {
     return getStashDiff(repoPath, index)
@@ -750,9 +890,12 @@ SUMMARY: <2-3 sentences explaining what each branch changed and why they conflic
     return hasGithubRemote(repoPath)
   })
 
-  ipcMain.handle('git:listOpenPrs', withResultDedup((_, repoPath: string) => {
-    return listOpenPrs(repoPath)
-  }))
+  ipcMain.handle(
+    'git:listOpenPrs',
+    withResultDedup((_, repoPath: string) => {
+      return listOpenPrs(repoPath)
+    })
+  )
 
   ipcMain.handle('git:getPrByUrl', (_, repoPath: string, url: string) => {
     return getPrByUrl(repoPath, url)

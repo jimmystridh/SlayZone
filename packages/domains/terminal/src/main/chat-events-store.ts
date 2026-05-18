@@ -16,9 +16,11 @@ export function persistChatEvent(
   event: AgentEvent
 ): void {
   // INSERT OR REPLACE so a respawn that re-uses a seq overwrites cleanly.
-  db.prepare(
-    'INSERT OR REPLACE INTO chat_events (tab_id, seq, event) VALUES (?, ?, ?)'
-  ).run(tabId, seq, JSON.stringify(event))
+  db.prepare('INSERT OR REPLACE INTO chat_events (tab_id, seq, event) VALUES (?, ?, ?)').run(
+    tabId,
+    seq,
+    JSON.stringify(event)
+  )
 
   // Retention: keep newest MAX rows per tab. Cheap because seq is monotonic.
   db.prepare(

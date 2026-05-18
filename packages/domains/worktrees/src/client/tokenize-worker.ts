@@ -22,24 +22,44 @@ export interface TokenizeRequest {
   path: string
 }
 
-export type TokenizeResponse =
-  | { id: string; spans: HlSpan[][] }
-  | { id: string; error: string }
+export type TokenizeResponse = { id: string; spans: HlSpan[][] } | { id: string; error: string }
 
 function getLanguageByExt(ext: string | undefined): LanguageSupport | null {
   switch (ext?.toLowerCase()) {
-    case 'js': case 'jsx': case 'mjs': case 'cjs': return javascript()
-    case 'ts': case 'mts': case 'cts': return javascript({ typescript: true })
-    case 'tsx': return javascript({ typescript: true, jsx: true })
-    case 'json': return json()
-    case 'css': case 'scss': case 'less': return css()
-    case 'html': case 'htm': return html()
-    case 'md': case 'mdx': return markdown()
-    case 'py': return python()
-    case 'go': return go()
-    case 'yaml': case 'yml': return yaml()
-    case 'sql': return sql()
-    default: return null
+    case 'js':
+    case 'jsx':
+    case 'mjs':
+    case 'cjs':
+      return javascript()
+    case 'ts':
+    case 'mts':
+    case 'cts':
+      return javascript({ typescript: true })
+    case 'tsx':
+      return javascript({ typescript: true, jsx: true })
+    case 'json':
+      return json()
+    case 'css':
+    case 'scss':
+    case 'less':
+      return css()
+    case 'html':
+    case 'htm':
+      return html()
+    case 'md':
+    case 'mdx':
+      return markdown()
+    case 'py':
+      return python()
+    case 'go':
+      return go()
+    case 'yaml':
+    case 'yml':
+      return yaml()
+    case 'sql':
+      return sql()
+    default:
+      return null
   }
 }
 
@@ -100,7 +120,10 @@ self.addEventListener('message', (event: MessageEvent<TokenizeRequest>) => {
     const response: TokenizeResponse = { id, spans }
     ;(self as unknown as Worker).postMessage(response)
   } catch (err) {
-    const response: TokenizeResponse = { id, error: err instanceof Error ? err.message : String(err) }
+    const response: TokenizeResponse = {
+      id,
+      error: err instanceof Error ? err.message : String(err)
+    }
     ;(self as unknown as Worker).postMessage(response)
   }
 })

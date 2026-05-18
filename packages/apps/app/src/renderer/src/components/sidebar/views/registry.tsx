@@ -10,7 +10,7 @@ export const viewRegistry: SidebarView[] = [
     icon: LayoutGrid,
     width: 'w-18',
     footerLayout: 'vertical',
-    render: (ctx) => <ProjectsRailView {...ctx} />,
+    render: (ctx) => <ProjectsRailView {...ctx} />
   },
   {
     id: 'tree',
@@ -22,8 +22,8 @@ export const viewRegistry: SidebarView[] = [
     defaultWidth: 384,
     minWidth: 220,
     maxWidth: 720,
-    render: (ctx) => <TreeView {...ctx} />,
-  },
+    render: (ctx) => <TreeView {...ctx} />
+  }
 ]
 
 export const getView = (id: string): SidebarView =>

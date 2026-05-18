@@ -3,13 +3,33 @@ import type { IpcMain } from 'electron'
 import type { Database } from 'better-sqlite3'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
-import { createPty, writePty, submitPty, resizePty, killPty, hasPty, getBuffer, clearBuffer, getBufferSince, listPtys, getState, setDatabase, setTerminalTheme, testExecutionContext } from './pty-manager'
+import {
+  createPty,
+  writePty,
+  submitPty,
+  resizePty,
+  killPty,
+  hasPty,
+  getBuffer,
+  clearBuffer,
+  getBufferSince,
+  listPtys,
+  getState,
+  setDatabase,
+  setTerminalTheme,
+  testExecutionContext
+} from './pty-manager'
 import { listSessions, getSessionState } from './session-registry'
 import { listChatSessions } from './chat-transport-manager'
 
 const execFileAsync = promisify(execFile)
 import { getAdapter, type ExecutionContext } from './adapters'
-import type { TerminalMode, TerminalModeInfo, CreateTerminalModeInput, UpdateTerminalModeInput } from '@slayzone/terminal/shared'
+import type {
+  TerminalMode,
+  TerminalModeInfo,
+  CreateTerminalModeInput,
+  UpdateTerminalModeInput
+} from '@slayzone/terminal/shared'
 import { DEFAULT_TERMINAL_MODES } from '@slayzone/terminal/shared'
 import { parseShellArgs } from './adapters/flag-parser'
 import { listCcsProfiles, setShellOverride } from './shell-env'
@@ -31,7 +51,11 @@ interface PtyCreateOpts {
 function mapModeRow(row: any): TerminalModeInfo {
   let usageConfig = null
   if (row.usage_config) {
-    try { usageConfig = JSON.parse(row.usage_config) } catch { /* ignore corrupt */ }
+    try {
+      usageConfig = JSON.parse(row.usage_config)
+    } catch {
+      /* ignore corrupt */
+    }
   }
   return {
     id: row.id,
@@ -46,7 +70,7 @@ function mapModeRow(row: any): TerminalModeInfo {
     order: row.order,
     patternWorking: row.pattern_working,
     patternError: row.pattern_error,
-    usageConfig,
+    usageConfig
   }
 }
 
@@ -106,70 +130,77 @@ export function registerPtyHandlers(ipcMain: IpcMain, db: Database): void {
     return mapModeRow(row)
   })
 
-  ipcMain.handle('terminalModes:update', async (_, id: string, updates: UpdateTerminalModeInput) => {
-    const builtinRow = db.prepare('SELECT is_builtin FROM terminal_modes WHERE id = ?').get(id) as { is_builtin: number } | undefined
-    const isBuiltin = Boolean(builtinRow?.is_builtin)
+  ipcMain.handle(
+    'terminalModes:update',
+    async (_, id: string, updates: UpdateTerminalModeInput) => {
+      const builtinRow = db.prepare('SELECT is_builtin FROM terminal_modes WHERE id = ?').get(id) as
+        | { is_builtin: number }
+        | undefined
+      const isBuiltin = Boolean(builtinRow?.is_builtin)
 
-    const sets: string[] = []
-    const params: any[] = []
+      const sets: string[] = []
+      const params: any[] = []
 
-    if (updates.label !== undefined && !isBuiltin) {
-      sets.push('label = ?')
-      params.push(updates.label)
-    }
-    if (updates.type !== undefined && !isBuiltin) {
-      sets.push('type = ?')
-      params.push(updates.type)
-    }
-    if (updates.initialCommand !== undefined && !isBuiltin) {
-      sets.push('initial_command = ?')
-      params.push(updates.initialCommand)
-    }
-    if (updates.resumeCommand !== undefined && !isBuiltin) {
-      sets.push('resume_command = ?')
-      params.push(updates.resumeCommand ?? null)
-    }
-    if (updates.headlessCommand !== undefined) {
-      sets.push('headless_command = ?')
-      params.push(updates.headlessCommand ?? null)
-    }
-    if (updates.defaultFlags !== undefined) {
-      sets.push('default_flags = ?')
-      params.push(updates.defaultFlags)
-    }
-    if (updates.enabled !== undefined) {
-      sets.push('enabled = ?')
-      params.push(updates.enabled ? 1 : 0)
-    }
-    if (updates.order !== undefined) {
-      sets.push(' "order" = ?')
-      params.push(updates.order)
-    }
-    if (updates.patternWorking !== undefined) {
-      sets.push('pattern_working = ?')
-      params.push(updates.patternWorking ?? null)
-    }
-    if (updates.patternError !== undefined) {
-      sets.push('pattern_error = ?')
-      params.push(updates.patternError ?? null)
-    }
-    if (updates.usageConfig !== undefined) {
-      sets.push('usage_config = ?')
-      params.push(updates.usageConfig ? JSON.stringify(updates.usageConfig) : null)
-    }
+      if (updates.label !== undefined && !isBuiltin) {
+        sets.push('label = ?')
+        params.push(updates.label)
+      }
+      if (updates.type !== undefined && !isBuiltin) {
+        sets.push('type = ?')
+        params.push(updates.type)
+      }
+      if (updates.initialCommand !== undefined && !isBuiltin) {
+        sets.push('initial_command = ?')
+        params.push(updates.initialCommand)
+      }
+      if (updates.resumeCommand !== undefined && !isBuiltin) {
+        sets.push('resume_command = ?')
+        params.push(updates.resumeCommand ?? null)
+      }
+      if (updates.headlessCommand !== undefined) {
+        sets.push('headless_command = ?')
+        params.push(updates.headlessCommand ?? null)
+      }
+      if (updates.defaultFlags !== undefined) {
+        sets.push('default_flags = ?')
+        params.push(updates.defaultFlags)
+      }
+      if (updates.enabled !== undefined) {
+        sets.push('enabled = ?')
+        params.push(updates.enabled ? 1 : 0)
+      }
+      if (updates.order !== undefined) {
+        sets.push(' "order" = ?')
+        params.push(updates.order)
+      }
+      if (updates.patternWorking !== undefined) {
+        sets.push('pattern_working = ?')
+        params.push(updates.patternWorking ?? null)
+      }
+      if (updates.patternError !== undefined) {
+        sets.push('pattern_error = ?')
+        params.push(updates.patternError ?? null)
+      }
+      if (updates.usageConfig !== undefined) {
+        sets.push('usage_config = ?')
+        params.push(updates.usageConfig ? JSON.stringify(updates.usageConfig) : null)
+      }
 
-    if (sets.length > 0) {
-      sets.push('updated_at = datetime(\'now\')')
-      params.push(id)
-      db.prepare(`UPDATE terminal_modes SET ${sets.join(', ')} WHERE id = ?`).run(...params)
-    }
+      if (sets.length > 0) {
+        sets.push("updated_at = datetime('now')")
+        params.push(id)
+        db.prepare(`UPDATE terminal_modes SET ${sets.join(', ')} WHERE id = ?`).run(...params)
+      }
 
-    const updatedRow = db.prepare('SELECT * FROM terminal_modes WHERE id = ?').get(id)
-    return updatedRow ? mapModeRow(updatedRow) : null
-  })
+      const updatedRow = db.prepare('SELECT * FROM terminal_modes WHERE id = ?').get(id)
+      return updatedRow ? mapModeRow(updatedRow) : null
+    }
+  )
 
   ipcMain.handle('terminalModes:delete', async (_, id: string) => {
-    const deleteRow = db.prepare('SELECT is_builtin FROM terminal_modes WHERE id = ?').get(id) as { is_builtin: number } | undefined
+    const deleteRow = db.prepare('SELECT is_builtin FROM terminal_modes WHERE id = ?').get(id) as
+      | { is_builtin: number }
+      | undefined
     if (deleteRow?.is_builtin) {
       return false // Built-in modes cannot be deleted
     }
@@ -222,46 +253,43 @@ export function registerPtyHandlers(ipcMain: IpcMain, db: Database): void {
     })()
   })
 
-  ipcMain.handle(
-    'pty:create',
-    async (event, opts: PtyCreateOpts) => {
-      const win = BrowserWindow.fromWebContents(event.sender)
-      if (!win) return { success: false, error: 'No window found' }
+  ipcMain.handle('pty:create', async (event, opts: PtyCreateOpts) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win) return { success: false, error: 'No window found' }
 
-      let providerArgs: string[] = []
-      try {
-        providerArgs = parseShellArgs(opts.providerFlags)
-      } catch (err) {
-        console.warn('[pty:create] Invalid provider flags, ignoring:', (err as Error).message)
-      }
-
-      // Look up mode info to get type, templates, and default flags
-      const modeId = opts.mode || 'claude-code'
-
-      const modeRow = db.prepare('SELECT * FROM terminal_modes WHERE id = ?').get(modeId)
-      const modeInfo = modeRow ? mapModeRow(modeRow) : undefined
-
-      return createPty({
-        win,
-        sessionId: opts.sessionId,
-        cwd: opts.cwd,
-        conversationId: opts.conversationId,
-        existingConversationId: opts.existingConversationId,
-        mode: modeId as TerminalMode,
-        initialPrompt: opts.initialPrompt,
-        providerArgs,
-        executionContext: opts.executionContext,
-        type: modeInfo?.type,
-        initialCommand: modeInfo?.initialCommand,
-        resumeCommand: modeInfo?.resumeCommand,
-        defaultFlags: modeInfo?.defaultFlags,
-        patternWorking: modeInfo?.patternWorking,
-        patternError: modeInfo?.patternError,
-        cols: opts.cols,
-        rows: opts.rows,
-      })
+    let providerArgs: string[] = []
+    try {
+      providerArgs = parseShellArgs(opts.providerFlags)
+    } catch (err) {
+      console.warn('[pty:create] Invalid provider flags, ignoring:', (err as Error).message)
     }
-  )
+
+    // Look up mode info to get type, templates, and default flags
+    const modeId = opts.mode || 'claude-code'
+
+    const modeRow = db.prepare('SELECT * FROM terminal_modes WHERE id = ?').get(modeId)
+    const modeInfo = modeRow ? mapModeRow(modeRow) : undefined
+
+    return createPty({
+      win,
+      sessionId: opts.sessionId,
+      cwd: opts.cwd,
+      conversationId: opts.conversationId,
+      existingConversationId: opts.existingConversationId,
+      mode: modeId as TerminalMode,
+      initialPrompt: opts.initialPrompt,
+      providerArgs,
+      executionContext: opts.executionContext,
+      type: modeInfo?.type,
+      initialCommand: modeInfo?.initialCommand,
+      resumeCommand: modeInfo?.resumeCommand,
+      defaultFlags: modeInfo?.defaultFlags,
+      patternWorking: modeInfo?.patternWorking,
+      patternError: modeInfo?.patternError,
+      cols: opts.cols,
+      rows: opts.rows
+    })
+  })
 
   ipcMain.handle('pty:testExecutionContext', async (_, context: ExecutionContext) => {
     return testExecutionContext(context)
@@ -284,7 +312,7 @@ export function registerPtyHandlers(ipcMain: IpcMain, db: Database): void {
     return submitPty(sessionId, text)
   })
 
-ipcMain.handle('pty:resize', (_, sessionId: string, cols: number, rows: number) => {
+  ipcMain.handle('pty:resize', (_, sessionId: string, cols: number, rows: number) => {
     return resizePty(sessionId, cols, rows)
   })
 
@@ -328,9 +356,15 @@ ipcMain.handle('pty:resize', (_, sessionId: string, cols: number, rows: number) 
     return getSessionState(sessionId)
   })
 
-  ipcMain.handle('pty:set-theme', (_, theme: { foreground: string; background: string; cursor: string; ansi?: readonly string[] }) => {
-    setTerminalTheme(theme)
-  })
+  ipcMain.handle(
+    'pty:set-theme',
+    (
+      _,
+      theme: { foreground: string; background: string; cursor: string; ansi?: readonly string[] }
+    ) => {
+      setTerminalTheme(theme)
+    }
+  )
 
   ipcMain.handle('pty:validate', async (_, mode: TerminalMode) => {
     const modeRow = db.prepare('SELECT * FROM terminal_modes WHERE id = ?').get(mode)
@@ -340,8 +374,8 @@ ipcMain.handle('pty:resize', (_, sessionId: string, cols: number, rows: number) 
       type: modeInfo?.type,
       patterns: {
         working: modeInfo?.patternWorking,
-        error: modeInfo?.patternError,
-      },
+        error: modeInfo?.patternError
+      }
     })
     return adapter.validate ? adapter.validate() : []
   })

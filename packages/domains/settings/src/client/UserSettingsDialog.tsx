@@ -24,7 +24,10 @@ function TelemetrySettingsTab() {
   const { tier, setTier } = useTelemetry()
   return (
     <div className="space-y-6">
-      <SettingsTabIntro title="Telemetry" description="Choose what product usage data is collected. Telemetry helps improve reliability while honoring your selected privacy tier." />
+      <SettingsTabIntro
+        title="Telemetry"
+        description="Choose what product usage data is collected. Telemetry helps improve reliability while honoring your selected privacy tier."
+      />
       <TelemetrySettings tier={tier} onTierChange={setTier} />
     </div>
   )
@@ -46,14 +49,22 @@ export function UserSettingsDialog({
   onTabChange
 }: UserSettingsDialogProps) {
   // Modes list is SHARED because multiple tabs (AI Providers, Panels) need it
-  const { modes, createMode, updateMode, deleteMode, testMode, restoreDefaults, resetToDefaultState } = useTerminalModes()
-  
+  const {
+    modes,
+    createMode,
+    updateMode,
+    deleteMode,
+    testMode,
+    restoreDefaults,
+    resetToDefaultState
+  } = useTerminalModes()
+
   const [activeTab, setActiveTab] = useState(initialTab)
   const [defaultTerminalMode, setDefaultTerminalMode] = useState<TerminalMode>('claude-code')
 
   useEffect(() => {
     if (open) {
-      window.api.settings.get('default_terminal_mode').then(m => {
+      window.api.settings.get('default_terminal_mode').then((m) => {
         if (m) setDefaultTerminalMode(m as TerminalMode)
       })
     }
@@ -78,9 +89,7 @@ export function UserSettingsDialog({
     {
       key: 'appearance',
       label: 'Appearance',
-      children: [
-        { key: 'appearance/layout', label: 'Layout' },
-      ]
+      children: [{ key: 'appearance/layout', label: 'Layout' }]
     },
     { key: 'worktrees', label: 'Worktrees' },
     { key: 'ai-providers', label: 'Providers' },
@@ -91,7 +100,7 @@ export function UserSettingsDialog({
         { key: 'panels/terminal', label: 'Agent' },
         { key: 'panels/browser', label: 'Browser' },
         { key: 'panels/editor', label: 'Editor' },
-        { key: 'panels/git', label: 'Git' },
+        { key: 'panels/git', label: 'Git' }
       ]
     },
     { key: 'data', label: 'Import & Export' },
@@ -105,11 +114,20 @@ export function UserSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent size="project-settings" showCloseButton={false} aria-label="Settings" className="overflow-hidden p-0">
+      <DialogContent
+        size="project-settings"
+        showCloseButton={false}
+        aria-label="Settings"
+        className="overflow-hidden p-0"
+      >
         <div className="border-b px-6 py-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-lg leading-none font-semibold">Settings</h2>
-            <button type="button" className="hover:bg-accent rounded-xs p-1 opacity-70 transition-opacity hover:opacity-100" onClick={() => onOpenChange(false)}>
+            <button
+              type="button"
+              className="hover:bg-accent rounded-xs p-1 opacity-70 transition-opacity hover:opacity-100"
+              onClick={() => onOpenChange(false)}
+            >
               <XIcon className="size-4" />
             </button>
           </div>
@@ -119,9 +137,7 @@ export function UserSettingsDialog({
           <div className="mx-auto w-full max-w-4xl space-y-8">
             {activeTab === 'worktrees' && <WorktreesSettingsTab />}
 
-            {activeTab === 'appearance' && (
-              <AppearanceSettingsTab />
-            )}
+            {activeTab === 'appearance' && <AppearanceSettingsTab />}
 
             {activeTab === 'appearance/layout' && <LayoutSettingsTab />}
 

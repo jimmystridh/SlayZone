@@ -32,7 +32,8 @@ function test(name: string, fn: () => void) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${String(actual)} to be ${String(expected)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${String(actual)} to be ${String(expected)}`)
     }
   }
 }
@@ -44,31 +45,39 @@ const unlinkedMissing: ProviderSyncEntry = { syncHealth: 'not_synced', syncReaso
 const unlinkedUnmanaged: ProviderSyncEntry = { syncHealth: 'unmanaged', syncReason: 'not_linked' }
 
 test('aggregateProviderSyncHealth prefers stale over other linked states', () => {
-  expect(aggregateProviderSyncHealth({
-    claude: linkedSynced,
-    codex: linkedStale
-  })).toBe('stale')
+  expect(
+    aggregateProviderSyncHealth({
+      claude: linkedSynced,
+      codex: linkedStale
+    })
+  ).toBe('stale')
 })
 
 test('aggregateProviderSyncHealth ignores unlinked not_synced entries', () => {
-  expect(aggregateProviderSyncHealth({
-    claude: linkedSynced,
-    codex: unlinkedMissing
-  })).toBe('synced')
+  expect(
+    aggregateProviderSyncHealth({
+      claude: linkedSynced,
+      codex: unlinkedMissing
+    })
+  ).toBe('synced')
 })
 
 test('aggregateProviderSyncHealth surfaces unmanaged when present', () => {
-  expect(aggregateProviderSyncHealth({
-    codex: linkedSynced,
-    claude: unlinkedUnmanaged
-  })).toBe('unmanaged')
+  expect(
+    aggregateProviderSyncHealth({
+      codex: linkedSynced,
+      claude: unlinkedUnmanaged
+    })
+  ).toBe('unmanaged')
 })
 
 test('aggregateProviderSyncHealth falls back to not_synced when only unlinked missing files exist', () => {
-  expect(aggregateProviderSyncHealth({
-    claude: unlinkedMissing,
-    codex: unlinkedMissing
-  })).toBe('not_synced')
+  expect(
+    aggregateProviderSyncHealth({
+      claude: unlinkedMissing,
+      codex: unlinkedMissing
+    })
+  ).toBe('not_synced')
 })
 
 test('toSyncBadgeLabel maps every sync health to stable text', () => {
@@ -101,12 +110,39 @@ test('hasPendingProviderSync returns true when any provider is not synced', () =
   expect(hasPendingProviderSync(['not_synced'])).toBe(true)
 })
 
-const ROW_ORDER: CliProvider[] = ['claude', 'codex', 'cursor', 'gemini', 'opencode', 'qwen', 'copilot']
+const ROW_ORDER: CliProvider[] = [
+  'claude',
+  'codex',
+  'cursor',
+  'gemini',
+  'opencode',
+  'qwen',
+  'copilot'
+]
 
-const claudeStale: ProviderGroupEntry = { path: '.claude/skills/foo/SKILL.md', syncHealth: 'stale', syncReason: 'external_edit', diskContent: 'CLAUDE-DISK' }
-const codexStaleAgents: ProviderGroupEntry = { path: '.agents/skills/foo/SKILL.md', syncHealth: 'stale', syncReason: 'external_edit', diskContent: 'AGENTS-DISK' }
-const geminiStaleAgents: ProviderGroupEntry = { path: '.agents/skills/foo/SKILL.md', syncHealth: 'stale', syncReason: 'external_edit', diskContent: 'AGENTS-DISK' }
-const cursorSynced: ProviderGroupEntry = { path: '.cursor/skills/foo/SKILL.md', syncHealth: 'synced', syncReason: null }
+const claudeStale: ProviderGroupEntry = {
+  path: '.claude/skills/foo/SKILL.md',
+  syncHealth: 'stale',
+  syncReason: 'external_edit',
+  diskContent: 'CLAUDE-DISK'
+}
+const codexStaleAgents: ProviderGroupEntry = {
+  path: '.agents/skills/foo/SKILL.md',
+  syncHealth: 'stale',
+  syncReason: 'external_edit',
+  diskContent: 'AGENTS-DISK'
+}
+const geminiStaleAgents: ProviderGroupEntry = {
+  path: '.agents/skills/foo/SKILL.md',
+  syncHealth: 'stale',
+  syncReason: 'external_edit',
+  diskContent: 'AGENTS-DISK'
+}
+const cursorSynced: ProviderGroupEntry = {
+  path: '.cursor/skills/foo/SKILL.md',
+  syncHealth: 'synced',
+  syncReason: null
+}
 
 test('groupProvidersByPath collapses codex + gemini sharing .agents/skills into one group', () => {
   const groups = groupProvidersByPath(
@@ -141,10 +177,7 @@ test('groupProvidersByPath filters out unlinked not_synced entries', () => {
 })
 
 test('groupProvidersByPath returns single-provider row when path is unique', () => {
-  const groups = groupProvidersByPath(
-    { claude: claudeStale, cursor: cursorSynced },
-    ROW_ORDER
-  )
+  const groups = groupProvidersByPath({ claude: claudeStale, cursor: cursorSynced }, ROW_ORDER)
   expect(groups.length).toBe(2)
   expect(groups[0].providers.join(',')).toBe('claude')
   expect(groups[1].providers.join(',')).toBe('cursor')

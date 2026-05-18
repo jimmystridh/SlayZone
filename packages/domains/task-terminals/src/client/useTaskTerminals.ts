@@ -33,7 +33,7 @@ function computeGroups(tabs: TerminalTab[]): TerminalGroup[] {
     groups.push({
       id,
       tabs: groupTabs,
-      isMain: groupTabs.some(t => t.isMain)
+      isMain: groupTabs.some((t) => t.isMain)
     })
   }
 
@@ -47,7 +47,10 @@ function computeGroups(tabs: TerminalTab[]): TerminalGroup[] {
   return groups
 }
 
-export function useTaskTerminals(taskId: string, defaultMode: TerminalMode): UseTaskTerminalsResult {
+export function useTaskTerminals(
+  taskId: string,
+  defaultMode: TerminalMode
+): UseTaskTerminalsResult {
   const [tabs, setTabs] = useState<TerminalTab[]>([])
   const [activeGroupId, setActiveGroupId] = useState<string>(taskId) // Main group id = taskId
   const closingTabIdsRef = useRef<Set<string>>(new Set())
@@ -64,8 +67,8 @@ export function useTaskTerminals(taskId: string, defaultMode: TerminalMode): Use
         setTabs(loadedTabs)
         // Set active to main group if current active doesn't exist
         const loadedGroups = computeGroups(loadedTabs)
-        if (!loadedGroups.find(g => g.id === activeGroupId)) {
-          const mainGroup = loadedGroups.find(g => g.isMain)
+        if (!loadedGroups.find((g) => g.id === activeGroupId)) {
+          const mainGroup = loadedGroups.find((g) => g.isMain)
           if (mainGroup) setActiveGroupId(mainGroup.id)
         }
       } catch (err) {
@@ -84,7 +87,7 @@ export function useTaskTerminals(taskId: string, defaultMode: TerminalMode): Use
         const loadedTabs = await window.api.tabs.list(taskId)
         setTabs(loadedTabs)
         if (focusTabId) {
-          const target = loadedTabs.find(t => t.id === focusTabId)
+          const target = loadedTabs.find((t) => t.id === focusTabId)
           if (target) setActiveGroupId(target.groupId)
         }
       } catch (err) {
@@ -94,63 +97,72 @@ export function useTaskTerminals(taskId: string, defaultMode: TerminalMode): Use
   }, [taskId])
 
   // Create a new group with one terminal
-  const createTab = useCallback(async (mode?: TerminalMode): Promise<TerminalTab> => {
-    const newTab = await window.api.tabs.create({ taskId, mode: mode || 'terminal' })
-    setTabs(prev => [...prev, newTab])
-    setActiveGroupId(newTab.groupId)
-    return newTab
-  }, [taskId])
+  const createTab = useCallback(
+    async (mode?: TerminalMode): Promise<TerminalTab> => {
+      const newTab = await window.api.tabs.create({ taskId, mode: mode || 'terminal' })
+      setTabs((prev) => [...prev, newTab])
+      setActiveGroupId(newTab.groupId)
+      return newTab
+    },
+    [taskId]
+  )
 
   // Split: add a new pane to the same group as the target tab
   const splitTab = useCallback(async (tabId: string): Promise<TerminalTab | null> => {
     const newTab = await window.api.tabs.split(tabId)
     if (newTab) {
-      setTabs(prev => [...prev, newTab])
+      setTabs((prev) => [...prev, newTab])
     }
     return newTab
   }, [])
 
-  const closeTabInternal = useCallback(async (tabId: string, skipKill: boolean): Promise<boolean> => {
-    if (closingTabIdsRef.current.has(tabId)) return false
-    closingTabIdsRef.current.add(tabId)
-    try {
-      const success = await window.api.tabs.delete(tabId)
-      if (success) {
-        const sessionId = `${taskId}:${tabId}`
-        if (!skipKill) {
-          await window.api.pty.kill(sessionId)
-        }
-        // Reap chat session for this tab regardless of mode — chat:remove is
-        // a no-op when no session exists. Without this, a chat-mode tab's claude
-        // subprocess + in-memory session map entry leak until app shutdown.
-        try {
-          await window.api.chat?.remove(tabId)
-        } catch {
-          /* ignore — chat session may not exist */
-        }
+  const closeTabInternal = useCallback(
+    async (tabId: string, skipKill: boolean): Promise<boolean> => {
+      if (closingTabIdsRef.current.has(tabId)) return false
+      closingTabIdsRef.current.add(tabId)
+      try {
+        const success = await window.api.tabs.delete(tabId)
+        if (success) {
+          const sessionId = `${taskId}:${tabId}`
+          if (!skipKill) {
+            await window.api.pty.kill(sessionId)
+          }
+          // Reap chat session for this tab regardless of mode — chat:remove is
+          // a no-op when no session exists. Without this, a chat-mode tab's claude
+          // subprocess + in-memory session map entry leak until app shutdown.
+          try {
+            await window.api.chat?.remove(tabId)
+          } catch {
+            /* ignore — chat session may not exist */
+          }
 
-        setTabs(prev => {
-          const remaining = prev.filter(t => t.id !== tabId)
-          // If the closed tab's group is now empty, we'll handle group switching below
-          return remaining
-        })
+          setTabs((prev) => {
+            const remaining = prev.filter((t) => t.id !== tabId)
+            // If the closed tab's group is now empty, we'll handle group switching below
+            return remaining
+          })
 
-        // Check if we need to switch active group
-        setActiveGroupId(prev => {
-          // Recompute from the updated tabs to see if the group still exists
-          // We use functional updater on tabs to peek at current state
-          return prev // Will be corrected in the effect below if needed
-        })
+          // Check if we need to switch active group
+          setActiveGroupId((prev) => {
+            // Recompute from the updated tabs to see if the group still exists
+            // We use functional updater on tabs to peek at current state
+            return prev // Will be corrected in the effect below if needed
+          })
+        }
+        return success
+      } finally {
+        closingTabIdsRef.current.delete(tabId)
       }
-      return success
-    } finally {
-      closingTabIdsRef.current.delete(tabId)
-    }
-  }, [taskId])
+    },
+    [taskId]
+  )
 
-  const closeTab = useCallback(async (tabId: string): Promise<boolean> => {
-    return closeTabInternal(tabId, false)
-  }, [closeTabInternal])
+  const closeTab = useCallback(
+    async (tabId: string): Promise<boolean> => {
+      return closeTabInternal(tabId, false)
+    },
+    [closeTabInternal]
+  )
 
   // Auto-close secondary terminal tabs when their PTY exits.
   useEffect(() => {
@@ -172,31 +184,37 @@ export function useTaskTerminals(taskId: string, defaultMode: TerminalMode): Use
 
   // Correct activeGroupId if the active group no longer exists
   useEffect(() => {
-    const activeGroup = groups.find(g => g.id === activeGroupId)
+    const activeGroup = groups.find((g) => g.id === activeGroupId)
     if (!activeGroup && groups.length > 0) {
-      const mainGroup = groups.find(g => g.isMain)
+      const mainGroup = groups.find((g) => g.isMain)
       setActiveGroupId(mainGroup?.id ?? groups[0].id)
     }
   }, [groups, activeGroupId])
 
   // Move a pane to a different group (null = new standalone group)
-  const movePane = useCallback(async (tabId: string, targetGroupId: string | null): Promise<void> => {
-    const updated = await window.api.tabs.moveToGroup(tabId, targetGroupId)
-    if (updated) {
-      setTabs(prev => prev.map(t => t.id === tabId ? updated : t))
-    }
-  }, [])
+  const movePane = useCallback(
+    async (tabId: string, targetGroupId: string | null): Promise<void> => {
+      const updated = await window.api.tabs.moveToGroup(tabId, targetGroupId)
+      if (updated) {
+        setTabs((prev) => prev.map((t) => (t.id === tabId ? updated : t)))
+      }
+    },
+    []
+  )
 
   const renameTab = useCallback(async (tabId: string, label: string | null): Promise<void> => {
     const updated = await window.api.tabs.update({ id: tabId, label })
     if (updated) {
-      setTabs(prev => prev.map(t => t.id === tabId ? updated : t))
+      setTabs((prev) => prev.map((t) => (t.id === tabId ? updated : t)))
     }
   }, [])
 
-  const getSessionId = useCallback((tabId: string): string => {
-    return `${taskId}:${tabId}`
-  }, [taskId])
+  const getSessionId = useCallback(
+    (tabId: string): string => {
+      return `${taskId}:${tabId}`
+    },
+    [taskId]
+  )
 
   return {
     tabs,

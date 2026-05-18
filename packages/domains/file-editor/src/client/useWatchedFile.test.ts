@@ -23,7 +23,7 @@ function installFsStub(): FsStub {
     }),
     emit: (root, rel) => {
       for (const cb of listeners) cb(root, rel)
-    },
+    }
   }
   ;(globalThis as unknown as { window: { api: { fs: unknown } } }).window = { api: { fs: stub } }
   return stub
@@ -78,11 +78,15 @@ describe('useWatchedFile', () => {
     )
     await flushPromises()
 
-    act(() => { result.current.setContent('new') })
+    act(() => {
+      result.current.setContent('new')
+    })
     expect(result.current.dirty).toBe(true)
     expect(save).not.toHaveBeenCalled()
 
-    await act(async () => { vi.advanceTimersByTime(100) })
+    await act(async () => {
+      vi.advanceTimersByTime(100)
+    })
     await flushPromises()
 
     expect(save).toHaveBeenCalledWith('new')
@@ -98,8 +102,12 @@ describe('useWatchedFile', () => {
     )
     await flushPromises()
 
-    act(() => { result.current.setContent('blurred') })
-    await act(async () => { await result.current.onBlur() })
+    act(() => {
+      result.current.setContent('blurred')
+    })
+    await act(async () => {
+      await result.current.onBlur()
+    })
 
     expect(save).toHaveBeenCalledWith('blurred')
     expect(result.current.dirty).toBe(false)
@@ -117,7 +125,9 @@ describe('useWatchedFile', () => {
     expect(result.current.content).toBe('v1')
 
     diskContent = 'v2'
-    act(() => { fsStub.emit(ROOT, REL) })
+    act(() => {
+      fsStub.emit(ROOT, REL)
+    })
     await flushPromises()
 
     expect(result.current.content).toBe('v2')
@@ -134,9 +144,13 @@ describe('useWatchedFile', () => {
     )
     await flushPromises()
 
-    act(() => { result.current.setContent('local edit') })
+    act(() => {
+      result.current.setContent('local edit')
+    })
     diskContent = 'external edit'
-    act(() => { fsStub.emit(ROOT, REL) })
+    act(() => {
+      fsStub.emit(ROOT, REL)
+    })
     await flushPromises()
 
     expect(result.current.content).toBe('local edit')
@@ -154,13 +168,19 @@ describe('useWatchedFile', () => {
     )
     await flushPromises()
 
-    act(() => { result.current.setContent('local') })
+    act(() => {
+      result.current.setContent('local')
+    })
     diskContent = 'v2'
-    act(() => { fsStub.emit(ROOT, REL) })
+    act(() => {
+      fsStub.emit(ROOT, REL)
+    })
     await flushPromises()
     expect(result.current.diskChanged).toBe(true)
 
-    await act(async () => { await result.current.reloadFromDisk() })
+    await act(async () => {
+      await result.current.reloadFromDisk()
+    })
     expect(result.current.content).toBe('v2')
     expect(result.current.diskChanged).toBe(false)
     expect(result.current.dirty).toBe(false)
@@ -175,7 +195,9 @@ describe('useWatchedFile', () => {
     )
     await flushPromises()
 
-    act(() => { result.current.setContent('unsaved') })
+    act(() => {
+      result.current.setContent('unsaved')
+    })
     unmount()
     await flushPromises()
 
@@ -197,20 +219,28 @@ describe('useWatchedFile', () => {
     )
     await flushPromises()
 
-    act(() => { result.current.setContent('same') })
+    act(() => {
+      result.current.setContent('same')
+    })
     // Kick off first save (via debounce)
-    await act(async () => { vi.advanceTimersByTime(50) })
+    await act(async () => {
+      vi.advanceTimersByTime(50)
+    })
     expect(save).toHaveBeenCalledTimes(1)
 
     // Call onBlur while previous save is still in-flight with same content
-    act(() => { result.current.onBlur() })
+    act(() => {
+      result.current.onBlur()
+    })
     await flushPromises()
 
     // Still only one call — dedupe prevents double-save of same content
     expect(save).toHaveBeenCalledTimes(1)
 
     // Finish the save
-    act(() => { resolveSave?.() })
+    act(() => {
+      resolveSave?.()
+    })
     await flushPromises()
     expect(result.current.dirty).toBe(false)
   })
@@ -220,11 +250,10 @@ describe('useWatchedFile', () => {
     // Per-rel save closures — mirrors ProjectInstructions usage where save is
     // built via useCallback with provider in deps, so each rel has its own fn.
     const saveCalls: Array<{ rel: string; content: string }> = []
-    const makeSave = (rel: string) =>
-      async (content: string) => {
-        saveCalls.push({ rel, content })
-        contentMap[rel] = content
-      }
+    const makeSave = (rel: string) => async (content: string) => {
+      saveCalls.push({ rel, content })
+      contentMap[rel] = content
+    }
 
     const { result, rerender } = renderHook(
       ({ rel }: { rel: string }) => {
@@ -234,7 +263,7 @@ describe('useWatchedFile', () => {
           relPath: rel,
           read,
           save: makeSave(rel),
-          debounceMs: 5000,
+          debounceMs: 5000
         })
       },
       { initialProps: { rel: 'A.md' } }
@@ -243,7 +272,9 @@ describe('useWatchedFile', () => {
     expect(result.current.content).toBe('A-disk')
 
     // Edit A
-    act(() => { result.current.setContent('A-edited') })
+    act(() => {
+      result.current.setContent('A-edited')
+    })
 
     // Swap to B — cleanup should flush A through A's save closure
     rerender({ rel: 'B.md' })
@@ -274,23 +305,34 @@ describe('useWatchedFile', () => {
     await flushPromises()
 
     // First edit → debounce → save("v1") starts, not yet resolved
-    act(() => { result.current.setContent('v1') })
-    await act(async () => { vi.advanceTimersByTime(50) })
+    act(() => {
+      result.current.setContent('v1')
+    })
+    await act(async () => {
+      vi.advanceTimersByTime(50)
+    })
     expect(save).toHaveBeenCalledTimes(1)
     expect(save).toHaveBeenLastCalledWith('v1')
 
     // Edit more while save("v1") is in-flight
-    act(() => { result.current.setContent('v2') })
+    act(() => {
+      result.current.setContent('v2')
+    })
     expect(result.current.dirty).toBe(true)
 
     // Resolve the in-flight save. Baseline must NOT update to "v1" because
     // content has since moved on to "v2" → dirty must stay true.
-    await act(async () => { resolveSave?.(); await Promise.resolve() })
+    await act(async () => {
+      resolveSave?.()
+      await Promise.resolve()
+    })
     expect(result.current.dirty).toBe(true)
     expect(result.current.content).toBe('v2')
 
     // Next debounce fires a follow-up save with latest content
-    await act(async () => { vi.advanceTimersByTime(50) })
+    await act(async () => {
+      vi.advanceTimersByTime(50)
+    })
     await flushPromises()
     expect(save).toHaveBeenCalledTimes(2)
     expect(save).toHaveBeenLastCalledWith('v2')
@@ -310,7 +352,9 @@ describe('useWatchedFile', () => {
     expect(read).toHaveBeenCalledTimes(1)
 
     // Trigger reloadFromDisk — still null, still unchanged
-    await act(async () => { await result.current.reloadFromDisk() })
+    await act(async () => {
+      await result.current.reloadFromDisk()
+    })
     expect(result.current.content).toBe('')
   })
 
@@ -320,8 +364,9 @@ describe('useWatchedFile', () => {
 
     const { result, rerender } = renderHook(
       ({ rel }: { rel: string | null }) =>
-        useWatchedFile({ projectPath: null, relPath: rel, read, save, debounceMs: 50 })
-    , { initialProps: { rel: null as string | null } })
+        useWatchedFile({ projectPath: null, relPath: rel, read, save, debounceMs: 50 }),
+      { initialProps: { rel: null as string | null } }
+    )
     await flushPromises()
 
     expect(read).not.toHaveBeenCalled()
@@ -329,8 +374,12 @@ describe('useWatchedFile', () => {
     expect(result.current.content).toBe('')
 
     // setContent on null-target: still dirty internally but no save ever fires
-    act(() => { result.current.setContent('ignored') })
-    await act(async () => { vi.advanceTimersByTime(50) })
+    act(() => {
+      result.current.setContent('ignored')
+    })
+    await act(async () => {
+      vi.advanceTimersByTime(50)
+    })
     await flushPromises()
     expect(save).not.toHaveBeenCalled()
 
@@ -351,11 +400,17 @@ describe('useWatchedFile', () => {
     )
     await flushPromises()
 
-    act(() => { result.current.setContent('new') })
+    act(() => {
+      result.current.setContent('new')
+    })
     // Debounce fires → save starts
-    await act(async () => { vi.advanceTimersByTime(10) })
+    await act(async () => {
+      vi.advanceTimersByTime(10)
+    })
     // Watcher echoes while savingRef is still set
-    act(() => { fsStub.emit(ROOT, REL) })
+    act(() => {
+      fsStub.emit(ROOT, REL)
+    })
     await flushPromises()
 
     expect(result.current.diskChanged).toBe(false)

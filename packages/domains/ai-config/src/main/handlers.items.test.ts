@@ -2,7 +2,12 @@
  * AI Config items handler contract tests
  * Run with: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/ai-config/src/main/handlers.items.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerAiConfigHandlers } from './handlers.js'
 
 const h = await createTestHarness()
@@ -18,8 +23,19 @@ let projectItemId: string
 describe('ai-config:create-item', () => {
   test('creates library item', () => {
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: 'My Skill!', content: '# Skill content'
-    }) as { id: string; type: string; scope: string; slug: string; name: string; content: string; project_id: null }
+      type: 'skill',
+      scope: 'library',
+      slug: 'My Skill!',
+      content: '# Skill content'
+    }) as {
+      id: string
+      type: string
+      scope: string
+      slug: string
+      name: string
+      content: string
+      project_id: null
+    }
     expect(item.type).toBe('skill')
     expect(item.scope).toBe('library')
     expect(item.slug).toBe('my-skill')
@@ -31,7 +47,11 @@ describe('ai-config:create-item', () => {
 
   test('creates project-scoped item', () => {
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'project', projectId, slug: 'deploy', content: 'run deploy'
+      type: 'skill',
+      scope: 'project',
+      projectId,
+      slug: 'deploy',
+      content: 'run deploy'
     }) as { id: string; project_id: string; scope: string }
     expect(item.scope).toBe('project')
     expect(item.project_id).toBe(projectId)
@@ -40,35 +60,45 @@ describe('ai-config:create-item', () => {
 
   test('normalizes slug', () => {
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: '  --Hello World!! --', content: ''
+      type: 'skill',
+      scope: 'library',
+      slug: '  --Hello World!! --',
+      content: ''
     }) as { slug: string }
     expect(item.slug).toBe('hello-world')
   })
 
   test('empty slug becomes untitled', () => {
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: '!!!', content: ''
+      type: 'skill',
+      scope: 'library',
+      slug: '!!!',
+      content: ''
     }) as { slug: string }
     expect(item.slug).toBe('untitled')
   })
 
   test('rejects duplicate library slug for same type', () => {
-    expect(() => h.invoke('ai-config:create-item', {
-      type: 'skill',
-      scope: 'library',
-      slug: 'my-skill',
-      content: ''
-    })).toThrow()
+    expect(() =>
+      h.invoke('ai-config:create-item', {
+        type: 'skill',
+        scope: 'library',
+        slug: 'my-skill',
+        content: ''
+      })
+    ).toThrow()
   })
 
   test('rejects duplicate project slug for same project and type', () => {
-    expect(() => h.invoke('ai-config:create-item', {
-      type: 'skill',
-      scope: 'project',
-      projectId,
-      slug: 'deploy',
-      content: ''
-    })).toThrow()
+    expect(() =>
+      h.invoke('ai-config:create-item', {
+        type: 'skill',
+        scope: 'project',
+        projectId,
+        slug: 'deploy',
+        content: ''
+      })
+    ).toThrow()
   })
 })
 
@@ -90,13 +120,17 @@ describe('ai-config:list-items', () => {
   })
 
   test('filters by scope + type', () => {
-    const items = h.invoke('ai-config:list-items', { scope: 'library', type: 'skill' }) as { type: string }[]
+    const items = h.invoke('ai-config:list-items', { scope: 'library', type: 'skill' }) as {
+      type: string
+    }[]
     for (const item of items) expect(item.type).toBe('skill')
     expect(items.length).toBeGreaterThan(0)
   })
 
   test('filters by scope + project', () => {
-    const items = h.invoke('ai-config:list-items', { scope: 'project', projectId }) as { project_id: string }[]
+    const items = h.invoke('ai-config:list-items', { scope: 'project', projectId }) as {
+      project_id: string
+    }[]
     expect(items).toHaveLength(1)
     expect(items[0].project_id).toBe(projectId)
   })
@@ -104,18 +138,27 @@ describe('ai-config:list-items', () => {
 
 describe('ai-config:update-item', () => {
   test('updates content', () => {
-    const item = h.invoke('ai-config:update-item', { id: libraryItemId, content: 'updated content' }) as { content: string }
+    const item = h.invoke('ai-config:update-item', {
+      id: libraryItemId,
+      content: 'updated content'
+    }) as { content: string }
     expect(item.content).toBe('updated content')
   })
 
   test('updates slug (normalized)', () => {
-    const item = h.invoke('ai-config:update-item', { id: libraryItemId, slug: 'New Name!!' }) as { slug: string; name: string }
+    const item = h.invoke('ai-config:update-item', { id: libraryItemId, slug: 'New Name!!' }) as {
+      slug: string
+      name: string
+    }
     expect(item.slug).toBe('new-name')
     expect(item.name).toBe('new-name')
   })
 
   test('updates scope to library clears project_id', () => {
-    const item = h.invoke('ai-config:update-item', { id: projectItemId, scope: 'library' }) as { scope: string; project_id: null }
+    const item = h.invoke('ai-config:update-item', { id: projectItemId, scope: 'library' }) as {
+      scope: string
+      project_id: null
+    }
     expect(item.scope).toBe('library')
     expect(item.project_id).toBeNull()
   })
@@ -132,10 +175,12 @@ describe('ai-config:update-item', () => {
       content: ''
     }) as { id: string }
 
-    expect(() => h.invoke('ai-config:update-item', {
-      id: other.id,
-      slug: 'new-name'
-    })).toThrow()
+    expect(() =>
+      h.invoke('ai-config:update-item', {
+        id: other.id,
+        slug: 'new-name'
+      })
+    ).toThrow()
   })
 })
 

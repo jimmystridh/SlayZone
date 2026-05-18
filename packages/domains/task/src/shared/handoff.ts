@@ -1,6 +1,13 @@
 import type { DesktopHandoffPolicy } from './types'
 
-export const BLOCKED_EXTERNAL_PROTOCOLS = ['figma', 'notion', 'slack', 'linear', 'vscode', 'cursor'] as const
+export const BLOCKED_EXTERNAL_PROTOCOLS = [
+  'figma',
+  'notion',
+  'slack',
+  'linear',
+  'vscode',
+  'cursor'
+] as const
 
 const LEGACY_PROTOCOL = 'figma'
 const LEGACY_HOST_SCOPE = 'figma.com'
@@ -98,7 +105,9 @@ const resolveDesktopHandoffPolicy = (
   const protocol = normalizeDesktopProtocol(policy.protocol)
   if (!protocol) return null
 
-  const hostScope = normalizeDesktopHostScope(policy.hostScope) ?? (protocol === LEGACY_PROTOCOL ? LEGACY_HOST_SCOPE : undefined)
+  const hostScope =
+    normalizeDesktopHostScope(policy.hostScope) ??
+    (protocol === LEGACY_PROTOCOL ? LEGACY_HOST_SCOPE : undefined)
   return hostScope ? { protocol, hostScope } : { protocol }
 }
 
@@ -146,5 +155,4 @@ export const isEncodedDesktopHandoffUrl = (
 export const isBlockedExternalHandoffUrl = (
   rawUrl: string,
   policy?: DesktopHandoffPolicy | null
-): boolean =>
-  isBlockedExternalProtocolUrl(rawUrl) || isEncodedDesktopHandoffUrl(rawUrl, policy)
+): boolean => isBlockedExternalProtocolUrl(rawUrl) || isEncodedDesktopHandoffUrl(rawUrl, policy)

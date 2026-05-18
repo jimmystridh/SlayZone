@@ -7,7 +7,8 @@ export const URL_REGEX = /(https?|HTTPS?):[/]{2}[^\s"'!*(){}|\\^<>`]*[^\s"':,.!?
 // Also matches bare filenames inside parentheses: Write(test.tf), Edit(main.c:42)
 // Requires a file extension to avoid false positives on plain words.
 // The line:col suffix (:digits and optionally :digits) is captured but not part of the "file" match group.
-export const FILE_REGEX = /(?:(?<![:/\w.])(?:\.{1,2}\/[\w./-]+|[a-zA-Z][\w./-]*\/[\w./-]*\.[a-zA-Z]\w*|\/[\w./-]+\.[a-zA-Z]\w*)|(?<=\()[\w.-]+\.[a-zA-Z]\w*)(?::(\d+)(?::(\d+))?)?/
+export const FILE_REGEX =
+  /(?:(?<![:/\w.])(?:\.{1,2}\/[\w./-]+|[a-zA-Z][\w./-]*\/[\w./-]*\.[a-zA-Z]\w*|\/[\w./-]+\.[a-zA-Z]\w*)|(?<=\()[\w.-]+\.[a-zA-Z]\w*)(?::(\d+)(?::(\d+))?)?/
 
 export interface TextLinkMatch {
   kind: 'url' | 'file'
@@ -39,7 +40,15 @@ export function findLinksInString(text: string): TextLinkMatch[] {
     const line = m[1] ? parseInt(m[1], 10) : undefined
     const col = m[2] ? parseInt(m[2], 10) : undefined
     const filePath = line !== undefined ? full.replace(/:\d+(?::\d+)?$/, '') : full
-    out.push({ kind: 'file', text: full, start: m.index, end: m.index + full.length, filePath, line, col })
+    out.push({
+      kind: 'file',
+      text: full,
+      start: m.index,
+      end: m.index + full.length,
+      filePath,
+      line,
+      col
+    })
   }
 
   out.sort((a, b) => a.start - b.start)

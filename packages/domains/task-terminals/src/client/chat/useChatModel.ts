@@ -13,7 +13,13 @@ interface UseChatModelOpts {
 }
 
 interface ChatModelApi {
-  setModel: (opts: { tabId: string; taskId: string; mode: string; cwd: string; chatModel: AgentModel }) => Promise<SessionInfoLite>
+  setModel: (opts: {
+    tabId: string
+    taskId: string
+    mode: string
+    cwd: string
+    chatModel: AgentModel
+  }) => Promise<SessionInfoLite>
   getModel: (taskId: string, mode: string) => Promise<AgentModel>
   getInfo: (tabId: string) => Promise<SessionInfoLite | null>
 }
@@ -48,22 +54,27 @@ export function useChatModel({ taskId, mode, tabId, cwd }: UseChatModelOpts) {
         /* leave null */
       }
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [taskId, mode, tabId])
 
-  const handleModelChange = useCallback(async (next: AgentModel) => {
-    if (next === chatModel || modelChanging) return
-    setModelChanging(true)
-    try {
-      const info = await getApi().setModel({ tabId, taskId, mode, cwd, chatModel: next })
-      if (info?.chatModel) setChatModelState(info.chatModel)
-      else setChatModelState(next)
-    } catch (err) {
-      toast(`Model change failed: ${err instanceof Error ? err.message : String(err)}`)
-    } finally {
-      setModelChanging(false)
-    }
-  }, [chatModel, modelChanging, tabId, taskId, mode, cwd])
+  const handleModelChange = useCallback(
+    async (next: AgentModel) => {
+      if (next === chatModel || modelChanging) return
+      setModelChanging(true)
+      try {
+        const info = await getApi().setModel({ tabId, taskId, mode, cwd, chatModel: next })
+        if (info?.chatModel) setChatModelState(info.chatModel)
+        else setChatModelState(next)
+      } catch (err) {
+        toast(`Model change failed: ${err instanceof Error ? err.message : String(err)}`)
+      } finally {
+        setModelChanging(false)
+      }
+    },
+    [chatModel, modelChanging, tabId, taskId, mode, cwd]
+  )
 
   return { chatModel, modelChanging, handleModelChange }
 }

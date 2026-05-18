@@ -20,7 +20,11 @@ export interface IpcUnchangedSentinel {
 }
 
 export function isIpcUnchangedSentinel(value: unknown): value is IpcUnchangedSentinel {
-  return value !== null && typeof value === 'object' && (value as { __ipc_unchanged__?: unknown }).__ipc_unchanged__ === true
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    (value as { __ipc_unchanged__?: unknown }).__ipc_unchanged__ === true
+  )
 }
 
 const UNCHANGED: IpcUnchangedSentinel = Object.freeze({ __ipc_unchanged__: true })
@@ -99,9 +103,17 @@ export function withResultDedup<E, A extends unknown[], R>(
     const result = await handler(event, ...args)
 
     let argsKey: string
-    try { argsKey = JSON.stringify(args) } catch { return result }
+    try {
+      argsKey = JSON.stringify(args)
+    } catch {
+      return result
+    }
     let resultHash: string
-    try { resultHash = hashFn(result) } catch { return result }
+    try {
+      resultHash = hashFn(result)
+    } catch {
+      return result
+    }
 
     if (!sender) {
       if (globalCache.get(argsKey) === resultHash) return UNCHANGED

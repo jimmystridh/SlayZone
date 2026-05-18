@@ -29,7 +29,7 @@ export function getStorageStats(db: DbLike, _blobStore: BlobStore): StorageStats
     perArtifact: perArtifactRows.map((r) => ({
       artifact_id: r.artifact_id as ArtifactId,
       bytes: r.bytes,
-      versions: r.versions,
-    })),
+      versions: r.versions
+    }))
   }
 }

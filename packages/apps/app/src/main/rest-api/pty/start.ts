@@ -14,11 +14,26 @@ export function registerPtyStartRoute(app: Express, deps: RestApiDeps): void {
 
     const result = await startMainPty(deps, taskId, { timeoutMs })
 
-    if (result === 'already-alive') { res.json({ ok: true, alreadyAlive: true, sessionId: taskId }); return }
-    if (result === 'ok')            { res.json({ ok: true, sessionId: taskId }); return }
-    if (result === 'no-task')       { res.status(404).json({ error: `Task not found: ${taskId}` }); return }
-    if (result === 'no-window')     { res.status(503).json({ error: 'No window available' }); return }
-    if (result === 'timeout')       { res.status(504).json({ error: 'PTY start timed out' }); return }
+    if (result === 'already-alive') {
+      res.json({ ok: true, alreadyAlive: true, sessionId: taskId })
+      return
+    }
+    if (result === 'ok') {
+      res.json({ ok: true, sessionId: taskId })
+      return
+    }
+    if (result === 'no-task') {
+      res.status(404).json({ error: `Task not found: ${taskId}` })
+      return
+    }
+    if (result === 'no-window') {
+      res.status(503).json({ error: 'No window available' })
+      return
+    }
+    if (result === 'timeout') {
+      res.status(504).json({ error: 'PTY start timed out' })
+      return
+    }
     res.status(500).json({ error: 'Renderer reported start failure' })
   })
 }

@@ -71,11 +71,23 @@ export function buildIdleTasks(
 }
 
 function ptyToRow(p: PtyInfo): AgentSessionRow {
-  return { sessionId: p.sessionId, taskId: p.taskId, mode: p.mode, lastOutputTime: p.lastOutputTime, state: p.state }
+  return {
+    sessionId: p.sessionId,
+    taskId: p.taskId,
+    mode: p.mode,
+    lastOutputTime: p.lastOutputTime,
+    state: p.state
+  }
 }
 
 function chatToRow(c: ChatSessionStateEntry): AgentSessionRow {
-  return { sessionId: c.sessionId, taskId: c.taskId, mode: c.mode, lastOutputTime: c.lastOutputTime, state: c.state }
+  return {
+    sessionId: c.sessionId,
+    taskId: c.taskId,
+    mode: c.mode,
+    lastOutputTime: c.lastOutputTime,
+    state: c.state
+  }
 }
 
 export function useIdleTasks(
@@ -87,10 +99,7 @@ export function useIdleTasks(
   const recheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const refresh = useCallback(async () => {
-    const [ptys, chats] = await Promise.all([
-      window.api.pty.list(),
-      window.api.chat.list()
-    ])
+    const [ptys, chats] = await Promise.all([window.api.pty.list(), window.api.chat.list()])
     setRows([...ptys.map(ptyToRow), ...chats.map(chatToRow)])
   }, [])
 
@@ -151,10 +160,7 @@ export function useActiveSessionTaskIds(): Set<string> {
   const [taskIds, setTaskIds] = useState<Set<string>>(new Set())
 
   const refresh = useCallback(async () => {
-    const [ptys, chats] = await Promise.all([
-      window.api.pty.list(),
-      window.api.chat.list()
-    ])
+    const [ptys, chats] = await Promise.all([window.api.pty.list(), window.api.chat.list()])
     setTaskIds(buildActiveSessionTaskIds(ptys, chats))
   }, [])
 
@@ -163,8 +169,12 @@ export function useActiveSessionTaskIds(): Set<string> {
   }, [refresh])
 
   useEffect(() => {
-    const unsub = window.api.pty.onStateChange(() => { refresh() })
-    return () => { unsub() }
+    const unsub = window.api.pty.onStateChange(() => {
+      refresh()
+    })
+    return () => {
+      unsub()
+    }
   }, [refresh])
 
   return taskIds

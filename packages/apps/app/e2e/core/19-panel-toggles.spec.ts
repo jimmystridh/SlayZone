@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { focusForAppShortcut } from '../fixtures/browser-view'
 import { shortcutKey } from '../fixtures/shortcuts'
@@ -10,7 +10,11 @@ test.describe('Panel toggles', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Panel Test', color: '#3b82f6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Panel Test',
+      color: '#3b82f6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'Panel toggle task', status: 'todo' })
     taskId = t.id
@@ -27,7 +31,10 @@ test.describe('Panel toggles', () => {
 
   /** Scope to visible PanelToggle buttons in the active task tab */
   const panelBtn = (page: import('@playwright/test').Page, label: string) =>
-    page.locator('.bg-surface-2.rounded-lg:visible').filter({ has: page.locator('button:has-text("Agent")') }).locator(`button:has-text("${label}")`)
+    page
+      .locator('.bg-surface-2.rounded-lg:visible')
+      .filter({ has: page.locator('button:has-text("Agent")') })
+      .locator(`button:has-text("${label}")`)
 
   const isPanelActive = async (page: import('@playwright/test').Page, label: string) => {
     const className = await panelBtn(page, label).getAttribute('class')
@@ -40,17 +47,24 @@ test.describe('Panel toggles', () => {
     label: string,
     expectedActive: boolean
   ) => {
-    await expect.poll(async () => {
-      if ((await isPanelActive(page, label)) === expectedActive) return true
-      await focusForAppShortcut(page)
-      await page.waitForTimeout(100)
-      await page.keyboard.press(shortcut)
-      await page.waitForTimeout(150)
-      return (await isPanelActive(page, label)) === expectedActive
-    }, { timeout: 5_000 }).toBe(true)
+    await expect
+      .poll(
+        async () => {
+          if ((await isPanelActive(page, label)) === expectedActive) return true
+          await focusForAppShortcut(page)
+          await page.waitForTimeout(100)
+          await page.keyboard.press(shortcut)
+          await page.waitForTimeout(150)
+          return (await isPanelActive(page, label)) === expectedActive
+        },
+        { timeout: 5_000 }
+      )
+      .toBe(true)
   }
 
-  test('default panels: terminal + settings active, browser + diff inactive', async ({ mainWindow }) => {
+  test('default panels: terminal + settings active, browser + diff inactive', async ({
+    mainWindow
+  }) => {
     await expect(panelBtn(mainWindow, 'Agent')).toHaveClass(/bg-surface-3/)
     await expect(panelBtn(mainWindow, 'Settings')).toHaveClass(/bg-surface-3/)
     await expect(panelBtn(mainWindow, 'Browser')).not.toHaveClass(/(?:^|\s)bg-surface-3(?:\s|$)/)

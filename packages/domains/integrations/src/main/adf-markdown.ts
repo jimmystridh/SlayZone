@@ -63,11 +63,17 @@ function adfNodeToMarkdown(node: AdfNode, listPrefix?: string): string {
       return (node.content ?? []).map((child) => adfNodeToMarkdown(child, '- ')).join('') + '\n'
 
     case 'orderedList':
-      return (node.content ?? []).map((child, i) => adfNodeToMarkdown(child, `${i + 1}. `)).join('') + '\n'
+      return (
+        (node.content ?? []).map((child, i) => adfNodeToMarkdown(child, `${i + 1}. `)).join('') +
+        '\n'
+      )
 
     case 'listItem': {
       const prefix = listPrefix ?? '- '
-      const inner = (node.content ?? []).map((child) => adfNodeToMarkdown(child)).join('').trim()
+      const inner = (node.content ?? [])
+        .map((child) => adfNodeToMarkdown(child))
+        .join('')
+        .trim()
       return prefix + inner + '\n'
     }
 
@@ -79,7 +85,13 @@ function adfNodeToMarkdown(node: AdfNode, listPrefix?: string): string {
 
     case 'blockquote': {
       const inner = (node.content ?? []).map((child) => adfNodeToMarkdown(child)).join('')
-      return inner.split('\n').filter(Boolean).map((line) => '> ' + line).join('\n') + '\n\n'
+      return (
+        inner
+          .split('\n')
+          .filter(Boolean)
+          .map((line) => '> ' + line)
+          .join('\n') + '\n\n'
+      )
     }
 
     case 'rule':
@@ -128,7 +140,11 @@ function parseInlineMarks(text: string): AdfNode[] {
     } else if (match[5]) {
       nodes.push({ type: 'text', text: match[5], marks: [{ type: 'strike' }] })
     } else if (match[6] && match[7]) {
-      nodes.push({ type: 'text', text: match[6], marks: [{ type: 'link', attrs: { href: match[7] } }] })
+      nodes.push({
+        type: 'text',
+        text: match[6],
+        marks: [{ type: 'link', attrs: { href: match[7] } }]
+      })
     }
 
     lastIndex = match.index + match[0].length

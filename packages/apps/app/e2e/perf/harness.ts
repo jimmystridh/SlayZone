@@ -72,7 +72,9 @@ async function installInstrumentation(page: Page): Promise<void> {
       __slayzone_perf_installed__?: boolean
       __slayzone_perf_longTasks__?: Array<{ startTime: number; duration: number }>
       __slayzone_perf_ipc__?: Map<string, { count: number; totalMs: number; maxMs: number }>
-      electron?: { ipcRenderer?: { invoke?: (channel: string, ...args: unknown[]) => Promise<unknown> } }
+      electron?: {
+        ipcRenderer?: { invoke?: (channel: string, ...args: unknown[]) => Promise<unknown> }
+      }
     }
     if (w.__slayzone_perf_installed__) return
     w.__slayzone_perf_installed__ = true
@@ -163,7 +165,11 @@ interface IterationCollectorState {
   marksBefore: number
 }
 
-async function beginIteration(page: Page, name: string, index: number): Promise<IterationCollectorState> {
+async function beginIteration(
+  page: Page,
+  name: string,
+  index: number
+): Promise<IterationCollectorState> {
   const startMark = `sz:perf:${name}:${index}:start`
   const endMark = `sz:perf:${name}:${index}:end`
   const marksBefore = await page.evaluate(() => performance.getEntriesByType('mark').length)
@@ -184,75 +190,107 @@ async function beginIteration(page: Page, name: string, index: number): Promise<
   return { startMark, endMark, marksBefore }
 }
 
-async function endIteration(page: Page, state: IterationCollectorState): Promise<{
+async function endIteration(
+  page: Page,
+  state: IterationCollectorState
+): Promise<{
   marks: PerfMark[]
   measures: PerfMeasure[]
   longTasks: LongTaskEntry[]
   profilerCommits: ProfilerCommit[]
-  ipc: { perChannel: Array<{ channel: string; count: number; totalMs: number; maxMs: number }>; total: { count: number; totalMs: number } }
+  ipc: {
+    perChannel: Array<{ channel: string; count: number; totalMs: number; maxMs: number }>
+    total: { count: number; totalMs: number }
+  }
 }> {
   await page.evaluate((endMark) => {
     performance.mark(endMark)
   }, state.endMark)
 
-  return await page.evaluate(({ startMark, endMark, marksBefore }) => {
-    const allMarks = performance.getEntriesByType('mark') as PerformanceMark[]
-    const newMarks = allMarks.slice(marksBefore)
-    const startEntry = newMarks.find((m) => m.name === startMark)
-    const endEntry = newMarks.find((m) => m.name === endMark)
-    const startTime = startEntry?.startTime ?? 0
-    const endTime = endEntry?.startTime ?? Number.POSITIVE_INFINITY
+  return await page.evaluate(
+    ({ startMark, endMark, marksBefore }) => {
+      const allMarks = performance.getEntriesByType('mark') as PerformanceMark[]
+      const newMarks = allMarks.slice(marksBefore)
+      const startEntry = newMarks.find((m) => m.name === startMark)
+      const endEntry = newMarks.find((m) => m.name === endMark)
+      const startTime = startEntry?.startTime ?? 0
+      const endTime = endEntry?.startTime ?? Number.POSITIVE_INFINITY
 
-    const marks = newMarks
-      .filter((m) => m.startTime >= startTime && m.startTime <= endTime)
-      .map((m) => ({ name: m.name, startTime: Math.round(m.startTime - startTime) }))
+      const marks = newMarks
+        .filter((m) => m.startTime >= startTime && m.startTime <= endTime)
+        .map((m) => ({ name: m.name, startTime: Math.round(m.startTime - startTime) }))
 
-    const measures = (performance.getEntriesByType('measure') as PerformanceMeasure[])
-      .filter((m) => m.startTime >= startTime && m.startTime <= endTime)
-      .map((m) => ({ name: m.name, startTime: Math.round(m.startTime - startTime), duration: Math.round(m.duration) }))
+      const measures = (performance.getEntriesByType('measure') as PerformanceMeasure[])
+        .filter((m) => m.startTime >= startTime && m.startTime <= endTime)
+        .map((m) => ({
+          name: m.name,
+          startTime: Math.round(m.startTime - startTime),
+          duration: Math.round(m.duration)
+        }))
 
-    const w = window as unknown as {
-      __slayzone_perf_longTasks__?: Array<{ startTime: number; duration: number }>
-      __slayzone_perf_ipc__?: Map<string, { count: number; totalMs: number; maxMs: number }>
-      __slayzone_profiler__?: { commits: Array<{ id: string; phase: string; actualDuration: number; baseDuration: number; startTime: number; commitTime: number }>; reset?: () => void }
-    }
+      const w = window as unknown as {
+        __slayzone_perf_longTasks__?: Array<{ startTime: number; duration: number }>
+        __slayzone_perf_ipc__?: Map<string, { count: number; totalMs: number; maxMs: number }>
+        __slayzone_profiler__?: {
+          commits: Array<{
+            id: string
+            phase: string
+            actualDuration: number
+            baseDuration: number
+            startTime: number
+            commitTime: number
+          }>
+          reset?: () => void
+        }
+      }
 
-    const longTasks = (w.__slayzone_perf_longTasks__ ?? [])
-      .filter((lt) => lt.startTime >= startTime && lt.startTime <= endTime)
-      .map((lt) => ({ startTime: Math.round(lt.startTime - startTime), duration: Math.round(lt.duration) }))
+      const longTasks = (w.__slayzone_perf_longTasks__ ?? [])
+        .filter((lt) => lt.startTime >= startTime && lt.startTime <= endTime)
+        .map((lt) => ({
+          startTime: Math.round(lt.startTime - startTime),
+          duration: Math.round(lt.duration)
+        }))
 
-    const profilerCommits = (w.__slayzone_profiler__?.commits ?? [])
-      .filter((c) => c.commitTime >= startTime && c.commitTime <= endTime)
-      .map((c) => ({
-        id: c.id,
-        phase: c.phase as 'mount' | 'update' | 'nested-update',
-        actualDuration: Math.round(c.actualDuration * 100) / 100,
-        baseDuration: Math.round(c.baseDuration * 100) / 100,
-        startTime: Math.round(c.startTime - startTime),
-        commitTime: Math.round(c.commitTime - startTime)
-      }))
+      const profilerCommits = (w.__slayzone_profiler__?.commits ?? [])
+        .filter((c) => c.commitTime >= startTime && c.commitTime <= endTime)
+        .map((c) => ({
+          id: c.id,
+          phase: c.phase as 'mount' | 'update' | 'nested-update',
+          actualDuration: Math.round(c.actualDuration * 100) / 100,
+          baseDuration: Math.round(c.baseDuration * 100) / 100,
+          startTime: Math.round(c.startTime - startTime),
+          commitTime: Math.round(c.commitTime - startTime)
+        }))
 
-    const perChannel: Array<{ channel: string; count: number; totalMs: number; maxMs: number }> = []
-    let totalCount = 0
-    let totalMs = 0
-    for (const [channel, stats] of (w.__slayzone_perf_ipc__ ?? new Map())) {
-      perChannel.push({ channel, count: stats.count, totalMs: Math.round(stats.totalMs), maxMs: Math.round(stats.maxMs) })
-      totalCount += stats.count
-      totalMs += stats.totalMs
-    }
-    perChannel.sort((a, b) => b.totalMs - a.totalMs)
+      const perChannel: Array<{ channel: string; count: number; totalMs: number; maxMs: number }> =
+        []
+      let totalCount = 0
+      let totalMs = 0
+      for (const [channel, stats] of w.__slayzone_perf_ipc__ ?? new Map()) {
+        perChannel.push({
+          channel,
+          count: stats.count,
+          totalMs: Math.round(stats.totalMs),
+          maxMs: Math.round(stats.maxMs)
+        })
+        totalCount += stats.count
+        totalMs += stats.totalMs
+      }
+      perChannel.sort((a, b) => b.totalMs - a.totalMs)
 
-    // Disable buffer until next iteration enables it again
-    if (w.__slayzone_profiler__) w.__slayzone_profiler__.enabled = false
+      // Disable buffer until next iteration enables it again
+      if (w.__slayzone_profiler__) w.__slayzone_profiler__.enabled = false
 
-    return {
-      marks,
-      measures,
-      longTasks,
-      profilerCommits,
-      ipc: { perChannel, total: { count: totalCount, totalMs: Math.round(totalMs) } }
-    }
-  }, { startMark: state.startMark, endMark: state.endMark, marksBefore: state.marksBefore })
+      return {
+        marks,
+        measures,
+        longTasks,
+        profilerCommits,
+        ipc: { perChannel, total: { count: totalCount, totalMs: Math.round(totalMs) } }
+      }
+    },
+    { startMark: state.startMark, endMark: state.endMark, marksBefore: state.marksBefore }
+  )
 }
 
 function percentile(values: number[], p: number): number {
@@ -265,7 +303,9 @@ function percentile(values: number[], p: number): number {
 function summarize(runs: IterationResult[]): ScenarioResult['summary'] {
   const wall = runs.map((r) => r.wallMs)
   const longTask = runs.map((r) => r.longTaskTotalMs)
-  const profilerActual = runs.map((r) => r.profilerCommits.reduce((sum, c) => sum + c.actualDuration, 0))
+  const profilerActual = runs.map((r) =>
+    r.profilerCommits.reduce((sum, c) => sum + c.actualDuration, 0)
+  )
   const ipcCount = runs.map((r) => r.ipcTotal.count)
   return {
     wallP50: percentile(wall, 50),
@@ -309,7 +349,7 @@ export async function profileScenario(
     const realIndex = i - warmup
     if (definition.beforeEach) await definition.beforeEach(page, isWarmup ? -1 : realIndex)
 
-    const cdpBeforeMetrics = await cdp.send('Performance.getMetrics') as CdpMetricsResponse
+    const cdpBeforeMetrics = (await cdp.send('Performance.getMetrics')) as CdpMetricsResponse
     const heapBeforeMB = Math.round(extractCdpMetric(cdpBeforeMetrics, 'JSHeapUsedSize') / 1048576)
     const cdpBefore = snapshotFromMetrics(cdpBeforeMetrics)
 
@@ -329,7 +369,7 @@ export async function profileScenario(
 
     const collected = await endIteration(page, collector)
 
-    const cdpAfterMetrics = await cdp.send('Performance.getMetrics') as CdpMetricsResponse
+    const cdpAfterMetrics = (await cdp.send('Performance.getMetrics')) as CdpMetricsResponse
     const heapAfterMB = Math.round(extractCdpMetric(cdpAfterMetrics, 'JSHeapUsedSize') / 1048576)
     const cdpAfter = snapshotFromMetrics(cdpAfterMetrics)
 

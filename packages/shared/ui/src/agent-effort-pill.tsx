@@ -4,7 +4,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from './dropdown-menu'
 
 export type AgentEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max'
@@ -19,28 +19,28 @@ const EFFORT_META: Record<AgentEffort, EffortMeta> = {
   low: {
     label: 'Low',
     short: 'Low',
-    description: 'Minimal reasoning. Fastest, cheapest.',
+    description: 'Minimal reasoning. Fastest, cheapest.'
   },
   medium: {
     label: 'Medium',
     short: 'Medium',
-    description: 'Balanced reasoning depth.',
+    description: 'Balanced reasoning depth.'
   },
   high: {
     label: 'High',
     short: 'High',
-    description: 'Deeper reasoning. Slower, higher cost.',
+    description: 'Deeper reasoning. Slower, higher cost.'
   },
   xhigh: {
     label: 'Extra-high',
     short: 'XHigh',
-    description: 'Extended reasoning depth.',
+    description: 'Extended reasoning depth.'
   },
   max: {
     label: 'Max',
     short: 'Max',
-    description: 'Maximum reasoning. Slowest, highest cost.',
-  },
+    description: 'Maximum reasoning. Slowest, highest cost.'
+  }
 }
 
 const EFFORT_ORDER: AgentEffort[] = ['low', 'medium', 'high', 'xhigh', 'max']
@@ -55,7 +55,14 @@ export interface AgentEffortPillProps {
   className?: string
 }
 
-export function AgentEffortPill({ effort, onChange, disabled, compact, variant = 'pill', className }: AgentEffortPillProps) {
+export function AgentEffortPill({
+  effort,
+  onChange,
+  disabled,
+  compact,
+  variant = 'pill',
+  className
+}: AgentEffortPillProps) {
   const meta = EFFORT_META[effort]
   return (
     <DropdownMenu>
@@ -67,7 +74,7 @@ export function AgentEffortPill({ effort, onChange, disabled, compact, variant =
             ? 'gap-1.5 rounded-full ring-1 px-2 py-0.5 text-[11px] font-medium bg-muted/40 text-muted-foreground ring-border hover:bg-muted/60 hover:text-foreground'
             : 'gap-1 rounded px-1 py-0.5 text-[10px] text-muted-foreground/80 hover:bg-muted/60 hover:text-foreground',
           disabled && 'opacity-50 cursor-not-allowed',
-          className,
+          className
         )}
         title={meta.description}
         aria-label={`Reasoning effort: ${meta.label}`}
@@ -99,7 +106,9 @@ export function AgentEffortPill({ effort, onChange, disabled, compact, variant =
                   {itemMeta.description}
                 </div>
               </div>
-              {selected && <span className="text-[10px] text-muted-foreground self-center">current</span>}
+              {selected && (
+                <span className="text-[10px] text-muted-foreground self-center">current</span>
+              )}
             </DropdownMenuItem>
           )
         })}

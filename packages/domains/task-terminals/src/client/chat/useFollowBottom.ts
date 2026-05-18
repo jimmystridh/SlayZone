@@ -132,10 +132,13 @@ export function useFollowBottom(): FollowBottomApi {
     return ref
   }, [isUserSelectingInside, scrollNow])
 
-  useEffect(() => () => {
-    resizeObserverRef.current?.disconnect()
-    resizeObserverRef.current = null
-  }, [])
+  useEffect(
+    () => () => {
+      resizeObserverRef.current?.disconnect()
+      resizeObserverRef.current = null
+    },
+    []
+  )
 
   return { scrollRef, contentRef, isAtBottom, scrollToBottom }
 }

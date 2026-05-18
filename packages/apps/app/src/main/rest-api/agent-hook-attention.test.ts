@@ -18,7 +18,12 @@
  *   packages/apps/app/src/main/rest-api/agent-hook-attention.test.ts
  */
 import express from 'express'
-import { createTestHarness, test, expect, describe } from '../../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../../shared/test-utils/ipc-harness.js'
 import { mountRestApp } from '../../../../../shared/test-utils/rest-harness.js'
 import { handleAttentionTransition } from '@slayzone/task/main'
 import type { TerminalState } from '@slayzone/terminal/shared'
@@ -26,14 +31,17 @@ import { registerAgentHookRoute, type TerminalStateBridge } from './agent-hook.j
 
 const h = await createTestHarness()
 const projectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
   .run(projectId, 'Proj', '#abc', '/tmp/attn')
 
 function seedTask(): string {
   const id = crypto.randomUUID()
-  h.db.prepare(
-    'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config) VALUES (?, ?, ?, ?, 3, ?, ?)'
-  ).run(id, projectId, `attn-${id.slice(0, 6)}`, 'todo', 'claude-code', '{}')
+  h.db
+    .prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, terminal_mode, provider_config) VALUES (?, ?, ?, ?, 3, ?, ?)'
+    )
+    .run(id, projectId, `attn-${id.slice(0, 6)}`, 'todo', 'claude-code', '{}')
   return id
 }
 
@@ -67,21 +75,24 @@ const bridge: TerminalStateBridge = {
     lastActivityAt = Date.now()
     activityLog.push({ kind: 'markActive', sessionId, at: lastActivityAt })
     return true
-  },
+  }
 }
 
 const app = express()
 registerAgentHookRoute(app, { db: h.db, notifyRenderer: () => {} }, bridge)
 const rest = await mountRestApp(app)
 
-interface HookRes { ok?: boolean; error?: string }
+interface HookRes {
+  ok?: boolean
+  error?: string
+}
 
 async function postHook(taskId: string, hookEvent: string, raw?: unknown): Promise<number> {
   const res = await rest.request<HookRes>('POST', '/api/agent-hook', {
     agentId: 'claude-code',
     hookEvent,
     taskId,
-    ...(raw !== undefined ? { raw } : {}),
+    ...(raw !== undefined ? { raw } : {})
   })
   return res.status
 }
@@ -184,7 +195,14 @@ await describe('POST /api/agent-hook → handleAttentionTransition', () => {
     activityLog.length = 0
 
     // Realistic flow: prompt → tool 1 (pre/post) → tool 2 (pre/post) → stop
-    const flow = ['UserPromptSubmit', 'PreToolUse', 'PostToolUse', 'PreToolUse', 'PostToolUse', 'Stop']
+    const flow = [
+      'UserPromptSubmit',
+      'PreToolUse',
+      'PostToolUse',
+      'PreToolUse',
+      'PostToolUse',
+      'Stop'
+    ]
     for (const hookEvent of flow) {
       expect(await postHook(id, hookEvent)).toBe(200)
     }
@@ -194,7 +212,14 @@ await describe('POST /api/agent-hook → handleAttentionTransition', () => {
     // Transitions: UserPromptSubmit → running, PreToolUse ×2 → running (same
     // state, still calls transition), Stop → idle. PostToolUse ×2 → markActive.
     const kinds = activityLog.map((e) => e.kind)
-    expect(kinds).toEqual(['transition', 'transition', 'markActive', 'transition', 'markActive', 'transition'])
+    expect(kinds).toEqual([
+      'transition',
+      'transition',
+      'markActive',
+      'transition',
+      'markActive',
+      'transition'
+    ])
     // Final state: idle. Flag set since running→idle w/ user input.
     expect(currentState).toBe('idle')
     expect(readFlag(id)).toBe(1)
@@ -207,7 +232,7 @@ await describe('POST /api/agent-hook → handleAttentionTransition', () => {
     const res = await rest.request<HookRes>('POST', '/api/agent-hook', {
       agentId: 'codex',
       hookEvent: 'task_complete',
-      taskId: id,
+      taskId: id
     })
     expect(res.status).toBe(200)
     expect(readFlag(id)).toBe(0)

@@ -11,7 +11,9 @@ export async function restoreTaskOp(db: Database, id: string, deps: OpDeps): Pro
     db.prepare(`
       UPDATE tasks SET deleted_at = NULL, updated_at = datetime('now') WHERE id = ?
     `).run(id)
-    const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as Record<string, unknown> | undefined
+    const row = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id) as
+      | Record<string, unknown>
+      | undefined
     const nextTask = parseTask(row)
     if (nextTask) {
       recordActivityEvents(db, buildTaskRestoredEvents(nextTask))

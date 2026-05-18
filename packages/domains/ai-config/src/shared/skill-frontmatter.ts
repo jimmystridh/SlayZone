@@ -73,12 +73,12 @@ export function parseSkillFrontmatter(content: string): ParsedSkillFrontmatter |
     }
   } catch (error) {
     const yamlError = error as YamlExceptionLike
-    const reason = typeof yamlError.reason === 'string'
-      ? yamlError.reason
-      : (yamlError.message || 'Invalid YAML frontmatter.')
-    const markLine = typeof yamlError.mark?.line === 'number'
-      ? startLine + yamlError.mark.line + 2
-      : null
+    const reason =
+      typeof yamlError.reason === 'string'
+        ? yamlError.reason
+        : yamlError.message || 'Invalid YAML frontmatter.'
+    const markLine =
+      typeof yamlError.mark?.line === 'number' ? startLine + yamlError.mark.line + 2 : null
     if (/duplicated mapping key/i.test(reason)) {
       issues.push({
         code: 'frontmatter_duplicate_key',
@@ -106,12 +106,14 @@ export function parseSkillFrontmatter(content: string): ParsedSkillFrontmatter |
 export function missingSkillFrontmatterValidation(): SkillValidationState {
   return {
     status: 'invalid',
-    issues: [{
-      code: 'frontmatter_missing',
-      severity: 'error',
-      message: 'Skill content must start with YAML frontmatter delimited by "---".',
-      line: 1
-    }]
+    issues: [
+      {
+        code: 'frontmatter_missing',
+        severity: 'error',
+        message: 'Skill content must start with YAML frontmatter delimited by "---".',
+        line: 1
+      }
+    ]
   }
 }
 
@@ -165,7 +167,10 @@ function toYamlKey(key: string): string {
 function toYamlLine(key: string, value: string): string {
   const yamlKey = toYamlKey(key)
   if (value.includes('\n')) {
-    const indented = value.split('\n').map((line) => `  ${line}`).join('\n')
+    const indented = value
+      .split('\n')
+      .map((line) => `  ${line}`)
+      .join('\n')
     return `${yamlKey}: |\n${indented}`
   }
   if (key === 'name' && /^[a-z0-9][a-z0-9._-]*$/i.test(value)) return `${yamlKey}: ${value}`
@@ -177,7 +182,8 @@ function toYamlLine(key: string, value: string): string {
 export function renderSkillFrontmatter(frontmatter: Record<string, string>): string {
   const lines: string[] = ['---']
   if (frontmatter.name) lines.push(toYamlLine('name', frontmatter.name))
-  if (frontmatter.description !== undefined) lines.push(toYamlLine('description', frontmatter.description))
+  if (frontmatter.description !== undefined)
+    lines.push(toYamlLine('description', frontmatter.description))
 
   for (const key of Object.keys(frontmatter).sort()) {
     if (key === 'name' || key === 'description') continue
@@ -191,7 +197,9 @@ export function renderSkillFrontmatter(frontmatter: Record<string, string>): str
           for (const item of arr) lines.push(`  - ${item}`)
           continue
         }
-      } catch { /* fall through to default rendering */ }
+      } catch {
+        /* fall through to default rendering */
+      }
     }
     lines.push(toYamlLine(key, value))
   }

@@ -1,10 +1,27 @@
-import { test, expect, seed, resetApp, goHome, clickProject, TEST_PROJECT_PATH } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  resetApp,
+  goHome,
+  clickProject,
+  TEST_PROJECT_PATH
+} from '../fixtures/electron'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const RESULTS_DIR = path.resolve(__dirname, '..', '..', '..', '..', '..', 'working-notes', 'performance')
+const RESULTS_DIR = path.resolve(
+  __dirname,
+  '..',
+  '..',
+  '..',
+  '..',
+  '..',
+  'working-notes',
+  'performance'
+)
 
 function writePerfResults(name: string, data: unknown) {
   fs.mkdirSync(RESULTS_DIR, { recursive: true })
@@ -47,7 +64,11 @@ test.describe('Startup & Suspense Profiling', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'StartupProf', color: '#8b5cf6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'StartupProf',
+      color: '#8b5cf6',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
 
     // Seed tasks across statuses
@@ -74,11 +95,14 @@ test.describe('Startup & Suspense Profiling', () => {
       const store = (window as any).__slayzone_tabStore
       if (store) {
         const state = store.getState()
-        window.api.settings.set('viewState', JSON.stringify({
-          tabs: state.tabs,
-          activeTabIndex: state.activeTabIndex,
-          selectedProjectId: state.selectedProjectId
-        }))
+        window.api.settings.set(
+          'viewState',
+          JSON.stringify({
+            tabs: state.tabs,
+            activeTabIndex: state.activeTabIndex,
+            selectedProjectId: state.selectedProjectId
+          })
+        )
       }
     })
     await mainWindow.waitForTimeout(600) // Wait for debounced persistence
@@ -100,7 +124,8 @@ test.describe('Startup & Suspense Profiling', () => {
 
     // Collect all performance marks
     const marks: MarkEntry[] = await mainWindow.evaluate(() => {
-      return performance.getEntriesByType('mark')
+      return performance
+        .getEntriesByType('mark')
         .filter((e) => e.name.startsWith('sz:'))
         .map((e) => ({ name: e.name, startTime: Math.round(e.startTime * 100) / 100 }))
         .sort((a, b) => a.startTime - b.startTime)
@@ -166,7 +191,9 @@ test.describe('Startup & Suspense Profiling', () => {
     const maxTime = Math.max(...marks.map((m) => m.startTime - baseline), 1)
     const barWidth = 50
 
-    waterfall.push(`${'Phase'.padEnd(22)} ${'Start'.padStart(7)} ${'Dur'.padStart(7)}  ${'Timeline'}`)
+    waterfall.push(
+      `${'Phase'.padEnd(22)} ${'Start'.padStart(7)} ${'Dur'.padStart(7)}  ${'Timeline'}`
+    )
     waterfall.push('─'.repeat(22 + 7 + 7 + 2 + barWidth + 4))
 
     // Add phases as bars
@@ -179,7 +206,7 @@ test.describe('Startup & Suspense Profiling', () => {
       { name: 'telemetry', label: 'Telemetry' },
       { name: 'loadBoardData', label: 'Load Board' },
       { name: 'dataReady', label: 'Data Ready', point: true },
-      { name: 'appMounted', label: 'App Mounted', point: true },
+      { name: 'appMounted', label: 'App Mounted', point: true }
     ]
 
     for (const p of allPhases) {
@@ -188,7 +215,9 @@ test.describe('Startup & Suspense Profiling', () => {
         if (time < 0) continue
         const pos = Math.round((time / maxTime) * barWidth)
         const bar = ' '.repeat(Math.max(0, pos)) + '▼'
-        waterfall.push(`${p.label.padEnd(22)} ${String(time + 'ms').padStart(7)} ${''.padStart(7)}  |${bar}`)
+        waterfall.push(
+          `${p.label.padEnd(22)} ${String(time + 'ms').padStart(7)} ${''.padStart(7)}  |${bar}`
+        )
       } else {
         const phase = phases[p.name]
         if (!phase) continue
@@ -196,7 +225,9 @@ test.describe('Startup & Suspense Profiling', () => {
         const endPos = Math.round((phase.endMs / maxTime) * barWidth)
         const len = Math.max(1, endPos - startPos)
         const bar = ' '.repeat(Math.max(0, startPos)) + '█'.repeat(len)
-        waterfall.push(`${p.label.padEnd(22)} ${String(phase.startMs + 'ms').padStart(7)} ${String(phase.durationMs + 'ms').padStart(7)}  |${bar}`)
+        waterfall.push(
+          `${p.label.padEnd(22)} ${String(phase.startMs + 'ms').padStart(7)} ${String(phase.durationMs + 'ms').padStart(7)}  |${bar}`
+        )
       }
     }
 
@@ -208,7 +239,10 @@ test.describe('Startup & Suspense Profiling', () => {
       const endPos = dur > 0 ? Math.round(((mountTime + dur) / maxTime) * barWidth) : startPos + 1
       const len = Math.max(1, endPos - startPos)
       const bar = ' '.repeat(Math.max(0, startPos)) + '░'.repeat(len)
-      waterfall.push(`${'Suspense #' + (i + 1)}`.padEnd(22) + ` ${String(mountTime + 'ms').padStart(7)} ${String((dur > 0 ? dur : '?') + 'ms').padStart(7)}  |${bar}`)
+      waterfall.push(
+        `${'Suspense #' + (i + 1)}`.padEnd(22) +
+          ` ${String(mountTime + 'ms').padStart(7)} ${String((dur > 0 ? dur : '?') + 'ms').padStart(7)}  |${bar}`
+      )
     }
 
     console.log('\n=== STARTUP WATERFALL ===')
@@ -227,7 +261,9 @@ test.describe('Startup & Suspense Profiling', () => {
     console.log(`  App mounted at:       ${summary.appMountedAt}ms`)
     console.log(`  Suspense fallbacks:   ${summary.suspenseFallbackCount}`)
     if (summary.suspenseFallbackDurations.length > 0) {
-      console.log(`  Fallback durations:   ${summary.suspenseFallbackDurations.map(d => d + 'ms').join(', ')}`)
+      console.log(
+        `  Fallback durations:   ${summary.suspenseFallbackDurations.map((d) => d + 'ms').join(', ')}`
+      )
     }
     console.log(`  Total startup:        ${summary.totalStartupMs}ms`)
 
@@ -275,10 +311,13 @@ test.describe('Startup & Suspense Profiling', () => {
 
     // Wait for Suspense to resolve
     await mainWindow.waitForTimeout(2_000)
-    await mainWindow.evaluate(() => { performance.mark('sz:taskSwitch:end') })
+    await mainWindow.evaluate(() => {
+      performance.mark('sz:taskSwitch:end')
+    })
 
     const marks: MarkEntry[] = await mainWindow.evaluate(() => {
-      return performance.getEntriesByType('mark')
+      return performance
+        .getEntriesByType('mark')
         .filter((e) => e.name.startsWith('sz:'))
         .map((e) => ({ name: e.name, startTime: Math.round(e.startTime * 100) / 100 }))
         .sort((a, b) => a.startTime - b.startTime)
@@ -339,7 +378,7 @@ test.describe('Startup & Suspense Profiling', () => {
         time('tags.getTags', () => window.api.tags.getTags()),
         time('taskTags.getTagsForTask', () => window.api.taskTags.getTagsForTask(taskId)),
         time('db.getProjects', () => window.api.db.getProjects()),
-        time('db.getSubTasks', () => window.api.db.getSubTasks(taskId)),
+        time('db.getSubTasks', () => window.api.db.getSubTasks(taskId))
       ])
 
       // Sequential: parent task lookup
@@ -349,11 +388,17 @@ test.describe('Startup & Suspense Profiling', () => {
 
       const totalMs = Math.round((performance.now() - totalStart) * 100) / 100
 
-      return { timings, totalMs, parallelBatchMs: Math.max(...timings.slice(0, 5).map(t => t.durationMs)) }
+      return {
+        timings,
+        totalMs,
+        parallelBatchMs: Math.max(...timings.slice(0, 5).map((t) => t.durationMs))
+      }
     }, tasks[0].id)
 
     console.log('\n=== TASK DETAIL IPC WATERFALL ===')
-    console.log(`  Total: ${ipcTimings.totalMs}ms (parallel batch bottleneck: ${ipcTimings.parallelBatchMs}ms)`)
+    console.log(
+      `  Total: ${ipcTimings.totalMs}ms (parallel batch bottleneck: ${ipcTimings.parallelBatchMs}ms)`
+    )
     for (const t of ipcTimings.timings) {
       const bar = '█'.repeat(Math.max(1, Math.round(t.durationMs / 2)))
       console.log(`  ${t.name.padEnd(28)} ${String(t.durationMs + 'ms').padStart(8)}  ${bar}`)

@@ -1,12 +1,35 @@
 import { useState, useEffect } from 'react'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-  Button, Input, Label, Textarea, Checkbox,
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel,
-  taskStatusOptions,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  Button,
+  Input,
+  Label,
+  Textarea,
+  Checkbox,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+  SelectGroup,
+  SelectLabel,
+  taskStatusOptions
 } from '@slayzone/ui'
 import { Plus, Trash2, Sparkles, Terminal } from 'lucide-react'
-import { TEMPLATE_VARIABLES, type Automation, type TriggerConfig, type ConditionConfig, type ActionConfig, type ActionType, type CreateAutomationInput, type UpdateAutomationInput } from '@slayzone/automations/shared'
+import {
+  TEMPLATE_VARIABLES,
+  type Automation,
+  type TriggerConfig,
+  type ConditionConfig,
+  type ActionConfig,
+  type ActionType,
+  type CreateAutomationInput,
+  type UpdateAutomationInput
+} from '@slayzone/automations/shared'
 
 interface AiProviderOption {
   id: string
@@ -35,15 +58,20 @@ function triggerDescription(trigger: TriggerConfig): string {
       if (from) return `Runs when a task leaves "${from}"`
       return 'Runs whenever a task changes status'
     }
-    case 'task_created': return 'Runs when a new task is created in this project'
-    case 'task_archived': return 'Runs when a task is archived'
-    case 'task_tag_changed': return 'Runs when tags are added or removed from a task'
+    case 'task_created':
+      return 'Runs when a new task is created in this project'
+    case 'task_archived':
+      return 'Runs when a task is archived'
+    case 'task_tag_changed':
+      return 'Runs when tags are added or removed from a task'
     case 'cron': {
       const expr = trigger.params.expression as string | undefined
       return expr ? `Runs on schedule: ${expr}` : 'Runs on a recurring schedule'
     }
-    case 'manual': return 'Runs only when you click the play button'
-    default: return ''
+    case 'manual':
+      return 'Runs only when you click the play button'
+    default:
+      return ''
   }
 }
 
@@ -59,7 +87,7 @@ interface ConditionPreset {
 const CONDITION_PRESETS: ConditionPreset[] = [
   { key: 'status_is_some', label: 'Task status is any of...' },
   { key: 'priority_is_some', label: 'Task priority is any of...' },
-  { key: 'tags_contains_some', label: 'Task tags contains any of...' },
+  { key: 'tags_contains_some', label: 'Task tags contains any of...' }
 ]
 
 const PRIORITY_OPTIONS = [
@@ -67,7 +95,7 @@ const PRIORITY_OPTIONS = [
   { value: '2', label: 'High' },
   { value: '3', label: 'Medium' },
   { value: '4', label: 'Low' },
-  { value: '5', label: 'None' },
+  { value: '5', label: 'None' }
 ]
 
 function conditionToPresetKey(c: ConditionConfig): ConditionPresetType {
@@ -80,15 +108,18 @@ function conditionToPresetKey(c: ConditionConfig): ConditionPresetType {
 
 function presetToCondition(key: ConditionPresetType): ConditionConfig {
   switch (key) {
-    case 'status_is_some': return { type: 'task_property', params: { field: 'status', operator: 'in', value: [] } }
-    case 'priority_is_some': return { type: 'task_property', params: { field: 'priority', operator: 'in', value: [] } }
-    case 'tags_contains_some': return { type: 'task_property', params: { field: 'tags', operator: 'in', value: [] } }
+    case 'status_is_some':
+      return { type: 'task_property', params: { field: 'status', operator: 'in', value: [] } }
+    case 'priority_is_some':
+      return { type: 'task_property', params: { field: 'priority', operator: 'in', value: [] } }
+    case 'tags_contains_some':
+      return { type: 'task_property', params: { field: 'tags', operator: 'in', value: [] } }
   }
 }
 
 // Multi-select toggle helper
 function toggleValue(arr: string[], val: string): string[] {
-  return arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]
+  return arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val]
 }
 
 const EMPTY_TRIGGER: TriggerConfig = { type: 'task_status_change', params: {} }
@@ -100,12 +131,19 @@ function newAiAction(provider: AiProviderOption | undefined): ActionConfig {
     params: {
       provider: provider?.id ?? '',
       prompt: '',
-      flags: provider?.defaultFlags ?? '',
-    },
+      flags: provider?.defaultFlags ?? ''
+    }
   }
 }
 
-export function AutomationDialog({ open, onOpenChange, automation, projectId, tags, onSave }: AutomationDialogProps) {
+export function AutomationDialog({
+  open,
+  onOpenChange,
+  automation,
+  projectId,
+  tags,
+  onSave
+}: AutomationDialogProps) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [trigger, setTrigger] = useState<TriggerConfig>(EMPTY_TRIGGER)
@@ -119,23 +157,37 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
   useEffect(() => {
     if (!open) return
     setProvidersLoaded(false)
-    window.api.terminalModes.list().then((modes: { id: string; label: string; type: string; enabled: boolean; defaultFlags?: string | null; headlessCommand?: string | null }[]) => {
-      setProviders(
-        modes
-          .filter(m => m.enabled && !!m.headlessCommand?.trim())
-          .map(m => ({
-            id: m.id,
-            label: m.label,
-            type: m.type,
-            defaultFlags: m.defaultFlags ?? '',
-            headlessCommand: m.headlessCommand ?? '',
-          }))
+    window.api.terminalModes
+      .list()
+      .then(
+        (
+          modes: {
+            id: string
+            label: string
+            type: string
+            enabled: boolean
+            defaultFlags?: string | null
+            headlessCommand?: string | null
+          }[]
+        ) => {
+          setProviders(
+            modes
+              .filter((m) => m.enabled && !!m.headlessCommand?.trim())
+              .map((m) => ({
+                id: m.id,
+                label: m.label,
+                type: m.type,
+                defaultFlags: m.defaultFlags ?? '',
+                headlessCommand: m.headlessCommand ?? ''
+              }))
+          )
+          setProvidersLoaded(true)
+        }
       )
-      setProvidersLoaded(true)
-    }).catch(() => {
-      setProviders([])
-      setProvidersLoaded(true)
-    })
+      .catch(() => {
+        setProviders([])
+        setProvidersLoaded(true)
+      })
   }, [open])
 
   // Validity is provider-aware: an AI action with a stale/disabled provider id
@@ -147,7 +199,7 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
       const providerId = (action.params.provider as string)?.trim()
       if (!providerId) return false
       if (!(action.params.prompt as string)?.trim()) return false
-      if (providersLoaded && !providers.some(p => p.id === providerId)) return false
+      if (providersLoaded && !providers.some((p) => p.id === providerId)) return false
       // Mirror engine's shell-injection guard so Save disables locally.
       if (((action.params.flags as string) ?? '').includes('{{')) return false
       return true
@@ -186,7 +238,7 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
         trigger_config: trigger,
         conditions,
         actions: validActions,
-        catchup_on_start: catchupOnStart,
+        catchup_on_start: catchupOnStart
       } satisfies UpdateAutomationInput)
     } else {
       onSave({
@@ -196,14 +248,17 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
         trigger_config: trigger,
         conditions,
         actions: validActions,
-        catchup_on_start: catchupOnStart,
+        catchup_on_start: catchupOnStart
       } satisfies CreateAutomationInput)
     }
     onOpenChange(false)
   }
 
   const updateTriggerParam = (key: string, value: string) => {
-    setTrigger((prev: TriggerConfig) => ({ ...prev, params: { ...prev.params, [key]: value === '_any' ? undefined : value || undefined } }))
+    setTrigger((prev: TriggerConfig) => ({
+      ...prev,
+      params: { ...prev.params, [key]: value === '_any' ? undefined : value || undefined }
+    }))
   }
 
   const addCondition = () => {
@@ -211,19 +266,25 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
   }
 
   const updateConditionPreset = (index: number, presetKey: ConditionPresetType) => {
-    setConditions((prev: ConditionConfig[]) => prev.map((c: ConditionConfig, i: number) => i === index ? presetToCondition(presetKey) : c))
+    setConditions((prev: ConditionConfig[]) =>
+      prev.map((c: ConditionConfig, i: number) => (i === index ? presetToCondition(presetKey) : c))
+    )
   }
 
   const toggleConditionValue = (index: number, val: string) => {
-    setConditions((prev: ConditionConfig[]) => prev.map((c: ConditionConfig, i: number) => {
-      if (i !== index) return c
-      const current = (c.params.value as string[]) ?? []
-      return { ...c, params: { ...c.params, value: toggleValue(current, val) } }
-    }))
+    setConditions((prev: ConditionConfig[]) =>
+      prev.map((c: ConditionConfig, i: number) => {
+        if (i !== index) return c
+        const current = (c.params.value as string[]) ?? []
+        return { ...c, params: { ...c.params, value: toggleValue(current, val) } }
+      })
+    )
   }
 
   const removeCondition = (index: number) => {
-    setConditions((prev: ConditionConfig[]) => prev.filter((_: ConditionConfig, i: number) => i !== index))
+    setConditions((prev: ConditionConfig[]) =>
+      prev.filter((_: ConditionConfig, i: number) => i !== index)
+    )
   }
 
   return (
@@ -237,58 +298,91 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
           {/* Name */}
           <div className="space-y-1.5">
             <Label>Name</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Auto-cleanup worktrees" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Auto-cleanup worktrees"
+            />
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <Label>Description <span className="text-muted-foreground text-xs">(optional)</span></Label>
-            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What does this automation do?" />
+            <Label>
+              Description <span className="text-muted-foreground text-xs">(optional)</span>
+            </Label>
+            <Input
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="What does this automation do?"
+            />
           </div>
 
           {/* WHEN */}
           <div className="rounded-lg border border-border/40 bg-muted/50 p-3 space-y-4">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground">When</Label>
             <div className="flex items-center gap-3">
-            <Select value={trigger.type} onValueChange={(v) => setTrigger({ type: v as TriggerConfig['type'], params: {} })}>
-              <SelectTrigger className="shrink-0"><SelectValue /></SelectTrigger>
-              <SelectContent className="[&_[data-slot=select-group]+[data-slot=select-group]]:pt-1.5">
-                <SelectGroup>
-                  <SelectLabel>Tasks</SelectLabel>
-                  <SelectItem value="task_status_change">Task status changes</SelectItem>
-                  <SelectItem value="task_created">Task created</SelectItem>
-                  <SelectItem value="task_archived">Task archived</SelectItem>
-                  <SelectItem value="task_tag_changed">Task tags changed</SelectItem>
-                </SelectGroup>
-                <SelectGroup>
-                  <SelectLabel>Other</SelectLabel>
-                  <SelectItem value="cron">Scheduled (cron)</SelectItem>
-                  <SelectItem value="manual">Manual trigger</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">{triggerDescription(trigger)}</p>
+              <Select
+                value={trigger.type}
+                onValueChange={(v) => setTrigger({ type: v as TriggerConfig['type'], params: {} })}
+              >
+                <SelectTrigger className="shrink-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="[&_[data-slot=select-group]+[data-slot=select-group]]:pt-1.5">
+                  <SelectGroup>
+                    <SelectLabel>Tasks</SelectLabel>
+                    <SelectItem value="task_status_change">Task status changes</SelectItem>
+                    <SelectItem value="task_created">Task created</SelectItem>
+                    <SelectItem value="task_archived">Task archived</SelectItem>
+                    <SelectItem value="task_tag_changed">Task tags changed</SelectItem>
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Other</SelectLabel>
+                    <SelectItem value="cron">Scheduled (cron)</SelectItem>
+                    <SelectItem value="manual">Manual trigger</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{triggerDescription(trigger)}</p>
             </div>
 
             {trigger.type === 'task_status_change' && (
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-xs">From status</Label>
-                  <Select value={(trigger.params.fromStatus as string) || '_any'} onValueChange={(v) => updateTriggerParam('fromStatus', v)}>
-                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <Select
+                    value={(trigger.params.fromStatus as string) || '_any'}
+                    onValueChange={(v) => updateTriggerParam('fromStatus', v)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_any">Any</SelectItem>
-                      {taskStatusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      {taskStatusOptions.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>
+                          {s.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">To status</Label>
-                  <Select value={(trigger.params.toStatus as string) || '_any'} onValueChange={(v) => updateTriggerParam('toStatus', v)}>
-                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <Select
+                    value={(trigger.params.toStatus as string) || '_any'}
+                    onValueChange={(v) => updateTriggerParam('toStatus', v)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_any">Any</SelectItem>
-                      {taskStatusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      {taskStatusOptions.map((s) => (
+                        <SelectItem key={s.value} value={s.value}>
+                          {s.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -307,20 +401,27 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
                       className="font-mono text-xs shrink-0 w-40"
                     />
                     <code className="font-mono text-[11px] text-muted-foreground whitespace-nowrap">
-                      <span className="text-foreground/70">min</span> <span className="text-foreground/70">hour</span> <span className="text-foreground/70">day</span> <span className="text-foreground/70">month</span> <span className="text-foreground/70">weekday</span>
+                      <span className="text-foreground/70">min</span>{' '}
+                      <span className="text-foreground/70">hour</span>{' '}
+                      <span className="text-foreground/70">day</span>{' '}
+                      <span className="text-foreground/70">month</span>{' '}
+                      <span className="text-foreground/70">weekday</span>
                       &nbsp;&nbsp;—&nbsp;&nbsp;
-                      <span className="text-foreground/50">*</span> = every &nbsp; <span className="text-foreground/50">*/N</span> = every Nth
+                      <span className="text-foreground/50">*</span> = every &nbsp;{' '}
+                      <span className="text-foreground/50">*/N</span> = every Nth
                     </code>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1" style={{ marginTop: 12 }}>
-                  {([
-                    ['*/15 * * * *', 'Every 15 min'],
-                    ['0 * * * *', 'Every hour'],
-                    ['0 9 * * *', 'Daily at 9am'],
-                    ['0 9 * * 1-5', 'Weekdays at 9am'],
-                    ['0 0 * * 0', 'Weekly (Sun midnight)'],
-                  ] as const).map(([expr, label]) => (
+                  {(
+                    [
+                      ['*/15 * * * *', 'Every 15 min'],
+                      ['0 * * * *', 'Every hour'],
+                      ['0 9 * * *', 'Daily at 9am'],
+                      ['0 9 * * 1-5', 'Weekdays at 9am'],
+                      ['0 0 * * 0', 'Weekly (Sun midnight)']
+                    ] as const
+                  ).map(([expr, label]) => (
                     <button
                       key={expr}
                       type="button"
@@ -354,7 +455,9 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
           {/* ONLY IF */}
           <div className="rounded-lg border border-border/40 bg-muted/50 p-3 space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Only if <span className="normal-case">(optional)</span></Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                Only if <span className="normal-case">(optional)</span>
+              </Label>
               <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={addCondition}>
                 <Plus className="w-3 h-3 mr-1" /> Add
               </Button>
@@ -364,27 +467,42 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
               const presetKey = conditionToPresetKey(condition)
               const selectedValues = (condition.params.value as string[]) ?? []
 
-              const options = presetKey === 'status_is_some'
-                ? taskStatusOptions.map(s => ({ value: s.value, label: s.label }))
-                : presetKey === 'priority_is_some'
-                  ? PRIORITY_OPTIONS
-                  : tags.map(t => ({ value: t.id, label: t.name }))
+              const options =
+                presetKey === 'status_is_some'
+                  ? taskStatusOptions.map((s) => ({ value: s.value, label: s.label }))
+                  : presetKey === 'priority_is_some'
+                    ? PRIORITY_OPTIONS
+                    : tags.map((t) => ({ value: t.id, label: t.name }))
 
               return (
                 <div key={i} className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Select value={presetKey} onValueChange={(v) => updateConditionPreset(i, v as ConditionPresetType)}>
-                      <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                    <Select
+                      value={presetKey}
+                      onValueChange={(v) => updateConditionPreset(i, v as ConditionPresetType)}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {CONDITION_PRESETS.map(p => <SelectItem key={p.key} value={p.key}>{p.label}</SelectItem>)}
+                        {CONDITION_PRESETS.map((p) => (
+                          <SelectItem key={p.key} value={p.key}>
+                            {p.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => removeCondition(i)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 shrink-0"
+                      onClick={() => removeCondition(i)}
+                    >
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {options.map(o => (
+                    {options.map((o) => (
                       <button
                         key={o.value}
                         type="button"
@@ -419,7 +537,9 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
                   variant="ghost"
                   size="sm"
                   className="h-6 text-xs"
-                  onClick={() => setActions((prev: ActionConfig[]) => [...prev, { ...EMPTY_RUN_COMMAND }])}
+                  onClick={() =>
+                    setActions((prev: ActionConfig[]) => [...prev, { ...EMPTY_RUN_COMMAND }])
+                  }
                 >
                   <Terminal className="w-3 h-3 mr-1" /> Command
                 </Button>
@@ -428,7 +548,9 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
                   size="sm"
                   className="h-6 text-xs"
                   disabled={providers.length === 0}
-                  onClick={() => setActions((prev: ActionConfig[]) => [...prev, newAiAction(providers[0])])}
+                  onClick={() =>
+                    setActions((prev: ActionConfig[]) => [...prev, newAiAction(providers[0])])
+                  }
                 >
                   <Sparkles className="w-3 h-3 mr-1" /> AI
                 </Button>
@@ -437,29 +559,45 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
 
             {actions.map((action, i) => {
               const updateParam = (key: string, value: string) =>
-                setActions((prev: ActionConfig[]) => prev.map((a: ActionConfig, j: number) => j === i ? { ...a, params: { ...a.params, [key]: value } } : a))
+                setActions((prev: ActionConfig[]) =>
+                  prev.map((a: ActionConfig, j: number) =>
+                    j === i ? { ...a, params: { ...a.params, [key]: value } } : a
+                  )
+                )
               const changeType = (newType: ActionType) =>
-                setActions((prev: ActionConfig[]) => prev.map((a: ActionConfig, j: number) => {
-                  if (j !== i) return a
-                  if (newType === a.type) return a
-                  return newType === 'ai' ? newAiAction(providers[0]) : { ...EMPTY_RUN_COMMAND }
-                }))
+                setActions((prev: ActionConfig[]) =>
+                  prev.map((a: ActionConfig, j: number) => {
+                    if (j !== i) return a
+                    if (newType === a.type) return a
+                    return newType === 'ai' ? newAiAction(providers[0]) : { ...EMPTY_RUN_COMMAND }
+                  })
+                )
 
-              const storedProviderId = action.type === 'ai' ? ((action.params.provider as string) ?? '') : ''
-              const providerMissing = action.type === 'ai'
-                && providersLoaded
-                && !!storedProviderId
-                && !providers.some(p => p.id === storedProviderId)
-              const flagsHasTemplate = action.type === 'ai' && ((action.params.flags as string) ?? '').includes('{{')
+              const storedProviderId =
+                action.type === 'ai' ? ((action.params.provider as string) ?? '') : ''
+              const providerMissing =
+                action.type === 'ai' &&
+                providersLoaded &&
+                !!storedProviderId &&
+                !providers.some((p) => p.id === storedProviderId)
+              const flagsHasTemplate =
+                action.type === 'ai' && ((action.params.flags as string) ?? '').includes('{{')
 
               return (
-                <div key={i} className="rounded-md border border-border/40 bg-background/40 p-2 space-y-2">
+                <div
+                  key={i}
+                  className="rounded-md border border-border/40 bg-background/40 p-2 space-y-2"
+                >
                   <div className="flex items-center gap-2">
                     <Select value={action.type} onValueChange={(v) => changeType(v as ActionType)}>
-                      <SelectTrigger size="sm" className="w-32 shrink-0"><SelectValue /></SelectTrigger>
+                      <SelectTrigger size="sm" className="w-32 shrink-0">
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="run_command">Run command</SelectItem>
-                        <SelectItem value="ai" disabled={providers.length === 0}>Run AI</SelectItem>
+                        <SelectItem value="ai" disabled={providers.length === 0}>
+                          Run AI
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     {action.type === 'ai' && (
@@ -467,15 +605,30 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
                         value={storedProviderId}
                         onValueChange={(v) => updateParam('provider', v)}
                       >
-                        <SelectTrigger size="sm" className="flex-1"><SelectValue placeholder="Pick provider" /></SelectTrigger>
+                        <SelectTrigger size="sm" className="flex-1">
+                          <SelectValue placeholder="Pick provider" />
+                        </SelectTrigger>
                         <SelectContent>
-                          {providers.map(p => <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>)}
+                          {providers.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     )}
                     <div className="flex-1" />
                     {actions.length > 1 && (
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => setActions((prev: ActionConfig[]) => prev.filter((_: ActionConfig, j: number) => j !== i))}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 shrink-0"
+                        onClick={() =>
+                          setActions((prev: ActionConfig[]) =>
+                            prev.filter((_: ActionConfig, j: number) => j !== i)
+                          )
+                        }
+                      >
                         <Trash2 className="w-3 h-3" />
                       </Button>
                     )}
@@ -510,7 +663,8 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
                       />
                       {flagsHasTemplate && (
                         <p className="text-[11px] text-destructive">
-                          Template variables are not allowed in flags — put them in the prompt above.
+                          Template variables are not allowed in flags — put them in the prompt
+                          above.
                         </p>
                       )}
                     </>
@@ -527,7 +681,7 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
                 </tr>
               </thead>
               <tbody className="text-muted-foreground">
-                {(showAllVars ? TEMPLATE_VARIABLES : TEMPLATE_VARIABLES.slice(0, 2)).map(v => (
+                {(showAllVars ? TEMPLATE_VARIABLES : TEMPLATE_VARIABLES.slice(0, 2)).map((v) => (
                   <tr key={v.name}>
                     <td className="px-2 py-1 font-mono text-foreground/70 border border-border/40">{`{{${v.name}}}`}</td>
                     <td className="px-2 py-1 border border-border/40">{v.desc}</td>
@@ -535,14 +689,20 @@ export function AutomationDialog({ open, onOpenChange, automation, projectId, ta
                 ))}
               </tbody>
             </table>
-            <button type="button" onClick={() => setShowAllVars(v => !v)} className="text-xs text-muted-foreground hover:text-foreground w-full text-center">
+            <button
+              type="button"
+              onClick={() => setShowAllVars((v) => !v)}
+              className="text-xs text-muted-foreground hover:text-foreground w-full text-center"
+            >
               {showAllVars ? 'Show less' : `Show all (${TEMPLATE_VARIABLES.length} variables)`}
             </button>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
           <Button onClick={handleSave} disabled={!name.trim() || !actions.some(actionIsValid)}>
             {automation ? 'Save' : 'Create'}
           </Button>

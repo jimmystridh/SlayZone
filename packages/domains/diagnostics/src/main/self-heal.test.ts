@@ -124,7 +124,7 @@ async function run(): Promise<void> {
   {
     const dir = makeTempDir()
     const salvagePath = path.join(dir, 'old.sqlite')
-    seedDb(salvagePath, 100_500)  // 500 rows above limit
+    seedDb(salvagePath, 100_500) // 500 rows above limit
 
     const freshPath = path.join(dir, 'new.sqlite')
     const fresh = new Database(freshPath)
@@ -136,8 +136,8 @@ async function run(): Promise<void> {
     const { min, max } = fresh
       .prepare('SELECT MIN(ts_ms) as min, MAX(ts_ms) as max FROM diagnostics_events')
       .get() as { min: number; max: number }
-    expect(max).toBe(100_499)        // newest preserved
-    expect(min).toBe(500)            // 500 oldest dropped
+    expect(max).toBe(100_499) // newest preserved
+    expect(min).toBe(500) // 500 oldest dropped
     fresh.close()
     fs.rmSync(dir, { recursive: true })
     console.log('  ✓ newest 100k by ts_ms DESC, older rows dropped')
@@ -147,7 +147,7 @@ async function run(): Promise<void> {
   {
     const dir = makeTempDir()
     const salvagePath = path.join(dir, 'old.sqlite')
-    seedDb(salvagePath, 100)  // ids "row-0".."row-99"
+    seedDb(salvagePath, 100) // ids "row-0".."row-99"
 
     const freshPath = path.join(dir, 'new.sqlite')
     const fresh = new Database(freshPath)
@@ -159,9 +159,11 @@ async function run(): Promise<void> {
     for (let i = 0; i < 50; i++) insertStmt.run(`row-${i}`, i)
 
     const { inserted } = mergeSalvage(fresh, salvagePath)
-    expect(inserted).toBe(50)  // only "row-50".."row-99" new
+    expect(inserted).toBe(50) // only "row-50".."row-99" new
 
-    const count = (fresh.prepare('SELECT COUNT(*) as c FROM diagnostics_events').get() as { c: number }).c
+    const count = (
+      fresh.prepare('SELECT COUNT(*) as c FROM diagnostics_events').get() as { c: number }
+    ).c
     expect(count).toBe(100)
     fresh.close()
     fs.rmSync(dir, { recursive: true })

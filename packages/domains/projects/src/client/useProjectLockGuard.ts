@@ -13,7 +13,7 @@ export function isRateLimited(project: Project): boolean {
   const cfg = project.lock_config?.rate_limit
   if (!cfg) return false
   const windowStart = Date.now() - cfg.per_minutes * 60_000
-  const log = (taskOpenLog.get(project.id) ?? []).filter(t => t > windowStart)
+  const log = (taskOpenLog.get(project.id) ?? []).filter((t) => t > windowStart)
   taskOpenLog.set(project.id, log) // prune old entries
   return log.length >= cfg.max_tasks
 }
@@ -45,7 +45,9 @@ function isWithinDuration(lockedUntil: string | null | undefined): boolean {
   return new Date(lockedUntil).getTime() > Date.now()
 }
 
-function isWithinSchedule(sched: { from: string; to: string; weekdays?: boolean[] } | null | undefined): boolean {
+function isWithinSchedule(
+  sched: { from: string; to: string; weekdays?: boolean[] } | null | undefined
+): boolean {
   if (!sched) return false
   const now = new Date()
   const current = now.getHours() * 60 + now.getMinutes()
@@ -57,7 +59,7 @@ function isWithinSchedule(sched: { from: string; to: string; weekdays?: boolean[
   const isStartDayActive = (dayIdx: number): boolean => {
     if (!sched.weekdays) return true
     if (sched.weekdays.length !== 7) return true
-    if (sched.weekdays.every(d => !d)) return false
+    if (sched.weekdays.every((d) => !d)) return false
     return !!sched.weekdays[dayIdx]
   }
   if (from <= to) {
@@ -90,7 +92,9 @@ export const PROJECT_LOCKED_TOAST = 'Project is locked — cannot open new tabs'
 
 export function hasActiveLockOverride(project: Project | null | undefined): boolean {
   if (!project) return false
-  if (durationOverrides.has(project.id) && isWithinDuration(project.lock_config?.locked_until)) return true
-  if (scheduleOverrides.has(project.id) && isWithinSchedule(project.lock_config?.schedule)) return true
+  if (durationOverrides.has(project.id) && isWithinDuration(project.lock_config?.locked_until))
+    return true
+  if (scheduleOverrides.has(project.id) && isWithinSchedule(project.lock_config?.schedule))
+    return true
   return false
 }

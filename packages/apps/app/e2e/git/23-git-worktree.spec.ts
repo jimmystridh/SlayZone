@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, resetApp, ensureGitRepo} from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  resetApp,
+  ensureGitRepo
+} from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { pressShortcut } from '../fixtures/shortcuts'
 import { execSync } from 'child_process'
@@ -16,10 +24,7 @@ test.describe('Git worktree operations', () => {
   const execGit = (command: string) =>
     execSync(command, { cwd: TEST_PROJECT_PATH, stdio: 'pipe' }).toString()
 
-  const openTaskViaSearch = async (
-    page: import('@playwright/test').Page,
-    title: string
-  ) => {
+  const openTaskViaSearch = async (page: import('@playwright/test').Page, title: string) => {
     const taskCardTitle = page.getByText(title).first()
     if (await taskCardTitle.isVisible({ timeout: 1_500 }).catch(() => false)) {
       await taskCardTitle.click()
@@ -30,7 +35,9 @@ test.describe('Git worktree operations', () => {
       await input.fill(title)
       await page.getByRole('dialog').last().getByText(title).first().click()
     }
-    await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible(
+      { timeout: 5_000 }
+    )
   }
 
   const removeWorktreeButton = (page: import('@playwright/test').Page) => {
@@ -48,24 +55,38 @@ test.describe('Git worktree operations', () => {
       const worktreeList = execGit('git worktree list --porcelain')
       const worktreePaths = worktreeList
         .split('\n')
-        .filter(line => line.startsWith('worktree '))
-        .map(line => line.replace('worktree ', '').trim())
+        .filter((line) => line.startsWith('worktree '))
+        .map((line) => line.replace('worktree ', '').trim())
 
       for (const wt of worktreePaths) {
         if (wt !== mainWorktree) {
-          try { execGit(`git worktree remove --force "${wt}"`) } catch { /* ignore */ }
+          try {
+            execGit(`git worktree remove --force "${wt}"`)
+          } catch {
+            /* ignore */
+          }
         }
       }
       execGit('git worktree prune')
       const worktreeDir = path.join(TEST_PROJECT_PATH, 'worktrees')
       execSync(`rm -rf "${worktreeDir}"`, { cwd: TEST_PROJECT_PATH, stdio: 'pipe' })
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     // Delete branch if it exists from a previous run
-    try { execGit(`git branch -D ${branchName}`) } catch { /* ignore */ }
+    try {
+      execGit(`git branch -D ${branchName}`)
+    } catch {
+      /* ignore */
+    }
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Worktree Test', color: '#10b981', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Worktree Test',
+      color: '#10b981',
+      path: TEST_PROJECT_PATH
+    })
     // Ensure default worktree base path behavior is used for this suite.
     await s.setSetting('worktree_base_path', '')
     await s.setSetting('worktree_copy_behavior', 'none')
@@ -76,7 +97,9 @@ test.describe('Git worktree operations', () => {
 
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
-    await expect(mainWindow.locator('p.line-clamp-3:visible', { hasText: 'Worktree task' }).first()).toBeVisible()
+    await expect(
+      mainWindow.locator('p.line-clamp-3:visible', { hasText: 'Worktree task' }).first()
+    ).toBeVisible()
     await openTaskViaSearch(mainWindow, 'Worktree task')
 
     // Toggle git panel on (general tab — shows branch/worktree info)
@@ -101,10 +124,13 @@ test.describe('Git worktree operations', () => {
     await mainWindow.getByRole('button', { name: /Branch to worktree/ }).click()
     // Wait for creation (git worktree add + DB update)
     await expect
-      .poll(async () => {
-        const task = await getTask(mainWindow, taskId)
-        return task?.worktree_path ?? null
-      }, { timeout: 10_000 })
+      .poll(
+        async () => {
+          const task = await getTask(mainWindow, taskId)
+          return task?.worktree_path ?? null
+        },
+        { timeout: 10_000 }
+      )
       .toContain(branchName)
 
     // Worktree name should appear (derived from slugified task title)
@@ -120,16 +146,19 @@ test.describe('Git worktree operations', () => {
 
   test('worktree path persisted in DB', async ({ mainWindow }) => {
     await expect
-      .poll(async () => {
-        const task = await getTask(mainWindow, taskId)
-        return {
-          worktreePath: task?.worktree_path ?? null,
-          parent: task?.worktree_parent_branch ?? null,
-        }
-      }, { timeout: 10_000 })
+      .poll(
+        async () => {
+          const task = await getTask(mainWindow, taskId)
+          return {
+            worktreePath: task?.worktree_path ?? null,
+            parent: task?.worktree_parent_branch ?? null
+          }
+        },
+        { timeout: 10_000 }
+      )
       .toMatchObject({
         worktreePath: expect.stringContaining(branchName),
-        parent: expect.stringMatching(/main|master/),
+        parent: expect.stringMatching(/main|master/)
       })
   })
 
@@ -153,7 +182,9 @@ test.describe('Git worktree operations', () => {
     await mainWindow.waitForTimeout(250)
   })
 
-  test('worktree metadata remains readable immediately after delete action', async ({ mainWindow }) => {
+  test('worktree metadata remains readable immediately after delete action', async ({
+    mainWindow
+  }) => {
     const task = await getTask(mainWindow, taskId)
     expect(task?.worktree_path).toContain(branchName)
   })
@@ -162,28 +193,49 @@ test.describe('Git worktree operations', () => {
     // Ensure previous delete action fully detached worktree branch, if still present.
     const existing = await getTask(mainWindow, taskId)
     if (existing?.worktree_path) {
-      await mainWindow.evaluate(async ({ repoPath, worktreePath, id }) => {
-        await window.api.git.removeWorktree(repoPath, worktreePath).catch(() => {})
-        await window.api.db.updateTask({ id, worktreePath: null })
-      }, { repoPath: TEST_PROJECT_PATH, worktreePath: existing.worktree_path, id: taskId })
+      await mainWindow.evaluate(
+        async ({ repoPath, worktreePath, id }) => {
+          await window.api.git.removeWorktree(repoPath, worktreePath).catch(() => {})
+          await window.api.db.updateTask({ id, worktreePath: null })
+        },
+        { repoPath: TEST_PROJECT_PATH, worktreePath: existing.worktree_path, id: taskId }
+      )
     }
 
     // Clean up branch from previous create/delete cycle
-    try { execGit(`git branch -D ${branchName}`) } catch { /* ignore */ }
-    try { execGit('git worktree prune') } catch { /* ignore */ }
-    try { execSync(`rm -rf "${path.join(TEST_PROJECT_PATH, 'worktrees')}"`, { cwd: TEST_PROJECT_PATH, stdio: 'pipe' }) } catch { /* ignore */ }
+    try {
+      execGit(`git branch -D ${branchName}`)
+    } catch {
+      /* ignore */
+    }
+    try {
+      execGit('git worktree prune')
+    } catch {
+      /* ignore */
+    }
+    try {
+      execSync(`rm -rf "${path.join(TEST_PROJECT_PATH, 'worktrees')}"`, {
+        cwd: TEST_PROJECT_PATH,
+        stdio: 'pipe'
+      })
+    } catch {
+      /* ignore */
+    }
 
     const targetPath = path.join(path.dirname(TEST_PROJECT_PATH), branchName)
     const parentBranch = execGit('git branch --show-current').trim() || 'main'
 
-    await mainWindow.evaluate(async ({ repoPath, targetPath, branch, taskId, parentBranch }) => {
-      await window.api.git.createWorktree({ repoPath, targetPath, branch })
-      await window.api.db.updateTask({
-        id: taskId,
-        worktreePath: targetPath,
-        worktreeParentBranch: parentBranch
-      })
-    }, { repoPath: TEST_PROJECT_PATH, targetPath, branch: branchName, taskId, parentBranch })
+    await mainWindow.evaluate(
+      async ({ repoPath, targetPath, branch, taskId, parentBranch }) => {
+        await window.api.git.createWorktree({ repoPath, targetPath, branch })
+        await window.api.db.updateTask({
+          id: taskId,
+          worktreePath: targetPath,
+          worktreeParentBranch: parentBranch
+        })
+      },
+      { repoPath: TEST_PROJECT_PATH, targetPath, branch: branchName, taskId, parentBranch }
+    )
     await expect
       .poll(async () => {
         const task = await getTask(mainWindow, taskId)
@@ -192,9 +244,7 @@ test.describe('Git worktree operations', () => {
       .toContain(branchName)
 
     // Verify branch was actually created in git
-    await expect
-      .poll(() => execGit('git branch'))
-      .toContain(branchName)
+    await expect.poll(() => execGit('git branch')).toContain(branchName)
 
     // Verify worktree path stored in DB matches the explicit targetPath used above
     // (test exercises direct createWorktree, not the auto-create default template).
@@ -204,7 +254,8 @@ test.describe('Git worktree operations', () => {
     expect(worktreePathFromDb).toBe(expectedWorktreePath)
 
     // Verify worktree dir exists on disk (read effective path from DB)
-    const worktreePath = task?.worktree_path ?? path.join(TEST_PROJECT_PATH, 'worktrees', branchName)
+    const worktreePath =
+      task?.worktree_path ?? path.join(TEST_PROJECT_PATH, 'worktrees', branchName)
     const exists = existsSync(worktreePath)
     expect(exists).toBe(true)
   })
@@ -222,18 +273,25 @@ test.describe('Git worktree operations', () => {
     const worktreePath = path.join(path.dirname(TEST_PROJECT_PATH), branch)
     const parentBranch = execGit('git branch --show-current').trim()
 
-    await mainWindow.evaluate(async ({ repoPath, targetPath, branch, taskId, parentBranch }) => {
-      await window.api.git.createWorktree({ repoPath, targetPath, branch })
-      await window.api.db.updateTask({
-        id: taskId,
-        worktreePath: targetPath,
-        worktreeParentBranch: parentBranch
-      })
-    }, { repoPath: TEST_PROJECT_PATH, targetPath: worktreePath, branch, taskId: created.id, parentBranch })
+    await mainWindow.evaluate(
+      async ({ repoPath, targetPath, branch, taskId, parentBranch }) => {
+        await window.api.git.createWorktree({ repoPath, targetPath, branch })
+        await window.api.db.updateTask({
+          id: taskId,
+          worktreePath: targetPath,
+          worktreeParentBranch: parentBranch
+        })
+      },
+      {
+        repoPath: TEST_PROJECT_PATH,
+        targetPath: worktreePath,
+        branch,
+        taskId: created.id,
+        parentBranch
+      }
+    )
 
-    await expect
-      .poll(() => execGit('git worktree list --porcelain'))
-      .toContain(worktreePath)
+    await expect.poll(() => execGit('git worktree list --porcelain')).toContain(worktreePath)
     expect(existsSync(worktreePath)).toBe(true)
 
     await s.archiveTask(created.id)
@@ -251,15 +309,13 @@ test.describe('Git worktree operations', () => {
         worktreePath: null
       })
 
-    await expect
-      .poll(() => execGit('git worktree list --porcelain'))
-      .not.toContain(worktreePath)
-    await expect
-      .poll(() => existsSync(worktreePath))
-      .toBe(false)
+    await expect.poll(() => execGit('git worktree list --porcelain')).not.toContain(worktreePath)
+    await expect.poll(() => existsSync(worktreePath)).toBe(false)
   })
 
-  test('deleting a task soft-deletes it and removes it from active lists', async ({ mainWindow }) => {
+  test('deleting a task soft-deletes it and removes it from active lists', async ({
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
     const projects = await s.getProjects()
     const project = projects.find((p: { name: string }) => p.name === 'Worktree Test')
@@ -272,18 +328,25 @@ test.describe('Git worktree operations', () => {
     const worktreePath = path.join(path.dirname(TEST_PROJECT_PATH), branch)
     const parentBranch = execGit('git branch --show-current').trim()
 
-    await mainWindow.evaluate(async ({ repoPath, targetPath, branch, taskId, parentBranch }) => {
-      await window.api.git.createWorktree({ repoPath, targetPath, branch })
-      await window.api.db.updateTask({
-        id: taskId,
-        worktreePath: targetPath,
-        worktreeParentBranch: parentBranch
-      })
-    }, { repoPath: TEST_PROJECT_PATH, targetPath: worktreePath, branch, taskId: created.id, parentBranch })
+    await mainWindow.evaluate(
+      async ({ repoPath, targetPath, branch, taskId, parentBranch }) => {
+        await window.api.git.createWorktree({ repoPath, targetPath, branch })
+        await window.api.db.updateTask({
+          id: taskId,
+          worktreePath: targetPath,
+          worktreeParentBranch: parentBranch
+        })
+      },
+      {
+        repoPath: TEST_PROJECT_PATH,
+        targetPath: worktreePath,
+        branch,
+        taskId: created.id,
+        parentBranch
+      }
+    )
 
-    await expect
-      .poll(() => execGit('git worktree list --porcelain'))
-      .toContain(worktreePath)
+    await expect.poll(() => execGit('git worktree list --porcelain')).toContain(worktreePath)
     expect(existsSync(worktreePath)).toBe(true)
 
     await s.deleteTask(created.id)
@@ -302,8 +365,6 @@ test.describe('Git worktree operations', () => {
       })
       .toBe(false)
 
-    await expect
-      .poll(() => existsSync(worktreePath))
-      .toBe(true)
+    await expect.poll(() => existsSync(worktreePath)).toBe(true)
   })
 })

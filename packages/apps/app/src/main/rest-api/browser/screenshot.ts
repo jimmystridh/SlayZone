@@ -13,7 +13,10 @@ export function registerBrowserScreenshotRoute(app: Express, _deps: RestApiDeps)
     if (!bwc) return
     try {
       const image = await bwc.wc.capturePage()
-      if (image.isEmpty()) { res.status(500).json({ error: 'Captured image is empty' }); return }
+      if (image.isEmpty()) {
+        res.status(500).json({ error: 'Captured image is empty' })
+        return
+      }
       const dir = join(electronApp.getPath('temp'), 'slayzone', 'browser-screenshots')
       mkdirSync(dir, { recursive: true })
       // Clean up screenshots older than 1 hour
@@ -21,9 +24,15 @@ export function registerBrowserScreenshotRoute(app: Express, _deps: RestApiDeps)
         const cutoff = Date.now() - 3600_000
         for (const f of readdirSync(dir)) {
           const fp = join(dir, f)
-          try { if (statSync(fp).mtimeMs < cutoff) unlinkSync(fp) } catch { /* ignore */ }
+          try {
+            if (statSync(fp).mtimeMs < cutoff) unlinkSync(fp)
+          } catch {
+            /* ignore */
+          }
         }
-      } catch { /* ignore cleanup errors */ }
+      } catch {
+        /* ignore cleanup errors */
+      }
       const filePath = join(dir, `${randomUUID()}.png`)
       writeFileSync(filePath, image.toPNG())
       res.json({ ok: true, path: filePath })

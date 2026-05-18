@@ -41,7 +41,7 @@ export const trueBlack: UnifiedThemeDefinition = {
       surface2: '#1a1a1a',
       surface3: '#262626',
       modal: '#000000',
-      modalBorder: 'rgba(255, 255, 255, 0.25)',
+      modalBorder: 'rgba(255, 255, 255, 0.25)'
     },
     terminal: {
       background: '#000000',
@@ -65,7 +65,7 @@ export const trueBlack: UnifiedThemeDefinition = {
       brightBlue: '#93c5fd',
       brightMagenta: '#d8b4fe',
       brightCyan: '#67e8f9',
-      brightWhite: '#fafafa',
+      brightWhite: '#fafafa'
     },
     editor: {
       background: '#000000',
@@ -85,8 +85,8 @@ export const trueBlack: UnifiedThemeDefinition = {
       variable: '#e5e5e5',
       property: '#f87171',
       link: '#60a5fa',
-      heading: '#e5e5e5',
-    },
+      heading: '#e5e5e5'
+    }
   },
   light: {
     chrome: {
@@ -126,7 +126,7 @@ export const trueBlack: UnifiedThemeDefinition = {
       surface2: '#ffffff',
       surface3: '#ffffff',
       modal: '#f5f5f5',
-      modalBorder: 'rgba(0, 0, 0, 0.35)',
+      modalBorder: 'rgba(0, 0, 0, 0.35)'
     },
     terminal: {
       background: '#ffffff',
@@ -150,7 +150,7 @@ export const trueBlack: UnifiedThemeDefinition = {
       brightBlue: '#3b82f6',
       brightMagenta: '#a855f7',
       brightCyan: '#06b6d4',
-      brightWhite: '#6b7280',
+      brightWhite: '#6b7280'
     },
     editor: {
       background: '#ffffff',
@@ -170,7 +170,7 @@ export const trueBlack: UnifiedThemeDefinition = {
       variable: '#1a1a1a',
       property: '#dc2626',
       link: '#2563eb',
-      heading: '#1a1a1a',
-    },
-  },
+      heading: '#1a1a1a'
+    }
+  }
 }

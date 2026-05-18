@@ -12,7 +12,7 @@ import {
   overrideScheduleLock,
   clearLockOverrides,
   isRateLimited,
-  recordTaskOpen,
+  recordTaskOpen
 } from './useProjectLockGuard.js'
 
 let nextId = 0
@@ -37,7 +37,7 @@ function makeProject(id: string, lock_config: ProjectLockConfig | null): Project
     icon_image_path: null,
     sort_order: 0,
     created_at: '',
-    updated_at: '',
+    updated_at: ''
   }
 }
 
@@ -49,7 +49,8 @@ function activeSchedule(): { from: string; to: string } {
   const now = new Date()
   const past = new Date(now.getTime() - 60_000)
   const future = new Date(now.getTime() + 3_600_000)
-  const fmt = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  const fmt = (d: Date) =>
+    `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   return { from: fmt(past), to: fmt(future) }
 }
 
@@ -58,7 +59,8 @@ function inactiveSchedule(): { from: string; to: string } {
   const now = new Date()
   const start = new Date(now.getTime() + 3_600_000)
   const end = new Date(now.getTime() + 7_200_000)
-  const fmt = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  const fmt = (d: Date) =>
+    `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   return { from: fmt(start), to: fmt(end) }
 }
 
@@ -73,24 +75,40 @@ describe('isProjectDurationLocked', () => {
   })
 
   test('locked_until in the future → true', () => {
-    const p = makeProject(newId(), { locked_until: futureIso(60_000), rate_limit: null, schedule: null })
+    const p = makeProject(newId(), {
+      locked_until: futureIso(60_000),
+      rate_limit: null,
+      schedule: null
+    })
     expect(isProjectDurationLocked(p)).toBeTruthy()
   })
 
   test('locked_until in the past → false', () => {
-    const p = makeProject(newId(), { locked_until: pastIso(60_000), rate_limit: null, schedule: null })
+    const p = makeProject(newId(), {
+      locked_until: pastIso(60_000),
+      rate_limit: null,
+      schedule: null
+    })
     expect(isProjectDurationLocked(p)).toBeFalsy()
   })
 
   test('override suppresses active duration lock', () => {
-    const p = makeProject(newId(), { locked_until: futureIso(60_000), rate_limit: null, schedule: null })
+    const p = makeProject(newId(), {
+      locked_until: futureIso(60_000),
+      rate_limit: null,
+      schedule: null
+    })
     overrideDurationLock(p.id)
     expect(isProjectDurationLocked(p)).toBeFalsy()
     clearLockOverrides(p.id)
   })
 
   test('clearLockOverrides re-enables duration lock', () => {
-    const p = makeProject(newId(), { locked_until: futureIso(60_000), rate_limit: null, schedule: null })
+    const p = makeProject(newId(), {
+      locked_until: futureIso(60_000),
+      rate_limit: null,
+      schedule: null
+    })
     overrideDurationLock(p.id)
     clearLockOverrides(p.id)
     expect(isProjectDurationLocked(p)).toBeTruthy()
@@ -108,24 +126,40 @@ describe('isScheduleLocked', () => {
   })
 
   test('schedule covering now → true', () => {
-    const p = makeProject(newId(), { locked_until: null, rate_limit: null, schedule: activeSchedule() })
+    const p = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: null,
+      schedule: activeSchedule()
+    })
     expect(isScheduleLocked(p)).toBeTruthy()
   })
 
   test('schedule outside now → false', () => {
-    const p = makeProject(newId(), { locked_until: null, rate_limit: null, schedule: inactiveSchedule() })
+    const p = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: null,
+      schedule: inactiveSchedule()
+    })
     expect(isScheduleLocked(p)).toBeFalsy()
   })
 
   test('override suppresses active schedule lock', () => {
-    const p = makeProject(newId(), { locked_until: null, rate_limit: null, schedule: activeSchedule() })
+    const p = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: null,
+      schedule: activeSchedule()
+    })
     overrideScheduleLock(p.id)
     expect(isScheduleLocked(p)).toBeFalsy()
     clearLockOverrides(p.id)
   })
 
   test('weekdays missing → behaves as all days active (back-compat)', () => {
-    const p = makeProject(newId(), { locked_until: null, rate_limit: null, schedule: activeSchedule() })
+    const p = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: null,
+      schedule: activeSchedule()
+    })
     expect(isScheduleLocked(p)).toBeTruthy()
   })
 
@@ -136,7 +170,7 @@ describe('isScheduleLocked', () => {
     const p = makeProject(newId(), {
       locked_until: null,
       rate_limit: null,
-      schedule: { ...activeSchedule(), weekdays },
+      schedule: { ...activeSchedule(), weekdays }
     })
     expect(isScheduleLocked(p)).toBeFalsy()
   })
@@ -148,7 +182,7 @@ describe('isScheduleLocked', () => {
     const p = makeProject(newId(), {
       locked_until: null,
       rate_limit: null,
-      schedule: { ...activeSchedule(), weekdays },
+      schedule: { ...activeSchedule(), weekdays }
     })
     expect(isScheduleLocked(p)).toBeTruthy()
   })
@@ -157,7 +191,7 @@ describe('isScheduleLocked', () => {
     const p = makeProject(newId(), {
       locked_until: null,
       rate_limit: null,
-      schedule: { ...activeSchedule(), weekdays: Array(7).fill(false) },
+      schedule: { ...activeSchedule(), weekdays: Array(7).fill(false) }
     })
     expect(isScheduleLocked(p)).toBeFalsy()
   })
@@ -166,7 +200,7 @@ describe('isScheduleLocked', () => {
     const p = makeProject(newId(), {
       locked_until: null,
       rate_limit: null,
-      schedule: { ...activeSchedule(), weekdays: [true, true] },
+      schedule: { ...activeSchedule(), weekdays: [true, true] }
     })
     expect(isScheduleLocked(p)).toBeTruthy()
   })
@@ -178,40 +212,64 @@ describe('hasActiveLockOverride', () => {
   })
 
   test('no override → false', () => {
-    const p = makeProject(newId(), { locked_until: futureIso(60_000), rate_limit: null, schedule: null })
+    const p = makeProject(newId(), {
+      locked_until: futureIso(60_000),
+      rate_limit: null,
+      schedule: null
+    })
     expect(hasActiveLockOverride(p)).toBeFalsy()
   })
 
   test('duration override + active duration → true', () => {
-    const p = makeProject(newId(), { locked_until: futureIso(60_000), rate_limit: null, schedule: null })
+    const p = makeProject(newId(), {
+      locked_until: futureIso(60_000),
+      rate_limit: null,
+      schedule: null
+    })
     overrideDurationLock(p.id)
     expect(hasActiveLockOverride(p)).toBeTruthy()
     clearLockOverrides(p.id)
   })
 
   test('duration override on expired lock → false', () => {
-    const p = makeProject(newId(), { locked_until: pastIso(60_000), rate_limit: null, schedule: null })
+    const p = makeProject(newId(), {
+      locked_until: pastIso(60_000),
+      rate_limit: null,
+      schedule: null
+    })
     overrideDurationLock(p.id)
     expect(hasActiveLockOverride(p)).toBeFalsy()
     clearLockOverrides(p.id)
   })
 
   test('schedule override + active schedule → true', () => {
-    const p = makeProject(newId(), { locked_until: null, rate_limit: null, schedule: activeSchedule() })
+    const p = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: null,
+      schedule: activeSchedule()
+    })
     overrideScheduleLock(p.id)
     expect(hasActiveLockOverride(p)).toBeTruthy()
     clearLockOverrides(p.id)
   })
 
   test('schedule override on inactive schedule → false', () => {
-    const p = makeProject(newId(), { locked_until: null, rate_limit: null, schedule: inactiveSchedule() })
+    const p = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: null,
+      schedule: inactiveSchedule()
+    })
     overrideScheduleLock(p.id)
     expect(hasActiveLockOverride(p)).toBeFalsy()
     clearLockOverrides(p.id)
   })
 
   test('clearLockOverrides drops both override types', () => {
-    const p = makeProject(newId(), { locked_until: futureIso(60_000), rate_limit: null, schedule: activeSchedule() })
+    const p = makeProject(newId(), {
+      locked_until: futureIso(60_000),
+      rate_limit: null,
+      schedule: activeSchedule()
+    })
     overrideDurationLock(p.id)
     overrideScheduleLock(p.id)
     clearLockOverrides(p.id)
@@ -228,22 +286,38 @@ describe('isRateLimited', () => {
   })
 
   test('under limit → false', () => {
-    const p = makeProject(newId(), { locked_until: null, rate_limit: { max_tasks: 3, per_minutes: 60 }, schedule: null })
+    const p = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: { max_tasks: 3, per_minutes: 60 },
+      schedule: null
+    })
     recordTaskOpen(p.id)
     recordTaskOpen(p.id)
     expect(isRateLimited(p)).toBeFalsy()
   })
 
   test('at limit → true', () => {
-    const p = makeProject(newId(), { locked_until: null, rate_limit: { max_tasks: 2, per_minutes: 60 }, schedule: null })
+    const p = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: { max_tasks: 2, per_minutes: 60 },
+      schedule: null
+    })
     recordTaskOpen(p.id)
     recordTaskOpen(p.id)
     expect(isRateLimited(p)).toBeTruthy()
   })
 
   test('separate projects do not interfere', () => {
-    const a = makeProject(newId(), { locked_until: null, rate_limit: { max_tasks: 1, per_minutes: 60 }, schedule: null })
-    const b = makeProject(newId(), { locked_until: null, rate_limit: { max_tasks: 1, per_minutes: 60 }, schedule: null })
+    const a = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: { max_tasks: 1, per_minutes: 60 },
+      schedule: null
+    })
+    const b = makeProject(newId(), {
+      locked_until: null,
+      rate_limit: { max_tasks: 1, per_minutes: 60 },
+      schedule: null
+    })
     recordTaskOpen(a.id)
     expect(isRateLimited(a)).toBeTruthy()
     expect(isRateLimited(b)).toBeFalsy()

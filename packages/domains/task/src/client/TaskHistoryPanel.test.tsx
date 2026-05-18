@@ -22,7 +22,7 @@ beforeEach(() => {
             source: 'task',
             summary: 'Status changed from Todo to In Progress',
             payload: { from: 'todo', to: 'in_progress' },
-            createdAt: '2026-03-31T10:00:00.000Z',
+            createdAt: '2026-03-31T10:00:00.000Z'
           },
           {
             id: 'event-2',
@@ -34,11 +34,15 @@ beforeEach(() => {
             actorType: 'automation',
             source: 'automations',
             summary: 'Automation "Auto close" succeeded',
-            payload: { automationId: 'automation-1', automationName: 'Auto close', status: 'success' },
-            createdAt: '2026-03-31T11:00:00.000Z',
-          },
+            payload: {
+              automationId: 'automation-1',
+              automationName: 'Auto close',
+              status: 'success'
+            },
+            createdAt: '2026-03-31T11:00:00.000Z'
+          }
         ],
-        nextCursor: null,
+        nextCursor: null
       }),
       getAutomationActionRuns: vi.fn().mockResolvedValue([
         {
@@ -55,10 +59,10 @@ beforeEach(() => {
           error: null,
           startedAt: '2026-03-31T11:00:00.000Z',
           completedAt: '2026-03-31T11:00:01.000Z',
-          durationMs: 1000,
-        },
-      ]),
-    },
+          durationMs: 1000
+        }
+      ])
+    }
   } as any
 })
 
@@ -94,7 +98,7 @@ describe('TaskHistoryPanel', () => {
   it('renders a richer empty state when there is no history', async () => {
     ;(window.api.history.listForTask as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       events: [],
-      nextCursor: null,
+      nextCursor: null
     })
 
     render(<TaskHistoryPanel taskId="task-2" />)
@@ -103,6 +107,10 @@ describe('TaskHistoryPanel', () => {
       expect(screen.getByText('No history yet')).toBeDefined()
     })
 
-    expect(screen.getByText('Task changes and automation activity will appear here once this task starts changing.')).toBeDefined()
+    expect(
+      screen.getByText(
+        'Task changes and automation activity will appear here once this task starts changing.'
+      )
+    ).toBeDefined()
   })
 })

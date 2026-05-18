@@ -21,9 +21,13 @@ export async function listAction(opts: ListOpts): Promise<void> {
   if (status) {
     let listColumns: ColumnConfig[] | null = null
     if (opts.project) {
-      const row = db.query<{ id: string }>(`SELECT id FROM projects WHERE id = :proj OR LOWER(name) LIKE :projLike LIMIT 1`, {
-        ':proj': opts.project, ':projLike': `%${opts.project.toLowerCase()}%`
-      })[0]
+      const row = db.query<{ id: string }>(
+        `SELECT id FROM projects WHERE id = :proj OR LOWER(name) LIKE :projLike LIMIT 1`,
+        {
+          ':proj': opts.project,
+          ':projLike': `%${opts.project.toLowerCase()}%`
+        }
+      )[0]
       if (row) listColumns = getProjectColumnsConfig(db, row.id)
     }
     status = resolveStatusId(status, listColumns) ?? status
@@ -57,10 +61,12 @@ export async function listAction(opts: ListOpts): Promise<void> {
   )
 
   const filteredTasks = doneFilter
-    ? tasks.filter((task) => {
-        const projectColumns = getProjectColumnsConfig(db, task.project_id)
-        return isCompletedStatus(task.status, projectColumns)
-      }).slice(0, limit)
+    ? tasks
+        .filter((task) => {
+          const projectColumns = getProjectColumnsConfig(db, task.project_id)
+          return isCompletedStatus(task.status, projectColumns)
+        })
+        .slice(0, limit)
     : tasks
 
   // Query blocked task IDs
@@ -78,20 +84,22 @@ export async function listAction(opts: ListOpts): Promise<void> {
     if (taskIds.length > 0) {
       const placeholders = taskIds.map((_, i) => `:t${i}`).join(', ')
       const tagParams: Record<string, string> = {}
-      taskIds.forEach((id, i) => { tagParams[`:t${i}`] = id })
+      taskIds.forEach((id, i) => {
+        tagParams[`:t${i}`] = id
+      })
       const tagRows = db.query<{ task_id: string; name: string }>(
         `SELECT tt.task_id, tg.name FROM task_tags tt JOIN tags tg ON tg.id = tt.tag_id
          WHERE tt.task_id IN (${placeholders})`,
         tagParams
       )
       for (const r of tagRows) {
-        (tagMap[r.task_id] ??= []).push(r.name)
+        ;(tagMap[r.task_id] ??= []).push(r.name)
       }
     }
     const enriched = filteredTasks.map((t) =>
       serializeTaskForJson(t, {
         isBlocked: blockedIds.has(t.id),
-        tags: tagMap[t.id] ?? [],
+        tags: tagMap[t.id] ?? []
       })
     )
     console.log(JSON.stringify(enriched, null, 2))

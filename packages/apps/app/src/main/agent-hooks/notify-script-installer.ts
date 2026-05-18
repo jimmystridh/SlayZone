@@ -19,10 +19,12 @@ export interface InstallNotifyScriptOpts {
  * Returns the absolute target path so the Claude hook installer can wire it.
  */
 export async function installNotifyScript(
-  opts: InstallNotifyScriptOpts = {},
+  opts: InstallNotifyScriptOpts = {}
 ): Promise<{ path: string; changed: boolean }> {
   const target = opts.targetPath ?? path.join(getSlayzoneHomeDir(), 'hooks', 'notify.sh')
-  const source = opts.source ?? (typeof notifyScriptSource === 'string' ? notifyScriptSource : String(notifyScriptSource))
+  const source =
+    opts.source ??
+    (typeof notifyScriptSource === 'string' ? notifyScriptSource : String(notifyScriptSource))
   const changed = await writeFileIfChanged(target, source, 0o755)
   return { path: target, changed }
 }

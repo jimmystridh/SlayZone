@@ -27,7 +27,9 @@ export function ProviderFilter({ selected, onChange, options }: Props) {
         <SelectItem value={ALL_PROVIDERS}>All Providers</SelectItem>
         {supported.length > 0 && <SelectSeparator />}
         {supported.map((opt) => (
-          <SelectItem key={opt.id} value={opt.id}>{opt.label}</SelectItem>
+          <SelectItem key={opt.id} value={opt.id}>
+            {opt.label}
+          </SelectItem>
         ))}
         {unsupported.length > 0 && <SelectSeparator />}
         {unsupported.map((opt) => (

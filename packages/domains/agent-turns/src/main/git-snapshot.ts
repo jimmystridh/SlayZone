@@ -3,20 +3,26 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-interface ExecResult { stdout: string; stderr: string; status: number | null }
+interface ExecResult {
+  stdout: string
+  stderr: string
+  status: number | null
+}
 
 function exec(args: string[], cwd: string, env?: NodeJS.ProcessEnv): Promise<ExecResult> {
   return new Promise((resolve) => {
     const child = spawn('git', args, {
       cwd,
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: env ? { ...process.env, ...env } : process.env,
+      env: env ? { ...process.env, ...env } : process.env
     })
     const out: string[] = []
     const err: string[] = []
     child.stdout.on('data', (b: Buffer) => out.push(b.toString()))
     child.stderr.on('data', (b: Buffer) => err.push(b.toString()))
-    child.on('close', (code) => resolve({ stdout: out.join(''), stderr: err.join(''), status: code }))
+    child.on('close', (code) =>
+      resolve({ stdout: out.join(''), stderr: err.join(''), status: code })
+    )
     child.on('error', (e) => resolve({ stdout: '', stderr: e.message, status: 1 }))
   })
 }
@@ -43,7 +49,10 @@ export interface SnapshotResult {
  * on the row so list-time filtering can drop pre-commit ghosts without re-
  * spawning `git rev-parse <sha>^` (and without risking null cache poisoning).
  */
-export async function snapshotWorktree(repoPath: string, turnId: string): Promise<SnapshotResult | null> {
+export async function snapshotWorktree(
+  repoPath: string,
+  turnId: string
+): Promise<SnapshotResult | null> {
   // Resolve HEAD; bail if no commits yet (e.g. brand-new repo with no commits).
   const head = await exec(['rev-parse', 'HEAD'], repoPath)
   if (head.status !== 0) return null
@@ -86,7 +95,11 @@ export async function snapshotWorktree(repoPath: string, turnId: string): Promis
     return { snapshotSha: sha, headSha }
   } finally {
     if (tmpDir) {
-      try { rmSync(tmpDir, { recursive: true, force: true }) } catch { /* ignore */ }
+      try {
+        rmSync(tmpDir, { recursive: true, force: true })
+      } catch {
+        /* ignore */
+      }
     }
   }
 }
@@ -95,7 +108,11 @@ export async function deleteTurnRef(repoPath: string, turnId: string): Promise<v
   await exec(['update-ref', '-d', `refs/slayzone/turns/${turnId}`], repoPath)
 }
 
-export async function diffIsEmpty(repoPath: string, fromSha: string, toSha: string): Promise<boolean> {
+export async function diffIsEmpty(
+  repoPath: string,
+  fromSha: string,
+  toSha: string
+): Promise<boolean> {
   const res = await exec(['diff', '--quiet', fromSha, toSha], repoPath)
   return res.status === 0
 }
@@ -161,10 +178,11 @@ export function listTurnFilesCached(repoPath: string, fromSha: string, toSha: st
     turnFilesCache.set(key, hit)
     return hit
   }
-  const r = spawnSync('git', ['diff', '--name-only', '-z', fromSha, toSha], { cwd: repoPath, encoding: 'utf-8' })
-  const files = r.status === 0
-    ? r.stdout.split('\0').filter((s) => s.length > 0)
-    : []
+  const r = spawnSync('git', ['diff', '--name-only', '-z', fromSha, toSha], {
+    cwd: repoPath,
+    encoding: 'utf-8'
+  })
+  const files = r.status === 0 ? r.stdout.split('\0').filter((s) => s.length > 0) : []
   turnFilesCache.set(key, files)
   if (turnFilesCache.size > TURN_FILES_CACHE_MAX) {
     const oldestKey = turnFilesCache.keys().next().value
@@ -239,7 +257,10 @@ export function getHeadSha(repoPath: string): string | null {
  * change in the worktree.
  */
 export function listWorkingChangedFiles(repoPath: string): Set<string> {
-  const r = spawnSync('git', ['status', '--porcelain=v1', '-uall', '-z'], { cwd: repoPath, encoding: 'utf-8' })
+  const r = spawnSync('git', ['status', '--porcelain=v1', '-uall', '-z'], {
+    cwd: repoPath,
+    encoding: 'utf-8'
+  })
   const set = new Set<string>()
   if (r.status !== 0) return set
   // -z output: each entry = `XY <path>\0` (renames add `<orig>\0` after).
@@ -247,7 +268,10 @@ export function listWorkingChangedFiles(repoPath: string): Set<string> {
   let i = 0
   while (i < parts.length) {
     const entry = parts[i]
-    if (!entry) { i++; continue }
+    if (!entry) {
+      i++
+      continue
+    }
     const xy = entry.slice(0, 2)
     const path = entry.slice(3)
     if (path) set.add(path)

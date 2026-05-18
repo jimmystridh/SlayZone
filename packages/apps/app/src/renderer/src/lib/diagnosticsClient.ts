@@ -10,10 +10,7 @@ export function getDiagnosticsContext(): DiagnosticsContext {
   return { ...diagnosticsContext }
 }
 
-export function recordDiagnosticsTimeline(
-  event: string,
-  payload?: Record<string, unknown>
-): void {
+export function recordDiagnosticsTimeline(event: string, payload?: Record<string, unknown>): void {
   try {
     window.api.diagnostics.recordClientEvent({
       event: `renderer.timeline.${event}`,

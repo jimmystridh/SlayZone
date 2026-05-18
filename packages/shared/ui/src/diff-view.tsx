@@ -61,11 +61,16 @@ export function DiffView({ left, right, leftLabel, rightLabel, className }: Diff
     return alignChanges(changes)
   }, [left, right])
 
-  const identical = aligned.every(l => l.type === 'equal')
+  const identical = aligned.every((l) => l.type === 'equal')
 
   if (identical) {
     return (
-      <div className={cn('flex items-center justify-center py-8 text-sm text-muted-foreground', className)}>
+      <div
+        className={cn(
+          'flex items-center justify-center py-8 text-sm text-muted-foreground',
+          className
+        )}
+      >
         Files are identical
       </div>
     )
@@ -76,7 +81,9 @@ export function DiffView({ left, right, leftLabel, rightLabel, className }: Diff
       {/* Header */}
       <div className="grid grid-cols-2 border-b bg-muted/50 text-muted-foreground">
         <div className="px-3 py-1.5 font-sans text-xs font-medium">{leftLabel ?? 'Left'}</div>
-        <div className="border-l px-3 py-1.5 font-sans text-xs font-medium">{rightLabel ?? 'Right'}</div>
+        <div className="border-l px-3 py-1.5 font-sans text-xs font-medium">
+          {rightLabel ?? 'Right'}
+        </div>
       </div>
       {/* Lines */}
       <div className="grid grid-cols-2">
@@ -89,15 +96,26 @@ export function DiffView({ left, right, leftLabel, rightLabel, className }: Diff
 }
 
 function Line({ line }: { line: AlignedLine }) {
-  const leftCls = line.type === 'removed' || line.type === 'modified' ? removedBg : line.left === null ? emptyBg : ''
-  const rightCls = line.type === 'added' || line.type === 'modified' ? addedBg : line.right === null ? emptyBg : ''
+  const leftCls =
+    line.type === 'removed' || line.type === 'modified'
+      ? removedBg
+      : line.left === null
+        ? emptyBg
+        : ''
+  const rightCls =
+    line.type === 'added' || line.type === 'modified' ? addedBg : line.right === null ? emptyBg : ''
 
   return (
     <>
       <div className={cn('min-h-[1.5rem] whitespace-pre-wrap break-all px-3 py-0.5', leftCls)}>
         {line.left ?? ''}
       </div>
-      <div className={cn('min-h-[1.5rem] whitespace-pre-wrap break-all border-l px-3 py-0.5', rightCls)}>
+      <div
+        className={cn(
+          'min-h-[1.5rem] whitespace-pre-wrap break-all border-l px-3 py-0.5',
+          rightCls
+        )}
+      >
         {line.right ?? ''}
       </div>
     </>

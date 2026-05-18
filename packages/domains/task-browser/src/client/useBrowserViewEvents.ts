@@ -28,7 +28,7 @@ const INITIAL_STATE: BrowserViewState = {
   isLoading: false,
   error: null,
   domReady: false,
-  hasLoadedRealPage: false,
+  hasLoadedRealPage: false
 }
 
 export function useBrowserViewEvents(viewId: string | null): BrowserViewState {
@@ -52,7 +52,7 @@ export function useBrowserViewEvents(viewId: string | null): BrowserViewState {
             url: event.url as string,
             canGoBack: event.canGoBack as boolean,
             canGoForward: event.canGoForward as boolean,
-            error: null,
+            error: null
           }))
           break
 
@@ -82,7 +82,8 @@ export function useBrowserViewEvents(viewId: string | null): BrowserViewState {
             ...prev,
             domReady: true,
             error: null,
-            hasLoadedRealPage: prev.hasLoadedRealPage || (prev.url !== '' && prev.url !== 'about:blank'),
+            hasLoadedRealPage:
+              prev.hasLoadedRealPage || (prev.url !== '' && prev.url !== 'about:blank')
           }))
           break
 
@@ -93,8 +94,8 @@ export function useBrowserViewEvents(viewId: string | null): BrowserViewState {
             error: {
               code: event.errorCode as number,
               description: event.errorDescription as string,
-              url: event.url as string,
-            },
+              url: event.url as string
+            }
           }))
           break
 
@@ -102,7 +103,7 @@ export function useBrowserViewEvents(viewId: string | null): BrowserViewState {
           setState((prev) => ({
             ...prev,
             isLoading: false,
-            error: { code: -1, description: 'Renderer process crashed', url: '' },
+            error: { code: -1, description: 'Renderer process crashed', url: '' }
           }))
           break
       }

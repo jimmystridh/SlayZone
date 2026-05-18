@@ -36,7 +36,11 @@ export function getWindowedLineStrings(lineIndex: number, terminal: Terminal): [
 
     // Expand downward through wrapped lines
     length = 0
-    while ((line = terminal.buffer.active.getLine(++bottomIdx)) && line.isWrapped && length < 2048) {
+    while (
+      (line = terminal.buffer.active.getLine(++bottomIdx)) &&
+      line.isWrapped &&
+      length < 2048
+    ) {
       content = line.translateToString(true)
       length += content.length
       lines.push(content)
@@ -50,7 +54,12 @@ export function getWindowedLineStrings(lineIndex: number, terminal: Terminal): [
  * Map a string index within the joined text back to a buffer position [lineIndex, columnIndex].
  * Both values are 0-based. Returns [-1, -1] if the line doesn't exist.
  */
-export function mapStringIndex(terminal: Terminal, lineIndex: number, startCol: number, stringIndex: number): [number, number] {
+export function mapStringIndex(
+  terminal: Terminal,
+  lineIndex: number,
+  startCol: number,
+  stringIndex: number
+): [number, number] {
   const buf = terminal.buffer.active
   let col = startCol
   while (stringIndex > 0) {
@@ -71,7 +80,7 @@ export class FileLinkProvider implements ILinkProvider {
     private _terminal: Terminal,
     private _activate: (event: MouseEvent, filePath: string, line?: number, col?: number) => void,
     private _hover?: (event: MouseEvent, text: string) => void,
-    private _leave?: (event: MouseEvent, text: string) => void,
+    private _leave?: (event: MouseEvent, text: string) => void
   ) {}
 
   provideLinks(bufferLineNumber: number, callback: (links: ILink[] | undefined) => void): void {
@@ -95,7 +104,12 @@ export class FileLinkProvider implements ILinkProvider {
       const filePath = lineNum !== undefined ? fullMatch.replace(/:\d+(?::\d+)?$/, '') : fullMatch
 
       const [startY, startX] = mapStringIndex(this._terminal, topLineIndex, 0, match.index)
-      const [endY, endX] = mapStringIndex(this._terminal, topLineIndex, 0, match.index + fullMatch.length)
+      const [endY, endX] = mapStringIndex(
+        this._terminal,
+        topLineIndex,
+        0,
+        match.index + fullMatch.length
+      )
       if (startY === -1 || endY === -1) continue
 
       links.push({
@@ -106,8 +120,12 @@ export class FileLinkProvider implements ILinkProvider {
         text: fullMatch,
         decorations: { underline: false, pointerCursor: true },
         activate: (event: MouseEvent) => this._activate(event, filePath, lineNum, colNum),
-        hover: this._hover ? (event: MouseEvent, text: string) => this._hover!(event, text) : undefined,
-        leave: this._leave ? (event: MouseEvent, text: string) => this._leave!(event, text) : undefined,
+        hover: this._hover
+          ? (event: MouseEvent, text: string) => this._hover!(event, text)
+          : undefined,
+        leave: this._leave
+          ? (event: MouseEvent, text: string) => this._leave!(event, text)
+          : undefined
       })
     }
 
@@ -120,7 +138,7 @@ export class WebLinkProvider implements ILinkProvider {
     private _terminal: Terminal,
     private _activate: (event: MouseEvent, uri: string) => void,
     private _hover?: (event: MouseEvent, uri: string) => void,
-    private _leave?: (event: MouseEvent, uri: string) => void,
+    private _leave?: (event: MouseEvent, uri: string) => void
   ) {}
 
   provideLinks(bufferLineNumber: number, callback: (links: ILink[] | undefined) => void): void {
@@ -162,8 +180,12 @@ export class WebLinkProvider implements ILinkProvider {
         text: uri,
         decorations: { underline: false, pointerCursor: true },
         activate: (event: MouseEvent) => this._activate(event, uri),
-        hover: this._hover ? (event: MouseEvent, text: string) => this._hover!(event, text) : undefined,
-        leave: this._leave ? (event: MouseEvent, text: string) => this._leave!(event, text) : undefined,
+        hover: this._hover
+          ? (event: MouseEvent, text: string) => this._hover!(event, text)
+          : undefined,
+        leave: this._leave
+          ? (event: MouseEvent, text: string) => this._leave!(event, text)
+          : undefined
       })
     }
 
@@ -182,8 +204,12 @@ export class WebLinkProvider implements ILinkProvider {
           text: fullUri,
           decorations: { underline: false, pointerCursor: true },
           activate: (event: MouseEvent) => this._activate(event, fullUri),
-          hover: this._hover ? (event: MouseEvent, text: string) => this._hover!(event, text) : undefined,
-          leave: this._leave ? (event: MouseEvent, text: string) => this._leave!(event, text) : undefined,
+          hover: this._hover
+            ? (event: MouseEvent, text: string) => this._hover!(event, text)
+            : undefined,
+          leave: this._leave
+            ? (event: MouseEvent, text: string) => this._leave!(event, text)
+            : undefined
         })
       }
     }
@@ -192,7 +218,10 @@ export class WebLinkProvider implements ILinkProvider {
   }
 
   /** Extend a partial URL through subsequent non-wrapped indented lines */
-  private _extendUrlSoft(partialUri: string, fromLineIndex: number): { uri: string; endLine: number; endCol: number } | null {
+  private _extendUrlSoft(
+    partialUri: string,
+    fromLineIndex: number
+  ): { uri: string; endLine: number; endCol: number } | null {
     const buf = this._terminal.buffer.active
     let extended = partialUri
     let found = false
@@ -204,7 +233,11 @@ export class WebLinkProvider implements ILinkProvider {
       const content = line.translateToString(true)
       const trimmed = content.trimStart()
       if (!trimmed || /\s/.test(trimmed)) break
-      consumed.push({ lineIndex: idx, indent: content.length - trimmed.length, trimmedLen: trimmed.length })
+      consumed.push({
+        lineIndex: idx,
+        indent: content.length - trimmed.length,
+        trimmedLen: trimmed.length
+      })
       extended += trimmed
       found = true
     }
@@ -247,8 +280,14 @@ export class WebLinkProvider implements ILinkProvider {
       const t = content.trimStart()
       if (!t) break
       parts.unshift(t)
-      if (/https?:\/\//i.test(t)) { foundScheme = true; break }
-      if (/\s/.test(t)) { parts.shift(); break }
+      if (/https?:\/\//i.test(t)) {
+        foundScheme = true
+        break
+      }
+      if (/\s/.test(t)) {
+        parts.shift()
+        break
+      }
     }
 
     if (!foundScheme || parts.length < 2) return null

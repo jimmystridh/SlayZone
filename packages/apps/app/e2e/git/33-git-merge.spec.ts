@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, resetApp, createIsolatedGitRepo } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  resetApp,
+  createIsolatedGitRepo
+} from '../fixtures/electron'
 import { execSync } from 'child_process'
 import { writeFileSync, mkdirSync } from 'fs'
 import path from 'path'
@@ -24,23 +32,53 @@ function resetRepo() {
   // Lazy-init: when only a subset of describes run (Playwright workers / grep),
   // the first describe's beforeAll may be skipped, leaving gitDir undefined.
   if (!gitDir) initGitDir()
-  try { git('git merge --abort') } catch { /* ignore */ }
-  try { git(`git checkout ${getMainBranch()}`) } catch { /* ignore */ }
+  try {
+    git('git merge --abort')
+  } catch {
+    /* ignore */
+  }
+  try {
+    git(`git checkout ${getMainBranch()}`)
+  } catch {
+    /* ignore */
+  }
   // Remove worktree dir first, then prune, then delete branch
-  try { execSync(`rm -rf "${WORKTREE_DIR}"`) } catch { /* ignore */ }
-  try { git('git worktree prune') } catch { /* ignore */ }
-  try { git('git branch -D test-branch') } catch { /* ignore */ }
-  try { git('git checkout -- .') } catch { /* ignore */ }
-  try { git('git clean -fd') } catch { /* ignore */ }
+  try {
+    execSync(`rm -rf "${WORKTREE_DIR}"`)
+  } catch {
+    /* ignore */
+  }
+  try {
+    git('git worktree prune')
+  } catch {
+    /* ignore */
+  }
+  try {
+    git('git branch -D test-branch')
+  } catch {
+    /* ignore */
+  }
+  try {
+    git('git checkout -- .')
+  } catch {
+    /* ignore */
+  }
+  try {
+    git('git clean -fd')
+  } catch {
+    /* ignore */
+  }
   // Remove test artifacts that may have been merged onto main
   try {
     const tracked = git('git ls-files').split('\n')
-    const artifacts = tracked.filter(f => f.startsWith('feature-') || f === 'base.txt')
+    const artifacts = tracked.filter((f) => f.startsWith('feature-') || f === 'base.txt')
     if (artifacts.length > 0) {
       git(`git rm -f ${artifacts.join(' ')}`)
       git('git commit -m "cleanup test artifacts"')
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 function initGitDir() {
@@ -54,7 +92,10 @@ async function ensureGitPanelVisible(page: import('@playwright/test').Page) {
   for (let attempt = 0; attempt < 5; attempt += 1) {
     if (await target.isVisible({ timeout: 500 }).catch(() => false)) return
     await page.keyboard.press('Escape').catch(() => {})
-    await page.locator('#root').click({ position: { x: 16, y: 16 } }).catch(() => {})
+    await page
+      .locator('#root')
+      .click({ position: { x: 16, y: 16 } })
+      .catch(() => {})
     await page.keyboard.press('Meta+g')
   }
   await expect(target).toBeVisible({ timeout: 5_000 })
@@ -80,7 +121,11 @@ function setupConflict() {
   const main = getMainBranch()
   writeFileSync(path.join(gitDir, 'base.txt'), 'original\n')
   git('git add base.txt')
-  try { git('git commit -m "base"') } catch { /* already committed */ }
+  try {
+    git('git commit -m "base"')
+  } catch {
+    /* already committed */
+  }
 
   git('git checkout -b test-branch')
   writeFileSync(path.join(gitDir, 'base.txt'), 'branch version\n')
@@ -113,17 +158,20 @@ test.describe('Clean merge', () => {
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'Clean merge task', status: 'todo' })
     taskId = t.id
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, worktreePath: WORKTREE_PATH, worktreeParentBranch: getMainBranch() }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch()
+    })
     await s.refreshData()
 
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
     await expect(mainWindow.getByText('Clean merge task').first()).toBeVisible({ timeout: 5_000 })
     await mainWindow.getByText('Clean merge task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
   })
 
   test('clean merge via API returns success', async ({ mainWindow }) => {
@@ -139,7 +187,7 @@ test.describe('Clean merge', () => {
     expect(log).toContain('feature')
     // At least one feature-*.txt should exist on main after merge
     const files = git('git ls-files').split('\n')
-    expect(files.some(f => f.startsWith('feature-'))).toBe(true)
+    expect(files.some((f) => f.startsWith('feature-'))).toBe(true)
   })
 })
 
@@ -158,17 +206,20 @@ test.describe('Clean merge UI', () => {
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'Merge UI task', status: 'todo' })
     taskId = t.id
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: taskId, worktreePath: WORKTREE_PATH, worktreeParentBranch: getMainBranch() }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: taskId,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch()
+    })
     await s.refreshData()
 
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
     await expect(mainWindow.getByText('Merge UI task').first()).toBeVisible({ timeout: 5_000 })
     await mainWindow.getByText('Merge UI task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
 
     // Toggle git panel on (general tab — shows merge controls)
     await ensureGitPanelVisible(mainWindow)
@@ -177,23 +228,27 @@ test.describe('Clean merge UI', () => {
   // QUARANTINED 2026-05-16 (revisit): passes in isolation, fails in full-suite
   // — ensureGitPanelVisible in beforeAll never sees a visible task-git-panel
   // after prior Clean merge describe runs. Same root cause as Git init below.
-  test.skip('merge via UI completes and merges feature commit onto parent branch', async ({ mainWindow }) => {
+  test.skip('merge via UI completes and merges feature commit onto parent branch', async ({
+    mainWindow
+  }) => {
     const main = getMainBranch()
     await mainWindow.getByRole('button', { name: new RegExp(`Merge to ${main}`) }).click()
     await mainWindow.getByRole('button', { name: 'Merge & delete' }).click()
 
-    await expect.poll(
-      async () => {
-        const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
-        const files = git('git ls-files').split('\n')
-        return {
-          status: task?.status ?? null,
-          mergeState: task?.merge_state ?? null,
-          merged: files.some((f) => f.startsWith('feature-')),
-        }
-      },
-      { timeout: 12_000 }
-    ).toMatchObject({ status: 'todo', mergeState: null, merged: true })
+    await expect
+      .poll(
+        async () => {
+          const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), taskId)
+          const files = git('git ls-files').split('\n')
+          return {
+            status: task?.status ?? null,
+            mergeState: task?.merge_state ?? null,
+            merged: files.some((f) => f.startsWith('feature-'))
+          }
+        },
+        { timeout: 12_000 }
+      )
+      .toMatchObject({ status: 'todo', mergeState: null, merged: true })
   })
 })
 
@@ -210,10 +265,11 @@ test.describe('Merge with uncommitted changes', () => {
     const s = seed(mainWindow)
     const p = await s.createProject({ name: 'Dirty Merge', color: '#ef4444', path: gitDir })
     const t = await s.createTask({ projectId: p.id, title: 'Dirty merge task', status: 'todo' })
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: t.id, worktreePath: WORKTREE_PATH, worktreeParentBranch: getMainBranch() }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: t.id,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch()
+    })
     await s.refreshData()
   })
 
@@ -228,7 +284,11 @@ test.describe('Merge with uncommitted changes', () => {
     expect(result.prompt).toMatch(/[Cc]ommit uncommitted/)
 
     // Clean up merge state
-    try { git('git merge --abort') } catch { /* ignore */ }
+    try {
+      git('git merge --abort')
+    } catch {
+      /* ignore */
+    }
   })
 })
 
@@ -242,10 +302,11 @@ test.describe('Merge with conflicts', () => {
     const s = seed(mainWindow)
     const p = await s.createProject({ name: 'Conflict Test', color: '#dc2626', path: gitDir })
     const t = await s.createTask({ projectId: p.id, title: 'Conflict task', status: 'todo' })
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: t.id, worktreePath: WORKTREE_PATH, worktreeParentBranch: getMainBranch() }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: t.id,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch()
+    })
     await s.refreshData()
   })
 
@@ -270,10 +331,7 @@ test.describe('Merge with conflicts', () => {
   })
 
   test('abort merge clears state', async ({ mainWindow }) => {
-    await mainWindow.evaluate(
-      (pp) => window.api.git.abortMerge(pp),
-      gitDir
-    )
+    await mainWindow.evaluate((pp) => window.api.git.abortMerge(pp), gitDir)
 
     const inProgress = await mainWindow.evaluate(
       (pp) => window.api.git.isMergeInProgress(pp),
@@ -302,10 +360,11 @@ test.describe('Merge with conflicts and uncommitted changes', () => {
     const s = seed(mainWindow)
     const p = await s.createProject({ name: 'Both Issues', color: '#7c3aed', path: gitDir })
     const t = await s.createTask({ projectId: p.id, title: 'Both merge task', status: 'todo' })
-    await mainWindow.evaluate(
-      (d) => window.api.db.updateTask(d),
-      { id: t.id, worktreePath: WORKTREE_PATH, worktreeParentBranch: getMainBranch() }
-    )
+    await mainWindow.evaluate((d) => window.api.db.updateTask(d), {
+      id: t.id,
+      worktreePath: WORKTREE_PATH,
+      worktreeParentBranch: getMainBranch()
+    })
     await s.refreshData()
   })
 
@@ -323,7 +382,11 @@ test.describe('Merge with conflicts and uncommitted changes', () => {
     expect(result.conflictedFiles!.length).toBeGreaterThan(0)
 
     // Clean up merge state
-    try { git('git merge --abort') } catch { /* ignore */ }
+    try {
+      git('git merge --abort')
+    } catch {
+      /* ignore */
+    }
   })
 })
 
@@ -333,53 +396,64 @@ test.describe('Merge with conflicts and uncommitted changes', () => {
 // describes in full-suite — `task-git-panel:visible` never appears for the
 // fresh NO_GIT project, even with ensureGitPanelVisible retry. Active-tab
 // switch may race the Meta+g press.
-test.describe.skip('Git init', () => {
-  // Must be outside any git repo for isGitRepo to return false
-  const NO_GIT_DIR = path.join('/tmp', 'slayzone-e2e-no-git')
-  let projectAbbrev: string
+test.describe
+  .skip('Git init', () => {
+    // Must be outside any git repo for isGitRepo to return false
+    const NO_GIT_DIR = path.join('/tmp', 'slayzone-e2e-no-git')
+    let projectAbbrev: string
 
-  test.beforeAll(async ({ mainWindow }) => {
-    // Create a directory outside any git repo
-    try { execSync(`rm -rf "${NO_GIT_DIR}"`) } catch { /* ignore */ }
-    mkdirSync(NO_GIT_DIR, { recursive: true })
+    test.beforeAll(async ({ mainWindow }) => {
+      // Create a directory outside any git repo
+      try {
+        execSync(`rm -rf "${NO_GIT_DIR}"`)
+      } catch {
+        /* ignore */
+      }
+      mkdirSync(NO_GIT_DIR, { recursive: true })
 
-    const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Init Test', color: '#06b6d4', path: NO_GIT_DIR })
-    projectAbbrev = p.name.slice(0, 2).toUpperCase()
-    await s.createTask({ projectId: p.id, title: 'Init task', status: 'todo' })
-    await s.refreshData()
+      const s = seed(mainWindow)
+      const p = await s.createProject({ name: 'Init Test', color: '#06b6d4', path: NO_GIT_DIR })
+      projectAbbrev = p.name.slice(0, 2).toUpperCase()
+      await s.createTask({ projectId: p.id, title: 'Init task', status: 'todo' })
+      await s.refreshData()
 
-    await goHome(mainWindow)
-    await clickProject(mainWindow, projectAbbrev)
-    await expect(mainWindow.getByText('Init task').first()).toBeVisible({ timeout: 5_000 })
-    await mainWindow.getByText('Init task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+      await goHome(mainWindow)
+      await clickProject(mainWindow, projectAbbrev)
+      await expect(mainWindow.getByText('Init task').first()).toBeVisible({ timeout: 5_000 })
+      await mainWindow.getByText('Init task').first().click()
+      await expect(
+        mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+      ).toBeVisible({ timeout: 5_000 })
 
-    // Toggle git panel on (general tab — shows git init controls). Use the
-    // retry helper since full-suite pollution can leave focus on the prior
-    // tab's panel.
-    await ensureGitPanelVisible(mainWindow)
-    await expect(mainWindow.getByText('Not a git repository')).toBeVisible({ timeout: 5_000 })
+      // Toggle git panel on (general tab — shows git init controls). Use the
+      // retry helper since full-suite pollution can leave focus on the prior
+      // tab's panel.
+      await ensureGitPanelVisible(mainWindow)
+      await expect(mainWindow.getByText('Not a git repository')).toBeVisible({ timeout: 5_000 })
+    })
+
+    test.afterAll(() => {
+      try {
+        execSync(`rm -rf "${NO_GIT_DIR}"`)
+      } catch {
+        /* ignore */
+      }
+    })
+
+    test('shows "Not a git repository" and init button', async ({ mainWindow }) => {
+      await expect(mainWindow.getByText('Not a git repository')).toBeVisible()
+      await expect(mainWindow.getByRole('button', { name: 'Initialize Git' })).toBeVisible()
+    })
+
+    test('initialize git creates repo', async ({ mainWindow }) => {
+      await mainWindow.getByRole('button', { name: 'Initialize Git' }).click()
+
+      // Init button should be gone, "Not a git repository" should be gone
+      await expect(mainWindow.getByRole('button', { name: 'Initialize Git' })).not.toBeVisible()
+      await expect(mainWindow.getByText('Not a git repository')).not.toBeVisible()
+
+      // Verify via API
+      const isRepo = await mainWindow.evaluate((p) => window.api.git.isGitRepo(p), NO_GIT_DIR)
+      expect(isRepo).toBe(true)
+    })
   })
-
-  test.afterAll(() => {
-    try { execSync(`rm -rf "${NO_GIT_DIR}"`) } catch { /* ignore */ }
-  })
-
-  test('shows "Not a git repository" and init button', async ({ mainWindow }) => {
-    await expect(mainWindow.getByText('Not a git repository')).toBeVisible()
-    await expect(mainWindow.getByRole('button', { name: 'Initialize Git' })).toBeVisible()
-  })
-
-  test('initialize git creates repo', async ({ mainWindow }) => {
-    await mainWindow.getByRole('button', { name: 'Initialize Git' }).click()
-
-    // Init button should be gone, "Not a git repository" should be gone
-    await expect(mainWindow.getByRole('button', { name: 'Initialize Git' })).not.toBeVisible()
-    await expect(mainWindow.getByText('Not a git repository')).not.toBeVisible()
-
-    // Verify via API
-    const isRepo = await mainWindow.evaluate((p) => window.api.git.isGitRepo(p), NO_GIT_DIR)
-    expect(isRepo).toBe(true)
-  })
-})

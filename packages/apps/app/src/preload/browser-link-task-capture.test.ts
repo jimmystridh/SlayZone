@@ -4,19 +4,23 @@ import {
   buildBrowserCreateTaskFromLinkCaptureScript,
   extractCreateTaskFromLinkPayload,
   extractModifiedLinkPayload,
-  installBrowserCreateTaskFromLinkCapture,
+  installBrowserCreateTaskFromLinkCapture
 } from './browser-link-task-capture'
 
 function dispatchClick(target: Element, init?: MouseEventInit): MouseEvent {
   return dispatchMouseEvent('click', target, init)
 }
 
-function dispatchMouseEvent(type: 'click' | 'mousedown', target: Element, init?: MouseEventInit): MouseEvent {
+function dispatchMouseEvent(
+  type: 'click' | 'mousedown',
+  target: Element,
+  init?: MouseEventInit
+): MouseEvent {
   const event = new MouseEvent(type, {
     bubbles: true,
     cancelable: true,
     button: 0,
-    ...init,
+    ...init
   })
   target.dispatchEvent(event)
   return event
@@ -24,7 +28,8 @@ function dispatchMouseEvent(type: 'click' | 'mousedown', target: Element, init?:
 
 describe('extractCreateTaskFromLinkPayload', () => {
   it('extracts http link payload for Alt+Shift-click on a top-level anchor', () => {
-    document.body.innerHTML = '<a id="docs" href="https://example.com/docs"><span> Example   docs </span></a>'
+    document.body.innerHTML =
+      '<a id="docs" href="https://example.com/docs"><span> Example   docs </span></a>'
     const anchor = document.getElementById('docs')
     expect(anchor).toBeInstanceOf(HTMLAnchorElement)
 
@@ -33,13 +38,13 @@ describe('extractCreateTaskFromLinkPayload', () => {
       cancelable: true,
       altKey: true,
       shiftKey: true,
-      button: 0,
+      button: 0
     })
     Object.defineProperty(event, 'target', { value: anchor, configurable: true })
 
     expect(extractCreateTaskFromLinkPayload(event)).toEqual({
       url: 'https://example.com/docs',
-      linkText: 'Example docs',
+      linkText: 'Example docs'
     })
   })
 
@@ -52,11 +57,23 @@ describe('extractCreateTaskFromLinkPayload', () => {
     Object.defineProperty(noAlt, 'target', { value: anchor, configurable: true })
     expect(extractCreateTaskFromLinkPayload(noAlt)).toBeNull()
 
-    const altOnly = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0, altKey: true })
+    const altOnly = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      altKey: true
+    })
     Object.defineProperty(altOnly, 'target', { value: anchor, configurable: true })
     expect(extractCreateTaskFromLinkPayload(altOnly)).toBeNull()
 
-    const withMeta = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0, altKey: true, shiftKey: true, metaKey: true })
+    const withMeta = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+      altKey: true,
+      shiftKey: true,
+      metaKey: true
+    })
     Object.defineProperty(withMeta, 'target', { value: anchor, configurable: true })
     expect(extractCreateTaskFromLinkPayload(withMeta)).toBeNull()
   })
@@ -71,18 +88,18 @@ describe('extractCreateTaskFromLinkPayload', () => {
       cancelable: true,
       altKey: true,
       shiftKey: true,
-      button: 0,
+      button: 0
     })
     Object.defineProperty(event, 'target', {
       value: {
-        closest: (selector: string) => selector === 'a[href]' ? anchor : null,
+        closest: (selector: string) => (selector === 'a[href]' ? anchor : null)
       },
-      configurable: true,
+      configurable: true
     })
 
     expect(extractCreateTaskFromLinkPayload(event)).toEqual({
       url: 'https://example.com/docs',
-      linkText: 'Example docs',
+      linkText: 'Example docs'
     })
   })
 })
@@ -90,15 +107,19 @@ describe('extractCreateTaskFromLinkPayload', () => {
 describe('installBrowserCreateTaskFromLinkCapture', () => {
   it('installs one capture handler that prevents navigation and forwards the payload', () => {
     const bridge = vi.fn()
-    ;((window as unknown) as Record<string, unknown>).__testBridge = bridge
-    document.body.innerHTML = '<a id="docs" href="https://example.com/docs"><span>Example docs</span></a>'
+    ;(window as unknown as Record<string, unknown>).__testBridge = bridge
+    document.body.innerHTML =
+      '<a id="docs" href="https://example.com/docs"><span>Example docs</span></a>'
     const anchor = document.getElementById('docs')
     expect(anchor).toBeTruthy()
 
     installBrowserCreateTaskFromLinkCapture('__testBridge', '__testBridgeInstalled')
     installBrowserCreateTaskFromLinkCapture('__testBridge', '__testBridgeInstalled')
 
-    const mouseDownEvent = dispatchMouseEvent('mousedown', anchor as Element, { altKey: true, shiftKey: true })
+    const mouseDownEvent = dispatchMouseEvent('mousedown', anchor as Element, {
+      altKey: true,
+      shiftKey: true
+    })
     const event = dispatchClick(anchor as Element, { altKey: true, shiftKey: true })
     expect(mouseDownEvent.defaultPrevented).toBe(true)
     expect(event.defaultPrevented).toBe(true)
@@ -106,14 +127,15 @@ describe('installBrowserCreateTaskFromLinkCapture', () => {
     expect(bridge).toHaveBeenCalledWith({
       intent: 'create-task',
       url: 'https://example.com/docs',
-      linkText: 'Example docs',
+      linkText: 'Example docs'
     })
   })
 
   it('forwards open-external intent for Cmd+Shift-click', () => {
     const bridge = vi.fn()
-    ;((window as unknown) as Record<string, unknown>).__metaBridge = bridge
-    document.body.innerHTML = '<a id="docs" href="https://example.com/docs"><span>Example docs</span></a>'
+    ;(window as unknown as Record<string, unknown>).__metaBridge = bridge
+    document.body.innerHTML =
+      '<a id="docs" href="https://example.com/docs"><span>Example docs</span></a>'
     const anchor = document.getElementById('docs')
     expect(anchor).toBeTruthy()
 
@@ -124,7 +146,7 @@ describe('installBrowserCreateTaskFromLinkCapture', () => {
     expect(bridge).toHaveBeenCalledWith({
       intent: 'open-external',
       url: 'https://example.com/docs',
-      linkText: 'Example docs',
+      linkText: 'Example docs'
     })
   })
 })
@@ -132,15 +154,22 @@ describe('installBrowserCreateTaskFromLinkCapture', () => {
 describe('buildBrowserCreateTaskFromLinkCaptureScript', () => {
   it('builds a self-contained installer script that forwards payloads', () => {
     const bridge = vi.fn()
-    ;((window as unknown) as Record<string, unknown>).__scriptBridge = bridge
-    document.body.innerHTML = '<a id="docs" href="https://example.com/docs"><span>Example docs</span></a>'
+    ;(window as unknown as Record<string, unknown>).__scriptBridge = bridge
+    document.body.innerHTML =
+      '<a id="docs" href="https://example.com/docs"><span>Example docs</span></a>'
     const anchor = document.getElementById('docs')
     expect(anchor).toBeTruthy()
 
-    const script = buildBrowserCreateTaskFromLinkCaptureScript('__scriptBridge', '__scriptBridgeInstalled')
+    const script = buildBrowserCreateTaskFromLinkCaptureScript(
+      '__scriptBridge',
+      '__scriptBridgeInstalled'
+    )
     eval(script)
 
-    const mouseDownEvent = dispatchMouseEvent('mousedown', anchor as Element, { altKey: true, shiftKey: true })
+    const mouseDownEvent = dispatchMouseEvent('mousedown', anchor as Element, {
+      altKey: true,
+      shiftKey: true
+    })
     const event = dispatchClick(anchor as Element, { altKey: true, shiftKey: true })
     expect(mouseDownEvent.defaultPrevented).toBe(true)
     expect(event.defaultPrevented).toBe(true)
@@ -148,18 +177,21 @@ describe('buildBrowserCreateTaskFromLinkCaptureScript', () => {
     expect(bridge).toHaveBeenCalledWith({
       intent: 'create-task',
       url: 'https://example.com/docs',
-      linkText: 'Example docs',
+      linkText: 'Example docs'
     })
   })
 
   it('forwards open-external intent for Cmd+Shift-click via injected script', () => {
     const bridge = vi.fn()
-    ;((window as unknown) as Record<string, unknown>).__scriptMetaBridge = bridge
+    ;(window as unknown as Record<string, unknown>).__scriptMetaBridge = bridge
     document.body.innerHTML = '<a id="docs" href="https://example.com/docs">Example docs</a>'
     const anchor = document.getElementById('docs')
     expect(anchor).toBeTruthy()
 
-    const script = buildBrowserCreateTaskFromLinkCaptureScript('__scriptMetaBridge', '__scriptMetaBridgeInstalled')
+    const script = buildBrowserCreateTaskFromLinkCaptureScript(
+      '__scriptMetaBridge',
+      '__scriptMetaBridgeInstalled'
+    )
     eval(script)
 
     const event = dispatchClick(anchor as Element, { metaKey: true, shiftKey: true })
@@ -167,7 +199,7 @@ describe('buildBrowserCreateTaskFromLinkCaptureScript', () => {
     expect(bridge).toHaveBeenCalledWith({
       intent: 'open-external',
       url: 'https://example.com/docs',
-      linkText: 'Example docs',
+      linkText: 'Example docs'
     })
   })
 })
@@ -188,7 +220,7 @@ describe('extractModifiedLinkPayload', () => {
     expect(extractModifiedLinkPayload(anchorEvent({ altKey: true, shiftKey: true }))).toEqual({
       intent: 'create-task',
       url: 'https://example.com/docs',
-      linkText: 'Example docs',
+      linkText: 'Example docs'
     })
   })
 
@@ -196,17 +228,23 @@ describe('extractModifiedLinkPayload', () => {
     expect(extractModifiedLinkPayload(anchorEvent({ metaKey: true, shiftKey: true }))).toEqual({
       intent: 'open-external',
       url: 'https://example.com/docs',
-      linkText: 'Example docs',
+      linkText: 'Example docs'
     })
   })
 
   it('returns null when both alt and meta are pressed', () => {
-    expect(extractModifiedLinkPayload(anchorEvent({ altKey: true, metaKey: true, shiftKey: true }))).toBeNull()
+    expect(
+      extractModifiedLinkPayload(anchorEvent({ altKey: true, metaKey: true, shiftKey: true }))
+    ).toBeNull()
   })
 
   it('returns null when ctrl is pressed', () => {
-    expect(extractModifiedLinkPayload(anchorEvent({ metaKey: true, shiftKey: true, ctrlKey: true }))).toBeNull()
-    expect(extractModifiedLinkPayload(anchorEvent({ altKey: true, shiftKey: true, ctrlKey: true }))).toBeNull()
+    expect(
+      extractModifiedLinkPayload(anchorEvent({ metaKey: true, shiftKey: true, ctrlKey: true }))
+    ).toBeNull()
+    expect(
+      extractModifiedLinkPayload(anchorEvent({ altKey: true, shiftKey: true, ctrlKey: true }))
+    ).toBeNull()
   })
 
   it('returns null without shift', () => {

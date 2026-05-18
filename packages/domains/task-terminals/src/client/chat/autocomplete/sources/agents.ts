@@ -7,7 +7,7 @@ import { renderAgentItem } from './render-agent'
 export function filterAgents(items: AgentInfo[], filter: string): AgentInfo[] {
   return rankByName(items, filter, {
     getName: (a) => a.name,
-    getDescription: (a) => a.description,
+    getDescription: (a) => a.description
   })
 }
 
@@ -21,9 +21,11 @@ export function createAgentsSource(): AutocompleteSource<AgentInfo> {
       return { query: rest, tokenStart: 0, tokenEnd: cursorPos }
     },
     async fetch({ cwd }) {
-      const api = (window as unknown as {
-        api?: { chat?: { listAgents?: (cwd: string) => Promise<AgentInfo[]> } }
-      }).api
+      const api = (
+        window as unknown as {
+          api?: { chat?: { listAgents?: (cwd: string) => Promise<AgentInfo[]> } }
+        }
+      ).api
       const fn = api?.chat?.listAgents
       if (!fn) return []
       return fn(cwd)
@@ -41,6 +43,6 @@ export function createAgentsSource(): AutocompleteSource<AgentInfo> {
         `Use the ${agent.name} agent to `
       )
       ctx.setDraft(next)
-    },
+    }
   }
 }

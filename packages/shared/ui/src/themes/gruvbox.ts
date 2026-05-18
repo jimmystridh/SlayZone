@@ -41,7 +41,7 @@ export const gruvbox: UnifiedThemeDefinition = {
       surface2: '#32302f',
       surface3: '#3c3836',
       modal: '#1d2021',
-      modalBorder: 'rgba(235, 219, 178, 0.25)',
+      modalBorder: 'rgba(235, 219, 178, 0.25)'
     },
     terminal: {
       background: '#282828',
@@ -65,7 +65,7 @@ export const gruvbox: UnifiedThemeDefinition = {
       brightBlue: '#83a598',
       brightMagenta: '#d3869b',
       brightCyan: '#8ec07c',
-      brightWhite: '#ebdbb2',
+      brightWhite: '#ebdbb2'
     },
     editor: {
       background: '#282828',
@@ -85,7 +85,7 @@ export const gruvbox: UnifiedThemeDefinition = {
       variable: '#ebdbb2',
       property: '#8ec07c',
       link: '#83a598',
-      heading: '#ebdbb2',
-    },
-  },
+      heading: '#ebdbb2'
+    }
+  }
 }

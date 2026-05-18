@@ -15,7 +15,7 @@ import crypto from 'crypto'
 export async function writeFileIfChanged(
   filePath: string,
   content: string | Buffer,
-  mode?: number,
+  mode?: number
 ): Promise<boolean> {
   const target = await resolveTarget(filePath)
   const buf = Buffer.isBuffer(content) ? content : Buffer.from(content, 'utf8')

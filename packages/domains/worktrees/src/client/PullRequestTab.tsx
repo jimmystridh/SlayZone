@@ -53,10 +53,16 @@ import {
   DialogTitle,
   DialogDescription,
   PulseGrid,
-  useStablePoll,
+  useStablePoll
 } from '@slayzone/ui'
 import type { Task, UpdateTaskInput } from '@slayzone/task/shared'
-import type { GhPullRequest, GhPrComment, GhPrCommit, GhPrTimelineEvent, MergeStrategy } from '../shared/types'
+import type {
+  GhPullRequest,
+  GhPrComment,
+  GhPrCommit,
+  GhPrTimelineEvent,
+  MergeStrategy
+} from '../shared/types'
 import { DiffView } from './DiffView'
 import { parseUnifiedDiff } from './parse-diff'
 import type { FileDiff } from './parse-diff'
@@ -70,7 +76,13 @@ interface PullRequestTabProps {
   onTaskUpdated: (task: Task) => void
 }
 
-export function PullRequestTab({ task, projectPath, visible, onUpdateTask, onTaskUpdated }: PullRequestTabProps) {
+export function PullRequestTab({
+  task,
+  projectPath,
+  visible,
+  onUpdateTask,
+  onTaskUpdated
+}: PullRequestTabProps) {
   const [ghInstalled, setGhInstalled] = useState<boolean | null>(null)
   const [pr, setPr] = useState<GhPullRequest | null>(null)
   const [loading, setLoading] = useState(true)
@@ -88,16 +100,23 @@ export function PullRequestTab({ task, projectPath, visible, onUpdateTask, onTas
         const installed = await window.api.git.checkGhInstalled()
         if (cancelled) return
         setGhInstalled(installed)
-        if (!installed) { setLoading(false); return }
+        if (!installed) {
+          setLoading(false)
+          return
+        }
 
         if (task.pr_url) {
           const data = await window.api.git.getPrByUrl(projectPath, task.pr_url)
           if (!cancelled) setPr(data)
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       if (!cancelled) setLoading(false)
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [visible, projectPath, task.pr_url])
 
   const lastPrHashRef = useRef<string>('')
@@ -113,14 +132,16 @@ export function PullRequestTab({ task, projectPath, visible, onUpdateTask, onTas
         if (data) setPr(data)
       }
       return hash
-    } catch { return null }
+    } catch {
+      return null
+    }
   }, [projectPath, task.pr_url])
 
   // Poll PR status when linked (faster when checks are pending)
   const prPollMs = pr?.statusCheckRollup === 'PENDING' ? 10000 : 30000
   useStablePoll(refreshPr, {
     enabled: visible && !!projectPath && !!task.pr_url && !!ghInstalled,
-    baseDelayMs: prPollMs,
+    baseDelayMs: prPollMs
   })
 
   const handleUnlink = useCallback(async () => {
@@ -129,30 +150,36 @@ export function PullRequestTab({ task, projectPath, visible, onUpdateTask, onTas
     setPr(null)
   }, [task.id, onUpdateTask, onTaskUpdated])
 
-  const handleLinkPr = useCallback(async (url: string) => {
-    setError(null)
-    try {
+  const handleLinkPr = useCallback(
+    async (url: string) => {
+      setError(null)
+      try {
+        const updated = await onUpdateTask({ id: task.id, prUrl: url })
+        onTaskUpdated(updated)
+        if (projectPath) {
+          const data = await window.api.git.getPrByUrl(projectPath, url)
+          setPr(data)
+        }
+        setLinkOpen(false)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err))
+      }
+    },
+    [task.id, projectPath, onUpdateTask, onTaskUpdated]
+  )
+
+  const handleCreated = useCallback(
+    async (url: string) => {
       const updated = await onUpdateTask({ id: task.id, prUrl: url })
       onTaskUpdated(updated)
       if (projectPath) {
         const data = await window.api.git.getPrByUrl(projectPath, url)
         setPr(data)
       }
-      setLinkOpen(false)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    }
-  }, [task.id, projectPath, onUpdateTask, onTaskUpdated])
-
-  const handleCreated = useCallback(async (url: string) => {
-    const updated = await onUpdateTask({ id: task.id, prUrl: url })
-    onTaskUpdated(updated)
-    if (projectPath) {
-      const data = await window.api.git.getPrByUrl(projectPath, url)
-      setPr(data)
-    }
-    setCreateOpen(false)
-  }, [task.id, projectPath, onUpdateTask, onTaskUpdated])
+      setCreateOpen(false)
+    },
+    [task.id, projectPath, onUpdateTask, onTaskUpdated]
+  )
 
   if (!projectPath) {
     return <EmptyMessage>Set a project path to use PR features</EmptyMessage>
@@ -181,8 +208,18 @@ export function PullRequestTab({ task, projectPath, visible, onUpdateTask, onTas
 
   // PR is linked — show status
   if (task.pr_url && pr) {
-    const onRefreshPrVoid = async (): Promise<void> => { await refreshPr() }
-    return <LinkedPrView pr={pr} projectPath={projectPath!} visible={visible} onUnlink={handleUnlink} onRefreshPr={onRefreshPrVoid} />
+    const onRefreshPrVoid = async (): Promise<void> => {
+      await refreshPr()
+    }
+    return (
+      <LinkedPrView
+        pr={pr}
+        projectPath={projectPath!}
+        visible={visible}
+        onUnlink={handleUnlink}
+        onRefreshPr={onRefreshPrVoid}
+      />
+    )
   }
   if (task.pr_url && !pr) {
     return (
@@ -192,7 +229,10 @@ export function PullRequestTab({ task, projectPath, visible, onUpdateTask, onTas
           <a
             className="text-primary hover:underline truncate"
             href="#"
-            onClick={(e) => { e.preventDefault(); window.api.shell.openExternal(task.pr_url!) }}
+            onClick={(e) => {
+              e.preventDefault()
+              window.api.shell.openExternal(task.pr_url!)
+            }}
           >
             {task.pr_url}
           </a>
@@ -239,7 +279,13 @@ export function PullRequestTab({ task, projectPath, visible, onUpdateTask, onTas
 
 // --- Linked PR view ---
 
-function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
+function LinkedPrView({
+  pr,
+  projectPath,
+  visible,
+  onUnlink,
+  onRefreshPr
+}: {
   pr: GhPullRequest
   projectPath: string
   visible: boolean
@@ -278,7 +324,9 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
     try {
       const data = await window.api.git.getPrComments(projectPath, pr.number)
       setComments(data)
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     setLoadingComments(false)
   }, [projectPath, pr.number])
 
@@ -298,7 +346,9 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
         setComments(data)
       }
       return hash
-    } catch { return null }
+    } catch {
+      return null
+    }
   }, [projectPath, pr.number])
 
   useStablePoll(fetchCommentsPoll, { enabled: visible, baseDelayMs: 30_000 })
@@ -310,7 +360,9 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
       try {
         const user = await window.api.git.getGhUser(projectPath)
         setGhUser(user)
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     })()
   }, [visible, projectPath])
 
@@ -345,7 +397,10 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
   }
 
   const handleReply = useCallback((comment: GhPrComment) => {
-    const quoted = comment.body.split('\n').map(l => `> ${l}`).join('\n')
+    const quoted = comment.body
+      .split('\n')
+      .map((l) => `> ${l}`)
+      .join('\n')
     setCommentBody(`${quoted}\n\n@${comment.author} `)
     setTimeout(() => {
       if (textareaRef.current) {
@@ -365,7 +420,11 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
     if (!editingId || !editBody.trim()) return
     setEditSubmitting(true)
     try {
-      await window.api.git.editPrComment({ repoPath: projectPath, commentId: editingId, body: editBody.trim() })
+      await window.api.git.editPrComment({
+        repoPath: projectPath,
+        commentId: editingId,
+        body: editBody.trim()
+      })
       setEditingId(null)
       setEditBody('')
       await fetchComments()
@@ -381,7 +440,7 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
   }, [])
 
   const toggleCollapse = useCallback((id: string) => {
-    setCollapsedIds(prev => {
+    setCollapsedIds((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
@@ -389,10 +448,12 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
     })
   }, [])
 
-  const collapsableComments = comments.filter((c): c is GhPrComment => c.type !== 'commit' && !!c.body)
+  const collapsableComments = comments.filter(
+    (c): c is GhPrComment => c.type !== 'commit' && !!c.body
+  )
 
   const collapseAll = useCallback(() => {
-    const ids = collapsableComments.map(c => c.id)
+    const ids = collapsableComments.map((c) => c.id)
     if (pr.body) ids.push('__pr_body__')
     setCollapsedIds(new Set(ids))
   }, [collapsableComments, pr.body])
@@ -401,7 +462,9 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
     setCollapsedIds(new Set())
   }, [])
 
-  const allCollapsed = collapsableComments.every(c => collapsedIds.has(c.id)) && (!pr.body || collapsedIds.has('__pr_body__'))
+  const allCollapsed =
+    collapsableComments.every((c) => collapsedIds.has(c.id)) &&
+    (!pr.body || collapsedIds.has('__pr_body__'))
 
   const groupedTimeline = useMemo(() => groupTimelineEvents(comments), [comments])
   const TIMELINE_PAGE_SIZE = 25
@@ -447,7 +510,7 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
   }, [diffFiles.length, diffLoading, projectPath, pr.number])
 
   const toggleFileExpand = useCallback((path: string) => {
-    setExpandedFiles(prev => {
+    setExpandedFiles((prev) => {
       const next = new Set(prev)
       if (next.has(path)) next.delete(path)
       else next.add(path)
@@ -456,8 +519,12 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
   }, [])
 
   const diffStats = useMemo(() => {
-    let additions = 0, deletions = 0
-    for (const f of diffFiles) { additions += f.additions; deletions += f.deletions }
+    let additions = 0,
+      deletions = 0
+    for (const f of diffFiles) {
+      additions += f.additions
+      deletions += f.deletions
+    }
     return { files: diffFiles.length, additions, deletions }
   }, [diffFiles])
 
@@ -472,7 +539,8 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
           <div className="flex items-center gap-2.5">
             <PrStateIcon state={pr.state} isDraft={pr.isDraft} />
             <div className="flex-1 min-w-0 text-sm font-medium leading-snug truncate">
-              {pr.title} <span className="text-xs text-muted-foreground font-normal">#{pr.number}</span>
+              {pr.title}{' '}
+              <span className="text-xs text-muted-foreground font-normal">#{pr.number}</span>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <PrStateBadge state={pr.state} isDraft={pr.isDraft} />
@@ -482,7 +550,12 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
               {pr.state === 'OPEN' && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <IconButton aria-label="Merge" variant="ghost" className="h-6 w-6" onClick={() => setMergeOpen(true)}>
+                    <IconButton
+                      aria-label="Merge"
+                      variant="ghost"
+                      className="h-6 w-6"
+                      onClick={() => setMergeOpen(true)}
+                    >
                       <GitMerge className="h-3 w-3" />
                     </IconButton>
                   </TooltipTrigger>
@@ -491,7 +564,12 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
               )}
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <IconButton aria-label="Refresh" variant="ghost" className="h-6 w-6" onClick={refreshAll}>
+                  <IconButton
+                    aria-label="Refresh"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    onClick={refreshAll}
+                  >
                     <RefreshCw className="h-3 w-3" />
                   </IconButton>
                 </TooltipTrigger>
@@ -499,7 +577,12 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <IconButton aria-label="Open in browser" variant="ghost" className="h-6 w-6" onClick={() => window.api.shell.openExternal(pr.url)}>
+                  <IconButton
+                    aria-label="Open in browser"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    onClick={() => window.api.shell.openExternal(pr.url)}
+                  >
                     <ExternalLink className="h-3 w-3" />
                   </IconButton>
                 </TooltipTrigger>
@@ -507,7 +590,12 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <IconButton aria-label="Unlink PR" variant="ghost" className="h-6 w-6" onClick={() => setUnlinkOpen(true)}>
+                  <IconButton
+                    aria-label="Unlink PR"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    onClick={() => setUnlinkOpen(true)}
+                  >
                     <Unlink className="h-3 w-3" />
                   </IconButton>
                 </TooltipTrigger>
@@ -550,11 +638,16 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
           >
             Activity
             {comments.length > 0 && (
-              <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">({comments.length})</span>
+              <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">
+                ({comments.length})
+              </span>
             )}
           </button>
           <button
-            onClick={() => { setActiveTab('files'); loadDiff() }}
+            onClick={() => {
+              setActiveTab('files')
+              loadDiff()
+            }}
             className={cn(
               'px-3 py-2 text-xs font-medium border-b-2 transition-colors -mb-px',
               activeTab === 'files'
@@ -589,12 +682,20 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
           <AlertDialogHeader>
             <AlertDialogTitle>Unlink Pull Request</AlertDialogTitle>
             <AlertDialogDescription>
-              Remove the link between this task and PR #{pr.number}? The pull request itself won't be affected.
+              Remove the link between this task and PR #{pr.number}? The pull request itself won't
+              be affected.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { setUnlinkOpen(false); onUnlink() }}>Unlink</AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                setUnlinkOpen(false)
+                onUnlink()
+              }}
+            >
+              Unlink
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -610,7 +711,7 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-foreground">Merge strategy</label>
                   <div className="flex gap-1">
-                    {(['merge', 'squash', 'rebase'] as const).map(s => (
+                    {(['merge', 'squash', 'rebase'] as const).map((s) => (
                       <button
                         key={s}
                         onClick={() => setMergeStrategy(s)}
@@ -621,7 +722,11 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
                             : 'bg-transparent hover:bg-accent border-border'
                         )}
                       >
-                        {s === 'merge' ? 'Merge commit' : s === 'squash' ? 'Squash & merge' : 'Rebase & merge'}
+                        {s === 'merge'
+                          ? 'Merge commit'
+                          : s === 'squash'
+                            ? 'Squash & merge'
+                            : 'Rebase & merge'}
                       </button>
                     ))}
                   </div>
@@ -629,7 +734,10 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
                 {/* Options */}
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-xs">
-                    <Checkbox checked={mergeDeleteBranch} onCheckedChange={(v) => setMergeDeleteBranch(!!v)} />
+                    <Checkbox
+                      checked={mergeDeleteBranch}
+                      onCheckedChange={(v) => setMergeDeleteBranch(!!v)}
+                    />
                     Delete branch after merge
                   </label>
                   <label className="flex items-center gap-2 text-xs">
@@ -638,7 +746,9 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
                   </label>
                 </div>
                 {mergeError && (
-                  <div className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2">{mergeError}</div>
+                  <div className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2">
+                    {mergeError}
+                  </div>
                 )}
               </div>
             </AlertDialogDescription>
@@ -646,7 +756,11 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <Button size="sm" disabled={merging} onClick={handleMerge} className="gap-2">
-              {merging ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <GitMerge className="h-3.5 w-3.5" />}
+              {merging ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <GitMerge className="h-3.5 w-3.5" />
+              )}
               {merging ? 'Merging...' : mergeAuto ? 'Enable auto-merge' : 'Merge'}
             </Button>
           </AlertDialogFooter>
@@ -655,21 +769,32 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
 
       {/* Tab content — all panels stay mounted, hidden via display:none to avoid reflow on switch */}
       <div className="flex-1 min-h-0 relative">
-        <div ref={activeTab === 'description' ? scrollRef : undefined} className={cn('absolute inset-0 overflow-y-auto', activeTab !== 'description' && 'hidden')}>
-            <div className="px-4 py-3">
-              <div className="rounded-lg border bg-surface-3 overflow-hidden">
-                {pr.body ? (
-                  <div className="px-3 py-2.5 text-xs">
-                    <GhMarkdown>{pr.body}</GhMarkdown>
-                  </div>
-                ) : (
-                  <p className="px-3 py-4 text-xs text-muted-foreground/60 italic">No description provided.</p>
-                )}
-              </div>
+        <div
+          ref={activeTab === 'description' ? scrollRef : undefined}
+          className={cn(
+            'absolute inset-0 overflow-y-auto',
+            activeTab !== 'description' && 'hidden'
+          )}
+        >
+          <div className="px-4 py-3">
+            <div className="rounded-lg border bg-surface-3 overflow-hidden">
+              {pr.body ? (
+                <div className="px-3 py-2.5 text-xs">
+                  <GhMarkdown>{pr.body}</GhMarkdown>
+                </div>
+              ) : (
+                <p className="px-3 py-4 text-xs text-muted-foreground/60 italic">
+                  No description provided.
+                </p>
+              )}
             </div>
           </div>
+        </div>
 
-        <div ref={activeTab === 'activity' ? scrollRef : undefined} className={cn('absolute inset-0 overflow-y-auto', activeTab !== 'activity' && 'hidden')}>
+        <div
+          ref={activeTab === 'activity' ? scrollRef : undefined}
+          className={cn('absolute inset-0 overflow-y-auto', activeTab !== 'activity' && 'hidden')}
+        >
           <div className="px-4 py-3">
             <div className="space-y-0">
               {/* PR description as first timeline entry */}
@@ -690,12 +815,15 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
                       onClick={() => toggleCollapse('__pr_body__')}
                     >
                       <span className="text-[11px] font-semibold">{pr.author}</span>
-                      <span className="text-[10px] text-muted-foreground/60">{formatRelativeTime(pr.createdAt)}</span>
+                      <span className="text-[10px] text-muted-foreground/60">
+                        {formatRelativeTime(pr.createdAt)}
+                      </span>
                       <span className="ml-auto shrink-0">
-                        {collapsedIds.has('__pr_body__')
-                          ? <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                          : <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                        }
+                        {collapsedIds.has('__pr_body__') ? (
+                          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                        )}
                       </span>
                     </div>
                     {!collapsedIds.has('__pr_body__') && (
@@ -721,14 +849,15 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
                   {hasOlderEntries && (
                     <div className="flex justify-center pb-3">
                       <button
-                        onClick={() => setTimelineLimit(prev => prev + TIMELINE_PAGE_SIZE)}
+                        onClick={() => setTimelineLimit((prev) => prev + TIMELINE_PAGE_SIZE)}
                         className="text-[11px] text-muted-foreground hover:text-foreground transition-colors px-3 py-1 rounded-md border border-border hover:bg-accent/30"
                       >
-                        Show {Math.min(TIMELINE_PAGE_SIZE, groupedTimeline.length - timelineLimit)} older entries
+                        Show {Math.min(TIMELINE_PAGE_SIZE, groupedTimeline.length - timelineLimit)}{' '}
+                        older entries
                       </button>
                     </div>
                   )}
-                  {visibleTimeline.map((entry, i) => (
+                  {visibleTimeline.map((entry, i) =>
                     entry.kind === 'commits' ? (
                       <CommitGroupItem
                         key={`commits-${entry.commits[0].oid}`}
@@ -754,57 +883,70 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
                         isLast={i === visibleTimeline.length - 1}
                       />
                     )
-                  ))}
+                  )}
                 </>
               )}
             </div>
           </div>
         </div>
 
-        <div ref={activeTab === 'files' ? scrollRef : undefined} className={cn('absolute inset-0 overflow-y-auto', activeTab !== 'files' && 'hidden')}>
-            <div className="py-2">
-              {diffLoading ? (
-                <div className="flex items-center justify-center py-6">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        <div
+          ref={activeTab === 'files' ? scrollRef : undefined}
+          className={cn('absolute inset-0 overflow-y-auto', activeTab !== 'files' && 'hidden')}
+        >
+          <div className="py-2">
+            {diffLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            ) : diffError ? (
+              <div className="px-4 py-2 text-xs text-destructive">{diffError}</div>
+            ) : diffFiles.length === 0 ? (
+              <div className="px-4 py-4 text-center text-xs text-muted-foreground">
+                No file changes
+              </div>
+            ) : (
+              <>
+                <div className="px-4 pb-2 text-[10px] text-muted-foreground">
+                  {diffStats.files} files
+                  <span className="text-green-500 ml-1">+{diffStats.additions}</span>
+                  <span className="text-red-500 ml-1">-{diffStats.deletions}</span>
                 </div>
-              ) : diffError ? (
-                <div className="px-4 py-2 text-xs text-destructive">{diffError}</div>
-              ) : diffFiles.length === 0 ? (
-                <div className="px-4 py-4 text-center text-xs text-muted-foreground">No file changes</div>
-              ) : (
-                <>
-                  <div className="px-4 pb-2 text-[10px] text-muted-foreground">
-                    {diffStats.files} files
-                    <span className="text-green-500 ml-1">+{diffStats.additions}</span>
-                    <span className="text-red-500 ml-1">-{diffStats.deletions}</span>
-                  </div>
-                  <div className="space-y-0">
-                    {diffFiles.map(file => (
-                      <div key={file.path}>
-                        <button
-                          onClick={() => toggleFileExpand(file.path)}
-                          className="flex items-center gap-2 w-full px-4 py-1.5 text-[11px] hover:bg-accent/30 transition-colors"
-                        >
-                          {expandedFiles.has(file.path) ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
-                          <DiffFileIcon file={file} />
-                          <span className="font-mono truncate text-left">{file.path}</span>
-                          <span className="ml-auto shrink-0 text-[10px]">
-                            {file.additions > 0 && <span className="text-green-500">+{file.additions}</span>}
-                            {file.deletions > 0 && <span className="text-red-500 ml-1">-{file.deletions}</span>}
-                          </span>
-                        </button>
-                        {expandedFiles.has(file.path) && (
-                          <div className="border-t border-b border-border/30 ml-4 mr-2 mb-1">
-                            <DiffView diff={file} />
-                          </div>
+                <div className="space-y-0">
+                  {diffFiles.map((file) => (
+                    <div key={file.path}>
+                      <button
+                        onClick={() => toggleFileExpand(file.path)}
+                        className="flex items-center gap-2 w-full px-4 py-1.5 text-[11px] hover:bg-accent/30 transition-colors"
+                      >
+                        {expandedFiles.has(file.path) ? (
+                          <ChevronDown className="h-3 w-3 shrink-0" />
+                        ) : (
+                          <ChevronRight className="h-3 w-3 shrink-0" />
                         )}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+                        <DiffFileIcon file={file} />
+                        <span className="font-mono truncate text-left">{file.path}</span>
+                        <span className="ml-auto shrink-0 text-[10px]">
+                          {file.additions > 0 && (
+                            <span className="text-green-500">+{file.additions}</span>
+                          )}
+                          {file.deletions > 0 && (
+                            <span className="text-red-500 ml-1">-{file.deletions}</span>
+                          )}
+                        </span>
+                      </button>
+                      {expandedFiles.has(file.path) && (
+                        <div className="border-t border-b border-border/30 ml-4 mr-2 mb-1">
+                          <DiffView diff={file} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
+        </div>
       </div>
 
       {/* Comment input */}
@@ -838,7 +980,11 @@ function LinkedPrView({ pr, projectPath, visible, onUnlink, onRefreshPr }: {
                 disabled={submitting || !commentBody.trim()}
                 className="h-6 px-2.5 text-[11px] gap-1.5"
               >
-                {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                {submitting ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Send className="h-3 w-3" />
+                )}
                 Comment
               </Button>
             </div>
@@ -888,7 +1034,11 @@ function groupTimelineEvents(events: GhPrTimelineEvent[]): GroupedTimelineEntry[
 
 // --- Commit group timeline item ---
 
-function CommitGroupItem({ commits, author, isLast }: {
+function CommitGroupItem({
+  commits,
+  author,
+  isLast
+}: {
   commits: GhPrCommit[]
   author: string
   isLast: boolean
@@ -903,15 +1053,20 @@ function CommitGroupItem({ commits, author, isLast }: {
       </div>
       <div className="flex-1 min-w-0 mb-4">
         <div className="text-[11px] text-muted-foreground">
-          <span className="font-medium text-foreground/80">{author}</span>
-          {' '}added {commits.length} commit{commits.length !== 1 && 's'}
+          <span className="font-medium text-foreground/80">{author}</span> added {commits.length}{' '}
+          commit{commits.length !== 1 && 's'}
         </div>
         <div className="mt-1.5 space-y-0.5 pl-1">
-          {commits.map(c => (
-            <div key={c.oid} className="flex items-center gap-2 text-[11px] text-muted-foreground truncate">
+          {commits.map((c) => (
+            <div
+              key={c.oid}
+              className="flex items-center gap-2 text-[11px] text-muted-foreground truncate"
+            >
               <GitCommitHorizontal className="h-3 w-3 shrink-0 text-muted-foreground/50" />
               <span className="text-foreground/70 truncate">{c.messageHeadline}</span>
-              <code className="shrink-0 text-[10px] font-mono text-muted-foreground/60">{c.oid.slice(0, 7)}</code>
+              <code className="shrink-0 text-[10px] font-mono text-muted-foreground/60">
+                {c.oid.slice(0, 7)}
+              </code>
             </div>
           ))}
         </div>
@@ -922,7 +1077,21 @@ function CommitGroupItem({ commits, author, isLast }: {
 
 // --- Timeline item ---
 
-function TimelineItem({ comment, collapsed, onToggleCollapse, onReply, isOwnComment, isEditing, editBody, editSubmitting, onStartEdit, onEditChange, onSaveEdit, onCancelEdit, isLast }: {
+function TimelineItem({
+  comment,
+  collapsed,
+  onToggleCollapse,
+  onReply,
+  isOwnComment,
+  isEditing,
+  editBody,
+  editSubmitting,
+  onStartEdit,
+  onEditChange,
+  onSaveEdit,
+  onCancelEdit,
+  isLast
+}: {
   comment: GhPrComment
   collapsed: boolean
   onToggleCollapse: () => void
@@ -951,17 +1120,22 @@ function TimelineItem({ comment, collapsed, onToggleCollapse, onReply, isOwnComm
         </div>
         <div className="flex-1 min-w-0 mb-4">
           <span className="text-[11px] text-muted-foreground">
-            <span className="font-medium text-foreground/80">{comment.author}</span>
-            {' '}{reviewActionLabel(comment.reviewState)}
+            <span className="font-medium text-foreground/80">{comment.author}</span>{' '}
+            {reviewActionLabel(comment.reviewState)}
             <span className="ml-1.5 text-muted-foreground/60">{timeAgo}</span>
           </span>
           {comment.reviewFiles && comment.reviewFiles.length > 0 && (
             <div className="mt-1 space-y-0.5">
-              {comment.reviewFiles.map(file => (
-                <div key={file} className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate">
+              {comment.reviewFiles.map((file) => (
+                <div
+                  key={file}
+                  className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate"
+                >
                   <File className="h-3 w-3 shrink-0 text-muted-foreground/50" />
                   <span className="font-mono truncate">{file.split('/').pop()}</span>
-                  <span className="text-[10px] text-muted-foreground/40 truncate hidden sm:inline">{file}</span>
+                  <span className="text-[10px] text-muted-foreground/40 truncate hidden sm:inline">
+                    {file}
+                  </span>
                 </div>
               ))}
             </div>
@@ -995,10 +1169,13 @@ function TimelineItem({ comment, collapsed, onToggleCollapse, onReply, isOwnComm
           <span className="text-[10px] text-muted-foreground/60">{timeAgo}</span>
           {/* Action buttons */}
           {!collapsed && (
-            <div className="ml-auto flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
+            <div className="ml-auto flex items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button onClick={onReply} className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
+                  <button
+                    onClick={onReply}
+                    className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                  >
                     <Reply className="h-3 w-3" />
                   </button>
                 </TooltipTrigger>
@@ -1007,7 +1184,10 @@ function TimelineItem({ comment, collapsed, onToggleCollapse, onReply, isOwnComm
               {isOwnComment && comment.type === 'comment' && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={onStartEdit} className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors">
+                    <button
+                      onClick={onStartEdit}
+                      className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors"
+                    >
                       <Pencil className="h-3 w-3" />
                     </button>
                   </TooltipTrigger>
@@ -1017,30 +1197,50 @@ function TimelineItem({ comment, collapsed, onToggleCollapse, onReply, isOwnComm
             </div>
           )}
           <span className={cn('shrink-0', collapsed && 'ml-auto')}>
-            {collapsed
-              ? <ChevronRight className="h-3 w-3 text-muted-foreground" />
-              : <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            }
+            {collapsed ? (
+              <ChevronRight className="h-3 w-3 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            )}
           </span>
         </div>
 
         {/* Comment body */}
-        {!collapsed && (
-          isEditing ? (
+        {!collapsed &&
+          (isEditing ? (
             <div className="px-3 py-2 space-y-2">
               <textarea
                 value={editBody}
-                onChange={e => onEditChange(e.target.value)}
+                onChange={(e) => onEditChange(e.target.value)}
                 className="w-full rounded-md border bg-transparent px-3 py-2 text-xs resize-y min-h-[60px] focus:outline-none focus:ring-1 focus:ring-ring"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onSaveEdit() }
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    e.preventDefault()
+                    onSaveEdit()
+                  }
                   if (e.key === 'Escape') onCancelEdit()
                 }}
               />
               <div className="flex gap-2 justify-end">
-                <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={onCancelEdit}>Cancel</Button>
-                <Button size="sm" className="h-6 text-[11px] gap-1" disabled={editSubmitting || !editBody.trim()} onClick={onSaveEdit}>
-                  {editSubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[11px]"
+                  onClick={onCancelEdit}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-6 text-[11px] gap-1"
+                  disabled={editSubmitting || !editBody.trim()}
+                  onClick={onSaveEdit}
+                >
+                  {editSubmitting ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Check className="h-3 w-3" />
+                  )}
                   Save
                 </Button>
               </div>
@@ -1049,12 +1249,14 @@ function TimelineItem({ comment, collapsed, onToggleCollapse, onReply, isOwnComm
             <div className="px-3 py-2 text-xs">
               <GhMarkdown>{comment.body}</GhMarkdown>
             </div>
-          )
-        )}
+          ))}
         {comment.reviewFiles && comment.reviewFiles.length > 0 && (
           <div className="border-t px-3 py-1.5 space-y-0.5">
-            {comment.reviewFiles.map(file => (
-              <div key={file} className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate">
+            {comment.reviewFiles.map((file) => (
+              <div
+                key={file}
+                className="flex items-center gap-1.5 text-[11px] text-muted-foreground truncate"
+              >
                 <File className="h-3 w-3 shrink-0 text-muted-foreground/50" />
                 <span className="font-mono truncate">{file}</span>
               </div>
@@ -1084,7 +1286,7 @@ const avatarColors = [
   'bg-pink-500/20 text-pink-400',
   'bg-cyan-500/20 text-cyan-400',
   'bg-yellow-500/20 text-yellow-400',
-  'bg-red-500/20 text-red-400',
+  'bg-red-500/20 text-red-400'
 ]
 
 function avatarColor(name: string): string {
@@ -1106,38 +1308,53 @@ function AuthorAvatar({ name, size = 'md' }: { name: string; size?: 'sm' | 'md' 
         src={`https://github.com/${name}.png?size=48`}
         alt={name}
         className={cn(sizeClass, 'rounded-full')}
-        onError={() => { failedAvatars.add(name); setImgError(true) }}
+        onError={() => {
+          failedAvatars.add(name)
+          setImgError(true)
+        }}
       />
     )
   }
 
   return (
-    <div className={cn(
-      'rounded-full flex items-center justify-center font-bold select-none',
-      sizeClass,
-      size === 'sm' ? 'text-[7px]' : 'text-[9px]',
-      avatarColor(name)
-    )}>
+    <div
+      className={cn(
+        'rounded-full flex items-center justify-center font-bold select-none',
+        sizeClass,
+        size === 'sm' ? 'text-[7px]' : 'text-[9px]',
+        avatarColor(name)
+      )}
+    >
       {initials}
     </div>
   )
 }
 
-
 function reviewActionLabel(state?: string): string {
   switch (state) {
-    case 'APPROVED': return 'approved these changes'
-    case 'CHANGES_REQUESTED': return 'requested changes'
-    case 'COMMENTED': return 'left a review'
-    case 'DISMISSED': return 'dismissed a review'
-    default: return 'reviewed'
+    case 'APPROVED':
+      return 'approved these changes'
+    case 'CHANGES_REQUESTED':
+      return 'requested changes'
+    case 'COMMENTED':
+      return 'left a review'
+    case 'DISMISSED':
+      return 'dismissed a review'
+    default:
+      return 'reviewed'
   }
 }
 
 function ReviewInlineBadge({ state }: { state: string }) {
   const config: Record<string, { label: string; className: string }> = {
-    APPROVED: { label: 'Approved', className: 'text-green-500 bg-green-500/10 border-green-500/20' },
-    CHANGES_REQUESTED: { label: 'Changes requested', className: 'text-red-500 bg-red-500/10 border-red-500/20' },
+    APPROVED: {
+      label: 'Approved',
+      className: 'text-green-500 bg-green-500/10 border-green-500/20'
+    },
+    CHANGES_REQUESTED: {
+      label: 'Changes requested',
+      className: 'text-red-500 bg-red-500/10 border-red-500/20'
+    },
     COMMENTED: { label: 'Reviewed', className: 'text-muted-foreground bg-muted border-border' }
   }
   const c = config[state]
@@ -1154,14 +1371,31 @@ function ReviewInlineBadge({ state }: { state: string }) {
 function ChecksBadge({ status }: { status: GhPullRequest['statusCheckRollup'] }) {
   if (!status) return null
   const config: Record<string, { icon: React.ReactNode; label: string; className: string }> = {
-    SUCCESS: { icon: <CheckCircle2 className="h-3 w-3" />, label: 'Checks pass', className: 'text-green-500 bg-green-500/10' },
-    FAILURE: { icon: <XCircle className="h-3 w-3" />, label: 'Checks failing', className: 'text-red-500 bg-red-500/10' },
-    PENDING: { icon: <Clock className="h-3 w-3" />, label: 'Checks running', className: 'text-yellow-500 bg-yellow-500/10' }
+    SUCCESS: {
+      icon: <CheckCircle2 className="h-3 w-3" />,
+      label: 'Checks pass',
+      className: 'text-green-500 bg-green-500/10'
+    },
+    FAILURE: {
+      icon: <XCircle className="h-3 w-3" />,
+      label: 'Checks failing',
+      className: 'text-red-500 bg-red-500/10'
+    },
+    PENDING: {
+      icon: <Clock className="h-3 w-3" />,
+      label: 'Checks running',
+      className: 'text-yellow-500 bg-yellow-500/10'
+    }
   }
   const c = config[status]
   if (!c) return null
   return (
-    <span className={cn('flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium', c.className)}>
+    <span
+      className={cn(
+        'flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium',
+        c.className
+      )}
+    >
       {c.icon} {c.label}
     </span>
   )
@@ -1170,14 +1404,31 @@ function ChecksBadge({ status }: { status: GhPullRequest['statusCheckRollup'] })
 function ReviewBadge({ decision }: { decision: GhPullRequest['reviewDecision'] }) {
   if (!decision) return null
   const config: Record<string, { icon: React.ReactNode; label: string; className: string }> = {
-    APPROVED: { icon: <ShieldCheck className="h-3 w-3" />, label: 'Approved', className: 'text-green-500 bg-green-500/10' },
-    CHANGES_REQUESTED: { icon: <ShieldAlert className="h-3 w-3" />, label: 'Changes requested', className: 'text-red-500 bg-red-500/10' },
-    REVIEW_REQUIRED: { icon: <ShieldQuestion className="h-3 w-3" />, label: 'Review required', className: 'text-yellow-500 bg-yellow-500/10' }
+    APPROVED: {
+      icon: <ShieldCheck className="h-3 w-3" />,
+      label: 'Approved',
+      className: 'text-green-500 bg-green-500/10'
+    },
+    CHANGES_REQUESTED: {
+      icon: <ShieldAlert className="h-3 w-3" />,
+      label: 'Changes requested',
+      className: 'text-red-500 bg-red-500/10'
+    },
+    REVIEW_REQUIRED: {
+      icon: <ShieldQuestion className="h-3 w-3" />,
+      label: 'Review required',
+      className: 'text-yellow-500 bg-yellow-500/10'
+    }
   }
   const c = config[decision]
   if (!c) return null
   return (
-    <span className={cn('flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium', c.className)}>
+    <span
+      className={cn(
+        'flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium',
+        c.className
+      )}
+    >
       {c.icon} {c.label}
     </span>
   )
@@ -1199,7 +1450,13 @@ function formatRelativeTime(dateStr: string): string {
 
 // --- Create PR dialog ---
 
-export function CreatePrDialog({ open, onOpenChange, task, projectPath, onCreated }: {
+export function CreatePrDialog({
+  open,
+  onOpenChange,
+  task,
+  projectPath,
+  onCreated
+}: {
   open: boolean
   onOpenChange: (open: boolean) => void
   task: Task
@@ -1217,7 +1474,10 @@ export function CreatePrDialog({ open, onOpenChange, task, projectPath, onCreate
   // Resolve default branch when worktree_parent_branch is not set
   useEffect(() => {
     if (!open || task.worktree_parent_branch) return
-    window.api.git.getDefaultBranch(projectPath).then(setBaseBranch).catch(() => setBaseBranch('main'))
+    window.api.git
+      .getDefaultBranch(projectPath)
+      .then(setBaseBranch)
+      .catch(() => setBaseBranch('main'))
   }, [open, projectPath, task.worktree_parent_branch])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1279,11 +1539,22 @@ export function CreatePrDialog({ open, onOpenChange, task, projectPath, onCreate
           </label>
 
           {error && (
-            <div className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</div>
+            <div className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2">
+              {error}
+            </div>
           )}
 
-          <Button type="submit" size="sm" disabled={creating || !title.trim() || !baseBranch} className="gap-2">
-            {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <GitPullRequest className="h-3.5 w-3.5" />}
+          <Button
+            type="submit"
+            size="sm"
+            disabled={creating || !title.trim() || !baseBranch}
+            className="gap-2"
+          >
+            {creating ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <GitPullRequest className="h-3.5 w-3.5" />
+            )}
             {creating ? 'Creating...' : 'Create Pull Request'}
           </Button>
         </form>
@@ -1294,7 +1565,13 @@ export function CreatePrDialog({ open, onOpenChange, task, projectPath, onCreate
 
 // --- Link existing PR dialog ---
 
-export function LinkPrDialog({ open, onOpenChange, projectPath, onLink, error }: {
+export function LinkPrDialog({
+  open,
+  onOpenChange,
+  projectPath,
+  onLink,
+  error
+}: {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectPath: string
@@ -1339,7 +1616,9 @@ export function LinkPrDialog({ open, onOpenChange, projectPath, onLink, error }:
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
           ) : prs.length === 0 ? (
-            <div className="py-8 text-center text-xs text-muted-foreground">No open pull requests</div>
+            <div className="py-8 text-center text-xs text-muted-foreground">
+              No open pull requests
+            </div>
           ) : (
             <div className="py-1">
               {prs.map((pr) => (
@@ -1376,7 +1655,11 @@ function PrStateIcon({ state, isDraft }: { state: GhPullRequest['state']; isDraf
 
 function PrStateBadge({ state, isDraft }: { state: GhPullRequest['state']; isDraft: boolean }) {
   if (isDraft) {
-    return <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">Draft</span>
+    return (
+      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+        Draft
+      </span>
+    )
   }
   const styles: Record<string, string> = {
     OPEN: 'bg-green-500/10 text-green-500',

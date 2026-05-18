@@ -24,10 +24,17 @@ test.describe('File tree rename', () => {
     fs.writeFileSync(path.join(TEST_PROJECT_PATH, 'renameme.ts'), 'export const x = 1\n')
     fs.mkdirSync(path.join(TEST_PROJECT_PATH, 'oldname', 'sub'), { recursive: true })
     fs.writeFileSync(path.join(TEST_PROJECT_PATH, 'oldname', 'other.ts'), 'export const o = 1\n')
-    fs.writeFileSync(path.join(TEST_PROJECT_PATH, 'oldname', 'sub', 'inner.ts'), 'export const y = 2\n')
+    fs.writeFileSync(
+      path.join(TEST_PROJECT_PATH, 'oldname', 'sub', 'inner.ts'),
+      'export const y = 2\n'
+    )
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Rename Test', color: '#6366f1', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Rename Test',
+      color: '#6366f1',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     await s.createTask({ projectId: p.id, title: 'Rename test task', status: 'todo' })
     await s.refreshData()
@@ -36,7 +43,9 @@ test.describe('File tree rename', () => {
     await clickProject(mainWindow, projectAbbrev)
     await expect(mainWindow.getByText('Rename test task').first()).toBeVisible({ timeout: 5_000 })
     await mainWindow.getByText('Rename test task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
 
     await mainWindow.keyboard.press('Meta+e')
     await expect(editorPanel(mainWindow).getByText('Files')).toBeVisible({ timeout: 5_000 })
@@ -45,7 +54,9 @@ test.describe('File tree rename', () => {
   test('file rename via context menu + Enter commits on disk', async ({ mainWindow }) => {
     await expect(treeFile(mainWindow, 'renameme.ts')).toBeVisible({ timeout: 5_000 })
     await treeFile(mainWindow, 'renameme.ts').click({ button: 'right' })
-    await expect(mainWindow.getByRole('menuitem', { name: 'Rename' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'Rename' })).toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByRole('menuitem', { name: 'Rename' }).click()
 
     const input = renameInput(mainWindow)
@@ -58,7 +69,10 @@ test.describe('File tree rename', () => {
     expect(fs.existsSync(path.join(TEST_PROJECT_PATH, 'renameme.ts'))).toBe(false)
     await expect(treeFile(mainWindow, 'renamed.ts')).toBeVisible({ timeout: 5_000 })
 
-    fs.renameSync(path.join(TEST_PROJECT_PATH, 'renamed.ts'), path.join(TEST_PROJECT_PATH, 'renameme.ts'))
+    fs.renameSync(
+      path.join(TEST_PROJECT_PATH, 'renamed.ts'),
+      path.join(TEST_PROJECT_PATH, 'renameme.ts')
+    )
   })
 
   test('folder rename via context menu + Enter commits on disk', async ({ mainWindow }) => {
@@ -79,7 +93,9 @@ test.describe('File tree rename', () => {
     fs.renameSync(path.join(TEST_PROJECT_PATH, 'newname'), path.join(TEST_PROJECT_PATH, 'oldname'))
   })
 
-  test('folder rename preserves expandedFolders for renamed folder + descendants', async ({ mainWindow }) => {
+  test('folder rename preserves expandedFolders for renamed folder + descendants', async ({
+    mainWindow
+  }) => {
     await expect(treeFile(mainWindow, 'oldname')).toBeVisible({ timeout: 5_000 })
 
     await treeFile(mainWindow, 'oldname').click()
@@ -105,7 +121,9 @@ test.describe('File tree rename', () => {
     fs.renameSync(path.join(TEST_PROJECT_PATH, 'newname'), path.join(TEST_PROJECT_PATH, 'oldname'))
   })
 
-  test('Escape cancels rename without committing and without blur double-invoke', async ({ mainWindow }) => {
+  test('Escape cancels rename without committing and without blur double-invoke', async ({
+    mainWindow
+  }) => {
     await expect(treeFile(mainWindow, 'renameme.ts')).toBeVisible({ timeout: 5_000 })
     await treeFile(mainWindow, 'renameme.ts').click({ button: 'right' })
     await mainWindow.getByRole('menuitem', { name: 'Rename' }).click()

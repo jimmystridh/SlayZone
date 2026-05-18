@@ -8,8 +8,8 @@ const initializeMock = vi.fn()
 vi.mock('mermaid', () => ({
   default: {
     initialize: initializeMock,
-    render: renderMock,
-  },
+    render: renderMock
+  }
 }))
 
 function setHtmlTheme(theme: 'dark' | 'light') {
@@ -17,9 +17,15 @@ function setHtmlTheme(theme: 'dark' | 'light') {
 }
 
 vi.mock('@slayzone/ui', () => ({
-  IconButton: (props: { onClick?: () => void; 'aria-label': string; children?: React.ReactNode }) => (
-    <button aria-label={props['aria-label']} onClick={props.onClick}>{props.children}</button>
-  ),
+  IconButton: (props: {
+    onClick?: () => void
+    'aria-label': string
+    children?: React.ReactNode
+  }) => (
+    <button aria-label={props['aria-label']} onClick={props.onClick}>
+      {props.children}
+    </button>
+  )
 }))
 
 import { MermaidBlock } from './MermaidBlock'
@@ -42,7 +48,7 @@ describe('MermaidBlock', () => {
     const { container } = render(<MermaidBlock code="flowchart TD\nA-->B # case-1" />)
     await waitFor(() => expect(container.querySelector('[data-testid="diagram-1"]')).not.toBeNull())
     expect(initializeMock).toHaveBeenCalledWith(
-      expect.objectContaining({ securityLevel: 'strict', theme: 'dark' }),
+      expect.objectContaining({ securityLevel: 'strict', theme: 'dark' })
     )
   })
 
@@ -51,7 +57,7 @@ describe('MermaidBlock', () => {
     const { container } = render(
       <StrictMode>
         <MermaidBlock code="flowchart TD\nA-->B # case-2" />
-      </StrictMode>,
+      </StrictMode>
     )
     await waitFor(() => expect(container.querySelector('[data-testid="diagram-2"]')).not.toBeNull())
     // StrictMode mounts effects twice; cancelled flag must drop duplicates so
@@ -62,7 +68,9 @@ describe('MermaidBlock', () => {
   it('re-renders with new theme on theme switch', async () => {
     renderMock.mockResolvedValueOnce({ svg: '<svg data-testid="diagram-3a"/>' })
     const { container, rerender } = render(<MermaidBlock code="flowchart TD\nA-->B # case-3" />)
-    await waitFor(() => expect(container.querySelector('[data-testid="diagram-3a"]')).not.toBeNull())
+    await waitFor(() =>
+      expect(container.querySelector('[data-testid="diagram-3a"]')).not.toBeNull()
+    )
 
     renderMock.mockResolvedValueOnce({ svg: '<svg data-testid="diagram-3b"/>' })
     act(() => {
@@ -72,10 +80,12 @@ describe('MermaidBlock', () => {
 
     await waitFor(() =>
       expect(initializeMock).toHaveBeenCalledWith(
-        expect.objectContaining({ securityLevel: 'strict', theme: 'default' }),
-      ),
+        expect.objectContaining({ securityLevel: 'strict', theme: 'default' })
+      )
     )
-    await waitFor(() => expect(container.querySelector('[data-testid="diagram-3b"]')).not.toBeNull())
+    await waitFor(() =>
+      expect(container.querySelector('[data-testid="diagram-3b"]')).not.toBeNull()
+    )
   })
 
   it('falls back to <pre><code> when mermaid.render rejects', async () => {

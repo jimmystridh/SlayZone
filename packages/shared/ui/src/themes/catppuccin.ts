@@ -41,7 +41,7 @@ export const catppuccin: UnifiedThemeDefinition = {
       surface2: '#313244',
       surface3: '#3b3d52',
       modal: '#181825',
-      modalBorder: 'rgba(255, 255, 255, 0.25)',
+      modalBorder: 'rgba(255, 255, 255, 0.25)'
     },
     terminal: {
       background: '#1e1e2e',
@@ -65,7 +65,7 @@ export const catppuccin: UnifiedThemeDefinition = {
       brightBlue: '#89b4fa',
       brightMagenta: '#f5c2e7',
       brightCyan: '#94e2d5',
-      brightWhite: '#a6adc8',
+      brightWhite: '#a6adc8'
     },
     editor: {
       background: '#1e1e2e',
@@ -85,8 +85,8 @@ export const catppuccin: UnifiedThemeDefinition = {
       variable: '#cdd6f4',
       property: '#f38ba8',
       link: '#89b4fa',
-      heading: '#cdd6f4',
-    },
+      heading: '#cdd6f4'
+    }
   },
   light: {
     chrome: {
@@ -126,7 +126,7 @@ export const catppuccin: UnifiedThemeDefinition = {
       surface2: '#ffffff',
       surface3: '#ffffff',
       modal: '#dce0e8',
-      modalBorder: 'rgba(0, 0, 0, 0.35)',
+      modalBorder: 'rgba(0, 0, 0, 0.35)'
     },
     terminal: {
       background: '#eff1f5',
@@ -150,7 +150,7 @@ export const catppuccin: UnifiedThemeDefinition = {
       brightBlue: '#1e66f5',
       brightMagenta: '#ea76cb',
       brightCyan: '#179299',
-      brightWhite: '#bcc0cc',
+      brightWhite: '#bcc0cc'
     },
     editor: {
       background: '#eff1f5',
@@ -170,7 +170,7 @@ export const catppuccin: UnifiedThemeDefinition = {
       variable: '#4c4f69',
       property: '#d20f39',
       link: '#1e66f5',
-      heading: '#4c4f69',
-    },
-  },
+      heading: '#4c4f69'
+    }
+  }
 }

@@ -21,12 +21,13 @@ function isBinary(buf: Buffer): boolean {
 
 export function diffVersions(db: DbLike, blobStore: BlobStore, input: DiffInput): DiffResult {
   const verA = resolveVersionRef(db, input.artifactId, input.a)
-  const verB = input.b !== undefined
-    ? resolveVersionRef(db, input.artifactId, input.b)
-    : getCurrentVersion(db, input.artifactId)
+  const verB =
+    input.b !== undefined
+      ? resolveVersionRef(db, input.artifactId, input.b)
+      : getCurrentVersion(db, input.artifactId)
   if (!verB) {
     throw new VersionError('NOT_FOUND', 'No current version to compare against', {
-      artifactId: input.artifactId,
+      artifactId: input.artifactId
     })
   }
 
@@ -41,7 +42,7 @@ export function diffVersions(db: DbLike, blobStore: BlobStore, input: DiffInput)
     return {
       kind: 'binary',
       a: { hash: verA.content_hash as ContentHash, size: verA.size },
-      b: { hash: verB.content_hash as ContentHash, size: verB.size },
+      b: { hash: verB.content_hash as ContentHash, size: verB.size }
     }
   }
 
@@ -62,7 +63,7 @@ export function diffVersions(db: DbLike, blobStore: BlobStore, input: DiffInput)
       if (prefix === '+') return { kind: 'add' as const, text }
       if (prefix === '-') return { kind: 'del' as const, text }
       return { kind: 'ctx' as const, text }
-    }),
+    })
   }))
 
   return { kind: 'text', hunks }
@@ -70,12 +71,13 @@ export function diffVersions(db: DbLike, blobStore: BlobStore, input: DiffInput)
 
 export function diffUnified(db: DbLike, blobStore: BlobStore, input: DiffInput): string {
   const verA = resolveVersionRef(db, input.artifactId, input.a)
-  const verB = input.b !== undefined
-    ? resolveVersionRef(db, input.artifactId, input.b)
-    : getCurrentVersion(db, input.artifactId)
+  const verB =
+    input.b !== undefined
+      ? resolveVersionRef(db, input.artifactId, input.b)
+      : getCurrentVersion(db, input.artifactId)
   if (!verB) {
     throw new VersionError('NOT_FOUND', 'No current version to compare against', {
-      artifactId: input.artifactId,
+      artifactId: input.artifactId
     })
   }
   const bufA = blobStore.read(verA.content_hash)

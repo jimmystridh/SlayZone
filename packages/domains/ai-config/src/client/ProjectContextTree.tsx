@@ -1,6 +1,44 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent } from 'react'
-import { File, FilePlus, Link, Unlink, RefreshCw, Save, Check, AlertCircle, Circle, Pencil, Trash2, RefreshCcw } from 'lucide-react'
-import { Button, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger, Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label, Textarea, FileTree, fileTreeIndent, cn } from '@slayzone/ui'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type MouseEvent as ReactMouseEvent
+} from 'react'
+import {
+  File,
+  FilePlus,
+  Link,
+  Unlink,
+  RefreshCw,
+  Save,
+  Check,
+  AlertCircle,
+  Circle,
+  Pencil,
+  Trash2,
+  RefreshCcw
+} from 'lucide-react'
+import {
+  Button,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Textarea,
+  FileTree,
+  fileTreeIndent,
+  cn
+} from '@slayzone/ui'
 import type { CliProvider, ContextTreeEntry } from '../shared'
 import { useContextManagerStore } from './useContextManagerStore'
 import { LibraryItemPicker } from './LibraryItemPicker'
@@ -10,21 +48,33 @@ function SyncBadge({ entry }: { entry: ContextTreeEntry }) {
   const health = entry.syncHealth
   if (health === 'synced') {
     return (
-      <span className="flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400" title="Synced with source" aria-label="Synced with source">
+      <span
+        className="flex items-center gap-1 text-[11px] text-green-600 dark:text-green-400"
+        title="Synced with source"
+        aria-label="Synced with source"
+      >
         <Check className="size-3" />
       </span>
     )
   }
   if (health === 'stale') {
     return (
-      <span className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400" title="Out of sync with source" aria-label="Out of sync with source">
+      <span
+        className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400"
+        title="Out of sync with source"
+        aria-label="Out of sync with source"
+      >
         <AlertCircle className="size-3" />
       </span>
     )
   }
   if (health !== 'unmanaged') return null
   return (
-    <span className="flex items-center gap-1 text-[11px] text-muted-foreground" title="Unmanaged (File exists but not linked in Database)" aria-label="Unmanaged file">
+    <span
+      className="flex items-center gap-1 text-[11px] text-muted-foreground"
+      title="Unmanaged (File exists but not linked in Database)"
+      aria-label="Unmanaged file"
+    >
       <Circle className="size-3" />
     </span>
   )
@@ -66,14 +116,17 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
   const storedExpandedFolders = useContextManagerStore((s) => s.projectExpandedFolders)
   const setStoredExpandedFolders = useContextManagerStore((s) => s.setProjectExpandedFolders)
   const expandedFolders = useMemo(() => new Set(storedExpandedFolders), [storedExpandedFolders])
-  const setExpandedFolders = useCallback((update: Set<string> | ((prev: Set<string>) => Set<string>)) => {
-    if (typeof update === 'function') {
-      const next = update(expandedFolders)
-      setStoredExpandedFolders([...next])
-    } else {
-      setStoredExpandedFolders([...update])
-    }
-  }, [expandedFolders, setStoredExpandedFolders])
+  const setExpandedFolders = useCallback(
+    (update: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+      if (typeof update === 'function') {
+        const next = update(expandedFolders)
+        setStoredExpandedFolders([...next])
+      } else {
+        setStoredExpandedFolders([...update])
+      }
+    },
+    [expandedFolders, setStoredExpandedFolders]
+  )
   const [renamingEntry, setRenamingEntry] = useState<ContextTreeEntry | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [syncing, setSyncing] = useState(false)
@@ -93,7 +146,7 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
           folders.add(path)
         }
       }
-      setExpandedFolders((prev) => prev.size === 0 ? folders : prev)
+      setExpandedFolders((prev) => (prev.size === 0 ? folders : prev))
     } finally {
       setLoading(false)
     }
@@ -147,7 +200,11 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
   const handleSync = async (entry: ContextTreeEntry) => {
     if (!entry.linkedItemId) return
     try {
-      const updated = await window.api.aiConfig.syncLinkedFile(projectId, projectPath, entry.linkedItemId)
+      const updated = await window.api.aiConfig.syncLinkedFile(
+        projectId,
+        projectPath,
+        entry.linkedItemId
+      )
       setEntries((prev) => prev.map((e) => (e.path === updated.path ? updated : e)))
       if (selectedPath === entry.path) {
         const text = await window.api.aiConfig.readContextFile(entry.path, projectPath)
@@ -236,79 +293,85 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
   const projectFiles = entries.filter((e) => !e.relativePath.startsWith('~'))
   const computerFiles = entries.filter((e) => e.relativePath.startsWith('~'))
 
-  const renderContextFile = useCallback((entry: ContextTreeEntry, { name, depth }: { name: string; depth: number }) => {
-    const selected = selectedPath === entry.path
-    const isStaleLinked = !!entry.linkedItemId && contextEntryToSyncHealth(entry) === 'stale'
-    return (
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <div
-            className={cn(
-              'group flex w-full select-none items-center gap-1.5 rounded px-1 py-1 text-xs',
-              selected ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/50',
-              !entry.exists && 'text-muted-foreground'
-            )}
-            style={{ paddingLeft: fileTreeIndent(depth) }}
-          >
-            <button className="flex min-w-0 flex-1 items-center gap-1.5" onClick={() => openFile(entry)}>
-              {entry.exists
-                ? (
+  const renderContextFile = useCallback(
+    (entry: ContextTreeEntry, { name, depth }: { name: string; depth: number }) => {
+      const selected = selectedPath === entry.path
+      const isStaleLinked = !!entry.linkedItemId && contextEntryToSyncHealth(entry) === 'stale'
+      return (
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            <div
+              className={cn(
+                'group flex w-full select-none items-center gap-1.5 rounded px-1 py-1 text-xs',
+                selected ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/50',
+                !entry.exists && 'text-muted-foreground'
+              )}
+              style={{ paddingLeft: fileTreeIndent(depth) }}
+            >
+              <button
+                className="flex min-w-0 flex-1 items-center gap-1.5"
+                onClick={() => openFile(entry)}
+              >
+                {entry.exists ? (
                   <span title="File exists" aria-label="File exists">
                     <File className="size-3.5 shrink-0" />
                   </span>
-                  )
-                : (
+                ) : (
                   <span title="File not created" aria-label="File not created">
                     <FilePlus className="size-3.5 shrink-0" />
                   </span>
-                  )
-              }
-              <span className="min-w-0 truncate font-mono">{name}</span>
-            </button>
-            <div className="flex shrink-0 items-center gap-1">
-              <ProviderBadge provider={entry.provider} />
-              {entry.linkedItemId && (
-                <>
-                  <span title="Linked to library item" aria-label="Linked to library item">
-                    <Link className="size-3 text-muted-foreground" />
-                  </span>
-                </>
-              )}
-              <SyncBadge entry={entry} />
-              {isStaleLinked && (
-                <button
-                  className="rounded p-0.5 text-muted-foreground hover:text-foreground"
-                  onClick={(e) => { e.stopPropagation(); handleSync(entry) }}
-                  title="Sync from library"
-                >
-                  <RefreshCw className="size-3" />
-                </button>
-              )}
+                )}
+                <span className="min-w-0 truncate font-mono">{name}</span>
+              </button>
+              <div className="flex shrink-0 items-center gap-1">
+                <ProviderBadge provider={entry.provider} />
+                {entry.linkedItemId && (
+                  <>
+                    <span title="Linked to library item" aria-label="Linked to library item">
+                      <Link className="size-3 text-muted-foreground" />
+                    </span>
+                  </>
+                )}
+                <SyncBadge entry={entry} />
+                {isStaleLinked && (
+                  <button
+                    className="rounded p-0.5 text-muted-foreground hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleSync(entry)
+                    }}
+                    title="Sync from library"
+                  >
+                    <RefreshCw className="size-3" />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem onSelect={() => handleStartRename(entry)}>
-            <Pencil className="size-4" /> Rename
-          </ContextMenuItem>
-          {isStaleLinked && (
-            <ContextMenuItem onSelect={() => handleSync(entry)}>
-              <RefreshCw className="size-4" /> Sync from library
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem onSelect={() => handleStartRename(entry)}>
+              <Pencil className="size-4" /> Rename
             </ContextMenuItem>
-          )}
-          {entry.linkedItemId && (
-            <ContextMenuItem onSelect={() => handleUnlink(entry)}>
-              <Unlink className="size-4" /> Unlink from library
+            {isStaleLinked && (
+              <ContextMenuItem onSelect={() => handleSync(entry)}>
+                <RefreshCw className="size-4" /> Sync from library
+              </ContextMenuItem>
+            )}
+            {entry.linkedItemId && (
+              <ContextMenuItem onSelect={() => handleUnlink(entry)}>
+                <Unlink className="size-4" /> Unlink from library
+              </ContextMenuItem>
+            )}
+            <ContextMenuSeparator />
+            <ContextMenuItem variant="destructive" onSelect={() => handleDelete(entry)}>
+              <Trash2 className="size-4" /> Delete
             </ContextMenuItem>
-          )}
-          <ContextMenuSeparator />
-          <ContextMenuItem variant="destructive" onSelect={() => handleDelete(entry)}>
-            <Trash2 className="size-4" /> Delete
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-    )
-  }, [selectedPath])
+          </ContextMenuContent>
+        </ContextMenu>
+      )
+    },
+    [selectedPath]
+  )
 
   // Resizable split (pixel-based)
   const splitWidth = useContextManagerStore((s) => s.projectSplitWidth)
@@ -347,7 +410,9 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
         <div className="flex-1 space-y-8">
           {projectFiles.length > 0 && (
             <div>
-              <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Project</p>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Project
+              </p>
               <FileTree
                 items={projectFiles}
                 getPath={getRelativePath}
@@ -360,7 +425,9 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
 
           {computerFiles.length > 0 && (
             <div>
-              <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Computer</p>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Computer
+              </p>
               <FileTree
                 items={computerFiles}
                 getPath={getRelativePath}
@@ -382,8 +449,18 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
               onKeyDown={(e) => e.key === 'Enter' && handleCreateFile()}
             />
             <div className="flex gap-1">
-              <Button size="sm" className="h-6 flex-1 text-[11px]" onClick={handleCreateFile}>Create</Button>
-              <Button size="sm" variant="ghost" className="h-6 flex-1 text-[11px]" onClick={() => { setCreatingFile(false); setNewFilePath('') }}>
+              <Button size="sm" className="h-6 flex-1 text-[11px]" onClick={handleCreateFile}>
+                Create
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 flex-1 text-[11px]"
+                onClick={() => {
+                  setCreatingFile(false)
+                  setNewFilePath('')
+                }}
+              >
                 Cancel
               </Button>
             </div>
@@ -418,7 +495,9 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
         {selectedPath ? (
           <>
             <div className="flex items-center justify-between gap-2 pb-2">
-              <Label className="font-mono text-xs">{selectedEntry?.relativePath ?? selectedPath}</Label>
+              <Label className="font-mono text-xs">
+                {selectedEntry?.relativePath ?? selectedPath}
+              </Label>
               <div className="flex items-center gap-2">
                 {message && <span className="text-[11px] text-muted-foreground">{message}</span>}
                 <Button size="sm" onClick={saveFile} disabled={!dirty || saving}>
@@ -433,11 +512,20 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
               value={content}
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value)}
             />
-            {selectedPath.endsWith('.json') && (() => {
-              if (!content.trim()) return null
-              try { JSON.parse(content); return <p className="text-[11px] text-green-600 dark:text-green-400 pt-1">Valid JSON</p> }
-              catch (e) { return <p className="text-[11px] text-destructive pt-1">{(e as Error).message}</p> }
-            })()}
+            {selectedPath.endsWith('.json') &&
+              (() => {
+                if (!content.trim()) return null
+                try {
+                  JSON.parse(content)
+                  return (
+                    <p className="text-[11px] text-green-600 dark:text-green-400 pt-1">
+                      Valid JSON
+                    </p>
+                  )
+                } catch (e) {
+                  return <p className="text-[11px] text-destructive pt-1">{(e as Error).message}</p>
+                }
+              })()}
           </>
         ) : (
           <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
@@ -470,7 +558,9 @@ export function ProjectContextTree({ projectPath, projectId }: ProjectContextTre
             autoFocus
           />
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setRenamingEntry(null)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setRenamingEntry(null)}>
+              Cancel
+            </Button>
             <Button onClick={handleRename}>Rename</Button>
           </div>
         </DialogContent>

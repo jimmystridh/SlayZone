@@ -13,13 +13,38 @@ test.describe('Kanban keyboard shortcuts', () => {
 
     taskIds = {}
     // Two tasks in todo column
-    const t1 = await s.createTask({ projectId: p.id, title: 'KN todo-1', status: 'todo', priority: 3 })
-    const t2 = await s.createTask({ projectId: p.id, title: 'KN todo-2', status: 'todo', priority: 3 })
+    const t1 = await s.createTask({
+      projectId: p.id,
+      title: 'KN todo-1',
+      status: 'todo',
+      priority: 3
+    })
+    const t2 = await s.createTask({
+      projectId: p.id,
+      title: 'KN todo-2',
+      status: 'todo',
+      priority: 3
+    })
     // One task in in_progress
-    const t3 = await s.createTask({ projectId: p.id, title: 'KN prog-1', status: 'in_progress', priority: 2 })
+    const t3 = await s.createTask({
+      projectId: p.id,
+      title: 'KN prog-1',
+      status: 'in_progress',
+      priority: 2
+    })
     // Two tasks in review
-    const t4 = await s.createTask({ projectId: p.id, title: 'KN rev-1', status: 'review', priority: 3 })
-    const t5 = await s.createTask({ projectId: p.id, title: 'KN rev-2', status: 'review', priority: 4 })
+    const t4 = await s.createTask({
+      projectId: p.id,
+      title: 'KN rev-1',
+      status: 'review',
+      priority: 3
+    })
+    const t5 = await s.createTask({
+      projectId: p.id,
+      title: 'KN rev-2',
+      status: 'review',
+      priority: 4
+    })
     taskIds = { t1: t1.id, t2: t2.id, t3: t3.id, t4: t4.id, t5: t5.id }
 
     await s.refreshData()
@@ -34,7 +59,11 @@ test.describe('Kanban keyboard shortcuts', () => {
       for (const el of document.querySelectorAll('[data-task-id]')) {
         const htmlEl = el as HTMLElement
         // offsetParent is null for display:none; closest('.invisible') catches visibility:hidden tabs
-        if (el.className.includes('ring-primary') && htmlEl.offsetParent !== null && !el.closest('.invisible')) {
+        if (
+          el.className.includes('ring-primary') &&
+          htmlEl.offsetParent !== null &&
+          !el.closest('.invisible')
+        ) {
           return el.getAttribute('data-task-id')
         }
       }
@@ -47,7 +76,7 @@ test.describe('Kanban keyboard shortcuts', () => {
     await page.keyboard.press(key)
     // Give React time to process the keypress and re-render.
     // 100ms is too tight under parallel load — use rAF + microtask flush instead.
-    await page.evaluate(() => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0))))
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))))
   }
 
   test('J/K navigates within column', async ({ mainWindow }) => {
@@ -111,7 +140,9 @@ test.describe('Kanban keyboard shortcuts', () => {
 
     // Task tab opened — kanban card is now hidden (home tab inactive)
     // Use data-task-id which only exists on kanban cards, not tab labels
-    await expect(mainWindow.locator(`[data-task-id="${taskIds.t1}"]`)).toBeHidden({ timeout: 3_000 })
+    await expect(mainWindow.locator(`[data-task-id="${taskIds.t1}"]`)).toBeHidden({
+      timeout: 3_000
+    })
 
     // Go back home for next tests
     await goHome(mainWindow)

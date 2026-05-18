@@ -82,7 +82,7 @@ export const appearanceDefaults: AppearanceSettings = {
   chatShowMessageMeta: true,
   editorMarkdownViewMode: 'rich',
   editorMinimapEnabled: false,
-  editorTocEnabled: false,
+  editorTocEnabled: false
 }
 
 export const AppearanceContext = createContext<AppearanceSettings>(appearanceDefaults)

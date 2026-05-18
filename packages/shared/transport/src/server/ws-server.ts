@@ -48,7 +48,7 @@ export function startTrpcServer(opts: StartTrpcServerOpts): void {
     wssHandler = applyWSSHandler({
       wss,
       router: appRouter,
-      createContext: ({ req }) => ({ ...baseContext, req }),
+      createContext: ({ req }) => ({ ...baseContext, req })
     })
 
     httpServer.on('listening', () => {
@@ -57,7 +57,7 @@ export function startTrpcServer(opts: StartTrpcServerOpts): void {
       ;(globalThis as Record<string, unknown>).__trpcPort = actualPort
       try {
         db.prepare(
-          "INSERT OR REPLACE INTO settings (key, value) VALUES ('trpc_server_port', ?)",
+          "INSERT OR REPLACE INTO settings (key, value) VALUES ('trpc_server_port', ?)"
         ).run(String(actualPort))
       } catch {
         /* non-fatal */

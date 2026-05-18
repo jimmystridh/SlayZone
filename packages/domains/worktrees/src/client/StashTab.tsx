@@ -1,4 +1,12 @@
-import { useState, useEffect, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react'
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  forwardRef,
+  useImperativeHandle
+} from 'react'
 import { Archive, FileText } from 'lucide-react'
 import { cn, PulseGrid, useStablePoll } from '@slayzone/ui'
 import type { StashEntry } from '../shared/types'
@@ -27,7 +35,10 @@ function formatAge(createdAt: number): string {
   return `${Math.floor(diff / (86400 * 30))}mo`
 }
 
-export const StashTab = forwardRef<StashTabHandle, StashTabProps>(function StashTab({ visible, pollIntervalMs = 5000, showAll }, ref) {
+export const StashTab = forwardRef<StashTabHandle, StashTabProps>(function StashTab(
+  { visible, pollIntervalMs = 5000, showAll },
+  ref
+) {
   const { projectPath, activeTask } = useGitPanelContext()
   const repoPath = activeTask?.worktree_path ?? projectPath
 
@@ -65,7 +76,10 @@ export const StashTab = forwardRef<StashTabHandle, StashTabProps>(function Stash
     }
   }, [repoPath])
 
-  const { refetch } = useStablePoll(load, { enabled: visible && !!repoPath, baseDelayMs: pollIntervalMs })
+  const { refetch } = useStablePoll(load, {
+    enabled: visible && !!repoPath,
+    baseDelayMs: pollIntervalMs
+  })
 
   useImperativeHandle(ref, () => ({ refresh: refetch }), [refetch])
 
@@ -80,16 +94,24 @@ export const StashTab = forwardRef<StashTabHandle, StashTabProps>(function Stash
   )
 
   useEffect(() => {
-    if (!repoPath || selected === null) { setDiff([]); return }
+    if (!repoPath || selected === null) {
+      setDiff([])
+      return
+    }
     let cancelled = false
     setDiffLoading(true)
-    window.api.git.getStashDiff(repoPath, selected.index).then((patch) => {
-      if (cancelled) return
-      setDiff(parseUnifiedDiff(patch))
-    }).finally(() => {
-      if (!cancelled) setDiffLoading(false)
-    })
-    return () => { cancelled = true }
+    window.api.git
+      .getStashDiff(repoPath, selected.index)
+      .then((patch) => {
+        if (cancelled) return
+        setDiff(parseUnifiedDiff(patch))
+      })
+      .finally(() => {
+        if (!cancelled) setDiffLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [repoPath, selected])
 
   if (!repoPath) {
@@ -135,9 +157,15 @@ export const StashTab = forwardRef<StashTabHandle, StashTabProps>(function Stash
               stash@{`{${entry.index}}`} · {entry.branch} · {formatAge(entry.createdAt)}
             </div>
             <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-2">
-              <span>{entry.filesChanged} file{entry.filesChanged === 1 ? '' : 's'}</span>
-              {entry.insertions > 0 && <span className="text-green-600 dark:text-green-400">+{entry.insertions}</span>}
-              {entry.deletions > 0 && <span className="text-red-600 dark:text-red-400">-{entry.deletions}</span>}
+              <span>
+                {entry.filesChanged} file{entry.filesChanged === 1 ? '' : 's'}
+              </span>
+              {entry.insertions > 0 && (
+                <span className="text-green-600 dark:text-green-400">+{entry.insertions}</span>
+              )}
+              {entry.deletions > 0 && (
+                <span className="text-red-600 dark:text-red-400">-{entry.deletions}</span>
+              )}
               {entry.includesUntracked && <span className="text-blue-500">untracked</span>}
             </div>
           </div>

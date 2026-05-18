@@ -3,7 +3,8 @@ import {
   urlInput,
   ensureBrowserPanelVisible,
   openTaskViaSearch,
-  newTabBtn, tabEntries,
+  newTabBtn,
+  tabEntries
 } from '../fixtures/browser-view'
 import { getTestUrl } from '../fixtures/test-server'
 
@@ -13,7 +14,11 @@ test.describe('Browser loading animation', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Load Anim', color: '#0ea5e9', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Load Anim',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
     const t = await s.createTask({ projectId: p.id, title: 'Loading anim task', status: 'todo' })
     taskId = t.id
     await s.refreshData()
@@ -23,7 +28,9 @@ test.describe('Browser loading animation', () => {
   const loadingOverlay = (page: typeof import('@playwright/test').Page.prototype) =>
     page.locator('[data-testid="browser-loading-animation"]:visible')
 
-  test('loading animation shows immediately when browser panel opens (before any URL)', async ({ mainWindow }) => {
+  test('loading animation shows immediately when browser panel opens (before any URL)', async ({
+    mainWindow
+  }) => {
     await ensureBrowserPanelVisible(mainWindow)
 
     // Animation visible right away — no gray about:blank screen
@@ -76,6 +83,9 @@ test.describe('Browser loading animation', () => {
 
     // Cleanup
     const count = await tabEntries(mainWindow).count()
-    await tabEntries(mainWindow).nth(count - 1).locator('.lucide-x').click({ force: true })
+    await tabEntries(mainWindow)
+      .nth(count - 1)
+      .locator('.lucide-x')
+      .click({ force: true })
   })
 })

@@ -2,14 +2,19 @@
  * agent-turns db unit tests (worktree-scoped, v119+)
  * Run: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/agent-turns/src/main/db.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import {
   insertTurn,
   deleteTurn,
   getTurn,
   getLatestTurnForWorktree,
   listTurnsForWorktree,
-  findTurnsToPrune,
+  findTurnsToPrune
 } from './db.js'
 
 const h = await createTestHarness()
@@ -21,8 +26,12 @@ const wt = '/tmp/wt-A'
 const otherWt = '/tmp/wt-B'
 
 h.db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(projectId, 'P', '#000')
-h.db.prepare('INSERT INTO tasks (id, project_id, title) VALUES (?, ?, ?)').run(taskId, projectId, 'T1')
-h.db.prepare('INSERT INTO tasks (id, project_id, title) VALUES (?, ?, ?)').run(otherTaskId, projectId, 'T2')
+h.db
+  .prepare('INSERT INTO tasks (id, project_id, title) VALUES (?, ?, ?)')
+  .run(taskId, projectId, 'T1')
+h.db
+  .prepare('INSERT INTO tasks (id, project_id, title) VALUES (?, ?, ?)')
+  .run(otherTaskId, projectId, 'T2')
 
 function mk(over: Partial<Parameters<typeof insertTurn>[1]> = {}) {
   return {
@@ -32,7 +41,7 @@ function mk(over: Partial<Parameters<typeof insertTurn>[1]> = {}) {
     terminal_tab_id: over.terminal_tab_id ?? 'tab-A',
     snapshot_sha: over.snapshot_sha ?? `sha-${Math.random().toString(36).slice(2, 10)}`,
     prompt_preview: over.prompt_preview ?? 'hello',
-    created_at: over.created_at ?? Date.now(),
+    created_at: over.created_at ?? Date.now()
   }
 }
 

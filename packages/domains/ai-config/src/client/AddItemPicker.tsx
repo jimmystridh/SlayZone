@@ -30,8 +30,14 @@ function nextAvailableSlug(base: string, existingSlugs: Set<string>): string {
 type Step = 'choose' | 'library'
 
 export function AddItemPicker({
-  open, onOpenChange, type, projectId, projectPath,
-  enabledProviders, existingLinks, onAdded
+  open,
+  onOpenChange,
+  type,
+  projectId,
+  projectPath,
+  enabledProviders,
+  existingLinks,
+  onAdded
 }: AddItemPickerProps) {
   const [step, setStep] = useState<Step>('choose')
   const [libraryItems, setLibraryItems] = useState<AiConfigItem[]>([])
@@ -109,7 +115,9 @@ export function AddItemPicker({
             {step === 'choose' ? 'Add Skill' : 'Add from Library'}
           </DialogTitle>
           <p className="text-xs text-muted-foreground">
-            {step === 'choose' ? 'Create a new skill or link one from your library' : 'Link a library skill into this project'}
+            {step === 'choose'
+              ? 'Create a new skill or link one from your library'
+              : 'Link a library skill into this project'}
           </p>
         </DialogHeader>
 
@@ -145,40 +153,42 @@ export function AddItemPicker({
           </div>
         ) : (
           <div className="border-t max-h-72 overflow-y-auto">
-            {[...libraryItems].sort((a, b) => a.slug.localeCompare(b.slug)).map(item => {
-              const linked = existingLinks.includes(item.id)
-              return (
-                <button
-                  key={item.id}
-                  disabled={linked || loading}
-                  onClick={() => handleSelectLibrary(item)}
-                  data-testid={`add-item-option-${item.slug}`}
-                  className={cn(
-                    'flex w-full items-start gap-3 border-b border-border/40 last:border-0 px-5 py-3 text-left transition-colors',
-                    linked
-                      ? 'cursor-not-allowed opacity-40'
-                      : 'hover:bg-muted/40'
-                  )}
-                >
-                  <Sparkles className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium truncate">{item.slug}</p>
-                      {linked && (
-                        <span className="shrink-0 text-[10px] text-muted-foreground">Linked</span>
-                      )}
+            {[...libraryItems]
+              .sort((a, b) => a.slug.localeCompare(b.slug))
+              .map((item) => {
+                const linked = existingLinks.includes(item.id)
+                return (
+                  <button
+                    key={item.id}
+                    disabled={linked || loading}
+                    onClick={() => handleSelectLibrary(item)}
+                    data-testid={`add-item-option-${item.slug}`}
+                    className={cn(
+                      'flex w-full items-start gap-3 border-b border-border/40 last:border-0 px-5 py-3 text-left transition-colors',
+                      linked ? 'cursor-not-allowed opacity-40' : 'hover:bg-muted/40'
+                    )}
+                  >
+                    <Sparkles className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate">{item.slug}</p>
+                        {linked && (
+                          <span className="shrink-0 text-[10px] text-muted-foreground">Linked</span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                        {item.content.slice(0, 120) || '(empty)'}
+                      </p>
                     </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                      {item.content.slice(0, 120) || '(empty)'}
-                    </p>
-                  </div>
-                </button>
-              )
-            })}
+                  </button>
+                )
+              })}
             {libraryItems.length === 0 && (
               <div className="px-5 py-8 text-center">
                 <p className="text-sm text-muted-foreground">No library skills available</p>
-                <p className="mt-1 text-xs text-muted-foreground/60">Create one in the Library section first</p>
+                <p className="mt-1 text-xs text-muted-foreground/60">
+                  Create one in the Library section first
+                </p>
               </div>
             )}
           </div>

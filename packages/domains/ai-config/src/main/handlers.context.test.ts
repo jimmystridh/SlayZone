@@ -2,7 +2,12 @@
  * AI Config context files, sync, instructions, MCP handler contract tests
  * Run with: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/ai-config/src/main/handlers.context.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerAiConfigHandlers } from './handlers.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -13,13 +18,17 @@ registerAiConfigHandlers(h.ipcMain as never, h.db)
 const root = h.tmpDir()
 const mockHome = '/tmp/mock-home'
 const projectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projectId, 'Ctx', '#000', root)
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(projectId, 'Ctx', '#000', root)
 
 function createProjectFixture(name: string): { projectId: string; projectPath: string } {
   const id = crypto.randomUUID()
   const projectPath = path.join(root, name)
   fs.mkdirSync(projectPath, { recursive: true })
-  h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(id, name, '#000', projectPath)
+  h.db
+    .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+    .run(id, name, '#000', projectPath)
   return { projectId: id, projectPath }
 }
 
@@ -31,7 +40,9 @@ function skillDoc(slug: string, body: string): string {
 function readSkillMetadata(itemId: string): {
   skillValidation?: { status?: string; issues?: Array<{ code?: string }> }
 } {
-  const row = h.db.prepare('SELECT metadata_json FROM ai_config_items WHERE id = ?').get(itemId) as {
+  const row = h.db
+    .prepare('SELECT metadata_json FROM ai_config_items WHERE id = ?')
+    .get(itemId) as {
     metadata_json: string
   }
   return JSON.parse(row.metadata_json) as {
@@ -47,8 +58,11 @@ h.db.prepare("UPDATE ai_config_sources SET enabled = 1 WHERE kind = 'claude'")?.
 describe('ai-config:discover-context-files', () => {
   test('finds CLAUDE.md when present', () => {
     fs.writeFileSync(path.join(root, 'CLAUDE.md'), '# rules')
-    const entries = h.invoke('ai-config:discover-context-files', root) as { name: string; exists: boolean }[]
-    const claudeMd = entries.find(e => e.name === 'CLAUDE.md')
+    const entries = h.invoke('ai-config:discover-context-files', root) as {
+      name: string
+      exists: boolean
+    }[]
+    const claudeMd = entries.find((e) => e.name === 'CLAUDE.md')
     expect(claudeMd).toBeTruthy()
     expect(claudeMd!.exists).toBe(true)
   })
@@ -61,13 +75,19 @@ describe('ai-config:get-context-tree', () => {
     fs.mkdirSync(path.dirname(diskOnlyPath), { recursive: true })
     fs.writeFileSync(diskOnlyPath, '# disk only')
 
-    const entries = h.invoke('ai-config:get-context-tree', fixture.projectPath, fixture.projectId) as Array<{
+    const entries = h.invoke(
+      'ai-config:get-context-tree',
+      fixture.projectPath,
+      fixture.projectId
+    ) as Array<{
       relativePath: string
       linkedItemId: string | null
       syncHealth: string
       syncReason: string | null
     }>
-    const found = entries.find((entry) => entry.relativePath === '.agents/skills/disk-only-skill/SKILL.md')
+    const found = entries.find(
+      (entry) => entry.relativePath === '.agents/skills/disk-only-skill/SKILL.md'
+    )
     expect(found).toBeTruthy()
     expect(found!.linkedItemId).toBeNull()
     expect(found!.syncHealth).toBe('unmanaged')
@@ -76,18 +96,27 @@ describe('ai-config:get-context-tree', () => {
 
   test('discovers unmanaged skill files for non-claude/codex providers', () => {
     const fixture = createProjectFixture('context-tree-unmanaged-cursor-skill')
-    const diskOnlyPath = path.join(fixture.projectPath, '.cursor/skills/disk-only-cursor-skill/SKILL.md')
+    const diskOnlyPath = path.join(
+      fixture.projectPath,
+      '.cursor/skills/disk-only-cursor-skill/SKILL.md'
+    )
     fs.mkdirSync(path.dirname(diskOnlyPath), { recursive: true })
     fs.writeFileSync(diskOnlyPath, '# cursor disk only')
 
-    const entries = h.invoke('ai-config:get-context-tree', fixture.projectPath, fixture.projectId) as Array<{
+    const entries = h.invoke(
+      'ai-config:get-context-tree',
+      fixture.projectPath,
+      fixture.projectId
+    ) as Array<{
       relativePath: string
       provider?: string
       linkedItemId: string | null
       syncHealth: string
       syncReason: string | null
     }>
-    const found = entries.find((entry) => entry.relativePath === '.cursor/skills/disk-only-cursor-skill/SKILL.md')
+    const found = entries.find(
+      (entry) => entry.relativePath === '.cursor/skills/disk-only-cursor-skill/SKILL.md'
+    )
     expect(found).toBeTruthy()
     expect(found!.provider).toBe('cursor')
     expect(found!.linkedItemId).toBeNull()
@@ -119,7 +148,12 @@ describe('ai-config:create-computer-file', () => {
     const expectedPath = path.join(mockHome, '.agents', 'skills', 'my-computer-skill.md')
     if (fs.existsSync(expectedPath)) fs.unlinkSync(expectedPath)
 
-    const created = h.invoke('ai-config:create-computer-file', 'gemini', 'skill', ' My Computer Skill! ') as {
+    const created = h.invoke(
+      'ai-config:create-computer-file',
+      'gemini',
+      'skill',
+      ' My Computer Skill! '
+    ) as {
       path: string
       provider: string
       category: string
@@ -150,10 +184,13 @@ describe('ai-config:list-items', () => {
     const staleMeta = JSON.parse(item.metadata_json) as Record<string, unknown>
     staleMeta.skillValidation = {
       status: 'invalid',
-      issues: [{ code: 'frontmatter_invalid_line', severity: 'error', message: 'stale issue', line: 4 }]
+      issues: [
+        { code: 'frontmatter_invalid_line', severity: 'error', message: 'stale issue', line: 4 }
+      ]
     }
     const staleMetadataJson = JSON.stringify(staleMeta)
-    h.db.prepare('UPDATE ai_config_items SET content = ?, metadata_json = ? WHERE id = ?')
+    h.db
+      .prepare('UPDATE ai_config_items SET content = ?, metadata_json = ? WHERE id = ?')
       .run(
         '---\nname: read-does-not-repair-db\ndescription: "fixed"\n---\n# body\n',
         staleMetadataJson,
@@ -171,7 +208,9 @@ describe('ai-config:list-items', () => {
     }
     expect(returnedMetadata.skillValidation?.status).toBe('valid')
 
-    const stored = h.db.prepare('SELECT metadata_json FROM ai_config_items WHERE id = ?').get(item.id) as {
+    const stored = h.db
+      .prepare('SELECT metadata_json FROM ai_config_items WHERE id = ?')
+      .get(item.id) as {
       metadata_json: string
     }
     expect(stored.metadata_json).toBe(staleMetadataJson)
@@ -192,9 +231,12 @@ describe('ai-config:list-items', () => {
     }
     staleMeta.skillValidation = {
       status: 'invalid',
-      issues: [{ code: 'frontmatter_invalid_line', severity: 'error', message: 'stale issue', line: 4 }]
+      issues: [
+        { code: 'frontmatter_invalid_line', severity: 'error', message: 'stale issue', line: 4 }
+      ]
     }
-    h.db.prepare('UPDATE ai_config_items SET content = ?, metadata_json = ? WHERE id = ?')
+    h.db
+      .prepare('UPDATE ai_config_items SET content = ?, metadata_json = ? WHERE id = ?')
       .run(
         '---\nname: stale-invalid-repair\ndescription: |\n  Multi-line\n  Description\n---\n# body',
         JSON.stringify(staleMeta),
@@ -229,7 +271,8 @@ describe('ai-config:list-items', () => {
       explicitFrontmatter: true
     }
     staleMeta.skillValidation = { status: 'valid', issues: [] }
-    h.db.prepare('UPDATE ai_config_items SET content = ?, metadata_json = ? WHERE id = ?')
+    h.db
+      .prepare('UPDATE ai_config_items SET content = ?, metadata_json = ? WHERE id = ?')
       .run(
         '---\nname: stale-valid-repair\ntags: [one, two\n---\n# body',
         JSON.stringify(staleMeta),
@@ -246,7 +289,9 @@ describe('ai-config:list-items', () => {
       skillValidation?: { status?: string; issues?: Array<{ code?: string }> }
     }
     expect(metadata.skillValidation?.status).toBe('invalid')
-    expect(metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_invalid_line')).toBe(true)
+    expect(
+      metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_invalid_line')
+    ).toBe(true)
   })
 
   test('drops legacy canonical metadata and marks body-only legacy content invalid at runtime', () => {
@@ -263,7 +308,8 @@ describe('ai-config:list-items', () => {
       explicitFrontmatter: true
     }
     staleMeta.skillValidation = { status: 'valid', issues: [] }
-    h.db.prepare('UPDATE ai_config_items SET content = ?, metadata_json = ? WHERE id = ?')
+    h.db
+      .prepare('UPDATE ai_config_items SET content = ?, metadata_json = ? WHERE id = ?')
       .run(
         'Create a new release for SlayZone.\nThe version argument is: patch\n',
         JSON.stringify(staleMeta),
@@ -276,13 +322,17 @@ describe('ai-config:list-items', () => {
     }) as Array<{ id: string; content: string; metadata_json: string }>
     const repaired = listed.find((row) => row.id === item.id)
     expect(repaired).toBeTruthy()
-    expect(repaired!.content).toBe('Create a new release for SlayZone.\nThe version argument is: patch\n')
+    expect(repaired!.content).toBe(
+      'Create a new release for SlayZone.\nThe version argument is: patch\n'
+    )
 
     const metadata = JSON.parse(repaired!.metadata_json) as {
       skillValidation?: { status?: string; issues?: Array<{ code?: string }> }
     }
     expect(metadata.skillValidation?.status).toBe('invalid')
-    expect(metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')).toBe(true)
+    expect(
+      metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')
+    ).toBe(true)
   })
 
   test('marks new body-only skills invalid when no canonical frontmatter exists', () => {
@@ -297,7 +347,9 @@ describe('ai-config:list-items', () => {
       skillValidation?: { status?: string; issues?: Array<{ code?: string }> }
     }
     expect(metadata.skillValidation?.status).toBe('invalid')
-    expect(metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')).toBe(true)
+    expect(
+      metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')
+    ).toBe(true)
   })
 })
 
@@ -310,14 +362,19 @@ describe('ai-config:get-item', () => {
       content: skillDoc('get-item-managed-frontmatter', '# managed')
     }) as { id: string }
 
-    const stored = h.db.prepare('SELECT content, metadata_json FROM ai_config_items WHERE id = ?').get(item.id) as {
+    const stored = h.db
+      .prepare('SELECT content, metadata_json FROM ai_config_items WHERE id = ?')
+      .get(item.id) as {
       content: string
       metadata_json: string
     }
     expect(stored.content.includes('---\nname: get-item-managed-frontmatter')).toBe(true)
     expect(stored.content.includes('# managed\n')).toBe(true)
 
-    const loaded = h.invoke('ai-config:get-item', item.id) as { content: string; metadata_json: string }
+    const loaded = h.invoke('ai-config:get-item', item.id) as {
+      content: string
+      metadata_json: string
+    }
     expect(loaded.content.includes('---\nname: get-item-managed-frontmatter')).toBe(true)
     expect(loaded.content.includes('# managed\n')).toBe(true)
 
@@ -342,12 +399,16 @@ describe('ai-config:update-item', () => {
       content: 'You are evaluating a competitor for the SlayZone comparison table.\n'
     }) as { content: string; metadata_json: string }
 
-    expect(updated.content).toBe('You are evaluating a competitor for the SlayZone comparison table.\n')
+    expect(updated.content).toBe(
+      'You are evaluating a competitor for the SlayZone comparison table.\n'
+    )
     const metadata = JSON.parse(updated.metadata_json) as {
       skillValidation?: { status?: string; issues?: Array<{ code?: string }> }
     }
     expect(metadata.skillValidation?.status).toBe('invalid')
-    expect(metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')).toBe(true)
+    expect(
+      metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')
+    ).toBe(true)
   })
 
   test('treats new and previously explicit body-only content the same', () => {
@@ -373,8 +434,12 @@ describe('ai-config:update-item', () => {
     const updatedMeta = readSkillMetadata(previouslyExplicit.id)
     expect(createdMeta.skillValidation?.status).toBe('invalid')
     expect(updatedMeta.skillValidation?.status).toBe('invalid')
-    expect(createdMeta.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')).toBe(true)
-    expect(updatedMeta.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')).toBe(true)
+    expect(
+      createdMeta.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')
+    ).toBe(true)
+    expect(
+      updatedMeta.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')
+    ).toBe(true)
   })
 })
 
@@ -383,28 +448,44 @@ describe('ai-config:update-item', () => {
 describe('ai-config:load-library-item', () => {
   test('writes skill to provider dir with manual path', () => {
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: 'deploy', content: skillDoc('deploy', '# Deploy skill')
+      type: 'skill',
+      scope: 'library',
+      slug: 'deploy',
+      content: skillDoc('deploy', '# Deploy skill')
     }) as { id: string }
 
     const result = h.invoke('ai-config:load-library-item', {
-      projectId, projectPath: root, itemId: item.id,
-      providers: ['claude'], manualPath: '.claude/skills/manual/deploy.md'
+      projectId,
+      projectPath: root,
+      itemId: item.id,
+      providers: ['claude'],
+      manualPath: '.claude/skills/manual/deploy.md'
     }) as { relativePath: string; syncHealth: string }
     expect(result.relativePath).toBe('.claude/skills/manual/deploy.md')
     expect(result.syncHealth).toBe('synced')
-    expect(fs.readFileSync(path.join(root, '.claude/skills/manual/deploy.md'), 'utf-8').trim()).toBe('# Deploy skill')
+    expect(
+      fs.readFileSync(path.join(root, '.claude/skills/manual/deploy.md'), 'utf-8').trim()
+    ).toBe('# Deploy skill')
   })
 
   test('writes skill to codex provider path', () => {
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: 'codex-skill', content: skillDoc('codex-skill', '# Codex skill')
+      type: 'skill',
+      scope: 'library',
+      slug: 'codex-skill',
+      content: skillDoc('codex-skill', '# Codex skill')
     }) as { id: string }
 
     h.invoke('ai-config:load-library-item', {
-      projectId, projectPath: root, itemId: item.id,
+      projectId,
+      projectPath: root,
+      itemId: item.id,
       providers: ['codex']
     })
-    const codexContent = fs.readFileSync(path.join(root, '.agents/skills/codex-skill/SKILL.md'), 'utf-8')
+    const codexContent = fs.readFileSync(
+      path.join(root, '.agents/skills/codex-skill/SKILL.md'),
+      'utf-8'
+    )
     expect(codexContent.includes('name: codex-skill')).toBe(true)
     expect(codexContent.includes('# Codex skill')).toBe(true)
   })
@@ -429,12 +510,21 @@ describe('ai-config:load-library-item', () => {
     expect(result.relativePath).toBe('.claude/skills/manual/manual-codex.md')
     expect(result.provider).toBe('codex')
     expect(result.syncHealth).toBe('synced')
-    expect(fs.readFileSync(path.join(fixture.projectPath, '.claude/skills/manual/manual-codex.md'), 'utf-8').trim()).toBe('# Manual codex skill')
+    expect(
+      fs
+        .readFileSync(
+          path.join(fixture.projectPath, '.claude/skills/manual/manual-codex.md'),
+          'utf-8'
+        )
+        .trim()
+    ).toBe('# Manual codex skill')
     const selections = h.invoke('ai-config:list-project-selections', fixture.projectId) as Array<{
       provider: string
       target_path: string
     }>
-    const found = selections.find((entry) => entry.target_path === '.claude/skills/manual/manual-codex.md')
+    const found = selections.find(
+      (entry) => entry.target_path === '.claude/skills/manual/manual-codex.md'
+    )
     expect(found).toBeTruthy()
     expect(found!.provider).toBe('codex')
   })
@@ -451,14 +541,18 @@ describe('ai-config:load-library-item', () => {
       skillValidation?: { status?: string; issues?: Array<{ code?: string }> }
     }
     expect(metadata.skillValidation?.status).toBe('invalid')
-    expect(metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_invalid_line')).toBe(true)
+    expect(
+      metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_invalid_line')
+    ).toBe(true)
 
-    expect(() => h.invoke('ai-config:load-library-item', {
-      projectId,
-      projectPath: root,
-      itemId: item.id,
-      providers: ['claude']
-    })).toThrow()
+    expect(() =>
+      h.invoke('ai-config:load-library-item', {
+        projectId,
+        projectPath: root,
+        itemId: item.id,
+        providers: ['claude']
+      })
+    ).toThrow()
   })
 
   test('accepts multiline/list YAML frontmatter as valid', () => {
@@ -506,14 +600,18 @@ describe('ai-config:load-library-item', () => {
       skillValidation?: { status?: string; issues?: Array<{ code?: string }> }
     }
     expect(metadata.skillValidation?.status).toBe('invalid')
-    expect(metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_invalid_line')).toBe(true)
+    expect(
+      metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_invalid_line')
+    ).toBe(true)
 
-    expect(() => h.invoke('ai-config:load-library-item', {
-      projectId,
-      projectPath: root,
-      itemId: item.id,
-      providers: ['claude']
-    })).toThrow()
+    expect(() =>
+      h.invoke('ai-config:load-library-item', {
+        projectId,
+        projectPath: root,
+        itemId: item.id,
+        providers: ['claude']
+      })
+    ).toThrow()
   })
 
   test('recomputes stale persisted invalid status from current valid content', () => {
@@ -526,7 +624,8 @@ describe('ai-config:load-library-item', () => {
 
     const metadata = JSON.parse(item.metadata_json) as Record<string, unknown>
     metadata.skillValidation = { status: 'invalid', issues: [] }
-    h.db.prepare("UPDATE ai_config_items SET metadata_json = ? WHERE id = ?")
+    h.db
+      .prepare('UPDATE ai_config_items SET metadata_json = ? WHERE id = ?')
       .run(JSON.stringify(metadata), item.id)
 
     const result = h.invoke('ai-config:load-library-item', {
@@ -549,14 +648,17 @@ describe('ai-config:load-library-item', () => {
     const metadata = JSON.parse(item.metadata_json) as Record<string, unknown>
     metadata.skillValidation = {
       status: 'valid',
-      issues: [{
-        code: 'frontmatter_invalid_line',
-        severity: 'error',
-        message: 'stale issue',
-        line: 2
-      }]
+      issues: [
+        {
+          code: 'frontmatter_invalid_line',
+          severity: 'error',
+          message: 'stale issue',
+          line: 2
+        }
+      ]
     }
-    h.db.prepare("UPDATE ai_config_items SET metadata_json = ? WHERE id = ?")
+    h.db
+      .prepare('UPDATE ai_config_items SET metadata_json = ? WHERE id = ?')
       .run(JSON.stringify(metadata), item.id)
 
     const result = h.invoke('ai-config:load-library-item', {
@@ -579,15 +681,18 @@ describe('ai-config:load-library-item', () => {
 
     const metadata = JSON.parse(item.metadata_json) as Record<string, unknown>
     metadata.skillValidation = { status: 'valid', issues: [] }
-    h.db.prepare("UPDATE ai_config_items SET metadata_json = ? WHERE id = ?")
+    h.db
+      .prepare('UPDATE ai_config_items SET metadata_json = ? WHERE id = ?')
       .run(JSON.stringify(metadata), item.id)
 
-    expect(() => h.invoke('ai-config:load-library-item', {
-      projectId,
-      projectPath: root,
-      itemId: item.id,
-      providers: ['claude']
-    })).toThrow()
+    expect(() =>
+      h.invoke('ai-config:load-library-item', {
+        projectId,
+        projectPath: root,
+        itemId: item.id,
+        providers: ['claude']
+      })
+    ).toThrow()
   })
 })
 
@@ -597,22 +702,33 @@ describe('ai-config:sync-linked-file', () => {
   test('re-syncs item content to disk', () => {
     // Create item + selection
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: 'sync-test', content: skillDoc('sync-test', 'original')
+      type: 'skill',
+      scope: 'library',
+      slug: 'sync-test',
+      content: skillDoc('sync-test', 'original')
     }) as { id: string }
     h.invoke('ai-config:load-library-item', {
-      projectId, projectPath: root, itemId: item.id,
-      providers: ['claude'], manualPath: '.claude/skills/manual/sync-test.md'
+      projectId,
+      projectPath: root,
+      itemId: item.id,
+      providers: ['claude'],
+      manualPath: '.claude/skills/manual/sync-test.md'
     })
     // Modify file externally
     fs.writeFileSync(path.join(root, '.claude/skills/manual/sync-test.md'), 'modified')
     // Update item content in DB
-    h.invoke('ai-config:update-item', { id: item.id, content: skillDoc('sync-test', 'updated content') })
+    h.invoke('ai-config:update-item', {
+      id: item.id,
+      content: skillDoc('sync-test', 'updated content')
+    })
 
     const result = h.invoke('ai-config:sync-linked-file', projectId, root, item.id) as {
       syncHealth: string
     }
     expect(result.syncHealth).toBe('synced')
-    expect(fs.readFileSync(path.join(root, '.claude/skills/manual/sync-test.md'), 'utf-8')).toBe('updated content\n')
+    expect(fs.readFileSync(path.join(root, '.claude/skills/manual/sync-test.md'), 'utf-8')).toBe(
+      'updated content\n'
+    )
   })
 
   test('syncs all provider links for an item', () => {
@@ -636,7 +752,10 @@ describe('ai-config:sync-linked-file', () => {
     const codexPath = path.join(fixture.projectPath, '.agents/skills/sync-all-providers/SKILL.md')
     fs.writeFileSync(claudePath, '# changed')
     fs.writeFileSync(codexPath, '# changed')
-    h.invoke('ai-config:update-item', { id: item.id, content: skillDoc('sync-all-providers', '# v2') })
+    h.invoke('ai-config:update-item', {
+      id: item.id,
+      content: skillDoc('sync-all-providers', '# v2')
+    })
 
     h.invoke('ai-config:sync-linked-file', fixture.projectId, fixture.projectPath, item.id)
 
@@ -715,14 +834,24 @@ describe('ai-config:sync-linked-file', () => {
     fs.mkdirSync(path.dirname(legacyPath), { recursive: true })
     fs.writeFileSync(legacyPath, '# old format')
 
-    const result = h.invoke('ai-config:sync-linked-file', fixture.projectId, fixture.projectPath, item.id) as {
+    const result = h.invoke(
+      'ai-config:sync-linked-file',
+      fixture.projectId,
+      fixture.projectPath,
+      item.id
+    ) as {
       relativePath: string
     }
 
-    const canonicalPath = path.join(fixture.projectPath, '.claude/skills/legacy-selection-skill/SKILL.md')
+    const canonicalPath = path.join(
+      fixture.projectPath,
+      '.claude/skills/legacy-selection-skill/SKILL.md'
+    )
     expect(result.relativePath).toBe('.claude/skills/legacy-selection-skill/SKILL.md')
     expect(fs.existsSync(legacyPath)).toBe(false)
-    expect(fs.readFileSync(canonicalPath, 'utf-8').includes('name: legacy-selection-skill')).toBe(true)
+    expect(fs.readFileSync(canonicalPath, 'utf-8').includes('name: legacy-selection-skill')).toBe(
+      true
+    )
     expect(fs.readFileSync(canonicalPath, 'utf-8').includes('# from library')).toBe(true)
   })
 
@@ -737,7 +866,9 @@ describe('ai-config:sync-linked-file', () => {
       content: '---\nname invalid\n---\n# still invalid'
     }) as { id: string }
 
-    expect(() => h.invoke('ai-config:sync-linked-file', fixture.projectId, fixture.projectPath, item.id)).toThrow()
+    expect(() =>
+      h.invoke('ai-config:sync-linked-file', fixture.projectId, fixture.projectPath, item.id)
+    ).toThrow()
   })
 
   test('rejects syncing a previously valid skill after its body is updated without frontmatter', () => {
@@ -762,7 +893,9 @@ describe('ai-config:sync-linked-file', () => {
       content: 'Create a new release for SlayZone.\n'
     })
 
-    expect(() => h.invoke('ai-config:sync-linked-file', fixture.projectId, fixture.projectPath, item.id)).toThrow()
+    expect(() =>
+      h.invoke('ai-config:sync-linked-file', fixture.projectId, fixture.projectPath, item.id)
+    ).toThrow()
   })
 })
 
@@ -771,11 +904,17 @@ describe('ai-config:sync-linked-file', () => {
 describe('ai-config:unlink-file', () => {
   test('removes selection from DB', () => {
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: 'unlink-me', content: skillDoc('unlink-me', 'x')
+      type: 'skill',
+      scope: 'library',
+      slug: 'unlink-me',
+      content: skillDoc('unlink-me', 'x')
     }) as { id: string }
     h.invoke('ai-config:load-library-item', {
-      projectId, projectPath: root, itemId: item.id,
-      providers: ['claude'], manualPath: '.claude/skills/manual/unlink-me.md'
+      projectId,
+      projectPath: root,
+      itemId: item.id,
+      providers: ['claude'],
+      manualPath: '.claude/skills/manual/unlink-me.md'
     })
     const result = h.invoke('ai-config:unlink-file', projectId, item.id)
     expect(result).toBe(true)
@@ -791,11 +930,17 @@ describe('ai-config:unlink-file', () => {
 describe('ai-config:rename-context-file', () => {
   test('renames file and updates selection target_path', () => {
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: 'renameme', content: skillDoc('renameme', 'rename content')
+      type: 'skill',
+      scope: 'library',
+      slug: 'renameme',
+      content: skillDoc('renameme', 'rename content')
     }) as { id: string }
     h.invoke('ai-config:load-library-item', {
-      projectId, projectPath: root, itemId: item.id,
-      providers: ['claude'], manualPath: '.claude/skills/manual/renameme.md'
+      projectId,
+      projectPath: root,
+      itemId: item.id,
+      providers: ['claude'],
+      manualPath: '.claude/skills/manual/renameme.md'
     })
     const oldPath = path.join(root, '.claude/skills/manual/renameme.md')
     const newPath = path.join(root, '.claude/skills/manual/renamed.md')
@@ -810,11 +955,17 @@ describe('ai-config:rename-context-file', () => {
 describe('ai-config:delete-context-file', () => {
   test('deletes file and removes selection', () => {
     const item = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: 'deleteme', content: skillDoc('deleteme', 'delete content')
+      type: 'skill',
+      scope: 'library',
+      slug: 'deleteme',
+      content: skillDoc('deleteme', 'delete content')
     }) as { id: string }
     h.invoke('ai-config:load-library-item', {
-      projectId, projectPath: root, itemId: item.id,
-      providers: ['claude'], manualPath: '.claude/skills/manual/deleteme.md'
+      projectId,
+      projectPath: root,
+      itemId: item.id,
+      providers: ['claude'],
+      manualPath: '.claude/skills/manual/deleteme.md'
     })
     const filePath = path.join(root, '.claude/skills/manual/deleteme.md')
     h.invoke('ai-config:delete-context-file', filePath, root, projectId)
@@ -844,7 +995,12 @@ describe('ai-config:save-library-instructions', () => {
 
 describe('ai-config:save-root-instructions', () => {
   test('writes to provider dirs and returns synced status', () => {
-    const result = h.invoke('ai-config:save-root-instructions', projectId, root, '# Project rules') as {
+    const result = h.invoke(
+      'ai-config:save-root-instructions',
+      projectId,
+      root,
+      '# Project rules'
+    ) as {
       content: string
       providerHealth: Record<string, { health: string; reason: string | null }>
     }
@@ -900,7 +1056,10 @@ describe('ai-config:needs-sync', () => {
       providers: ['codex']
     })
 
-    const codexPath = path.join(fixture.projectPath, '.agents/skills/disabled-provider-skill/SKILL.md')
+    const codexPath = path.join(
+      fixture.projectPath,
+      '.agents/skills/disabled-provider-skill/SKILL.md'
+    )
     fs.writeFileSync(codexPath, '# modified externally')
 
     h.invoke('ai-config:set-project-providers', fixture.projectId, ['claude'])
@@ -919,7 +1078,8 @@ describe('ai-config:check-sync-status', () => {
   test('detects external edits as conflicts', () => {
     // CLAUDE.md was modified above
     const conflicts = h.invoke('ai-config:check-sync-status', projectId, root) as {
-      path: string; reason: string
+      path: string
+      reason: string
     }[]
     // May or may not have conflicts depending on content_hash state
     expect(Array.isArray(conflicts)).toBe(true)
@@ -931,10 +1091,12 @@ describe('ai-config:check-sync-status', () => {
 describe('ai-config:discover-mcp-configs', () => {
   test('returns entries for supported providers (codex disabled)', () => {
     const results = h.invoke('ai-config:discover-mcp-configs', root) as {
-      provider: string; exists: boolean; servers: Record<string, unknown>
+      provider: string
+      exists: boolean
+      servers: Record<string, unknown>
     }[]
-    expect(results.length).toBe(5)  // claude, cursor, gemini, opencode, copilot
-    const providers = results.map(r => r.provider).sort()
+    expect(results.length).toBe(5) // claude, cursor, gemini, opencode, copilot
+    const providers = results.map((r) => r.provider).sort()
     expect(providers).toContain('claude')
     expect(providers).toContain('cursor')
     expect(providers).toContain('gemini')
@@ -945,13 +1107,18 @@ describe('ai-config:discover-mcp-configs', () => {
 
   test('detects existing config files', () => {
     fs.mkdirSync(path.join(root, '.mcp-test'), { recursive: true })
-    fs.writeFileSync(path.join(root, '.mcp.json'), JSON.stringify({
-      mcpServers: { 'my-server': { command: 'node', args: ['server.js'] } }
-    }))
+    fs.writeFileSync(
+      path.join(root, '.mcp.json'),
+      JSON.stringify({
+        mcpServers: { 'my-server': { command: 'node', args: ['server.js'] } }
+      })
+    )
     const results = h.invoke('ai-config:discover-mcp-configs', root) as {
-      provider: string; exists: boolean; servers: Record<string, unknown>
+      provider: string
+      exists: boolean
+      servers: Record<string, unknown>
     }[]
-    const claude = results.find(r => r.provider === 'claude')!
+    const claude = results.find((r) => r.provider === 'claude')!
     expect(claude.exists).toBe(true)
     expect(claude.servers['my-server']).toBeTruthy()
   })
@@ -977,12 +1144,14 @@ describe('ai-config:write-mcp-server', () => {
   })
 
   test('rejects codex writes', () => {
-    expect(() => h.invoke('ai-config:write-mcp-server', {
-      projectPath: root,
-      provider: 'codex',
-      serverKey: 'test-server',
-      config: { command: 'node', args: ['test.js'] }
-    })).toThrow()
+    expect(() =>
+      h.invoke('ai-config:write-mcp-server', {
+        projectPath: root,
+        provider: 'codex',
+        serverKey: 'test-server',
+        config: { command: 'node', args: ['test.js'] }
+      })
+    ).toThrow()
   })
 })
 
@@ -1008,11 +1177,17 @@ describe('ai-config:get-project-skills-status', () => {
     h.invoke('ai-config:save-root-instructions', projectId, root, '# Project rules')
     // Create and load a skill
     const skill = h.invoke('ai-config:create-item', {
-      type: 'skill', scope: 'library', slug: 'status-skill', content: skillDoc('status-skill', '# Status skill content')
+      type: 'skill',
+      scope: 'library',
+      slug: 'status-skill',
+      content: skillDoc('status-skill', '# Status skill content')
     }) as { id: string }
     h.invoke('ai-config:load-library-item', {
-      projectId, projectPath: root, itemId: skill.id,
-      providers: ['claude'], manualPath: '.claude/skills/manual/status-skill.md'
+      projectId,
+      projectPath: root,
+      itemId: skill.id,
+      providers: ['claude'],
+      manualPath: '.claude/skills/manual/status-skill.md'
     })
 
     const results = h.invoke('ai-config:get-project-skills-status', projectId, root) as {
@@ -1020,7 +1195,7 @@ describe('ai-config:get-project-skills-status', () => {
       providers: Record<string, { path: string; syncHealth: string; syncReason: string | null }>
     }[]
     expect(results.length).toBeGreaterThan(0)
-    const found = results.find(r => r.item.id === skill.id)
+    const found = results.find((r) => r.item.id === skill.id)
     expect(found).toBeTruthy()
     expect(found!.providers.claude).toBeTruthy()
     expect(found!.providers.claude.syncHealth).toBe('synced')
@@ -1034,7 +1209,7 @@ describe('ai-config:get-project-skills-status', () => {
       item: { slug: string }
       providers: Record<string, { syncHealth: string; syncReason: string | null }>
     }[]
-    const found = results.find(r => r.item.slug === 'status-skill')
+    const found = results.find((r) => r.item.slug === 'status-skill')
     expect(found).toBeTruthy()
     expect(found!.providers.claude.syncHealth).toBe('stale')
     expect(found!.providers.claude.syncReason).toBe('external_edit')
@@ -1063,7 +1238,11 @@ describe('ai-config:get-project-skills-status', () => {
       content: '# Body v2\n\nChanged body\n'
     })
 
-    const results = h.invoke('ai-config:get-project-skills-status', fixture.projectId, fixture.projectPath) as Array<{
+    const results = h.invoke(
+      'ai-config:get-project-skills-status',
+      fixture.projectId,
+      fixture.projectPath
+    ) as Array<{
       item: { id: string }
       providers: Record<string, { syncHealth: string; syncReason: string | null }>
     }>
@@ -1096,7 +1275,11 @@ describe('ai-config:get-project-skills-status', () => {
       content: '---\nfoo: bar\n---\n\n# Shared body\n\nSame body\n'
     })
 
-    const results = h.invoke('ai-config:get-project-skills-status', fixture.projectId, fixture.projectPath) as Array<{
+    const results = h.invoke(
+      'ai-config:get-project-skills-status',
+      fixture.projectId,
+      fixture.projectPath
+    ) as Array<{
       item: { id: string }
       providers: Record<string, { syncHealth: string; syncReason: string | null }>
     }>
@@ -1131,9 +1314,15 @@ describe('ai-config:get-project-skills-status', () => {
 
     const metadata = readSkillMetadata(item.id)
     expect(metadata.skillValidation?.status).toBe('invalid')
-    expect(metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')).toBe(true)
+    expect(
+      metadata.skillValidation?.issues?.some((issue) => issue.code === 'frontmatter_missing')
+    ).toBe(true)
 
-    const results = h.invoke('ai-config:get-project-skills-status', fixture.projectId, fixture.projectPath) as Array<{
+    const results = h.invoke(
+      'ai-config:get-project-skills-status',
+      fixture.projectId,
+      fixture.projectPath
+    ) as Array<{
       item: { id: string }
       providers: Record<string, { syncHealth: string }>
     }>
@@ -1167,10 +1356,12 @@ describe('ai-config:sync-all', () => {
       content: '---\nname broken\n---\n# still invalid'
     })
 
-    expect(() => h.invoke('ai-config:sync-all', {
-      projectId: fixture.projectId,
-      projectPath: fixture.projectPath
-    })).toThrow()
+    expect(() =>
+      h.invoke('ai-config:sync-all', {
+        projectId: fixture.projectId,
+        projectPath: fixture.projectPath
+      })
+    ).toThrow()
   })
 
   test('rejects sync-all when a previously valid linked skill is updated with body-only content', () => {
@@ -1196,10 +1387,12 @@ describe('ai-config:sync-all', () => {
       content: 'Create a new release for SlayZone.\n'
     })
 
-    expect(() => h.invoke('ai-config:sync-all', {
-      projectId: fixture.projectId,
-      projectPath: fixture.projectPath
-    })).toThrow()
+    expect(() =>
+      h.invoke('ai-config:sync-all', {
+        projectId: fixture.projectId,
+        projectPath: fixture.projectPath
+      })
+    ).toThrow()
   })
 
   test('includes project-local items in sync output and disk writes', () => {
@@ -1224,17 +1417,36 @@ describe('ai-config:sync-all', () => {
       written: Array<{ path: string; provider: string }>
     }
 
-    expect(fs.readFileSync(path.join(fixture.projectPath, '.claude/skills/local-project-skill/SKILL.md'), 'utf-8').includes('# local project skill'))
-      .toBe(true)
-    const cursorContent = fs.readFileSync(path.join(fixture.projectPath, '.cursor/skills/local-project-skill/SKILL.md'), 'utf-8')
+    expect(
+      fs
+        .readFileSync(
+          path.join(fixture.projectPath, '.claude/skills/local-project-skill/SKILL.md'),
+          'utf-8'
+        )
+        .includes('# local project skill')
+    ).toBe(true)
+    const cursorContent = fs.readFileSync(
+      path.join(fixture.projectPath, '.cursor/skills/local-project-skill/SKILL.md'),
+      'utf-8'
+    )
     expect(cursorContent.includes('name: local-project-skill')).toBe(true)
     expect(cursorContent.includes('# local project skill')).toBe(true)
     expect(fs.existsSync(legacyLocalPath)).toBe(false)
 
-    expect(result.written.some((entry) =>
-      entry.provider === 'claude' && entry.path === '.claude/skills/local-project-skill/SKILL.md')).toBe(true)
-    expect(result.written.some((entry) =>
-      entry.provider === 'cursor' && entry.path === '.cursor/skills/local-project-skill/SKILL.md')).toBe(true)
+    expect(
+      result.written.some(
+        (entry) =>
+          entry.provider === 'claude' &&
+          entry.path === '.claude/skills/local-project-skill/SKILL.md'
+      )
+    ).toBe(true)
+    expect(
+      result.written.some(
+        (entry) =>
+          entry.provider === 'cursor' &&
+          entry.path === '.cursor/skills/local-project-skill/SKILL.md'
+      )
+    ).toBe(true)
   })
 
   test('does not recreate removed per-item provider links', () => {
@@ -1256,9 +1468,15 @@ describe('ai-config:sync-all', () => {
     })
 
     h.invoke('ai-config:remove-project-selection', fixture.projectId, item.id, 'codex')
-    h.invoke('ai-config:update-item', { id: item.id, content: skillDoc('sync-all-provider-unlink', '# updated') })
+    h.invoke('ai-config:update-item', {
+      id: item.id,
+      content: skillDoc('sync-all-provider-unlink', '# updated')
+    })
 
-    const codexPath = path.join(fixture.projectPath, '.agents/skills/sync-all-provider-unlink/SKILL.md')
+    const codexPath = path.join(
+      fixture.projectPath,
+      '.agents/skills/sync-all-provider-unlink/SKILL.md'
+    )
     const codexBefore = fs.readFileSync(codexPath, 'utf-8')
 
     const result = h.invoke('ai-config:sync-all', {
@@ -1273,13 +1491,18 @@ describe('ai-config:sync-all', () => {
     expect(result.written.some((entry) => entry.provider === 'codex')).toBe(false)
     expect(fs.readFileSync(codexPath, 'utf-8')).toBe(codexBefore)
 
-    const selections = h.invoke('ai-config:list-project-selections', fixture.projectId) as Array<{ provider: string }>
+    const selections = h.invoke('ai-config:list-project-selections', fixture.projectId) as Array<{
+      provider: string
+    }>
     expect(selections.some((row) => row.provider === 'codex')).toBe(false)
   })
 
   test('falls back to globally enabled providers when project settings are malformed JSON', () => {
     const fixture = createProjectFixture('sync-all-malformed-provider-settings')
-    h.db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
+    h.db
+      .prepare(
+        'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+      )
       .run(`ai_providers:${fixture.projectId}`, '{"broken":')
 
     const item = h.invoke('ai-config:create-item', {
@@ -1325,7 +1548,13 @@ describe('ai-config:sync-all', () => {
     const codexPath = path.join(fixture.projectPath, '.agents/skills/sync-after-pull/SKILL.md')
     fs.writeFileSync(claudePath, '---\nname: modified-on-disk\n---\n# pulled body\n')
 
-    h.invoke('ai-config:pull-provider-skill', fixture.projectId, fixture.projectPath, 'claude', item.id)
+    h.invoke(
+      'ai-config:pull-provider-skill',
+      fixture.projectId,
+      fixture.projectPath,
+      'claude',
+      item.id
+    )
     const result = h.invoke('ai-config:sync-all', {
       projectId: fixture.projectId,
       projectPath: fixture.projectPath,
@@ -1336,15 +1565,32 @@ describe('ai-config:sync-all', () => {
     }
 
     expect(result.conflicts.length).toBe(0)
-    expect(result.written.some((entry) => entry.provider === 'claude' && entry.path === '.claude/skills/sync-after-pull/SKILL.md')).toBe(true)
-    expect(result.written.some((entry) => entry.provider === 'codex' && entry.path === '.agents/skills/sync-after-pull/SKILL.md')).toBe(true)
-    expect(fs.readFileSync(codexPath, 'utf-8')).toBe('---\nname: modified-on-disk\n---\n# pulled body\n')
+    expect(
+      result.written.some(
+        (entry) =>
+          entry.provider === 'claude' && entry.path === '.claude/skills/sync-after-pull/SKILL.md'
+      )
+    ).toBe(true)
+    expect(
+      result.written.some(
+        (entry) =>
+          entry.provider === 'codex' && entry.path === '.agents/skills/sync-after-pull/SKILL.md'
+      )
+    ).toBe(true)
+    expect(fs.readFileSync(codexPath, 'utf-8')).toBe(
+      '---\nname: modified-on-disk\n---\n# pulled body\n'
+    )
   })
 
   test('prunes unmanaged skills and disabled-provider MCP configs when enabled', () => {
     const fixture = createProjectFixture('sync-all-prune-unmanaged')
     h.invoke('ai-config:set-project-providers', fixture.projectId, ['claude'])
-    h.invoke('ai-config:save-root-instructions', fixture.projectId, fixture.projectPath, '# managed instructions')
+    h.invoke(
+      'ai-config:save-root-instructions',
+      fixture.projectId,
+      fixture.projectPath,
+      '# managed instructions'
+    )
 
     const item = h.invoke('ai-config:create-item', {
       type: 'skill',
@@ -1367,12 +1613,21 @@ describe('ai-config:sync-all', () => {
       content: skillDoc('keep-local-skill', '# keep local')
     })
 
-    const managedSkillPath = path.join(fixture.projectPath, '.claude/skills/keep-managed-skill/SKILL.md')
-    const localSkillPath = path.join(fixture.projectPath, '.claude/skills/keep-local-skill/SKILL.md')
+    const managedSkillPath = path.join(
+      fixture.projectPath,
+      '.claude/skills/keep-managed-skill/SKILL.md'
+    )
+    const localSkillPath = path.join(
+      fixture.projectPath,
+      '.claude/skills/keep-local-skill/SKILL.md'
+    )
     const managedInstructionPath = path.join(fixture.projectPath, 'CLAUDE.md')
     const unmanagedInstructionPath = path.join(fixture.projectPath, 'AGENTS.md')
     const unmanagedSkillPath = path.join(fixture.projectPath, '.claude/skills/remove-me.md')
-    const unmanagedCodexSkillPath = path.join(fixture.projectPath, '.agents/skills/remove-codex/SKILL.md')
+    const unmanagedCodexSkillPath = path.join(
+      fixture.projectPath,
+      '.agents/skills/remove-codex/SKILL.md'
+    )
     const unmanagedEmptyEnabledMcpPath = path.join(fixture.projectPath, '.mcp.json')
     const disabledProviderMcpPath = path.join(fixture.projectPath, '.cursor/mcp.json')
 
@@ -1384,7 +1639,10 @@ describe('ai-config:sync-all', () => {
     fs.writeFileSync(unmanagedSkillPath, '# remove')
     fs.writeFileSync(unmanagedCodexSkillPath, '# remove codex')
     fs.writeFileSync(unmanagedEmptyEnabledMcpPath, JSON.stringify({ mcpServers: {} }, null, 2))
-    fs.writeFileSync(disabledProviderMcpPath, JSON.stringify({ mcpServers: { orphan: { command: 'npx', args: ['x'] } } }, null, 2))
+    fs.writeFileSync(
+      disabledProviderMcpPath,
+      JSON.stringify({ mcpServers: { orphan: { command: 'npx', args: ['x'] } } }, null, 2)
+    )
 
     const result = h.invoke('ai-config:sync-all', {
       projectId: fixture.projectId,
@@ -1405,10 +1663,18 @@ describe('ai-config:sync-all', () => {
     expect(fs.existsSync(disabledProviderMcpPath)).toBe(false)
 
     expect(result.written.some((entry) => entry.provider === 'claude')).toBe(true)
-    expect(result.deleted.some((entry) => entry.kind === 'instruction' && entry.provider === 'codex')).toBe(true)
-    expect(result.deleted.some((entry) => entry.kind === 'skill' && entry.provider === 'claude')).toBe(true)
-    expect(result.deleted.some((entry) => entry.kind === 'mcp' && entry.provider === 'claude')).toBe(true)
-    expect(result.deleted.some((entry) => entry.kind === 'mcp' && entry.provider === 'cursor')).toBe(true)
+    expect(
+      result.deleted.some((entry) => entry.kind === 'instruction' && entry.provider === 'codex')
+    ).toBe(true)
+    expect(
+      result.deleted.some((entry) => entry.kind === 'skill' && entry.provider === 'claude')
+    ).toBe(true)
+    expect(
+      result.deleted.some((entry) => entry.kind === 'mcp' && entry.provider === 'claude')
+    ).toBe(true)
+    expect(
+      result.deleted.some((entry) => entry.kind === 'mcp' && entry.provider === 'cursor')
+    ).toBe(true)
   })
 })
 

@@ -49,7 +49,7 @@ async function read(): Promise<AutoModeEligibility> {
   const home = os.homedir()
   const [globalRaw, settingsRaw] = await Promise.all([
     safeRead(path.join(home, '.claude.json')),
-    safeRead(path.join(home, '.claude', 'settings.json')),
+    safeRead(path.join(home, '.claude', 'settings.json'))
   ])
   const global = parseJson(globalRaw)
   const settings = parseJson(settingsRaw)

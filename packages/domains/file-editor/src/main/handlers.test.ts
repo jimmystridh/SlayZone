@@ -2,7 +2,12 @@
  * File editor handler contract tests
  * Run with: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/file-editor/src/main/handlers.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerFileEditorHandlers } from './handlers.js'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -27,7 +32,7 @@ fs.writeFileSync(path.join(root, 'debug.log'), 'log content')
 describe('fs:readDir', () => {
   test('lists root dir, sorts dirs first', () => {
     const entries = h.invoke('fs:readDir', root, '') as { name: string; type: string }[]
-    const types = entries.map(e => e.type)
+    const types = entries.map((e) => e.type)
     const firstFile = types.indexOf('file')
     const lastDir = types.lastIndexOf('directory')
     if (lastDir >= 0 && firstFile >= 0) {
@@ -37,20 +42,20 @@ describe('fs:readDir', () => {
 
   test('filters .git (ALWAYS_IGNORED)', () => {
     const entries = h.invoke('fs:readDir', root, '') as { name: string }[]
-    const names = entries.map(e => e.name)
+    const names = entries.map((e) => e.name)
     expect(names.includes('.git')).toBe(false)
   })
 
   test('filters gitignored entries', () => {
     const entries = h.invoke('fs:readDir', root, '') as { name: string }[]
-    const names = entries.map(e => e.name)
+    const names = entries.map((e) => e.name)
     expect(names.includes('node_modules')).toBe(false)
     expect(names.includes('debug.log')).toBe(false)
   })
 
   test('lists subdirectory', () => {
     const entries = h.invoke('fs:readDir', root, 'src') as { name: string }[]
-    const names = entries.map(e => e.name)
+    const names = entries.map((e) => e.name)
     expect(names).toContain('main.ts')
     expect(names).toContain('utils.ts')
   })
@@ -63,7 +68,10 @@ describe('fs:readDir', () => {
 
 describe('fs:readFile', () => {
   test('reads file content', () => {
-    const result = h.invoke('fs:readFile', root, 'readme.md') as { content: string; tooLarge?: boolean }
+    const result = h.invoke('fs:readFile', root, 'readme.md') as {
+      content: string
+      tooLarge?: boolean
+    }
     expect(result.content).toBe('# Hello')
   })
 

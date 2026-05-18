@@ -39,7 +39,7 @@ const pool: TestItem[] = [
   { name: 'caveman', description: 'terse' },
   { name: 'caveman-commit', description: 'commit' },
   { name: 'commit', description: 'plain commit' },
-  { name: 'unrelated', description: 'has caveman in desc' },
+  { name: 'unrelated', description: 'has caveman in desc' }
 ]
 
 console.log('\nrankByName')
@@ -55,7 +55,7 @@ test('empty query — alphabetical', () => {
 test('prefix > substring > description', () => {
   const out = rankByName(pool, 'cave', {
     getName: (i) => i.name,
-    getDescription: (i) => i.description,
+    getDescription: (i) => i.description
   })
   assertEqual(out[0].name, 'caveman')
   assertEqual(out[out.length - 1].name, 'unrelated')
@@ -63,7 +63,10 @@ test('prefix > substring > description', () => {
 
 test('no description accessor — description matches excluded', () => {
   const out = rankByName(pool, 'cave', { getName: (i) => i.name })
-  assertEqual(out.find((i) => i.name === 'unrelated'), undefined)
+  assertEqual(
+    out.find((i) => i.name === 'unrelated'),
+    undefined
+  )
 })
 
 test('alphabetical tiebreak in same score bucket', () => {
@@ -74,8 +77,14 @@ test('alphabetical tiebreak in same score bucket', () => {
 test('fuzzy match — non-contiguous chars', () => {
   const out = rankByName(pool, 'cmt', { getName: (i) => i.name })
   // 'commit' and 'caveman-commit' both contain c…m…t fuzzily
-  assertEqual(out.some((i) => i.name === 'commit'), true)
-  assertEqual(out.some((i) => i.name === 'caveman-commit'), true)
+  assertEqual(
+    out.some((i) => i.name === 'commit'),
+    true
+  )
+  assertEqual(
+    out.some((i) => i.name === 'caveman-commit'),
+    true
+  )
 })
 
 test('fuzzy match — case-insensitive', () => {
@@ -90,7 +99,7 @@ test('usage tiebreak — higher count beats alphabetical', () => {
   const usage: Record<string, number> = { commit: 5, 'caveman-commit': 0 }
   const out = rankByName(pool, 'commit', {
     getName: (i) => i.name,
-    getUsage: (i) => usage[i.name] ?? 0,
+    getUsage: (i) => usage[i.name] ?? 0
   })
   assertEqual(out[0].name, 'commit')
   assertEqual(out[1].name, 'caveman-commit')
@@ -102,7 +111,7 @@ test('exact name match wins over alphabetical tiebreak', () => {
   const usage: Record<string, number> = { commit: 3, 'caveman-commit': 3 }
   const out = rankByName(pool, 'commit', {
     getName: (i) => i.name,
-    getUsage: (i) => usage[i.name] ?? 0,
+    getUsage: (i) => usage[i.name] ?? 0
   })
   assertEqual(out[0].name, 'commit')
   assertEqual(out[1].name, 'caveman-commit')
@@ -113,7 +122,7 @@ test('exact match wins over higher usage of partial match', () => {
   const usage: Record<string, number> = { commit: 0, 'caveman-commit': 100 }
   const out = rankByName(pool, 'commit', {
     getName: (i) => i.name,
-    getUsage: (i) => usage[i.name] ?? 0,
+    getUsage: (i) => usage[i.name] ?? 0
   })
   assertEqual(out[0].name, 'commit')
 })
@@ -127,16 +136,21 @@ test('empty query — usage outranks alphabetical', () => {
   const usage: Record<string, number> = { commit: 7 }
   const out = rankByName(pool, '', {
     getName: (i) => i.name,
-    getUsage: (i) => usage[i.name] ?? 0,
+    getUsage: (i) => usage[i.name] ?? 0
   })
   assertEqual(out[0].name, 'commit')
 })
 
 console.log('\nrankAcrossSources — usage tiebreak')
 
-interface NamedItem { name: string }
+interface NamedItem {
+  name: string
+}
 
-function makeSource(id: string, items: NamedItem[]): { source: AutocompleteSource; items: unknown[] } {
+function makeSource(
+  id: string,
+  items: NamedItem[]
+): { source: AutocompleteSource; items: unknown[] } {
   const src: AutocompleteSource<NamedItem> = {
     id,
     detect: () => null,
@@ -146,7 +160,7 @@ function makeSource(id: string, items: NamedItem[]): { source: AutocompleteSourc
     render: () => null,
     accept: () => undefined,
     getName: (i) => i.name,
-    getDescription: () => '',
+    getDescription: () => ''
   }
   return { source: src as AutocompleteSource, items: items as unknown[] }
 }
@@ -199,7 +213,7 @@ test('returns null when no cmd matches', () => {
 
 test('expands $ARGUMENTS with rest-of-line', () => {
   const r = transformCommandSubmit('/review https://github.com/pr/1', [
-    cmd('review', 'Review PR: $ARGUMENTS'),
+    cmd('review', 'Review PR: $ARGUMENTS')
   ])
   assertEqual(r?.send, 'Review PR: https://github.com/pr/1')
 })

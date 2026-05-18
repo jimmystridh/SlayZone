@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, resetApp, TEST_PROJECT_PATH } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  resetApp,
+  TEST_PROJECT_PATH
+} from '../fixtures/electron'
 import type { Page } from '@playwright/test'
 import fs from 'fs'
 import path from 'path'
@@ -8,16 +16,31 @@ import path from 'path'
 const artifactsPanel = (page: Page) => page.locator('[data-panel-id="artifacts"]:visible')
 const sidebar = (page: Page) => artifactsPanel(page).locator('[data-testid="artifacts-sidebar"]')
 const artifactRow = (page: Page, title: string) =>
-  sidebar(page).locator(`[data-testid^="artifact-row-"]`).filter({ has: page.locator('span', { hasText: title }) }).locator('button').filter({ has: page.locator('span', { hasText: title }) }).first()
+  sidebar(page)
+    .locator(`[data-testid^="artifact-row-"]`)
+    .filter({ has: page.locator('span', { hasText: title }) })
+    .locator('button')
+    .filter({ has: page.locator('span', { hasText: title }) })
+    .first()
 const folderRow = (page: Page, name: string) =>
   // Scope to the folder's own clickable button (not the expanded children that share the data-testid wrapper).
-  sidebar(page).locator(`[data-testid^="folder-row-"]`).filter({ has: page.locator('button', { hasText: name }) }).locator('button').filter({ hasText: name }).first()
+  sidebar(page)
+    .locator(`[data-testid^="folder-row-"]`)
+    .filter({ has: page.locator('button', { hasText: name }) })
+    .locator('button')
+    .filter({ hasText: name })
+    .first()
 const createInput = (page: Page) => sidebar(page).locator('[data-testid="artifacts-create-input"]')
 const renameInput = (page: Page) => sidebar(page).locator('[data-testid="artifacts-rename-input"]')
 
 async function openArtifactsPanel(page: Page) {
   // Cmd+Shift+A toggles artifacts panel
-  if (await artifactsPanel(page).isVisible().catch(() => false)) return
+  if (
+    await artifactsPanel(page)
+      .isVisible()
+      .catch(() => false)
+  )
+    return
   await page.keyboard.press('Meta+Shift+A')
   await expect(artifactsPanel(page)).toBeVisible({ timeout: 5_000 })
 }
@@ -34,7 +57,11 @@ test.describe('Artifacts panel', () => {
     await resetApp(mainWindow)
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'AsPanel Test', color: '#f59e0b', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'AsPanel Test',
+      color: '#f59e0b',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
     const t = await s.createTask({ projectId: p.id, title: 'Artifacts test task', status: 'todo' })
     taskId = t.id
@@ -43,16 +70,24 @@ test.describe('Artifacts panel', () => {
     // Navigate to task
     await goHome(mainWindow)
     await clickProject(mainWindow, projectAbbrev)
-    await expect(mainWindow.getByText('Artifacts test task').first()).toBeVisible({ timeout: 5_000 })
+    await expect(mainWindow.getByText('Artifacts test task').first()).toBeVisible({
+      timeout: 5_000
+    })
     await mainWindow.getByText('Artifacts test task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
   })
 
   // --- Group 1: Panel basics ---
 
   test('artifacts panel toggles with Cmd+Shift+A', async ({ mainWindow }) => {
     // Make sure panel is off first
-    if (await artifactsPanel(mainWindow).isVisible().catch(() => false)) {
+    if (
+      await artifactsPanel(mainWindow)
+        .isVisible()
+        .catch(() => false)
+    ) {
       await mainWindow.keyboard.press('Meta+Shift+A')
       await expect(artifactsPanel(mainWindow)).not.toBeVisible({ timeout: 3_000 })
     }
@@ -92,13 +127,17 @@ test.describe('Artifacts panel', () => {
     await openArtifactsPanel(mainWindow)
     await artifactRow(mainWindow, 'notes.md').click()
     // The right pane should show an editor (RichTextEditor for .md in preview mode)
-    await expect(artifactsPanel(mainWindow).locator('.ProseMirror, textarea').first()).toBeVisible({ timeout: 3_000 })
+    await expect(artifactsPanel(mainWindow).locator('.ProseMirror, textarea').first()).toBeVisible({
+      timeout: 3_000
+    })
   })
 
   test('create artifact via root context menu', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
     await rightClick(mainWindow, sidebar(mainWindow))
-    await expect(mainWindow.getByRole('menuitem', { name: 'New Artifact' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'New Artifact' })).toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByRole('menuitem', { name: 'New Artifact' }).first().click()
     await expect(createInput(mainWindow)).toBeVisible({ timeout: 3_000 })
     await createInput(mainWindow).fill('schema.sql')
@@ -109,7 +148,9 @@ test.describe('Artifacts panel', () => {
   test('rename artifact via context menu', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
     await rightClick(mainWindow, artifactRow(mainWindow, 'schema.sql'))
-    await expect(mainWindow.getByRole('menuitem', { name: 'Rename' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'Rename' })).toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByRole('menuitem', { name: 'Rename' }).click()
     await expect(renameInput(mainWindow)).toBeVisible({ timeout: 3_000 })
     await renameInput(mainWindow).fill('schema.json')
@@ -121,7 +162,9 @@ test.describe('Artifacts panel', () => {
   test('delete artifact via context menu', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
     await rightClick(mainWindow, artifactRow(mainWindow, 'schema.json'))
-    await expect(mainWindow.getByRole('menuitem', { name: 'Delete' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'Delete' })).toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByRole('menuitem', { name: 'Delete' }).click()
     await expect(artifactRow(mainWindow, 'schema.json')).not.toBeVisible({ timeout: 3_000 })
   })
@@ -140,7 +183,9 @@ test.describe('Artifacts panel', () => {
   test('create folder via root context menu', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
     await rightClick(mainWindow, sidebar(mainWindow))
-    await expect(mainWindow.getByRole('menuitem', { name: 'New Folder' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'New Folder' })).toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByRole('menuitem', { name: 'New Folder' }).first().click()
     await expect(createInput(mainWindow)).toBeVisible({ timeout: 3_000 })
     await createInput(mainWindow).fill('docs')
@@ -151,7 +196,9 @@ test.describe('Artifacts panel', () => {
   test('create artifact inside folder via context menu', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
     await rightClick(mainWindow, folderRow(mainWindow, 'designs'))
-    await expect(mainWindow.getByRole('menuitem', { name: 'New Artifact' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'New Artifact' })).toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByRole('menuitem', { name: 'New Artifact' }).first().click()
     await expect(createInput(mainWindow)).toBeVisible({ timeout: 3_000 })
     await createInput(mainWindow).fill('mockup.svg')
@@ -162,7 +209,9 @@ test.describe('Artifacts panel', () => {
   test('create subfolder via folder context menu', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
     await rightClick(mainWindow, folderRow(mainWindow, 'designs'))
-    await expect(mainWindow.getByRole('menuitem', { name: 'New Folder' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'New Folder' })).toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByRole('menuitem', { name: 'New Folder' }).first().click()
     await expect(createInput(mainWindow)).toBeVisible({ timeout: 3_000 })
     await createInput(mainWindow).fill('icons')
@@ -173,7 +222,9 @@ test.describe('Artifacts panel', () => {
   test('rename folder via context menu', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
     await rightClick(mainWindow, folderRow(mainWindow, 'docs'))
-    await expect(mainWindow.getByRole('menuitem', { name: 'Rename' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'Rename' })).toBeVisible({
+      timeout: 3_000
+    })
     await mainWindow.getByRole('menuitem', { name: 'Rename' }).click()
     await expect(renameInput(mainWindow)).toBeVisible({ timeout: 3_000 })
     await renameInput(mainWindow).fill('documentation')
@@ -205,13 +256,19 @@ test.describe('Artifacts panel', () => {
 
   test('artifact context menu has correct items', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
-    if (!(await artifactRow(mainWindow, 'notes.md').isVisible({ timeout: 500 }).catch(() => false))) {
+    if (
+      !(await artifactRow(mainWindow, 'notes.md')
+        .isVisible({ timeout: 500 })
+        .catch(() => false))
+    ) {
       await seed(mainWindow).createArtifact({ taskId, title: 'notes.md', content: '' })
       await seed(mainWindow).refreshData()
     }
     await rightClick(mainWindow, artifactRow(mainWindow, 'notes.md'))
 
-    await expect(mainWindow.getByRole('menuitem', { name: 'Rename' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'Rename' })).toBeVisible({
+      timeout: 3_000
+    })
     await expect(mainWindow.getByRole('menuitem', { name: 'Copy Path' })).toBeVisible()
     await expect(mainWindow.getByRole('menuitem', { name: 'Delete' })).toBeVisible()
 
@@ -221,13 +278,19 @@ test.describe('Artifacts panel', () => {
 
   test('folder context menu has correct items', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
-    if (!(await folderRow(mainWindow, 'designs').isVisible({ timeout: 500 }).catch(() => false))) {
+    if (
+      !(await folderRow(mainWindow, 'designs')
+        .isVisible({ timeout: 500 })
+        .catch(() => false))
+    ) {
       await seed(mainWindow).createArtifactFolder({ taskId, name: 'designs' })
       await seed(mainWindow).refreshData()
     }
     await rightClick(mainWindow, folderRow(mainWindow, 'designs'))
 
-    await expect(mainWindow.getByRole('menuitem', { name: 'New Artifact' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'New Artifact' })).toBeVisible({
+      timeout: 3_000
+    })
     await expect(mainWindow.getByRole('menuitem', { name: 'New Folder' })).toBeVisible()
     await expect(mainWindow.getByRole('menuitem', { name: 'Rename' })).toBeVisible()
     await expect(mainWindow.getByRole('menuitem', { name: 'Delete' })).toBeVisible()
@@ -240,7 +303,9 @@ test.describe('Artifacts panel', () => {
     // Right-click on empty space in sidebar
     await sidebar(mainWindow).click({ button: 'right', position: { x: 10, y: 5 } })
 
-    await expect(mainWindow.getByRole('menuitem', { name: 'New Artifact' })).toBeVisible({ timeout: 3_000 })
+    await expect(mainWindow.getByRole('menuitem', { name: 'New Artifact' })).toBeVisible({
+      timeout: 3_000
+    })
     await expect(mainWindow.getByRole('menuitem', { name: 'New Folder' })).toBeVisible()
 
     await mainWindow.keyboard.press('Escape')
@@ -251,21 +316,32 @@ test.describe('Artifacts panel', () => {
   test('view mode toggle works for markdown', async ({ mainWindow }) => {
     await openArtifactsPanel(mainWindow)
     // Ensure notes.md exists (this spec runs sequentially but be resilient).
-    if (!(await artifactRow(mainWindow, 'notes.md').isVisible({ timeout: 500 }).catch(() => false))) {
+    if (
+      !(await artifactRow(mainWindow, 'notes.md')
+        .isVisible({ timeout: 500 })
+        .catch(() => false))
+    ) {
       await seed(mainWindow).createArtifact({ taskId, title: 'notes.md', content: '# notes\n' })
       await seed(mainWindow).refreshData()
     }
     await artifactRow(mainWindow, 'notes.md').click()
 
     // Should be in preview mode (WYSIWYG) by default
-    await expect(artifactsPanel(mainWindow).locator('.ProseMirror').first()).toBeVisible({ timeout: 3_000 })
+    await expect(artifactsPanel(mainWindow).locator('.ProseMirror').first()).toBeVisible({
+      timeout: 3_000
+    })
 
     // Click split mode
-    const splitBtn = artifactsPanel(mainWindow).locator('button').filter({ hasText: 'Split' }).first()
+    const splitBtn = artifactsPanel(mainWindow)
+      .locator('button')
+      .filter({ hasText: 'Split' })
+      .first()
     if (await splitBtn.isVisible().catch(() => false)) {
       await splitBtn.click()
       // Should see both textarea and preview
-      await expect(artifactsPanel(mainWindow).locator('textarea').first()).toBeVisible({ timeout: 3_000 })
+      await expect(artifactsPanel(mainWindow).locator('textarea').first()).toBeVisible({
+        timeout: 3_000
+      })
     }
   })
 
@@ -316,10 +392,16 @@ test.describe('Artifacts panel', () => {
 
   // --- Group 9: External-sync banner + caret preservation ---
 
-  test('conflict banner is absolute-positioned and does not shift editor', async ({ mainWindow }) => {
+  test('conflict banner is absolute-positioned and does not shift editor', async ({
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
     // Use a code-mode extension so CodeMirror is the only editor — preview/split toggle isn't on the path.
-    const artifact = await s.createArtifact({ taskId, title: 'sync-banner.ts', content: 'initial\n' })
+    const artifact = await s.createArtifact({
+      taskId,
+      title: 'sync-banner.ts',
+      content: 'initial\n'
+    })
     await s.refreshData()
 
     await openArtifactsPanel(mainWindow)
@@ -329,7 +411,10 @@ test.describe('Artifacts panel', () => {
     await expect(editor).toBeVisible({ timeout: 5_000 })
 
     // Resolve disk path for external write
-    const filePath = await mainWindow.evaluate((id) => (window as any).api.artifacts.getFilePath(id), artifact.id)
+    const filePath = await mainWindow.evaluate(
+      (id) => (window as any).api.artifacts.getFilePath(id),
+      artifact.id
+    )
     expect(filePath).toBeTruthy()
 
     // Dirty the buffer
@@ -385,9 +470,8 @@ test.describe('Artifacts panel', () => {
     await mainWindow.waitForTimeout(800)
     await mainWindow.keyboard.type('def')
 
-    await expect.poll(
-      async () => cmContent.evaluate((el) => el.textContent ?? ''),
-      { timeout: 3_000 }
-    ).toBe('abcdef')
+    await expect
+      .poll(async () => cmContent.evaluate((el) => el.textContent ?? ''), { timeout: 3_000 })
+      .toBe('abcdef')
   })
 })

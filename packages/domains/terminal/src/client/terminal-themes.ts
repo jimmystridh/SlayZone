@@ -33,7 +33,7 @@ const defaultDark: ITheme = {
   brightBlue: '#93c5fd',
   brightMagenta: '#d8b4fe',
   brightCyan: '#67e8f9',
-  brightWhite: '#fafafa',
+  brightWhite: '#fafafa'
 }
 
 const ghostty: ITheme = {
@@ -57,7 +57,7 @@ const ghostty: ITheme = {
   brightBlue: '#83a5d6',
   brightMagenta: '#bc99d4',
   brightCyan: '#83beb1',
-  brightWhite: '#eaeaea',
+  brightWhite: '#eaeaea'
 }
 
 const catppuccinMocha: ITheme = {
@@ -81,7 +81,7 @@ const catppuccinMocha: ITheme = {
   brightBlue: '#89b4fa',
   brightMagenta: '#f5c2e7',
   brightCyan: '#94e2d5',
-  brightWhite: '#a6adc8',
+  brightWhite: '#a6adc8'
 }
 
 const dracula: ITheme = {
@@ -105,7 +105,7 @@ const dracula: ITheme = {
   brightBlue: '#d6acff',
   brightMagenta: '#ff92df',
   brightCyan: '#a4ffff',
-  brightWhite: '#ffffff',
+  brightWhite: '#ffffff'
 }
 
 const tokyoNight: ITheme = {
@@ -129,7 +129,7 @@ const tokyoNight: ITheme = {
   brightBlue: '#7aa2f7',
   brightMagenta: '#bb9af7',
   brightCyan: '#7dcfff',
-  brightWhite: '#c0caf5',
+  brightWhite: '#c0caf5'
 }
 
 const gruvboxDark: ITheme = {
@@ -153,7 +153,7 @@ const gruvboxDark: ITheme = {
   brightBlue: '#83a598',
   brightMagenta: '#d3869b',
   brightCyan: '#8ec07c',
-  brightWhite: '#ebdbb2',
+  brightWhite: '#ebdbb2'
 }
 
 const nord: ITheme = {
@@ -177,7 +177,7 @@ const nord: ITheme = {
   brightBlue: '#81a1c1',
   brightMagenta: '#b48ead',
   brightCyan: '#8fbcbb',
-  brightWhite: '#eceff4',
+  brightWhite: '#eceff4'
 }
 
 const solarizedDark: ITheme = {
@@ -201,7 +201,7 @@ const solarizedDark: ITheme = {
   brightBlue: '#839496',
   brightMagenta: '#6c71c4',
   brightCyan: '#93a1a1',
-  brightWhite: '#fdf6e3',
+  brightWhite: '#fdf6e3'
 }
 
 const oneDark: ITheme = {
@@ -225,7 +225,7 @@ const oneDark: ITheme = {
   brightBlue: '#61afef',
   brightMagenta: '#c678dd',
   brightCyan: '#56b6c2',
-  brightWhite: '#ffffff',
+  brightWhite: '#ffffff'
 }
 
 const rosePine: ITheme = {
@@ -249,7 +249,7 @@ const rosePine: ITheme = {
   brightBlue: '#9ccfd8',
   brightMagenta: '#c4a7e7',
   brightCyan: '#ebbcba',
-  brightWhite: '#e0def4',
+  brightWhite: '#e0def4'
 }
 
 const kanagawa: ITheme = {
@@ -273,7 +273,7 @@ const kanagawa: ITheme = {
   brightBlue: '#7fb4ca',
   brightMagenta: '#938aa9',
   brightCyan: '#7aa89f',
-  brightWhite: '#dcd7ba',
+  brightWhite: '#dcd7ba'
 }
 
 const slay: ITheme = {
@@ -297,7 +297,7 @@ const slay: ITheme = {
   brightBlue: '#bfdbfe',
   brightMagenta: '#ddd6fe',
   brightCyan: '#a5f3fc',
-  brightWhite: '#fafafa',
+  brightWhite: '#fafafa'
 }
 
 const slaySpecial: ITheme = {
@@ -321,7 +321,7 @@ const slaySpecial: ITheme = {
   brightBlue: '#44ccff',
   brightMagenta: '#ff44ff',
   brightCyan: '#ff8833',
-  brightWhite: '#ffffff',
+  brightWhite: '#ffffff'
 }
 
 // ---------------------------------------------------------------------------
@@ -349,7 +349,7 @@ const slayLight: ITheme = {
   brightBlue: '#3b82f6',
   brightMagenta: '#8b5cf6',
   brightCyan: '#06b6d4',
-  brightWhite: '#52525b',
+  brightWhite: '#52525b'
 }
 
 const slaySpecialLight: ITheme = {
@@ -373,7 +373,7 @@ const slaySpecialLight: ITheme = {
   brightBlue: '#0066ff',
   brightMagenta: '#ff0088',
   brightCyan: '#ff5500',
-  brightWhite: '#440000',
+  brightWhite: '#440000'
 }
 
 const defaultLight: ITheme = {
@@ -397,7 +397,7 @@ const defaultLight: ITheme = {
   brightBlue: '#3b82f6',
   brightMagenta: '#a855f7',
   brightCyan: '#06b6d4',
-  brightWhite: '#6b7280',
+  brightWhite: '#6b7280'
 }
 
 const catppuccinLatte: ITheme = {
@@ -421,7 +421,7 @@ const catppuccinLatte: ITheme = {
   brightBlue: '#1e66f5',
   brightMagenta: '#ea76cb',
   brightCyan: '#179299',
-  brightWhite: '#bcc0cc',
+  brightWhite: '#bcc0cc'
 }
 
 const solarizedLight: ITheme = {
@@ -445,7 +445,7 @@ const solarizedLight: ITheme = {
   brightBlue: '#839496',
   brightMagenta: '#6c71c4',
   brightCyan: '#93a1a1',
-  brightWhite: '#fdf6e3',
+  brightWhite: '#fdf6e3'
 }
 
 const tokyoNightLight: ITheme = {
@@ -469,7 +469,7 @@ const tokyoNightLight: ITheme = {
   brightBlue: '#34548a',
   brightMagenta: '#5a4a78',
   brightCyan: '#0f4b6e',
-  brightWhite: '#343b58',
+  brightWhite: '#343b58'
 }
 
 const rosePineDawn: ITheme = {
@@ -493,7 +493,7 @@ const rosePineDawn: ITheme = {
   brightBlue: '#56949f',
   brightMagenta: '#907aa9',
   brightCyan: '#d7827e',
-  brightWhite: '#575279',
+  brightWhite: '#575279'
 }
 
 // ---------------------------------------------------------------------------
@@ -522,17 +522,21 @@ export const terminalThemes: TerminalThemeDefinition[] = [
   { id: 'catppuccin-latte', name: 'Catppuccin Latte', variant: 'light', colors: catppuccinLatte },
   { id: 'solarized-light', name: 'Solarized', variant: 'light', colors: solarizedLight },
   { id: 'tokyo-night-light', name: 'Tokyo Night', variant: 'light', colors: tokyoNightLight },
-  { id: 'rose-pine-dawn', name: 'Rosé Pine Dawn', variant: 'light', colors: rosePineDawn },
+  { id: 'rose-pine-dawn', name: 'Rosé Pine Dawn', variant: 'light', colors: rosePineDawn }
 ]
 
-export const darkThemes = terminalThemes.filter(t => t.variant === 'dark')
-export const lightThemes = terminalThemes.filter(t => t.variant === 'light')
+export const darkThemes = terminalThemes.filter((t) => t.variant === 'dark')
+export const lightThemes = terminalThemes.filter((t) => t.variant === 'light')
 
 export function getTerminalThemeById(id: string): ITheme {
-  return terminalThemes.find(t => t.id === id)?.colors ?? slay
+  return terminalThemes.find((t) => t.id === id)?.colors ?? slay
 }
 
-export function getTerminalTheme(appTheme: Theme, terminalThemeDark: string, terminalThemeLight: string): ITheme {
+export function getTerminalTheme(
+  appTheme: Theme,
+  terminalThemeDark: string,
+  terminalThemeLight: string
+): ITheme {
   const id = appTheme === 'dark' ? terminalThemeDark : terminalThemeLight
   return getTerminalThemeById(id)
 }

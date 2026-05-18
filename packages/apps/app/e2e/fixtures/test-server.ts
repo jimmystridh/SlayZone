@@ -42,7 +42,9 @@ function startServer(): Promise<{ host: string; port: number }> {
       resolve({ host: '127.0.0.1', port: addr.port })
     })
     process.once('exit', () => {
-      try { server.close() } catch {}
+      try {
+        server.close()
+      } catch {}
     })
   })
   return serverPromise

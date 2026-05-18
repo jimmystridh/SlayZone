@@ -3,26 +3,44 @@
  * Run with: ELECTRON_RUN_AS_NODE=1 ./node_modules/.bin/electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/apps/app/src/main/rest-api/tasks/archive-many.test.ts
  */
 import express from 'express'
-import { createTestHarness, test, expect, describe } from '../../../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../../../shared/test-utils/ipc-harness.js'
 import { mountRestApp } from '../../../../../../shared/test-utils/rest-harness.js'
 import { spyTaskEvents } from '../../../../../../shared/test-utils/event-spy.js'
-import { __ipcEmitCalls, __resetIpcEmitCalls } from '../../../../../../shared/test-utils/mock-electron.js'
+import {
+  __ipcEmitCalls,
+  __resetIpcEmitCalls
+} from '../../../../../../shared/test-utils/mock-electron.js'
 import { taskEvents } from '@slayzone/task/main'
 import { registerArchiveManyTaskRoute } from './archive-many.js'
 
 const h = await createTestHarness()
 const projectId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projectId, 'P', '#000', '/tmp/p')
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(projectId, 'P', '#000', '/tmp/p')
 
 let notifyCount = 0
 const app = express()
 app.use(express.json())
-registerArchiveManyTaskRoute(app, { db: h.db, notifyRenderer: () => { notifyCount++ } })
+registerArchiveManyTaskRoute(app, {
+  db: h.db,
+  notifyRenderer: () => {
+    notifyCount++
+  }
+})
 const rest = await mountRestApp(app)
 
 function seedTask(): string {
   const id = crypto.randomUUID()
-  h.db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)')
+  h.db
+    .prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+    )
     .run(id, projectId, 'T', 'todo', 3, 0)
   return id
 }
@@ -33,12 +51,16 @@ await describe('POST /api/tasks/archive-many', () => {
     __resetIpcEmitCalls()
     const spy = spyTaskEvents(taskEvents, 'task:archived')
     notifyCount = 0
-    const res = await rest.request<{ ok: boolean; data: null }>('POST', '/api/tasks/archive-many', { ids })
+    const res = await rest.request<{ ok: boolean; data: null }>('POST', '/api/tasks/archive-many', {
+      ids
+    })
     spy.stop()
     expect(res.status).toBe(200)
     expect(res.body.ok).toBe(true)
     for (const id of ids) {
-      const row = h.db.prepare('SELECT archived_at FROM tasks WHERE id = ?').get(id) as { archived_at: string | null }
+      const row = h.db.prepare('SELECT archived_at FROM tasks WHERE id = ?').get(id) as {
+        archived_at: string | null
+      }
       expect(row.archived_at !== null).toBe(true)
     }
     expect(spy.calls.length).toBe(ids.length)
@@ -59,13 +81,21 @@ await describe('POST /api/tasks/archive-many', () => {
   })
 
   test('400: missing ids field', async () => {
-    const res = await rest.request<{ ok: boolean; error: string }>('POST', '/api/tasks/archive-many', {})
+    const res = await rest.request<{ ok: boolean; error: string }>(
+      'POST',
+      '/api/tasks/archive-many',
+      {}
+    )
     expect(res.status).toBe(400)
     expect(res.body.ok).toBe(false)
   })
 
   test('400: ids is not an array', async () => {
-    const res = await rest.request<{ ok: boolean; error: string }>('POST', '/api/tasks/archive-many', { ids: 'oops' })
+    const res = await rest.request<{ ok: boolean; error: string }>(
+      'POST',
+      '/api/tasks/archive-many',
+      { ids: 'oops' }
+    )
     expect(res.status).toBe(400)
     expect(res.body.ok).toBe(false)
   })
@@ -73,10 +103,15 @@ await describe('POST /api/tasks/archive-many', () => {
   test('cascade: archives sub-tasks of the given parents', async () => {
     const parent = seedTask()
     const child = crypto.randomUUID()
-    h.db.prepare('INSERT INTO tasks (id, project_id, parent_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?, ?)')
+    h.db
+      .prepare(
+        'INSERT INTO tasks (id, project_id, parent_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?, ?)'
+      )
       .run(child, projectId, parent, 'C', 'todo', 3, 1)
     await rest.request('POST', '/api/tasks/archive-many', { ids: [parent] })
-    const childRow = h.db.prepare('SELECT archived_at FROM tasks WHERE id = ?').get(child) as { archived_at: string | null }
+    const childRow = h.db.prepare('SELECT archived_at FROM tasks WHERE id = ?').get(child) as {
+      archived_at: string | null
+    }
     expect(childRow.archived_at !== null).toBe(true)
   })
 })

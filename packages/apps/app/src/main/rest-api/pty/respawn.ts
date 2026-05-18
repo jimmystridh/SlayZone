@@ -21,10 +21,25 @@ export function registerPtyRespawnRoute(app: Express, deps: RestApiDeps): void {
     // onEnsureAlive listener. requestEnsureAlive retries until acked or
     // times out, so race with mount is handled.
     broadcastToWindows('app:open-task', taskId)
-    const result = await requestEnsureAlive(taskId, { force: true, timeoutMs: FORCE_RESPAWN_TIMEOUT_MS })
-    if (result === 'ok' || result === 'already-alive') { res.json({ ok: true }); return }
-    if (result === 'no-window') { res.status(503).json({ error: 'No window available' }); return }
-    if (result === 'error') { res.status(500).json({ error: 'Renderer reported respawn failure' }); return }
-    res.status(408).json({ error: 'Renderer did not acknowledge respawn within timeout — task tab may be closed or app unresponsive' })
+    const result = await requestEnsureAlive(taskId, {
+      force: true,
+      timeoutMs: FORCE_RESPAWN_TIMEOUT_MS
+    })
+    if (result === 'ok' || result === 'already-alive') {
+      res.json({ ok: true })
+      return
+    }
+    if (result === 'no-window') {
+      res.status(503).json({ error: 'No window available' })
+      return
+    }
+    if (result === 'error') {
+      res.status(500).json({ error: 'Renderer reported respawn failure' })
+      return
+    }
+    res.status(408).json({
+      error:
+        'Renderer did not acknowledge respawn within timeout — task tab may be closed or app unresponsive'
+    })
   })
 }

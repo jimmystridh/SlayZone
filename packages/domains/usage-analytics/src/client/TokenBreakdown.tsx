@@ -6,7 +6,7 @@ const COLORS: Record<string, string> = {
   Output: '#8b5cf6',
   Input: '#3b82f6',
   'Cache Read': '#22c55e',
-  'Cache Write': '#f59e0b',
+  'Cache Write': '#f59e0b'
 }
 
 interface Props {
@@ -47,10 +47,7 @@ export function TokenBreakdown({ data }: Props) {
             interval={0}
             height={60}
           />
-          <YAxis
-            tick={TICK_STYLE}
-            tickFormatter={(v) => formatTokens(v)}
-          />
+          <YAxis tick={TICK_STYLE} tickFormatter={(v) => formatTokens(v)} />
           <Tooltip
             cursor={{ fill: 'var(--muted)', opacity: 0.3 }}
             contentStyle={TOOLTIP_STYLE}

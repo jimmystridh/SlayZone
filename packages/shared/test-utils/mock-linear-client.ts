@@ -30,7 +30,8 @@ export const _mock = {
     nextCursor: null as string | null
   }),
   getIssue: async (_apiKey: string, _issueId: string) => null as LinearIssueSummary | null,
-  updateIssue: async (_apiKey: string, _issueId: string, _input: unknown) => null as LinearIssueSummary | null
+  updateIssue: async (_apiKey: string, _issueId: string, _input: unknown) =>
+    null as LinearIssueSummary | null
 }
 
 export async function getViewer(apiKey: string) {

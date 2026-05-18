@@ -1,19 +1,9 @@
-import {
-  Inbox,
-  CircleDashed,
-  Circle,
-  CircleDot,
-  CircleCheck,
-  CircleX
-} from 'lucide-react'
+import { Inbox, CircleDashed, Circle, CircleDot, CircleCheck, CircleX } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { WorkflowCategory } from '@slayzone/projects/shared'
 import type { IntegrationProvider } from '@slayzone/integrations/shared'
 
-export const CATEGORY_META: Record<
-  WorkflowCategory,
-  { label: string; icon: LucideIcon }
-> = {
+export const CATEGORY_META: Record<WorkflowCategory, { label: string; icon: LucideIcon }> = {
   triage: { label: 'Triage', icon: Inbox },
   backlog: { label: 'Backlog', icon: CircleDashed },
   unstarted: { label: 'Unstarted', icon: Circle },
@@ -73,7 +63,9 @@ export function SettingsTabIntro({ title, description }: { title: string; descri
   return (
     <div className="space-y-1">
       <h3 className="text-base font-semibold">{title}</h3>
-      <p className="max-w-[80%] text-sm text-muted-foreground" style={{ textWrap: 'balance' }}>{description}</p>
+      <p className="max-w-[80%] text-sm text-muted-foreground" style={{ textWrap: 'balance' }}>
+        {description}
+      </p>
     </div>
   )
 }

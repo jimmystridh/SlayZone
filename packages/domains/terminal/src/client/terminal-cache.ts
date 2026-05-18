@@ -111,6 +111,9 @@ export function unregisterActiveAddon(sessionId: string): void {
 export function serializeTerminalHistory(sessionId: string): string {
   const addon = activeAddons.get(sessionId) ?? cache.get(sessionId)?.serializeAddon
   if (!addon) return ''
-  try { return addon.serialize() }
-  catch { return '' }
+  try {
+    return addon.serialize()
+  } catch {
+    return ''
+  }
 }

@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, TEST_PROJECT_PATH, resetApp} from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  TEST_PROJECT_PATH,
+  resetApp
+} from '../fixtures/electron'
 import fs from 'fs'
 import path from 'path'
 
@@ -9,10 +17,10 @@ declare global {
 }
 
 function testInvoke(page: import('@playwright/test').Page, channel: string, ...args: unknown[]) {
-  return page.evaluate(
-    ({ ch, a }) => window.__testInvoke(ch, ...a),
-    { ch: channel, a: args }
-  ) as Promise<any>
+  return page.evaluate(({ ch, a }) => window.__testInvoke(ch, ...a), {
+    ch: channel,
+    a: args
+  }) as Promise<any>
 }
 
 test.describe('Export & Import', () => {
@@ -27,15 +35,34 @@ test.describe('Export & Import', () => {
     await s.deleteAllProjects()
 
     // Create a project with tasks, tags, and dependencies
-    const project = await s.createProject({ name: 'EX Project', color: '#ef4444', path: TEST_PROJECT_PATH })
+    const project = await s.createProject({
+      name: 'EX Project',
+      color: '#ef4444',
+      path: TEST_PROJECT_PATH
+    })
     projectId = project.id
 
     const tag1 = await s.createTag({ name: 'ex-urgent', color: '#dc2626' })
     const tag2 = await s.createTag({ name: 'ex-backend', color: '#2563eb' })
 
-    const t1 = await s.createTask({ projectId, title: 'EX Task Alpha', status: 'in_progress', priority: 1 })
-    const t2 = await s.createTask({ projectId, title: 'EX Task Beta', status: 'inbox', priority: 3 })
-    const t3 = await s.createTask({ projectId, title: 'EX Task Gamma', status: 'done', priority: 2 })
+    const t1 = await s.createTask({
+      projectId,
+      title: 'EX Task Alpha',
+      status: 'in_progress',
+      priority: 1
+    })
+    const t2 = await s.createTask({
+      projectId,
+      title: 'EX Task Beta',
+      status: 'inbox',
+      priority: 3
+    })
+    const t3 = await s.createTask({
+      projectId,
+      title: 'EX Task Gamma',
+      status: 'done',
+      priority: 2
+    })
 
     await s.setTagsForTask(t1.id, [tag1.id, tag2.id])
     await s.setTagsForTask(t2.id, [tag2.id])
@@ -66,7 +93,12 @@ test.describe('Export & Import', () => {
 
   test('export single project to file', async ({ mainWindow }) => {
     const filePath = path.join(exportDir, 'project-export.slay')
-    const result = await testInvoke(mainWindow, 'export-import:test:export-project-to-path', projectId, filePath)
+    const result = await testInvoke(
+      mainWindow,
+      'export-import:test:export-project-to-path',
+      projectId,
+      filePath
+    )
 
     expect(result.success).toBe(true)
 
@@ -122,7 +154,9 @@ test.describe('Export & Import', () => {
     expect(imported!.id).not.toBe(projectId)
 
     // Imported tasks belong to the new project
-    const importedTasks = tasksAfter.filter((t: { project_id: string }) => t.project_id === imported!.id)
+    const importedTasks = tasksAfter.filter(
+      (t: { project_id: string }) => t.project_id === imported!.id
+    )
     expect(importedTasks).toHaveLength(3)
     const importedTitles = importedTasks.map((t: { title: string }) => t.title).sort()
     expect(importedTitles).toEqual(['EX Task Alpha', 'EX Task Beta', 'EX Task Gamma'])
@@ -170,7 +204,12 @@ test.describe('Export & Import', () => {
 
   test('export nonexistent project fails', async ({ mainWindow }) => {
     const filePath = path.join(exportDir, 'fail.slay')
-    const result = await testInvoke(mainWindow, 'export-import:test:export-project-to-path', 'nonexistent-id', filePath)
+    const result = await testInvoke(
+      mainWindow,
+      'export-import:test:export-project-to-path',
+      'nonexistent-id',
+      filePath
+    )
     expect(result.success).toBe(false)
     expect(result.error).toContain('not found')
   })

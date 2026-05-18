@@ -4,7 +4,12 @@
  */
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { createTestHarness, test, expect, describe } from '../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../shared/test-utils/ipc-harness.js'
 import { createSlayDbAdapter, captureAll } from './test-harness.js'
 import { resolveProjectByPath } from '../src/db-helpers.mjs'
 import { BUILTIN_SKILLS, PROVIDER_PATHS } from '../../../domains/ai-config/src/shared/index.js'
@@ -19,7 +24,9 @@ const db = createSlayDbAdapter(h.db)
 
 const projDir = h.tmpDir()
 const projId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projId, 'TestProj', '#000', projDir)
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(projId, 'TestProj', '#000', projDir)
 
 describe('resolveProjectByPath', () => {
   test('resolves exact path match', () => {
@@ -43,7 +50,9 @@ describe('resolveProjectByPath', () => {
   test('longest prefix wins for nested projects', () => {
     const nestedDir = path.join(projDir, 'packages', 'sub')
     const nestedId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(nestedId, 'NestedProj', '#111', nestedDir)
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(nestedId, 'NestedProj', '#111', nestedDir)
 
     const p = resolveProjectByPath(db, path.join(nestedDir, 'src'))
     expect(p.id).toBe(nestedId)
@@ -62,10 +71,17 @@ describe('resolveProjectByPath', () => {
 
 const initProjDir = h.tmpDir()
 const initProjId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(initProjId, 'InitProj', '#222', initProjDir)
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(initProjId, 'InitProj', '#222', initProjDir)
 
 /** Run the init-skills insertion logic directly (mirrors init.ts action) */
-function runInitSkills(sdb: ReturnType<typeof createSlayDbAdapter>, projectId: string, projectPath: string, providers: string[] = ['claude']) {
+function runInitSkills(
+  sdb: ReturnType<typeof createSlayDbAdapter>,
+  projectId: string,
+  projectPath: string,
+  providers: string[] = ['claude']
+) {
   const registryId = 'builtin-slayzone'
   const syncedSkills: { slug: string; content: string }[] = []
   let installed = 0
@@ -99,12 +115,17 @@ function runInitSkills(sdb: ReturnType<typeof createSlayDbAdapter>, projectId: s
           registryName: 'SlayZone Built-in',
           entryId,
           installedVersion: hash,
-          installedAt: now,
-        },
+          installedAt: now
+        }
       }
       sdb.run(
         `UPDATE ai_config_items SET content = :content, metadata_json = :metadata, updated_at = :now WHERE id = :id`,
-        { ':content': skill.content, ':metadata': JSON.stringify(metadata), ':now': now, ':id': existing[0].id }
+        {
+          ':content': skill.content,
+          ':metadata': JSON.stringify(metadata),
+          ':now': now,
+          ':id': existing[0].id
+        }
       )
       syncedSkills.push({ slug: skill.slug, content: skill.content })
       updated++
@@ -113,13 +134,27 @@ function runInitSkills(sdb: ReturnType<typeof createSlayDbAdapter>, projectId: s
 
     const id = crypto.randomUUID()
     const metadata = {
-      marketplace: { registryId, registryName: 'SlayZone Built-in', entryId, installedVersion: hash, installedAt: now }
+      marketplace: {
+        registryId,
+        registryName: 'SlayZone Built-in',
+        entryId,
+        installedVersion: hash,
+        installedAt: now
+      }
     }
 
     sdb.run(
       `INSERT INTO ai_config_items (id, type, scope, project_id, name, slug, content, metadata_json, created_at, updated_at)
        VALUES (:id, 'skill', 'project', :projectId, :name, :slug, :content, :metadata, :now, :now)`,
-      { ':id': id, ':projectId': projectId, ':name': skill.name, ':slug': skill.slug, ':content': skill.content, ':metadata': JSON.stringify(metadata), ':now': now }
+      {
+        ':id': id,
+        ':projectId': projectId,
+        ':name': skill.name,
+        ':slug': skill.slug,
+        ':content': skill.content,
+        ':metadata': JSON.stringify(metadata),
+        ':now': now
+      }
     )
     syncedSkills.push({ slug: skill.slug, content: skill.content })
     installed++
@@ -181,7 +216,7 @@ describe('init skills — DB insertion', () => {
     db.run(`UPDATE ai_config_items SET metadata_json = :m, content = :c WHERE id = :id`, {
       ':m': JSON.stringify(meta),
       ':c': 'outdated content',
-      ':id': row.id,
+      ':id': row.id
     })
 
     const { installed, updated, skipped } = runInitSkills(db, initProjId, initProjDir)
@@ -204,7 +239,9 @@ describe('init skills — DB insertion', () => {
 
 const fileProjDir = h.tmpDir()
 const fileProjId = crypto.randomUUID()
-h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(fileProjId, 'FileProj', '#333', fileProjDir)
+h.db
+  .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+  .run(fileProjId, 'FileProj', '#333', fileProjDir)
 
 describe('init skills — file writing', () => {
   test('writes .claude/skills/{slug}/SKILL.md for each skill', () => {
@@ -220,13 +257,19 @@ describe('init skills — file writing', () => {
   test('writes to multiple providers when configured', () => {
     const multiDir = h.tmpDir()
     const multiId = crypto.randomUUID()
-    h.db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(multiId, 'MultiProj', '#444', multiDir)
+    h.db
+      .prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
+      .run(multiId, 'MultiProj', '#444', multiDir)
 
     runInitSkills(db, multiId, multiDir, ['claude', 'cursor'])
 
     const firstSlug = BUILTIN_SKILLS[0].slug
-    expect(fs.existsSync(path.join(multiDir, '.claude', 'skills', firstSlug, 'SKILL.md'))).toBe(true)
-    expect(fs.existsSync(path.join(multiDir, '.cursor', 'skills', firstSlug, 'SKILL.md'))).toBe(true)
+    expect(fs.existsSync(path.join(multiDir, '.claude', 'skills', firstSlug, 'SKILL.md'))).toBe(
+      true
+    )
+    expect(fs.existsSync(path.join(multiDir, '.cursor', 'skills', firstSlug, 'SKILL.md'))).toBe(
+      true
+    )
   })
 })
 

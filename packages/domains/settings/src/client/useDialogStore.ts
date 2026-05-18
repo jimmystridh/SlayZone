@@ -94,7 +94,8 @@ export const useDialogStore = create<DialogState>()((set) => ({
 
   searchOpen: false,
   searchFileContext: null,
-  openSearch: (payload) => set({ searchOpen: true, searchFileContext: payload?.fileContext ?? null }),
+  openSearch: (payload) =>
+    set({ searchOpen: true, searchFileContext: payload?.fileContext ?? null }),
   closeSearch: () => set({ searchOpen: false, searchFileContext: null }),
 
   completeTaskDialogOpen: false,
@@ -107,5 +108,5 @@ export const useDialogStore = create<DialogState>()((set) => ({
 
   terminalsOpen: false,
   openTerminals: () => set({ terminalsOpen: true }),
-  closeTerminals: () => set({ terminalsOpen: false }),
+  closeTerminals: () => set({ terminalsOpen: false })
 }))

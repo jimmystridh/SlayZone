@@ -73,9 +73,7 @@ export function normalizeGithubIssue(issue: GithubIssueSummary): NormalizedIssue
     updatedAt: issue.updatedAt,
     url: issue.url,
     isArchived: issue.state === 'closed',
-    assignee: issue.assignee
-      ? { id: issue.assignee.id, name: issue.assignee.login }
-      : null,
+    assignee: issue.assignee ? { id: issue.assignee.id, name: issue.assignee.login } : null,
     extras: {
       labels: issue.labels,
       number: issue.number,
@@ -108,7 +106,11 @@ export const githubAdapter: ProviderAdapter = {
     }))
   },
 
-  async fetchStatuses(credential: string, _groupId: string, scopeId?: string): Promise<ProviderStatus[]> {
+  async fetchStatuses(
+    credential: string,
+    _groupId: string,
+    scopeId?: string
+  ): Promise<ProviderStatus[]> {
     if (!scopeId) throw new Error('externalProjectId required for GitHub')
     const options = await listProjectStatusOptions(credential, scopeId)
     return options.map((o, i) => ({ id: o.id, name: o.name, color: o.color, position: i }))
@@ -167,7 +169,10 @@ export const githubAdapter: ProviderAdapter = {
     return issue ? normalizeGithubIssue(issue) : null
   },
 
-  async getIssuesBatch(credential: string, refs: IssueRef[]): Promise<Map<string, NormalizedIssue>> {
+  async getIssuesBatch(
+    credential: string,
+    refs: IssueRef[]
+  ): Promise<Map<string, NormalizedIssue>> {
     const batchInput = refs
       .map((ref) => {
         const ctx = ref.context as GitHubExternalKeyContext | undefined

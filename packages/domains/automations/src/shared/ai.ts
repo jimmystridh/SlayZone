@@ -37,7 +37,7 @@ export function shellSingleQuote(value: unknown): string {
  */
 export function buildAiHeadlessCommand(
   params: AiActionParams,
-  provider: ProviderInfo,
+  provider: ProviderInfo
 ): string | null {
   const template = provider.headlessCommand?.trim()
   if (!template) return null

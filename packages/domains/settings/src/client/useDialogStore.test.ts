@@ -17,8 +17,13 @@ function assert(condition: boolean, msg: string) {
 
 function test(name: string, fn: () => void) {
   reset()
-  try { fn(); console.log(`  ✓ ${name}`) }
-  catch (e) { console.error(`  ✗ ${name}: ${(e as Error).message}`); process.exitCode = 1 }
+  try {
+    fn()
+    console.log(`  ✓ ${name}`)
+  } catch (e) {
+    console.error(`  ✗ ${name}: ${(e as Error).message}`)
+    process.exitCode = 1
+  }
 }
 
 console.log('useDialogStore')

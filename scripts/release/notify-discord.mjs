@@ -9,8 +9,8 @@ const { values } = parseArgs({
   options: {
     version: { type: 'string' },
     'webhook-url': { type: 'string' },
-    'release-url': { type: 'string' },
-  },
+    'release-url': { type: 'string' }
+  }
 })
 
 const version = (values.version || '').replace(/^v/, '')
@@ -38,9 +38,9 @@ if (!entry) {
       {
         title: `SlayZone v${version} released`,
         url: releaseUrl || undefined,
-        color: 0x7c3aed,
-      },
-    ],
+        color: 0x7c3aed
+      }
+    ]
   }
   await send(payload)
   process.exit(0)
@@ -49,7 +49,7 @@ if (!entry) {
 const groups = {
   feature: { label: '🚀  New', items: [] },
   improvement: { label: '✨  Improved', items: [] },
-  fix: { label: '🐛  Fixed', items: [] },
+  fix: { label: '🐛  Fixed', items: [] }
 }
 
 for (const item of entry.items) {
@@ -60,9 +60,7 @@ for (const item of entry.items) {
 const description = Object.values(groups)
   .filter((g) => g.items.length > 0)
   .map(
-    (g) =>
-      `**${g.label}**\n` +
-      g.items.map((i) => `> **${i.title}** — ${i.description}`).join('\n')
+    (g) => `**${g.label}**\n` + g.items.map((i) => `> **${i.title}** — ${i.description}`).join('\n')
   )
   .join('\n\n')
 
@@ -73,9 +71,9 @@ const payload = {
       url: releaseUrl || undefined,
       description,
       color: 0x7c3aed,
-      footer: { text: entry.date },
-    },
-  ],
+      footer: { text: entry.date }
+    }
+  ]
 }
 
 await send(payload)
@@ -84,7 +82,7 @@ async function send(payload) {
   const res = await fetch(webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload)
   })
 
   if (!res.ok) {

@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@slayzone/ui'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@slayzone/ui'
 import { Input } from '@slayzone/ui'
 import type { Task } from '@slayzone/task/shared'
 import type { Project } from '@slayzone/projects/shared'
@@ -18,7 +13,11 @@ interface BlockerDialogProps {
   onClose: () => void
 }
 
-export function BlockerDialog({ taskId, projects, onClose }: BlockerDialogProps): React.JSX.Element {
+export function BlockerDialog({
+  taskId,
+  projects,
+  onClose
+}: BlockerDialogProps): React.JSX.Element {
   const [allTasks, setAllTasks] = useState<Task[]>([])
   const [blockers, setBlockers] = useState<Task[]>([])
   const [search, setSearch] = useState('')
@@ -32,14 +31,13 @@ export function BlockerDialog({ taskId, projects, onClose }: BlockerDialogProps)
 
   useEffect(() => {
     if (!open || !taskId) return
-    Promise.all([
-      window.api.db.getTasks(),
-      window.api.taskDependencies.getBlockers(taskId)
-    ]).then(([tasks, currentBlockers]) => {
-      setAllTasks(tasks.filter((t) => t.id !== taskId))
-      setBlockers(currentBlockers)
-      setSearch('')
-    })
+    Promise.all([window.api.db.getTasks(), window.api.taskDependencies.getBlockers(taskId)]).then(
+      ([tasks, currentBlockers]) => {
+        setAllTasks(tasks.filter((t) => t.id !== taskId))
+        setBlockers(currentBlockers)
+        setSearch('')
+      }
+    )
   }, [open, taskId])
 
   const handleAddBlocker = async (blockerTaskId: string): Promise<void> => {
@@ -50,7 +48,9 @@ export function BlockerDialog({ taskId, projects, onClose }: BlockerDialogProps)
   }
 
   const availableBlockers = allTasks.filter(
-    (t) => !isTerminalStatus(t.status, columnsByProject.get(t.project_id)) && !blockers.some((b) => b.id === t.id)
+    (t) =>
+      !isTerminalStatus(t.status, columnsByProject.get(t.project_id)) &&
+      !blockers.some((b) => b.id === t.id)
   )
   const filteredAvailableBlockers = availableBlockers.filter((t) => {
     const q = search.trim().toLowerCase()
@@ -58,7 +58,15 @@ export function BlockerDialog({ taskId, projects, onClose }: BlockerDialogProps)
   })
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { onClose(); setSearch('') } }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) {
+          onClose()
+          setSearch('')
+        }
+      }}
+    >
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Add blocking task</DialogTitle>

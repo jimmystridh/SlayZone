@@ -13,7 +13,9 @@ export function TopTasksTable({ data, onTaskClick }: Props) {
     return (
       <div className="rounded-lg border bg-surface-2 p-4">
         <p className="text-sm font-medium text-muted-foreground mb-3">Top Tasks by Tokens</p>
-        <p className="text-sm text-muted-foreground">No task data — usage will be attributed once sessions match task IDs.</p>
+        <p className="text-sm text-muted-foreground">
+          No task data — usage will be attributed once sessions match task IDs.
+        </p>
       </div>
     )
   }
@@ -37,7 +39,9 @@ export function TopTasksTable({ data, onTaskClick }: Props) {
                 onClick={() => onTaskClick?.(task.taskId)}
               >
                 <td className="py-2 pr-4 max-w-[300px] truncate">{task.taskTitle}</td>
-                <td className="py-2 text-right font-medium tabular-nums">{formatTokens(task.totalTokens)}</td>
+                <td className="py-2 text-right font-medium tabular-nums">
+                  {formatTokens(task.totalTokens)}
+                </td>
               </tr>
             ))}
           </tbody>

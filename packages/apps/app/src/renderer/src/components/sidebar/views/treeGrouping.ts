@@ -109,7 +109,13 @@ export function groupTreeRows(
     // Single ungrouped bucket. Pinned/temp still split when their toggles on,
     // so users can pull those to the top without forcing status/priority bins.
     if (persistent.length > 0 || opts.showEmpty) {
-      groups.push({ key: NONE_GROUP_KEY, isTemp: false, isPinned: false, isNone: true, tasks: persistent })
+      groups.push({
+        key: NONE_GROUP_KEY,
+        isTemp: false,
+        isPinned: false,
+        isNone: true,
+        tasks: persistent
+      })
     }
     return groups
   }
@@ -130,7 +136,8 @@ export function groupTreeRows(
         byKey.delete(col.id)
       }
       // Any leftover statuses not in columns config (legacy).
-      for (const [k, arr] of byKey) groups.push({ key: k, isTemp: false, isPinned: false, tasks: arr })
+      for (const [k, arr] of byKey)
+        groups.push({ key: k, isTemp: false, isPinned: false, tasks: arr })
     } else {
       // Preserve column position order for known statuses.
       const seen = new Set<string>()
@@ -159,7 +166,9 @@ export function groupTreeRows(
     arr.push(t)
     byPrio.set(p, arr)
   }
-  const prioRange = opts.showEmpty ? [1, 2, 3, 4, 5] : Array.from(byPrio.keys()).sort((a, b) => a - b)
+  const prioRange = opts.showEmpty
+    ? [1, 2, 3, 4, 5]
+    : Array.from(byPrio.keys()).sort((a, b) => a - b)
   for (const p of prioRange) {
     const arr = byPrio.get(p) ?? []
     if (!opts.showEmpty && arr.length === 0) continue

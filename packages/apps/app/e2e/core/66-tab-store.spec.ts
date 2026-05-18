@@ -6,7 +6,10 @@ import type { Page } from '@playwright/test'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function sendIPC(electronApp: any, channel: string): Promise<void> {
   await electronApp.evaluate(
-    ({ BrowserWindow }: { BrowserWindow: typeof Electron.CrossProcessExports.BrowserWindow }, ch: string) => {
+    (
+      { BrowserWindow }: { BrowserWindow: typeof Electron.CrossProcessExports.BrowserWindow },
+      ch: string
+    ) => {
       BrowserWindow.getAllWindows()
         .find((w) => !w.isDestroyed() && !w.webContents.getURL().startsWith('data:'))
         ?.webContents.send(ch)
@@ -44,7 +47,9 @@ const openTaskViaSearch = async (page: Page, title: string) => {
     await input.fill(title)
     await page.getByRole('dialog').last().getByText(title).first().click()
   }
-  await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+  await expect(page.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({
+    timeout: 5_000
+  })
 }
 
 test.describe('Tab store — persistence, sync, and side effects', () => {
@@ -54,7 +59,11 @@ test.describe('Tab store — persistence, sync, and side effects', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'TabStore Test', color: '#8b5cf6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'TabStore Test',
+      color: '#8b5cf6',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
@@ -101,14 +110,20 @@ test.describe('Tab store — persistence, sync, and side effects', () => {
     }).toPass({ timeout: 3_000 })
 
     // Wait for the reopened task's content to become visible
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
   })
 
   // ── 2. Tab auto-closes when task deleted ───────────────────────────────
 
   test('deleting task auto-removes its tab', async ({ mainWindow }) => {
     const s = seed(mainWindow)
-    const throwaway = await s.createTask({ projectId, title: 'TS throwaway', status: 'in_progress' })
+    const throwaway = await s.createTask({
+      projectId,
+      title: 'TS throwaway',
+      status: 'in_progress'
+    })
     await s.refreshData()
 
     await goHome(mainWindow)
@@ -126,10 +141,12 @@ test.describe('Tab store — persistence, sync, and side effects', () => {
 
   test('closing temp task tab deletes it from DB', async ({ mainWindow, electronApp }) => {
     const s = seed(mainWindow)
-    const temp = await mainWindow.evaluate(
-      (d: any) => window.api.db.createTask(d),
-      { projectId, title: 'TS temp task', status: 'in_progress', isTemporary: true }
-    )
+    const temp = await mainWindow.evaluate((d: any) => window.api.db.createTask(d), {
+      projectId,
+      title: 'TS temp task',
+      status: 'in_progress',
+      isTemporary: true
+    })
     await s.refreshData()
 
     // Keep A open so closing temp doesn't leave only home tab → window.close()
@@ -141,10 +158,15 @@ test.describe('Tab store — persistence, sync, and side effects', () => {
 
     await sendIPC(electronApp, 'app:close-active-task')
 
-    await expect.poll(async () => {
-      const tasks = await mainWindow.evaluate(() => window.api.db.getTasks())
-      return tasks.some((t: any) => t.id === temp.id)
-    }, { timeout: 10_000 }).toBe(false)
+    await expect
+      .poll(
+        async () => {
+          const tasks = await mainWindow.evaluate(() => window.api.db.getTasks())
+          return tasks.some((t: any) => t.id === temp.id)
+        },
+        { timeout: 10_000 }
+      )
+      .toBe(false)
   })
 
   // ── 4. Tab persistence across reload ───────────────────────────────────
@@ -177,7 +199,9 @@ test.describe('Tab store — persistence, sync, and side effects', () => {
     await mainWindow.waitForTimeout(800)
 
     const before = await getPersistedViewState(mainWindow)
-    const taskTabsBefore = before.tabs.filter((t: any) => t.type === 'task').map((t: any) => t.title)
+    const taskTabsBefore = before.tabs
+      .filter((t: any) => t.type === 'task')
+      .map((t: any) => t.title)
     expect(taskTabsBefore.length).toBeGreaterThanOrEqual(2)
 
     // Swap the first two task tabs

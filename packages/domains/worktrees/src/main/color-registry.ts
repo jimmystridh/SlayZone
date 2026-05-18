@@ -29,12 +29,14 @@ export function getColor(projectPath: string, worktreePath: string): string | un
  * handler path still updates the registry on every poll when the panel is open, so real
  * changes (e.g. user runs `git init` later) are picked up there.
  */
-export async function ensureProjectColors(projectPath: string): Promise<ReadonlyMap<string, string>> {
+export async function ensureProjectColors(
+  projectPath: string
+): Promise<ReadonlyMap<string, string>> {
   const existing = registry.get(projectPath)
   if (existing !== undefined) return existing
   try {
     const detected = await detectWorktrees(projectPath)
-    const nonMainPaths = detected.filter(d => !d.isMain).map(d => d.path)
+    const nonMainPaths = detected.filter((d) => !d.isMain).map((d) => d.path)
     return ensureColors(projectPath, nonMainPaths)
   } catch {
     const empty = new Map<string, string>()

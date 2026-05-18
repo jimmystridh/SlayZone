@@ -1,5 +1,10 @@
 import type { Response } from 'express'
-import { getBrowserWebContents, getResolvedBrowserTabId, listBrowserTabs, waitForBrowserRegistration } from '../../browser-registry'
+import {
+  getBrowserWebContents,
+  getResolvedBrowserTabId,
+  listBrowserTabs,
+  waitForBrowserRegistration
+} from '../../browser-registry'
 import { broadcastToWindows } from '../../broadcast-to-windows'
 
 export const BROWSER_JS_TIMEOUT = 10_000
@@ -18,9 +23,12 @@ export async function ensureBrowserWc(
   panel: 'visible' | 'hidden' | undefined,
   res: Response,
   url?: string,
-  tabId?: string,
+  tabId?: string
 ): Promise<BrowserWcResult | null> {
-  if (!taskId) { res.status(400).json({ error: 'taskId required' }); return null }
+  if (!taskId) {
+    res.status(400).json({ error: 'taskId required' })
+    return null
+  }
   const wc = getBrowserWebContents(taskId, tabId)
   if (wc) return { wc, autoOpened: false, tabId: getResolvedBrowserTabId(taskId, tabId) }
 
@@ -40,16 +48,17 @@ export async function ensureBrowserWc(
     error: tabId
       ? `Browser tab '${tabId}' not found for task ${taskId}.`
       : 'Browser panel not found. Is the browser panel open on this task?',
-    tabs,
+    tabs
   })
   return null
 }
 
 export function execJs<T>(wc: Electron.WebContents, code: string): Promise<T> {
   return Promise.race([
-    (wc.mainFrame?.executeJavaScript(code) ?? Promise.reject(new Error('No main frame'))) as Promise<T>,
+    (wc.mainFrame?.executeJavaScript(code) ??
+      Promise.reject(new Error('No main frame'))) as Promise<T>,
     new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('Browser script timed out (10s)')), BROWSER_JS_TIMEOUT)
-    ),
+    )
   ])
 }

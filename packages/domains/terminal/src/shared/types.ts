@@ -20,7 +20,7 @@ export const BuiltinTerminalMode = {
   CursorAgent: 'cursor-agent',
   OpenCode: 'opencode',
   QwenCode: 'qwen-code',
-  Copilot: 'copilot',
+  Copilot: 'copilot'
 } as const
 
 /**
@@ -97,19 +97,118 @@ export const DETECTION_ENGINES: DetectionEngine[] = [
   { type: 'cursor-agent', label: 'Cursor' },
   { type: 'opencode', label: 'OpenCode' },
   { type: 'qwen-code', label: 'Qwen Code' },
-  { type: 'copilot', label: 'Copilot' },
+  { type: 'copilot', label: 'Copilot' }
 ]
 
 export const DEFAULT_TERMINAL_MODES: TerminalModeInfo[] = [
-  { id: BuiltinTerminalMode.ClaudeCode, label: 'Claude', type: 'claude-code', initialCommand: 'claude --session-id {id} {flags}', resumeCommand: 'claude --resume {id} {flags}', headlessCommand: 'claude -p {prompt} {flags}', defaultFlags: '--allow-dangerously-skip-permissions', enabled: true, isBuiltin: true, order: 0 },
-  { id: BuiltinTerminalMode.ClaudeChat, label: 'Claude Chat', type: 'claude-code', initialCommand: null, resumeCommand: null, headlessCommand: 'claude -p {prompt} {flags}', defaultFlags: '--allow-dangerously-skip-permissions', enabled: true, isBuiltin: true, order: 0.5 },
-  { id: BuiltinTerminalMode.Codex, label: 'Codex', type: 'codex', initialCommand: 'codex {flags}', resumeCommand: 'codex {flags} resume {id}', headlessCommand: 'codex exec {flags} {prompt}', defaultFlags: '--sandbox workspace-write', enabled: true, isBuiltin: true, order: 1 },
-  { id: BuiltinTerminalMode.Gemini, label: 'Gemini', type: 'gemini', initialCommand: 'gemini {flags}', resumeCommand: 'gemini --resume latest {flags}', headlessCommand: 'gemini -p {prompt} {flags}', defaultFlags: '--yolo', enabled: true, isBuiltin: true, order: 2 },
-  { id: BuiltinTerminalMode.CursorAgent, label: 'Cursor', type: 'cursor-agent', initialCommand: 'cursor-agent {flags}', resumeCommand: 'cursor-agent --resume {id} {flags}', headlessCommand: 'cursor-agent -p {prompt} {flags}', defaultFlags: '--force', enabled: true, isBuiltin: true, order: 3 },
-  { id: BuiltinTerminalMode.OpenCode, label: 'OpenCode', type: 'opencode', initialCommand: 'opencode {flags}', resumeCommand: 'opencode --session {id} {flags}', headlessCommand: 'opencode run {flags} {prompt}', defaultFlags: '', enabled: true, isBuiltin: true, order: 4 },
-  { id: BuiltinTerminalMode.QwenCode, label: 'Qwen', type: 'qwen-code', initialCommand: 'qwen --session-id {id} {flags}', resumeCommand: 'qwen --resume {id} {flags}', headlessCommand: 'qwen -p {prompt} {flags}', defaultFlags: '--yolo', enabled: true, isBuiltin: true, order: 6 },
-  { id: BuiltinTerminalMode.Copilot, label: 'Copilot', type: 'copilot', initialCommand: 'copilot --resume={id} {flags}', resumeCommand: 'copilot --resume={id} {flags}', headlessCommand: 'copilot -p {prompt} {flags}', defaultFlags: '--allow-all-tools', enabled: true, isBuiltin: true, order: 7 },
-  { id: 'terminal', label: 'Terminal', type: 'terminal', initialCommand: null, resumeCommand: null, headlessCommand: null, defaultFlags: null, enabled: true, isBuiltin: true, order: 8 },
+  {
+    id: BuiltinTerminalMode.ClaudeCode,
+    label: 'Claude',
+    type: 'claude-code',
+    initialCommand: 'claude --session-id {id} {flags}',
+    resumeCommand: 'claude --resume {id} {flags}',
+    headlessCommand: 'claude -p {prompt} {flags}',
+    defaultFlags: '--allow-dangerously-skip-permissions',
+    enabled: true,
+    isBuiltin: true,
+    order: 0
+  },
+  {
+    id: BuiltinTerminalMode.ClaudeChat,
+    label: 'Claude Chat',
+    type: 'claude-code',
+    initialCommand: null,
+    resumeCommand: null,
+    headlessCommand: 'claude -p {prompt} {flags}',
+    defaultFlags: '--allow-dangerously-skip-permissions',
+    enabled: true,
+    isBuiltin: true,
+    order: 0.5
+  },
+  {
+    id: BuiltinTerminalMode.Codex,
+    label: 'Codex',
+    type: 'codex',
+    initialCommand: 'codex {flags}',
+    resumeCommand: 'codex {flags} resume {id}',
+    headlessCommand: 'codex exec {flags} {prompt}',
+    defaultFlags: '--sandbox workspace-write',
+    enabled: true,
+    isBuiltin: true,
+    order: 1
+  },
+  {
+    id: BuiltinTerminalMode.Gemini,
+    label: 'Gemini',
+    type: 'gemini',
+    initialCommand: 'gemini {flags}',
+    resumeCommand: 'gemini --resume latest {flags}',
+    headlessCommand: 'gemini -p {prompt} {flags}',
+    defaultFlags: '--yolo',
+    enabled: true,
+    isBuiltin: true,
+    order: 2
+  },
+  {
+    id: BuiltinTerminalMode.CursorAgent,
+    label: 'Cursor',
+    type: 'cursor-agent',
+    initialCommand: 'cursor-agent {flags}',
+    resumeCommand: 'cursor-agent --resume {id} {flags}',
+    headlessCommand: 'cursor-agent -p {prompt} {flags}',
+    defaultFlags: '--force',
+    enabled: true,
+    isBuiltin: true,
+    order: 3
+  },
+  {
+    id: BuiltinTerminalMode.OpenCode,
+    label: 'OpenCode',
+    type: 'opencode',
+    initialCommand: 'opencode {flags}',
+    resumeCommand: 'opencode --session {id} {flags}',
+    headlessCommand: 'opencode run {flags} {prompt}',
+    defaultFlags: '',
+    enabled: true,
+    isBuiltin: true,
+    order: 4
+  },
+  {
+    id: BuiltinTerminalMode.QwenCode,
+    label: 'Qwen',
+    type: 'qwen-code',
+    initialCommand: 'qwen --session-id {id} {flags}',
+    resumeCommand: 'qwen --resume {id} {flags}',
+    headlessCommand: 'qwen -p {prompt} {flags}',
+    defaultFlags: '--yolo',
+    enabled: true,
+    isBuiltin: true,
+    order: 6
+  },
+  {
+    id: BuiltinTerminalMode.Copilot,
+    label: 'Copilot',
+    type: 'copilot',
+    initialCommand: 'copilot --resume={id} {flags}',
+    resumeCommand: 'copilot --resume={id} {flags}',
+    headlessCommand: 'copilot -p {prompt} {flags}',
+    defaultFlags: '--allow-all-tools',
+    enabled: true,
+    isBuiltin: true,
+    order: 7
+  },
+  {
+    id: 'terminal',
+    label: 'Terminal',
+    type: 'terminal',
+    initialCommand: null,
+    resumeCommand: null,
+    headlessCommand: null,
+    defaultFlags: null,
+    enabled: true,
+    isBuiltin: true,
+    order: 8
+  }
 ]
 
 // Duplicated from @slayzone/projects/shared — neither domain can depend on the
@@ -208,13 +307,12 @@ export interface ValidationResult {
   fix?: string
 }
 
-
 // Provider usage / rate limiting
 export interface UsageWindow {
-  key: string         // unique within provider, e.g. "fiveHour"
-  label: string       // display label, e.g. "5h", "7d", "Opus"
+  key: string // unique within provider, e.g. "fiveHour"
+  label: string // display label, e.g. "5h", "7d", "Opus"
   utilization: number // 0-100
-  resetsAt: string    // ISO timestamp
+  resetsAt: string // ISO timestamp
 }
 
 export interface ProviderUsage {
@@ -227,11 +325,11 @@ export interface ProviderUsage {
 
 // Custom usage provider configuration (stored as JSON in terminal_modes.usage_config)
 export interface UsageWindowMapping {
-  key?: string                // dot-path to key field, or omit for auto-index
-  label: string               // dot-path or literal prefixed with "="
-  labelMap?: Record<string, string>  // rename map, e.g. { "TIME_LIMIT": "30d" }
-  utilization: string         // dot-path, e.g. "used_percent"
-  resetsAt: string            // dot-path, e.g. "reset_at"
+  key?: string // dot-path to key field, or omit for auto-index
+  label: string // dot-path or literal prefixed with "="
+  labelMap?: Record<string, string> // rename map, e.g. { "TIME_LIMIT": "30d" }
+  utilization: string // dot-path, e.g. "used_percent"
+  resetsAt: string // dot-path, e.g. "reset_at"
   resetsAtFormat?: 'iso' | 'unix-s' | 'unix-ms'
 }
 
@@ -242,21 +340,21 @@ export interface UsageProviderConfig {
   authType: 'none' | 'bearer-env' | 'file-json' | 'keychain'
   authEnvVar?: string
   authFilePath?: string
-  authFileTokenPath?: string | string[]  // single path or fallback chain
-  authKeychainService?: string           // macOS Keychain service name
-  authKeychainTokenPath?: string         // dot-path into parsed JSON value, e.g. "claudeAiOauth.accessToken"
+  authFileTokenPath?: string | string[] // single path or fallback chain
+  authKeychainService?: string // macOS Keychain service name
+  authKeychainTokenPath?: string // dot-path into parsed JSON value, e.g. "claudeAiOauth.accessToken"
   authHeaderName?: string
   authHeaderTemplate?: string
   extraHeaders?: Record<string, string>
-  windowsPath?: string        // dot-path to array in response
+  windowsPath?: string // dot-path to array in response
   windowMapping: UsageWindowMapping
-  singleWindow?: boolean      // map root object directly (no array)
+  singleWindow?: boolean // map root object directly (no array)
 }
 
 /** Command to discover session ID for providers that don't support --session-id at creation. */
 export const SESSION_ID_COMMANDS: Partial<Record<TerminalMode, string>> = {
-  'codex': '/status',
-  'gemini': '/stats',
+  codex: '/status',
+  gemini: '/stats'
 }
 
 /** Providers where session ID detection is not possible — no --session-id flag and no detection command. */

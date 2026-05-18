@@ -1,7 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, ChevronRight, Loader2, Plus, Server, X, Search } from 'lucide-react'
-import { Button, cn, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, IconButton, Input, Label, toast } from '@slayzone/ui'
-import type { CliProvider, McpConfigFileResult, McpServerConfig, McpTarget, SyncHealth } from '../shared'
+import {
+  Button,
+  cn,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  IconButton,
+  Input,
+  Label,
+  toast
+} from '@slayzone/ui'
+import type {
+  CliProvider,
+  McpConfigFileResult,
+  McpServerConfig,
+  McpTarget,
+  SyncHealth
+} from '../shared'
 import { CURATED_MCP_SERVERS, type CuratedMcpServer } from '../shared/mcp-registry'
 import { ProviderFileCard, StatusBadge } from './SyncComponents'
 import type { ContextManagerSection } from './ContextManagerSettings'
@@ -12,7 +30,7 @@ const MCP_CONFIG_PATHS: Partial<Record<McpTarget, string>> = {
   cursor: '.cursor/mcp.json',
   gemini: '.agents/settings.json',
   opencode: 'opencode.json',
-  copilot: '.copilot/mcp-config.json',
+  copilot: '.copilot/mcp-config.json'
 }
 
 interface MergedServer {
@@ -35,7 +53,11 @@ interface McpFlatSectionProps {
 
 const MCP_PROVIDER_ORDER: McpTarget[] = ['claude', 'cursor', 'gemini', 'opencode', 'copilot']
 
-function normalizeMcpConfig(config: McpServerConfig): { command: string; args: string[]; env: Record<string, string> } {
+function normalizeMcpConfig(config: McpServerConfig): {
+  command: string
+  args: string[]
+  env: Record<string, string>
+} {
   const envEntries = Object.entries(config.env ?? {}).sort(([a], [b]) => a.localeCompare(b))
   return {
     command: config.command,
@@ -52,7 +74,11 @@ function mcpConfigToDisplay(config: McpServerConfig): string {
   return JSON.stringify(normalizeMcpConfig(config), null, 2)
 }
 
-function buildMcpConfig(command: string, args: string, envRows: Array<{ key: string; value: string }>): McpServerConfig {
+function buildMcpConfig(
+  command: string,
+  args: string,
+  envRows: Array<{ key: string; value: string }>
+): McpServerConfig {
   const config: McpServerConfig = {
     command: command.trim(),
     args: args.trim() ? args.trim().split(/\s+/) : []
@@ -73,7 +99,9 @@ function parseComputerCustomServerIds(raw: string | null): Set<string> {
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) return new Set()
     const ids = parsed
-      .map((entry) => (entry && typeof entry === 'object' ? (entry as { id?: unknown }).id : undefined))
+      .map((entry) =>
+        entry && typeof entry === 'object' ? (entry as { id?: unknown }).id : undefined
+      )
       .filter((id): id is string => typeof id === 'string' && id.trim().length > 0)
     return new Set(ids)
   } catch {
@@ -81,19 +109,32 @@ function parseComputerCustomServerIds(raw: string | null): Set<string> {
   }
 }
 
-export function McpFlatSection({ projectPath, enabledProviders, onOpenContextManager, onChanged }: McpFlatSectionProps) {
+export function McpFlatSection({
+  projectPath,
+  enabledProviders,
+  onOpenContextManager,
+  onChanged
+}: McpFlatSectionProps) {
   const [configs, setConfigs] = useState<McpConfigFileResult[]>([])
   const [computerCustomServerIds, setComputerCustomServerIds] = useState<Set<string>>(new Set())
   const [draftByServerKey, setDraftByServerKey] = useState<Record<string, McpServerConfig>>({})
-  const [expandedProviderRows, setExpandedProviderRows] = useState<Record<string, Partial<Record<McpTarget, boolean>>>>({})
+  const [expandedProviderRows, setExpandedProviderRows] = useState<
+    Record<string, Partial<Record<McpTarget, boolean>>>
+  >({})
   const [loading, setLoading] = useState(true)
   const [expandedKey, setExpandedKey] = useState<string | null>(null)
   const [showCatalog, setShowCatalog] = useState(false)
   const [showCustomDialog, setShowCustomDialog] = useState(false)
   const [catalogSearch, setCatalogSearch] = useState('')
   const [syncingServerKey, setSyncingServerKey] = useState<string | null>(null)
-  const [syncingProvider, setSyncingProvider] = useState<{ serverKey: string; provider: McpTarget } | null>(null)
-  const [pullingProvider, setPullingProvider] = useState<{ serverKey: string; provider: McpTarget } | null>(null)
+  const [syncingProvider, setSyncingProvider] = useState<{
+    serverKey: string
+    provider: McpTarget
+  } | null>(null)
+  const [pullingProvider, setPullingProvider] = useState<{
+    serverKey: string
+    provider: McpTarget
+  } | null>(null)
   const [customKey, setCustomKey] = useState('')
   const [customCommand, setCustomCommand] = useState('')
   const [customArgs, setCustomArgs] = useState('')
@@ -115,10 +156,12 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
     }
   }, [projectPath])
 
-  useEffect(() => { void loadConfigs() }, [loadConfigs])
+  useEffect(() => {
+    void loadConfigs()
+  }, [loadConfigs])
 
   // Track which providers support writes
-  const writableProviders = new Set(configs.filter(c => c.writable).map(c => c.provider))
+  const writableProviders = new Set(configs.filter((c) => c.writable).map((c) => c.provider))
 
   // Build merged server list from discovered configs
   const merged: MergedServer[] = []
@@ -127,7 +170,7 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
   for (const cfg of configs) {
     for (const [key, config] of Object.entries(cfg.servers)) {
       if (!seen.has(key)) {
-        const curated = CURATED_MCP_SERVERS.find(c => c.id === key) ?? null
+        const curated = CURATED_MCP_SERVERS.find((c) => c.id === key) ?? null
         merged.push({
           key,
           name: curated?.name ?? key,
@@ -140,7 +183,7 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
         })
         seen.add(key)
       } else {
-        const existing = merged.find(m => m.key === key)
+        const existing = merged.find((m) => m.key === key)
         if (existing) {
           existing.providers.push(cfg.provider)
           existing.providerConfigs[cfg.provider] = config
@@ -149,7 +192,7 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
     }
   }
 
-  const enabledServers = merged.filter(s => s.providers.length > 0)
+  const enabledServers = merged.filter((s) => s.providers.length > 0)
 
   const handleRemove = async (server: MergedServer) => {
     try {
@@ -197,7 +240,7 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
     }
   }
 
-  const availableCurated = CURATED_MCP_SERVERS.filter(c => !seen.has(c.id))
+  const availableCurated = CURATED_MCP_SERVERS.filter((c) => !seen.has(c.id))
   const mcpProviders = enabledProviders.filter((provider): provider is McpTarget =>
     Object.prototype.hasOwnProperty.call(MCP_CONFIG_PATHS, provider)
   )
@@ -217,7 +260,9 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
   const getServerSyncHealth = (server: MergedServer): SyncHealth => {
     const writableEnabled = mcpProviders.filter((provider) => writableProviders.has(provider))
     if (writableEnabled.length === 0) return 'not_synced'
-    const providerHealth = writableEnabled.map((provider) => getProviderSyncHealth(server, provider))
+    const providerHealth = writableEnabled.map((provider) =>
+      getProviderSyncHealth(server, provider)
+    )
     if (providerHealth.every((health) => health === 'synced')) return 'synced'
     if (providerHealth.every((health) => health === 'not_synced')) return 'not_synced'
     return 'stale'
@@ -225,7 +270,9 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
 
   const getSyncCoverage = (server: MergedServer): { linked: number; total: number } => {
     const writableEnabled = mcpProviders.filter((provider) => writableProviders.has(provider))
-    const linkedEnabled = writableEnabled.filter((provider) => getProviderSyncHealth(server, provider) === 'synced')
+    const linkedEnabled = writableEnabled.filter(
+      (provider) => getProviderSyncHealth(server, provider) === 'synced'
+    )
     return { linked: linkedEnabled.length, total: writableEnabled.length }
   }
 
@@ -357,7 +404,7 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
     <div>
       {loading ? (
         <div className="space-y-2">
-          {[1, 2].map(i => (
+          {[1, 2].map((i) => (
             <div key={i} className="h-16 animate-pulse rounded-md border bg-muted/20" />
           ))}
         </div>
@@ -365,17 +412,21 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
         <>
           {enabledServers.length > 0 && (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-2">
-              {enabledServers.map(server => {
+              {enabledServers.map((server) => {
                 const isExpanded = expandedKey === server.key
                 const syncHealth = getServerSyncHealth(server)
                 const coverage = getSyncCoverage(server)
-                const hasPendingProviderSyncForServer = coverage.total > 0 && hasPendingProviderSync(
-                  mcpProviders
-                    .filter((provider) => writableProviders.has(provider))
-                    .map((provider) => getProviderSyncHealth(server, provider))
-                )
+                const hasPendingProviderSyncForServer =
+                  coverage.total > 0 &&
+                  hasPendingProviderSync(
+                    mcpProviders
+                      .filter((provider) => writableProviders.has(provider))
+                      .map((provider) => getProviderSyncHealth(server, provider))
+                  )
                 const draftConfig = getDraftConfig(server)
-                const displayProviders = [...mcpProviders].sort((a, b) => MCP_PROVIDER_ORDER.indexOf(a) - MCP_PROVIDER_ORDER.indexOf(b))
+                const displayProviders = [...mcpProviders].sort(
+                  (a, b) => MCP_PROVIDER_ORDER.indexOf(a) - MCP_PROVIDER_ORDER.indexOf(b)
+                )
                 const disabledDetectedProviders = server.providers
                   .filter((provider) => !mcpProviders.includes(provider))
                   .sort((a, b) => MCP_PROVIDER_ORDER.indexOf(a) - MCP_PROVIDER_ORDER.indexOf(b))
@@ -384,7 +435,7 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
                   <div
                     key={server.key}
                     data-testid={`project-context-item-mcp-${server.key}`}
-                  className={cn(
+                    className={cn(
                       'rounded-md border bg-surface-3 overflow-hidden',
                       isExpanded && 'border-primary/30 col-[1/-1]'
                     )}
@@ -396,10 +447,11 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
                       )}
                       onClick={() => setExpandedKey(isExpanded ? null : server.key)}
                     >
-                      {isExpanded
-                        ? <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
-                        : <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
-                      }
+                      {isExpanded ? (
+                        <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
+                      )}
                       <span className="flex-1 truncate font-mono text-xs">{server.name}</span>
                       <StatusBadge syncHealth={syncHealth} />
                       <IconButton
@@ -436,13 +488,17 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
                           <div className="rounded-lg border bg-surface-3 p-3 space-y-2">
                             <div className="text-xs text-muted-foreground">
                               <span className="font-medium text-foreground">Command: </span>
-                              <span className="font-mono">{draftConfig?.command ?? '-'} {draftConfig?.args?.join(' ') ?? ''}</span>
+                              <span className="font-mono">
+                                {draftConfig?.command ?? '-'} {draftConfig?.args?.join(' ') ?? ''}
+                              </span>
                             </div>
                             {draftConfig?.env && Object.keys(draftConfig.env).length > 0 && (
                               <div className="text-xs text-muted-foreground">
                                 <span className="font-medium text-foreground">Env: </span>
                                 {Object.entries(draftConfig.env).map(([key, value]) => (
-                                  <span key={key} className="font-mono">{key}={value} </span>
+                                  <span key={key} className="font-mono">
+                                    {key}={value}{' '}
+                                  </span>
                                 ))}
                               </div>
                             )}
@@ -468,35 +524,50 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
                                 disabled={syncingServerKey === server.key}
                                 data-testid={`mcp-sync-all-${server.key}`}
                               >
-                                {syncingServerKey === server.key && <Loader2 className="size-3.5 animate-spin" />}
+                                {syncingServerKey === server.key && (
+                                  <Loader2 className="size-3.5 animate-spin" />
+                                )}
                                 Database → All Files
                               </Button>
                             )}
                           </div>
 
                           <div className="space-y-2">
-                            {displayProviders.map(provider => {
+                            {displayProviders.map((provider) => {
                               const providerSyncHealth = getProviderSyncHealth(server, provider)
                               const writable = writableProviders.has(provider)
                               const configPath = MCP_CONFIG_PATHS[provider] ?? '-'
                               const diskConfig = server.providerConfigs[provider]
                               return (
-                                <div key={provider} data-testid={`project-context-mcp-provider-${provider}`}>
+                                <div
+                                  key={provider}
+                                  data-testid={`project-context-mcp-provider-${provider}`}
+                                >
                                   <ProviderFileCard
                                     testIdPrefix="mcp"
                                     testIdSuffix={server.key}
                                     provider={provider}
                                     path={configPath}
                                     syncHealth={providerSyncHealth}
-                                    isPushing={syncingProvider?.serverKey === server.key && syncingProvider.provider === provider}
-                                    isPulling={pullingProvider?.serverKey === server.key && pullingProvider.provider === provider}
+                                    isPushing={
+                                      syncingProvider?.serverKey === server.key &&
+                                      syncingProvider.provider === provider
+                                    }
+                                    isPulling={
+                                      pullingProvider?.serverKey === server.key &&
+                                      pullingProvider.provider === provider
+                                    }
                                     isExpanded={!!expandedProviderRows[server.key]?.[provider]}
                                     syncingAll={syncingServerKey === server.key}
                                     disk={diskConfig ? mcpConfigToDisplay(diskConfig) : undefined}
-                                    expected={draftConfig ? mcpConfigToDisplay(draftConfig) : undefined}
+                                    expected={
+                                      draftConfig ? mcpConfigToDisplay(draftConfig) : undefined
+                                    }
                                     rightLabel="MCP config"
                                     canPush={writable}
-                                    onToggleExpand={() => toggleProviderExpanded(server.key, provider)}
+                                    onToggleExpand={() =>
+                                      toggleProviderExpanded(server.key, provider)
+                                    }
                                     onPush={() => void handlePushProvider(server, provider)}
                                     onPull={() => void handlePullProvider(server, provider)}
                                   />
@@ -507,9 +578,10 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
                             {disabledDetectedProviders.length > 0 && (
                               <div className="rounded-lg border bg-surface-3 px-3 py-2.5">
                                 <p className="text-[11px] text-muted-foreground">
-                                  Detected in disabled providers:
-                                  {' '}
-                                  <span className="font-mono">{disabledDetectedProviders.join(', ')}</span>
+                                  Detected in disabled providers:{' '}
+                                  <span className="font-mono">
+                                    {disabledDetectedProviders.join(', ')}
+                                  </span>
                                 </p>
                               </div>
                             )}
@@ -566,13 +638,18 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
               placeholder="Search servers..."
               className="pl-8 h-8 text-xs"
               value={catalogSearch}
-              onChange={e => setCatalogSearch(e.target.value)}
+              onChange={(e) => setCatalogSearch(e.target.value)}
             />
           </div>
           <div className="max-h-[300px] overflow-y-auto space-y-1">
             {availableCurated
-              .filter(c => !catalogSearch || c.name.toLowerCase().includes(catalogSearch.toLowerCase()) || c.description?.toLowerCase().includes(catalogSearch.toLowerCase()))
-              .map(c => (
+              .filter(
+                (c) =>
+                  !catalogSearch ||
+                  c.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+                  c.description?.toLowerCase().includes(catalogSearch.toLowerCase())
+              )
+              .map((c) => (
                 <button
                   key={c.id}
                   onClick={async () => {
@@ -585,11 +662,15 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
                   <Server className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
                   <div>
                     <div className="text-xs font-medium">{c.name}</div>
-                    {c.description && <div className="text-[11px] text-muted-foreground">{c.description}</div>}
+                    {c.description && (
+                      <div className="text-[11px] text-muted-foreground">{c.description}</div>
+                    )}
                   </div>
                 </button>
               ))}
-            {availableCurated.filter(c => !catalogSearch || c.name.toLowerCase().includes(catalogSearch.toLowerCase())).length === 0 && (
+            {availableCurated.filter(
+              (c) => !catalogSearch || c.name.toLowerCase().includes(catalogSearch.toLowerCase())
+            ).length === 0 && (
               <p className="py-4 text-center text-xs text-muted-foreground">No servers found</p>
             )}
           </div>
@@ -682,18 +763,31 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
             <div className="space-y-1">
               <Label className="text-xs">Write to providers</Label>
               {mcpProviders.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No MCP-capable providers enabled for this project.</p>
+                <p className="text-xs text-muted-foreground">
+                  No MCP-capable providers enabled for this project.
+                </p>
               ) : (
                 <div className="flex flex-wrap items-center gap-3">
                   {mcpProviders.map((provider) => {
                     const writable = writableProviders.has(provider)
                     return (
-                      <label key={provider} className={cn('flex items-center gap-1.5 text-xs', writable ? 'cursor-pointer' : 'opacity-60')}>
+                      <label
+                        key={provider}
+                        className={cn(
+                          'flex items-center gap-1.5 text-xs',
+                          writable ? 'cursor-pointer' : 'opacity-60'
+                        )}
+                      >
                         <input
                           type="checkbox"
                           checked={writable ? !!customProviders[provider] : false}
                           disabled={!writable}
-                          onChange={(event) => setCustomProviders((prev) => ({ ...prev, [provider]: event.target.checked }))}
+                          onChange={(event) =>
+                            setCustomProviders((prev) => ({
+                              ...prev,
+                              [provider]: event.target.checked
+                            }))
+                          }
                         />
                         {provider}
                       </label>
@@ -714,7 +808,9 @@ export function McpFlatSection({ projectPath, enabledProviders, onOpenContextMan
                 addingCustom ||
                 !customKey.trim() ||
                 !customCommand.trim() ||
-                !mcpProviders.some((provider) => writableProviders.has(provider) && customProviders[provider])
+                !mcpProviders.some(
+                  (provider) => writableProviders.has(provider) && customProviders[provider]
+                )
               }
             >
               {addingCustom ? 'Adding...' : 'Add server'}

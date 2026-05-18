@@ -24,7 +24,11 @@ export async function createAction(title: string, opts: CreateOpts): Promise<voi
       `SELECT id, title, status FROM tasks
        WHERE project_id = :projectId AND external_provider = :provider AND external_id = :externalId
        LIMIT 1`,
-      { ':projectId': project.id, ':provider': opts.externalProvider ?? null, ':externalId': opts.externalId }
+      {
+        ':projectId': project.id,
+        ':provider': opts.externalProvider ?? null,
+        ':externalId': opts.externalId
+      }
     )
     if (existing.length > 0) {
       const t = existing[0]
@@ -38,7 +42,10 @@ export async function createAction(title: string, opts: CreateOpts): Promise<voi
 
   if (opts.priority) {
     const p = parseInt(opts.priority, 10)
-    if (isNaN(p) || p < 1 || p > 5) { console.error('Priority must be 1-5.'); process.exit(1) }
+    if (isNaN(p) || p < 1 || p > 5) {
+      console.error('Priority must be 1-5.')
+      process.exit(1)
+    }
   }
 
   let resolvedStatus: string | undefined
@@ -61,15 +68,16 @@ export async function createAction(title: string, opts: CreateOpts): Promise<voi
     status: resolvedStatus,
     priority: opts.priority ? parseInt(opts.priority, 10) : undefined,
     dueDate: opts.due,
-    templateId: template?.id,
+    templateId: template?.id
   })
 
   if (opts.externalId) {
     const db2 = openDb()
-    db2.run(
-      `UPDATE tasks SET external_id = :eid, external_provider = :prov WHERE id = :id`,
-      { ':eid': opts.externalId, ':prov': opts.externalProvider ?? null, ':id': task.id }
-    )
+    db2.run(`UPDATE tasks SET external_id = :eid, external_provider = :prov WHERE id = :id`, {
+      ':eid': opts.externalId,
+      ':prov': opts.externalProvider ?? null,
+      ':id': task.id
+    })
     db2.close()
   }
 

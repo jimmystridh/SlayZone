@@ -17,7 +17,11 @@ import type { Express } from 'express'
 export interface RestHarness {
   port: number
   url: string
-  request<T = unknown>(method: string, path: string, body?: unknown): Promise<{
+  request<T = unknown>(
+    method: string,
+    path: string,
+    body?: unknown
+  ): Promise<{
     status: number
     body: T
   }>
@@ -46,7 +50,11 @@ export async function mountRestApp(app: Express): Promise<RestHarness> {
       })
       const text = await res.text()
       let parsed: unknown = text
-      try { parsed = text ? JSON.parse(text) : null } catch { /* keep text */ }
+      try {
+        parsed = text ? JSON.parse(text) : null
+      } catch {
+        /* keep text */
+      }
       return { status: res.status, body: parsed as T }
     },
     async close() {

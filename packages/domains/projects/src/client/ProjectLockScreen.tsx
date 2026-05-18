@@ -23,7 +23,12 @@ function formatRemaining(ms: number): string {
     : `${pad(minutes)}:${pad(seconds)}`
 }
 
-export function ProjectLockScreen({ project, lockedUntil, schedule, onUnlocked }: ProjectLockScreenProps) {
+export function ProjectLockScreen({
+  project,
+  lockedUntil,
+  schedule,
+  onUnlocked
+}: ProjectLockScreenProps) {
   const hasDuration = lockedUntil && new Date(lockedUntil).getTime() > Date.now()
   const [remaining, setRemaining] = useState(() =>
     hasDuration ? new Date(lockedUntil).getTime() - Date.now() : 0
@@ -73,12 +78,15 @@ export function ProjectLockScreen({ project, lockedUntil, schedule, onUnlocked }
             {formatRemaining(remaining)}
           </p>
         ) : schedule ? (
-          <p className="text-lg text-muted-foreground">
-            Available at {schedule.to}
-          </p>
+          <p className="text-lg text-muted-foreground">Available at {schedule.to}</p>
         ) : null}
         {!project.lock_config?.disable_unlock_early && (
-          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={handleUnlockEarly}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-muted-foreground"
+            onClick={handleUnlockEarly}
+          >
             Unlock early
           </Button>
         )}

@@ -37,7 +37,7 @@ export interface FetchRegistryResult {
 
 function githubHeaders(token?: string): Record<string, string> {
   const h: Record<string, string> = {
-    'Accept': 'application/vnd.github.v3+json',
+    Accept: 'application/vnd.github.v3+json',
     'User-Agent': 'SlayZone-SkillMarketplace'
   }
   if (token) h['Authorization'] = `Bearer ${token}`
@@ -95,7 +95,12 @@ export async function fetchGitHubRegistry(opts: {
   let manifest: RegistryManifest | null = null
   if (manifestEntry) {
     try {
-      manifest = await fetchFileJson<RegistryManifest>(owner, repo, `${prefix}registry.json`, branch)
+      manifest = await fetchFileJson<RegistryManifest>(
+        owner,
+        repo,
+        `${prefix}registry.json`,
+        branch
+      )
     } catch {
       // manifest is optional, ignore errors
     }
@@ -192,7 +197,9 @@ export function parseGitHubUrl(input: string): { owner: string; repo: string } |
   if (shorthand) return { owner: shorthand[1], repo: shorthand[2] }
 
   // Full URL
-  const urlMatch = trimmed.match(/(?:https?:\/\/)?github\.com\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)/)
+  const urlMatch = trimmed.match(
+    /(?:https?:\/\/)?github\.com\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)/
+  )
   if (urlMatch) return { owner: urlMatch[1], repo: urlMatch[2] }
 
   return null

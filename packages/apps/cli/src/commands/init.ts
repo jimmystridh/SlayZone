@@ -26,15 +26,16 @@ The toolbox is the \`slay\` CLI. \`$SLAYZONE_TASK_ID\` holds your task's ID, and
 type SkillStats = { installed: number; updated: number; skipped: number }
 
 function loadProviders(db: SlayDb, projectId: string): CliProvider[] {
-  const row = db.query<{ value: string }>(
-    `SELECT value FROM settings WHERE key = :key`,
-    { ':key': `ai_providers:${projectId}` }
-  )
+  const row = db.query<{ value: string }>(`SELECT value FROM settings WHERE key = :key`, {
+    ':key': `ai_providers:${projectId}`
+  })
   if (row.length > 0) {
     try {
       const parsed = JSON.parse(row[0].value)
       if (Array.isArray(parsed) && parsed.length > 0) return parsed as CliProvider[]
-    } catch { /* fall through */ }
+    } catch {
+      /* fall through */
+    }
   }
 
   const modeRow = db.query<{ value: string }>(
@@ -64,7 +65,7 @@ function installSkills(
   db: SlayDb,
   projectId: string,
   projectPath: string | null,
-  providers: CliProvider[],
+  providers: CliProvider[]
 ): SkillStats {
   const registryId = 'builtin-slayzone'
   const syncedSkills: { slug: string; content: string }[] = []
@@ -98,8 +99,8 @@ function installSkills(
           registryName: 'SlayZone Built-in',
           entryId,
           installedVersion: hash,
-          installedAt: now,
-        },
+          installedAt: now
+        }
       }
 
       db.run(
@@ -108,7 +109,7 @@ function installSkills(
           ':content': skill.content,
           ':metadata': JSON.stringify(metadata),
           ':now': now,
-          ':id': existing[0].id,
+          ':id': existing[0].id
         }
       )
       syncedSkills.push({ slug: skill.slug, content: skill.content })
@@ -139,7 +140,7 @@ function installSkills(
         ':slug': skill.slug,
         ':content': skill.content,
         ':metadata': JSON.stringify(metadata),
-        ':now': now,
+        ':now': now
       }
     )
     syncedSkills.push({ slug: skill.slug, content: skill.content })

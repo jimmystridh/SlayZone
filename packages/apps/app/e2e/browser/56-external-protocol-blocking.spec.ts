@@ -12,7 +12,7 @@ import {
   ensureBrowserPanelVisible,
   openTaskViaSearch,
   getViewsForTask,
-  newTabBtn,
+  newTabBtn
 } from '../fixtures/browser-view'
 import { getTestUrl, TEST_HOST_MATCH } from '../fixtures/test-server'
 
@@ -45,21 +45,41 @@ test.describe('External protocol blocking', () => {
     await newTabBtn(page).click()
 
     let viewId = ''
-    await expect.poll(async () => {
-      const nextViewIds = await getViewsForTask(page, taskId)
-      viewId = nextViewIds.find((candidate) => !existingViewIds.includes(candidate)) ?? ''
-      return viewId
-    }, { timeout: 10000 }).toBeTruthy()
+    await expect
+      .poll(
+        async () => {
+          const nextViewIds = await getViewsForTask(page, taskId)
+          viewId = nextViewIds.find((candidate) => !existingViewIds.includes(candidate)) ?? ''
+          return viewId
+        },
+        { timeout: 10000 }
+      )
+      .toBeTruthy()
 
     await testInvoke(page, 'browser:navigate', viewId, await getTestUrl('/'))
-    await expect.poll(async () => {
-      return String(await testInvoke(page, 'browser:get-url', viewId) ?? '')
-    }, { timeout: 15000 }).toContain(TEST_HOST_MATCH)
+    await expect
+      .poll(
+        async () => {
+          return String((await testInvoke(page, 'browser:get-url', viewId)) ?? '')
+        },
+        { timeout: 15000 }
+      )
+      .toContain(TEST_HOST_MATCH)
 
-    await expect.poll(async () => {
-      const readyState = await testInvoke(page, 'browser:execute-js', viewId, 'document.readyState')
-      return readyState === 'complete' || readyState === 'interactive'
-    }, { timeout: 10000 }).toBe(true)
+    await expect
+      .poll(
+        async () => {
+          const readyState = await testInvoke(
+            page,
+            'browser:execute-js',
+            viewId,
+            'document.readyState'
+          )
+          return readyState === 'complete' || readyState === 'interactive'
+        },
+        { timeout: 10000 }
+      )
+      .toBe(true)
 
     return viewId
   }
@@ -94,7 +114,7 @@ test.describe('External protocol blocking', () => {
           writable: true,
           value: async (url: string) => {
             globalState.__externalProtocolOpenExternalCalls?.push({ url })
-          },
+          }
         })
         return { ok: true as const, error: null }
       } catch (error) {
@@ -109,12 +129,12 @@ test.describe('External protocol blocking', () => {
     const project = await s.createProject({
       name: 'ProtoBlock',
       color: '#6366f1',
-      path: TEST_PROJECT_PATH,
+      path: TEST_PROJECT_PATH
     })
     const task = await s.createTask({
       projectId: project.id,
       title: 'Protocol blocking task',
-      status: 'todo',
+      status: 'todo'
     })
     taskId = task.id
     await s.refreshData()
@@ -133,7 +153,7 @@ test.describe('External protocol blocking', () => {
         Object.defineProperty(shell, 'openExternal', {
           configurable: true,
           writable: true,
-          value: globalState.__externalProtocolOriginalOpenExternal,
+          value: globalState.__externalProtocolOriginalOpenExternal
         })
       }
 
@@ -152,7 +172,11 @@ test.describe('External protocol blocking', () => {
     test(`blocks ${scheme}:// via window.open`, async ({ electronApp, mainWindow }) => {
       const viewId = await prepareBrowserView(mainWindow)
 
-      const result = await testInvoke(mainWindow, 'browser:execute-js', viewId, `
+      const result = await testInvoke(
+        mainWindow,
+        'browser:execute-js',
+        viewId,
+        `
         new Promise((resolve) => {
           const popup = window.open('${scheme}://blocked-by-slayzone', '_blank')
           if (!popup) {
@@ -170,7 +194,8 @@ test.describe('External protocol blocking', () => {
             resolve(JSON.stringify({ popupIsNull: false, popupHref }))
           }, 400)
         })
-      `)
+      `
+      )
 
       const parsed = JSON.parse(String(result))
       expect(parsed.popupIsNull).toBe(true)
@@ -181,7 +206,11 @@ test.describe('External protocol blocking', () => {
     test(`blocks ${scheme}:// via anchor click`, async ({ electronApp, mainWindow }) => {
       const viewId = await prepareBrowserView(mainWindow)
 
-      await testInvoke(mainWindow, 'browser:execute-js', viewId, `
+      await testInvoke(
+        mainWindow,
+        'browser:execute-js',
+        viewId,
+        `
         new Promise((resolve) => {
           const a = document.createElement('a')
           a.href = '${scheme}://blocked-by-slayzone'
@@ -190,7 +219,8 @@ test.describe('External protocol blocking', () => {
           document.body.removeChild(a)
           setTimeout(() => resolve(window.location.href), 1000)
         })
-      `)
+      `
+      )
 
       expect(await getOpenExternalCalls(electronApp)).toHaveLength(0)
       await expectViewStillQueryable(mainWindow, viewId)
@@ -199,10 +229,15 @@ test.describe('External protocol blocking', () => {
     test(`blocks ${scheme}:// via window.location`, async ({ electronApp, mainWindow }) => {
       const viewId = await prepareBrowserView(mainWindow)
 
-      await testInvoke(mainWindow, 'browser:execute-js', viewId, `
+      await testInvoke(
+        mainWindow,
+        'browser:execute-js',
+        viewId,
+        `
         window.location.href = '${scheme}://blocked-by-slayzone'
         window.location.href
-      `)
+      `
+      )
 
       expect(await getOpenExternalCalls(electronApp)).toHaveLength(0)
       await expectViewStillQueryable(mainWindow, viewId)
@@ -211,7 +246,11 @@ test.describe('External protocol blocking', () => {
     test(`blocks ${scheme}:// via hidden iframe`, async ({ electronApp, mainWindow }) => {
       const viewId = await prepareBrowserView(mainWindow)
 
-      await testInvoke(mainWindow, 'browser:execute-js', viewId, `
+      await testInvoke(
+        mainWindow,
+        'browser:execute-js',
+        viewId,
+        `
         new Promise((resolve) => {
           const iframe = document.createElement('iframe')
           iframe.onload = () => resolve(window.location.href)
@@ -220,7 +259,8 @@ test.describe('External protocol blocking', () => {
           document.body.appendChild(iframe)
           setTimeout(() => resolve(window.location.href), 1000)
         })
-      `)
+      `
+      )
 
       expect(await getOpenExternalCalls(electronApp)).toHaveLength(0)
       await expectViewStillQueryable(mainWindow, viewId)

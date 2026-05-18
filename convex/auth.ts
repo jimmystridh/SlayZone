@@ -6,7 +6,10 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   callbacks: {
     async redirect({ redirectTo }) {
       const allowedDesktopRedirect = 'slayzone://auth/callback'
-      if (redirectTo === allowedDesktopRedirect || redirectTo.startsWith(`${allowedDesktopRedirect}?`)) {
+      if (
+        redirectTo === allowedDesktopRedirect ||
+        redirectTo.startsWith(`${allowedDesktopRedirect}?`)
+      ) {
         return redirectTo
       }
 

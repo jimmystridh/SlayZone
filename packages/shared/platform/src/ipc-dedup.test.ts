@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { withResultDedup, isIpcUnchangedSentinel, type SenderLifecycle } from './ipc-dedup'
 
-interface FakeEvent { senderId: number }
+interface FakeEvent {
+  senderId: number
+}
 
 function makeLifecycle(): { lifecycle: SenderLifecycle<FakeEvent>; fire: (id: number) => void } {
   const clears = new Map<number, Array<() => void>>()
@@ -16,7 +18,7 @@ function makeLifecycle(): { lifecycle: SenderLifecycle<FakeEvent>; fire: (id: nu
     },
     fire: (id) => {
       const list = clears.get(id) ?? []
-      list.forEach(fn => fn())
+      list.forEach((fn) => fn())
       clears.delete(id)
     }
   }
@@ -42,7 +44,9 @@ describe('withResultDedup — global cache (no sender)', () => {
 describe('withResultDedup — sender-scoped cache', () => {
   it('clears cache when lifecycle fires — re-returns real result instead of stale sentinel', async () => {
     const { lifecycle, fire } = makeLifecycle()
-    const wrapped = withResultDedup(async (_e: FakeEvent, x: number) => ({ x }), { sender: lifecycle })
+    const wrapped = withResultDedup(async (_e: FakeEvent, x: number) => ({ x }), {
+      sender: lifecycle
+    })
 
     const first = await wrapped({ senderId: 1 }, 7)
     expect(first).toEqual({ x: 7 })
@@ -60,7 +64,9 @@ describe('withResultDedup — sender-scoped cache', () => {
 
   it('isolates caches between distinct senders', async () => {
     const { lifecycle } = makeLifecycle()
-    const wrapped = withResultDedup(async (_e: FakeEvent, x: number) => ({ x }), { sender: lifecycle })
+    const wrapped = withResultDedup(async (_e: FakeEvent, x: number) => ({ x }), {
+      sender: lifecycle
+    })
 
     expect(await wrapped({ senderId: 1 }, 7)).toEqual({ x: 7 })
     const sender2First = await wrapped({ senderId: 2 }, 7)
@@ -74,7 +80,9 @@ describe('withResultDedup — sender-scoped cache', () => {
       getKey: (e) => e.senderId,
       subscribe
     }
-    const wrapped = withResultDedup(async (_e: FakeEvent, x: number) => ({ x }), { sender: lifecycle })
+    const wrapped = withResultDedup(async (_e: FakeEvent, x: number) => ({ x }), {
+      sender: lifecycle
+    })
 
     await wrapped({ senderId: 1 }, 1)
     await wrapped({ senderId: 1 }, 2)
@@ -87,7 +95,9 @@ describe('withResultDedup — sender-scoped cache', () => {
       getKey: () => null,
       subscribe: () => {}
     }
-    const wrapped = withResultDedup(async (_e: FakeEvent, x: number) => ({ x }), { sender: lifecycle })
+    const wrapped = withResultDedup(async (_e: FakeEvent, x: number) => ({ x }), {
+      sender: lifecycle
+    })
 
     const first = await wrapped({ senderId: 1 }, 7)
     const second = await wrapped({ senderId: 1 }, 7)

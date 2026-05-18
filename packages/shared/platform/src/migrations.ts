@@ -50,7 +50,7 @@ export function migrateStateDir(oldDir: string, newDir: string): MigrationResult
 
   // Snapshot which critical files exist in old dir for post-copy verification
   const dbFiles = ['slayzone.sqlite', 'slayzone.dev.sqlite']
-  const expectedFiles = dbFiles.filter(f => fs.existsSync(path.join(oldDir, f)))
+  const expectedFiles = dbFiles.filter((f) => fs.existsSync(path.join(oldDir, f)))
 
   try {
     // Ensure parent dir exists (e.g. ~/.local/state/)
@@ -116,7 +116,9 @@ export function migrateCliBinIfNeeded(cliSrcPath: string): CliMigrationResult {
   // Install at new location first
   const result = installCliSync(cliSrcPath)
   if (!result.ok) {
-    console.error(`[slayzone] CLI bin migration: failed to install at new location: ${result.error}`)
+    console.error(
+      `[slayzone] CLI bin migration: failed to install at new location: ${result.error}`
+    )
     return { status: 'failed' }
   }
 
@@ -126,7 +128,9 @@ export function migrateCliBinIfNeeded(cliSrcPath: string): CliMigrationResult {
     console.error(`[slayzone] Migrated CLI from ${oldTarget} to ${result.path}`)
     return { status: 'migrated', newPath: result.path }
   } catch {
-    console.error(`[slayzone] CLI installed at ${result.path} (old symlink at ${oldTarget} kept — remove manually with: sudo rm ${oldTarget})`)
+    console.error(
+      `[slayzone] CLI installed at ${result.path} (old symlink at ${oldTarget} kept — remove manually with: sudo rm ${oldTarget})`
+    )
     return { status: 'migrated-old-kept', oldPath: oldTarget, newPath: result.path }
   }
 }

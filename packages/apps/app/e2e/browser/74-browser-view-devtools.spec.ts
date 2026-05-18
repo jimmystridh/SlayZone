@@ -3,7 +3,8 @@ import {
   testInvoke,
   ensureBrowserPanelVisible,
   ensureBrowserPanelHidden,
-  openTaskViaSearch, getActiveViewId,
+  openTaskViaSearch,
+  getActiveViewId
 } from '../fixtures/browser-view'
 
 test.describe('Browser view DevTools (WebContentsView)', () => {
@@ -12,7 +13,11 @@ test.describe('Browser view DevTools (WebContentsView)', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'DevTool T', color: '#0ea5e9', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'DevTool T',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
     const t = await s.createTask({ projectId: p.id, title: 'DevTools task', status: 'todo' })
     taskId = t.id
     await s.refreshData()
@@ -22,7 +27,7 @@ test.describe('Browser view DevTools (WebContentsView)', () => {
   test('devtools starts closed', async ({ mainWindow }) => {
     await ensureBrowserPanelVisible(mainWindow)
     const viewId = await getActiveViewId(mainWindow, taskId)
-    const isOpen = await testInvoke(mainWindow, 'browser:is-devtools-open', viewId) as boolean
+    const isOpen = (await testInvoke(mainWindow, 'browser:is-devtools-open', viewId)) as boolean
     expect(isOpen).toBe(false)
   })
 
@@ -73,7 +78,7 @@ test.describe('Browser view DevTools (WebContentsView)', () => {
 
     // Close when already closed — should not throw
     await testInvoke(mainWindow, 'browser:close-devtools', viewId)
-    const isOpen = await testInvoke(mainWindow, 'browser:is-devtools-open', viewId) as boolean
+    const isOpen = (await testInvoke(mainWindow, 'browser:is-devtools-open', viewId)) as boolean
     expect(isOpen).toBe(false)
   })
 
@@ -104,7 +109,7 @@ test.describe('Browser view DevTools (WebContentsView)', () => {
     const viewId = await getActiveViewId(mainWindow, taskId)
     await testInvoke(mainWindow, 'browser:destroy-view', viewId)
 
-    const isOpen = await testInvoke(mainWindow, 'browser:is-devtools-open', viewId) as boolean
+    const isOpen = (await testInvoke(mainWindow, 'browser:is-devtools-open', viewId)) as boolean
     expect(isOpen).toBe(false)
 
     // Restore panel

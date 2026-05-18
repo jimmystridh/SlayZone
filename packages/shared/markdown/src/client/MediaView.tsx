@@ -3,9 +3,7 @@ import { Frame, Expand } from 'lucide-react'
 import { IconButton, Tooltip, TooltipTrigger, TooltipContent } from '@slayzone/ui'
 import { usePanZoom, type PanZoomControls, type PanZoomTransform } from './usePanZoom'
 
-export type MediaSource =
-  | { kind: 'svg'; svg: string }
-  | { kind: 'image'; src: string }
+export type MediaSource = { kind: 'svg'; svg: string } | { kind: 'image'; src: string }
 
 export interface MediaViewProps {
   source: MediaSource
@@ -30,7 +28,7 @@ interface FitFullMode {
 function useFitFullMode(
   hostRef: React.RefObject<HTMLDivElement | null>,
   intrinsicRef: IntrinsicRef,
-  controls: PanZoomControls,
+  controls: PanZoomControls
 ): FitFullMode {
   const [mode, setMode] = useState<'fit' | 'full'>('fit')
   const modeRef = useRef(mode)
@@ -76,13 +74,26 @@ function useFitFullMode(
   return { mode, fit, full, refitIfFitMode }
 }
 
-function FitFullControls({ mode, fit, full }: { mode: 'fit' | 'full'; fit: () => void; full: () => void }) {
+function FitFullControls({
+  mode,
+  fit,
+  full
+}: {
+  mode: 'fit' | 'full'
+  fit: () => void
+  full: () => void
+}) {
   return (
     <div className="absolute top-2 right-2 flex gap-1.5">
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="rounded-md border border-border bg-popover/90 p-0.5 shadow-sm">
-            <IconButton aria-label="Fit to view" size="icon-sm" variant={mode === 'fit' ? 'secondary' : 'ghost'} onClick={fit}>
+            <IconButton
+              aria-label="Fit to view"
+              size="icon-sm"
+              variant={mode === 'fit' ? 'secondary' : 'ghost'}
+              onClick={fit}
+            >
               <Frame className="size-3.5" />
             </IconButton>
           </div>
@@ -92,7 +103,12 @@ function FitFullControls({ mode, fit, full }: { mode: 'fit' | 'full'; fit: () =>
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="rounded-md border border-border bg-popover/90 p-0.5 shadow-sm">
-            <IconButton aria-label="Full size" size="icon-sm" variant={mode === 'full' ? 'secondary' : 'ghost'} onClick={full}>
+            <IconButton
+              aria-label="Full size"
+              size="icon-sm"
+              variant={mode === 'full' ? 'secondary' : 'ghost'}
+              onClick={full}
+            >
               <Expand className="size-3.5" />
             </IconButton>
           </div>
@@ -109,9 +125,21 @@ export function MediaView(props: MediaViewProps) {
   // path is unusable for mermaid + other HTML-in-SVG payloads). Raster images
   // keep the canvas pipeline for crisp blits.
   if (props.source.kind === 'svg') {
-    return <SvgVectorView svg={props.source.svg} className={props.className} showControls={props.showControls} />
+    return (
+      <SvgVectorView
+        svg={props.source.svg}
+        className={props.className}
+        showControls={props.showControls}
+      />
+    )
   }
-  return <RasterCanvasView src={props.source.src} className={props.className} showControls={props.showControls} />
+  return (
+    <RasterCanvasView
+      src={props.source.src}
+      className={props.className}
+      showControls={props.showControls}
+    />
+  )
 }
 
 // Parse intrinsic dims from SVG string + strip width="100%"/max-width so the
@@ -137,7 +165,15 @@ function preprocessSvg(svg: string): { svg: string; w: number; h: number } | nul
   return { svg: fixed, w, h }
 }
 
-function SvgVectorView({ svg, className, showControls = true }: { svg: string; className?: string; showControls?: boolean }) {
+function SvgVectorView({
+  svg,
+  className,
+  showControls = true
+}: {
+  svg: string
+  className?: string
+  showControls?: boolean
+}) {
   const processed = useMemo(() => preprocessSvg(svg), [svg])
   const intrinsicRef = useRef<{ w: number; h: number } | null>(processed)
   intrinsicRef.current = processed
@@ -150,8 +186,13 @@ function SvgVectorView({ svg, className, showControls = true }: { svg: string; c
   }, [])
 
   const opts = useMemo(
-    () => ({ fitOnMount: false, fitOnResize: false, doubleClickToReset: false, onApplyTransform: applyToSvg }),
-    [applyToSvg],
+    () => ({
+      fitOnMount: false,
+      fitOnResize: false,
+      doubleClickToReset: false,
+      onApplyTransform: applyToSvg
+    }),
+    [applyToSvg]
   )
   const { hostRef, contentRef, controls } = usePanZoom(opts)
   const { mode, fit, full, refitIfFitMode } = useFitFullMode(hostRef, intrinsicRef, controls)
@@ -193,7 +234,15 @@ function SvgVectorView({ svg, className, showControls = true }: { svg: string; c
   )
 }
 
-function RasterCanvasView({ src, className, showControls = true }: { src: string; className?: string; showControls?: boolean }) {
+function RasterCanvasView({
+  src,
+  className,
+  showControls = true
+}: {
+  src: string
+  className?: string
+  showControls?: boolean
+}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const bitmapRef = useRef<HTMLImageElement | null>(null)
   const intrinsicRef = useRef<{ w: number; h: number } | null>(null)
@@ -214,11 +263,16 @@ function RasterCanvasView({ src, className, showControls = true }: { src: string
     ctx.drawImage(bitmap, 0, 0, intrinsic.w, intrinsic.h)
   }, [])
 
-  const onApplyTransform = useCallback((t: PanZoomTransform) => { draw(t) }, [draw])
+  const onApplyTransform = useCallback(
+    (t: PanZoomTransform) => {
+      draw(t)
+    },
+    [draw]
+  )
 
   const opts = useMemo(
     () => ({ fitOnMount: false, fitOnResize: false, doubleClickToReset: false, onApplyTransform }),
-    [onApplyTransform],
+    [onApplyTransform]
   )
   const { hostRef, contentRef, controls } = usePanZoom(opts)
   const { mode, fit, full, refitIfFitMode } = useFitFullMode(hostRef, intrinsicRef, controls)
@@ -257,10 +311,14 @@ function RasterCanvasView({ src, className, showControls = true }: { src: string
       // ResizeObserver effect will refit once host lays out.
       draw({ x: 0, y: 0, scale: 1 })
     }
-    img.onerror = () => { if (!cancelled) console.warn('[MediaView] image load failed:', src) }
+    img.onerror = () => {
+      if (!cancelled) console.warn('[MediaView] image load failed:', src)
+    }
     img.src = src
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [src, resizeCanvas, refitIfFitMode, draw])
 
   useEffect(() => {

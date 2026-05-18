@@ -4,7 +4,7 @@ import {
   extractShellIdFromSpawnResult,
   extractBashOutputCall,
   extractKillShellCall,
-  extractBashOutputResult,
+  extractBashOutputResult
 } from '../shared/bg-shell-helpers'
 
 /**
@@ -15,11 +15,39 @@ import {
  * but are rendered nested inside their parent SubAgentRow, not at the chat root.
  */
 export type TimelineItem =
-  | { kind: 'user-text'; text: string; timestamp: number; parentToolUseId?: string; optimistic?: boolean }
-  | { kind: 'text'; role: 'assistant'; messageId: string; text: string; timestamp: number; parentToolUseId?: string }
-  | { kind: 'thinking'; messageId: string; text: string; hasSignature: boolean; timestamp: number; parentToolUseId?: string }
+  | {
+      kind: 'user-text'
+      text: string
+      timestamp: number
+      parentToolUseId?: string
+      optimistic?: boolean
+    }
+  | {
+      kind: 'text'
+      role: 'assistant'
+      messageId: string
+      text: string
+      timestamp: number
+      parentToolUseId?: string
+    }
+  | {
+      kind: 'thinking'
+      messageId: string
+      text: string
+      hasSignature: boolean
+      timestamp: number
+      parentToolUseId?: string
+    }
   | { kind: 'tool'; invocation: ToolInvocation; timestamp: number; parentToolUseId?: string }
-  | { kind: 'session-start'; sessionId: string; model: string; cwd: string; tools: string[]; timestamp: number; parentToolUseId?: string }
+  | {
+      kind: 'session-start'
+      sessionId: string
+      model: string
+      cwd: string
+      tools: string[]
+      timestamp: number
+      parentToolUseId?: string
+    }
   | {
       kind: 'result'
       subtype: string
@@ -33,7 +61,15 @@ export type TimelineItem =
       timestamp: number
       parentToolUseId?: string
     }
-  | { kind: 'api-retry'; attempt: number; maxRetries: number; delayMs: number; error: string; timestamp: number; parentToolUseId?: string }
+  | {
+      kind: 'api-retry'
+      attempt: number
+      maxRetries: number
+      delayMs: number
+      error: string
+      timestamp: number
+      parentToolUseId?: string
+    }
   | { kind: 'rate-limit'; status: string; timestamp: number; parentToolUseId?: string }
   | {
       kind: 'sub-agent'
@@ -219,7 +255,7 @@ export function initialState(): ChatTimelineState {
     bgShellOrder: [],
     bgShellPollIndex: new Map(),
     currentSpawnId: null,
-    notStarted: true,
+    notStarted: true
   }
 }
 
@@ -285,7 +321,7 @@ function applyAction(state: ChatTimelineState, action: Action): ChatTimelineStat
       return {
         ...state,
         timeline: [...state.timeline, item],
-        resultCount: state.resultCount + 1,
+        resultCount: state.resultCount + 1
       }
     }
     case 'user-sent': {
@@ -300,12 +336,12 @@ function applyAction(state: ChatTimelineState, action: Action): ChatTimelineStat
         kind: 'user-text',
         text: action.text,
         timestamp: Date.now(),
-        optimistic: true,
+        optimistic: true
       }
       return {
         ...healed,
         timeline: [...healed.timeline, item],
-        userMessagesSent: healed.userMessagesSent + 1,
+        userMessagesSent: healed.userMessagesSent + 1
       }
     }
     case 'user-send-failed': {
@@ -320,7 +356,7 @@ function applyAction(state: ChatTimelineState, action: Action): ChatTimelineStat
           return {
             ...state,
             timeline: next,
-            userMessagesSent: Math.max(0, state.userMessagesSent - 1),
+            userMessagesSent: Math.max(0, state.userMessagesSent - 1)
           }
         }
       }
@@ -341,7 +377,7 @@ function applyAction(state: ChatTimelineState, action: Action): ChatTimelineStat
         ...healed,
         sessionEnded: true,
         exitCode: action.code,
-        exitSignal: action.signal,
+        exitSignal: action.signal
       }
     }
     case 'event':
@@ -374,12 +410,12 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
       const item: TimelineItem = {
         kind: 'user-text',
         text: event.text,
-        timestamp: ts,
+        timestamp: ts
       }
       return {
         ...healed,
         timeline: [...healed.timeline, item],
-        userMessagesSent: healed.userMessagesSent + 1,
+        userMessagesSent: healed.userMessagesSent + 1
       }
     }
     case 'interrupted': {
@@ -398,7 +434,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         // Defensive: clear any straggling stream state so the typing indicator
         // can't read "Writing…" off a half-open block once the turn is gone.
         openBlocks: state.openBlocks.size > 0 ? new Map() : state.openBlocks,
-        currentStreamMessageId: null,
+        currentStreamMessageId: null
       }
     }
     case 'user-message-popped': {
@@ -415,7 +451,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
           return {
             ...state,
             timeline: next,
-            userMessagesSent: Math.max(0, state.userMessagesSent - 1),
+            userMessagesSent: Math.max(0, state.userMessagesSent - 1)
           }
         }
         return state
@@ -436,7 +472,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
           model: event.model,
           cwd: event.cwd,
           tools: event.tools,
-          timestamp: ts,
+          timestamp: ts
         }
         return {
           ...initialState(),
@@ -444,7 +480,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
           sessionStarted: true,
           sessionId: event.sessionId,
           model: event.model,
-          permissionMode: event.permissionMode ?? null,
+          permissionMode: event.permissionMode ?? null
         }
       }
       if (state.sessionStarted) {
@@ -452,7 +488,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
           ...state,
           sessionId: event.sessionId,
           model: event.model,
-          permissionMode: event.permissionMode ?? state.permissionMode,
+          permissionMode: event.permissionMode ?? state.permissionMode
         }
       }
       const item: TimelineItem = {
@@ -461,7 +497,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         model: event.model,
         cwd: event.cwd,
         tools: event.tools,
-        timestamp: ts,
+        timestamp: ts
       }
       // Prepend session-start: user messages may arrive in the timeline before turn-init
       // (optimistic user-sent dispatch races the stream). Keep session-start at the top.
@@ -476,7 +512,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         sessionEnded: false,
         exitCode: null,
         exitSignal: null,
-        permissionMode: event.permissionMode ?? state.permissionMode,
+        permissionMode: event.permissionMode ?? state.permissionMode
       }
     }
     case 'assistant-text': {
@@ -488,7 +524,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         messageId: event.messageId,
         text: event.text,
         timestamp: ts,
-        parentToolUseId: event.parentToolUseId,
+        parentToolUseId: event.parentToolUseId
       }
       const childIndex = registerChild(state, state.timeline.length, event.parentToolUseId)
       return { ...state, timeline: [...state.timeline, item], childIndex }
@@ -501,7 +537,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         text: event.text,
         hasSignature: event.hasSignature,
         timestamp: ts,
-        parentToolUseId: event.parentToolUseId,
+        parentToolUseId: event.parentToolUseId
       }
       const childIndex = registerChild(state, state.timeline.length, event.parentToolUseId)
       return { ...state, timeline: [...state.timeline, item], childIndex }
@@ -518,8 +554,8 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
             invocation: {
               ...target.invocation,
               name: target.invocation.name || event.name,
-              input: target.invocation.input ?? event.input,
-            },
+              input: target.invocation.input ?? event.input
+            }
           }
           const t = state.timeline.slice()
           t[existingIdx] = next
@@ -530,9 +566,14 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         id: event.id,
         name: event.name,
         input: event.input,
-        status: 'pending',
+        status: 'pending'
       }
-      const item: TimelineItem = { kind: 'tool', invocation, timestamp: ts, parentToolUseId: event.parentToolUseId }
+      const item: TimelineItem = {
+        kind: 'tool',
+        invocation,
+        timestamp: ts,
+        parentToolUseId: event.parentToolUseId
+      }
       const newIndex = new Map(state.toolIndex)
       newIndex.set(event.id, state.timeline.length)
       const childIndex = registerChild(state, state.timeline.length, event.parentToolUseId)
@@ -540,7 +581,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         ...state,
         timeline: [...state.timeline, item],
         toolIndex: newIndex,
-        childIndex,
+        childIndex
       }
     }
     case 'stream-message-start': {
@@ -550,7 +591,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
       return {
         ...state,
         currentStreamMessageId: event.messageId,
-        openBlocks: new Map(),
+        openBlocks: new Map()
       }
     }
     case 'stream-block-start': {
@@ -563,9 +604,14 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
           id: event.toolUseId ?? '',
           name: event.toolName ?? '',
           input: null,
-          status: 'pending',
+          status: 'pending'
         }
-        const item: TimelineItem = { kind: 'tool', invocation, timestamp: ts, parentToolUseId: event.parentToolUseId }
+        const item: TimelineItem = {
+          kind: 'tool',
+          invocation,
+          timestamp: ts,
+          parentToolUseId: event.parentToolUseId
+        }
         const timelineIndex = state.timeline.length
         const nextOpen = new Map(state.openBlocks)
         nextOpen.set(event.blockIndex, {
@@ -574,7 +620,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
           toolUseId: event.toolUseId,
           toolName: event.toolName,
           messageId,
-          partialJson: '',
+          partialJson: ''
         })
         let nextToolIndex = state.toolIndex
         if (event.toolUseId) {
@@ -587,7 +633,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
           timeline: [...state.timeline, item],
           openBlocks: nextOpen,
           toolIndex: nextToolIndex,
-          childIndex,
+          childIndex
         }
       }
 
@@ -596,7 +642,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
       nextOpen.set(event.blockIndex, {
         timelineIndex: -1,
         blockType: event.blockType,
-        messageId,
+        messageId
       })
       return { ...state, openBlocks: nextOpen }
     }
@@ -617,7 +663,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
             messageId,
             text: event.text,
             timestamp: ts,
-            parentToolUseId: event.parentToolUseId,
+            parentToolUseId: event.parentToolUseId
           }
           const nextOpen = new Map(state.openBlocks)
           nextOpen.set(event.blockIndex, { ...open, timelineIndex: state.timeline.length })
@@ -627,7 +673,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
             timeline: [...state.timeline, item],
             openBlocks: nextOpen,
             streamedMessageIds: nextStreamed,
-            childIndex,
+            childIndex
           }
         }
         if (open.blockType === 'thinking' && event.deltaType === 'thinking') {
@@ -637,7 +683,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
             text: event.text,
             hasSignature: false,
             timestamp: ts,
-            parentToolUseId: event.parentToolUseId,
+            parentToolUseId: event.parentToolUseId
           }
           const nextOpen = new Map(state.openBlocks)
           nextOpen.set(event.blockIndex, { ...open, timelineIndex: state.timeline.length })
@@ -647,7 +693,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
             timeline: [...state.timeline, item],
             openBlocks: nextOpen,
             streamedMessageIds: nextStreamed,
-            childIndex,
+            childIndex
           }
         }
         return state
@@ -677,7 +723,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         const nextOpen = new Map(state.openBlocks)
         nextOpen.set(event.blockIndex, {
           ...open,
-          partialJson: (open.partialJson ?? '') + event.text,
+          partialJson: (open.partialJson ?? '') + event.text
         })
         return { ...state, openBlocks: nextOpen }
       }
@@ -699,7 +745,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
           }
           const next: TimelineItem = {
             ...target,
-            invocation: { ...target.invocation, input: parsed },
+            invocation: { ...target.invocation, input: parsed }
           }
           const t = state.timeline.slice()
           t[open.timelineIndex] = next
@@ -722,13 +768,31 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
           name: '',
           input: null,
           status: event.isError ? 'error' : 'done',
-          result: { rawContent: event.rawContent, structured: event.structured, isError: event.isError },
+          result: {
+            rawContent: event.rawContent,
+            structured: event.structured,
+            isError: event.isError
+          }
         }
-        const item: TimelineItem = { kind: 'tool', invocation, timestamp: ts, parentToolUseId: event.parentToolUseId }
+        const item: TimelineItem = {
+          kind: 'tool',
+          invocation,
+          timestamp: ts,
+          parentToolUseId: event.parentToolUseId
+        }
         const newIndex = new Map(baseState.toolIndex)
         newIndex.set(event.toolUseId, baseState.timeline.length)
-        const childIndex = registerChild(baseState, baseState.timeline.length, event.parentToolUseId)
-        return { ...baseState, timeline: [...baseState.timeline, item], toolIndex: newIndex, childIndex }
+        const childIndex = registerChild(
+          baseState,
+          baseState.timeline.length,
+          event.parentToolUseId
+        )
+        return {
+          ...baseState,
+          timeline: [...baseState.timeline, item],
+          toolIndex: newIndex,
+          childIndex
+        }
       }
       const target = baseState.timeline[idx]
       if (target.kind !== 'tool') return baseState
@@ -738,8 +802,8 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         result: {
           rawContent: event.rawContent,
           structured: event.structured,
-          isError: event.isError,
-        },
+          isError: event.isError
+        }
       }
       const nextTimeline = baseState.timeline.slice()
       nextTimeline[idx] = { ...target, invocation: nextInvocation }
@@ -763,7 +827,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         numTurns: event.numTurns,
         text: event.text,
         copyText,
-        timestamp: ts,
+        timestamp: ts
       }
       // Mark any tools the SDK denied this turn — `result.permissionDenials`
       // is the authoritative source (e.g. `ExitPlanMode` in plan mode).
@@ -779,7 +843,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         nextTimeline = nextTimeline.slice()
         nextTimeline[idx] = {
           ...target,
-          invocation: { ...target.invocation, status: 'denied', denied: true },
+          invocation: { ...target.invocation, status: 'denied', denied: true }
         }
       }
       return {
@@ -792,7 +856,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         // (rate-limit, error path, network drop after partial stream) the typing
         // indicator would otherwise read "Writing…" off a stranded open block.
         openBlocks: state.openBlocks.size > 0 ? new Map() : state.openBlocks,
-        currentStreamMessageId: null,
+        currentStreamMessageId: null
       }
     }
     case 'api-retry':
@@ -806,9 +870,9 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
             maxRetries: event.maxRetries,
             delayMs: event.delayMs,
             error: event.error,
-            timestamp: ts,
-          },
-        ],
+            timestamp: ts
+          }
+        ]
       }
     case 'rate-limit':
       // Suppress 'allowed' / 'allowed_warning' — informational, not actionable. Only surface
@@ -816,7 +880,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
       if (event.status.startsWith('allowed')) return state
       return {
         ...state,
-        timeline: [...state.timeline, { kind: 'rate-limit', status: event.status, timestamp: ts }],
+        timeline: [...state.timeline, { kind: 'rate-limit', status: event.status, timestamp: ts }]
       }
     case 'sub-agent': {
       // Every `task_*` system event is treated as enrichment of an in-flight
@@ -846,7 +910,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
             summary: event.summary ?? target.summary,
             durationMs: event.usage?.durationMs ?? target.durationMs,
             toolUses: event.usage?.toolUses ?? target.toolUses,
-            totalTokens: event.usage?.totalTokens ?? target.totalTokens,
+            totalTokens: event.usage?.totalTokens ?? target.totalTokens
           }
           const t = state.timeline.slice()
           t[existingIdx] = next
@@ -864,7 +928,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         toolUses: event.usage?.toolUses,
         totalTokens: event.usage?.totalTokens,
         timestamp: ts,
-        parentToolUseId: event.parentToolUseId,
+        parentToolUseId: event.parentToolUseId
       }
       const nextIdx = new Map(state.subAgentIndex)
       if (id) nextIdx.set(id, state.timeline.length)
@@ -873,7 +937,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         ...state,
         timeline: [...state.timeline, item],
         subAgentIndex: nextIdx,
-        childIndex,
+        childIndex
       }
     }
     case 'compact-boundary':
@@ -881,7 +945,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
     case 'stderr':
       return {
         ...state,
-        timeline: [...state.timeline, { kind: 'stderr', text: event.text, timestamp: ts }],
+        timeline: [...state.timeline, { kind: 'stderr', text: event.text, timestamp: ts }]
       }
     case 'process-exit': {
       // Process exited. If we were mid-turn, heal counters + clear stream state
@@ -892,13 +956,13 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         ...healed,
         sessionEnded: true,
         exitCode: event.code,
-        exitSignal: event.signal,
+        exitSignal: event.signal
       }
     }
     case 'error':
       return {
         ...state,
-        timeline: [...state.timeline, { kind: 'stderr', text: event.message, timestamp: ts }],
+        timeline: [...state.timeline, { kind: 'stderr', text: event.message, timestamp: ts }]
       }
     case 'unknown':
       // Silently drop — already logged main-side as `[chat-parser] unknown event type=X`.
@@ -935,7 +999,7 @@ function applyEvent(state: ChatTimelineState, event: AgentEvent): ChatTimelineSt
         sessionEnded: false,
         exitCode: null,
         exitSignal: null,
-        notStarted: false,
+        notStarted: false
       }
   }
 }
@@ -981,7 +1045,7 @@ function healOrphanedTurn(state: ChatTimelineState, ts: number): ChatTimelineSta
     timeline: [...failed.timeline, item],
     resultCount: state.userMessagesSent,
     openBlocks: state.openBlocks.size > 0 ? new Map() : state.openBlocks,
-    currentStreamMessageId: null,
+    currentStreamMessageId: null
   }
 }
 
@@ -992,7 +1056,7 @@ function healOrphanedTurn(state: ChatTimelineState, ts: number): ChatTimelineSta
  */
 function closeSubAgentForToolResult(
   state: ChatTimelineState,
-  event: ToolResultEvent,
+  event: ToolResultEvent
 ): ChatTimelineState {
   const idx = state.subAgentIndex.get(event.toolUseId)
   if (idx === undefined) return state
@@ -1001,7 +1065,7 @@ function closeSubAgentForToolResult(
   const closed: TimelineItem = {
     ...row,
     phase: event.isError ? 'failed' : 'completed',
-    status: row.status ?? (event.isError ? 'failed' : 'completed'),
+    status: row.status ?? (event.isError ? 'failed' : 'completed')
   }
   const t = state.timeline.slice()
   t[idx] = closed
@@ -1072,8 +1136,7 @@ export function deriveLoadingLabel(state: ChatTimelineState): string | null {
   }
   if (latestOpen) {
     if (latestOpen.blockType === 'tool_use') {
-      const item =
-        latestOpen.timelineIndex >= 0 ? state.timeline[latestOpen.timelineIndex] : null
+      const item = latestOpen.timelineIndex >= 0 ? state.timeline[latestOpen.timelineIndex] : null
       return formatToolLabel(latestOpen.toolName, item)
     }
     if (latestOpen.blockType === 'thinking') return 'Thinking…'
@@ -1168,7 +1231,7 @@ const TERMINAL_BG_STATUSES: ReadonlySet<BgShellStatus> = new Set([
   'completed',
   'killed',
   'failed',
-  'unknown',
+  'unknown'
 ])
 
 function tail(s: string, max: number): string {
@@ -1178,7 +1241,7 @@ function tail(s: string, max: number): string {
 function evictTerminalShells(
   shells: Map<string, BgShell>,
   order: string[],
-  pollIndex: Map<string, { spawnToolUseId: string; kind: 'output' | 'kill' }>,
+  pollIndex: Map<string, { spawnToolUseId: string; kind: 'output' | 'kill' }>
 ): {
   shells: Map<string, BgShell>
   order: string[]
@@ -1216,9 +1279,7 @@ function setBgShell(state: ChatTimelineState, shell: BgShell): ChatTimelineState
   const isNew = !state.bgShells.has(shell.spawnToolUseId)
   const shellMap = new Map(state.bgShells)
   shellMap.set(shell.spawnToolUseId, shell)
-  const order = isNew
-    ? [...state.bgShellOrder, shell.spawnToolUseId]
-    : state.bgShellOrder
+  const order = isNew ? [...state.bgShellOrder, shell.spawnToolUseId] : state.bgShellOrder
   // Eviction runs on every setBgShell so terminal-history bound holds across
   // both new spawns AND status transitions (running→completed bumps count).
   const evicted = evictTerminalShells(shellMap, order, state.bgShellPollIndex)
@@ -1226,7 +1287,7 @@ function setBgShell(state: ChatTimelineState, shell: BgShell): ChatTimelineState
     ...state,
     bgShells: evicted.shells,
     bgShellOrder: evicted.order,
-    bgShellPollIndex: evicted.pollIndex,
+    bgShellPollIndex: evicted.pollIndex
   }
 }
 
@@ -1251,7 +1312,7 @@ const ACTIVE_BG_STATUSES: ReadonlySet<BgShellStatus> = new Set(['pending', 'runn
  */
 function invalidateForeignSpawnShells(
   state: ChatTimelineState,
-  newSpawnId: string,
+  newSpawnId: string
 ): ChatTimelineState {
   return dropActiveShells(state, (shell) => shell.spawnedInSpawnId !== newSpawnId)
 }
@@ -1269,7 +1330,7 @@ function invalidateActiveShells(state: ChatTimelineState): ChatTimelineState {
 
 function dropActiveShells(
   state: ChatTimelineState,
-  predicate: (shell: BgShell) => boolean,
+  predicate: (shell: BgShell) => boolean
 ): ChatTimelineState {
   const toDrop = new Set<string>()
   for (const [id, shell] of state.bgShells) {
@@ -1291,7 +1352,7 @@ function dropActiveShells(
     ...state,
     bgShells: nextShells,
     bgShellOrder: nextOrder,
-    bgShellPollIndex: nextPollIndex,
+    bgShellPollIndex: nextPollIndex
   }
 }
 
@@ -1311,7 +1372,7 @@ function applyBgShellToolCall(state: ChatTimelineState, event: ToolCallEvent): C
       lastPolledAt: null,
       latestStdout: '',
       latestStderr: '',
-      spawnedInSpawnId: state.currentSpawnId,
+      spawnedInSpawnId: state.currentSpawnId
     }
     return setBgShell(state, shell)
   }
@@ -1326,14 +1387,17 @@ function applyBgShellToolCall(state: ChatTimelineState, event: ToolCallEvent): C
     const nextIdx = new Map(state.bgShellPollIndex)
     nextIdx.set(event.id, {
       spawnToolUseId: owner.spawnToolUseId,
-      kind: kill ? 'kill' : 'output',
+      kind: kill ? 'kill' : 'output'
     })
     return { ...state, bgShellPollIndex: nextIdx }
   }
   return state
 }
 
-function applyBgShellToolResult(state: ChatTimelineState, event: ToolResultEvent): ChatTimelineState {
+function applyBgShellToolResult(
+  state: ChatTimelineState,
+  event: ToolResultEvent
+): ChatTimelineState {
   // 1. Spawn result → assign shell id.
   const spawnOwner = state.bgShells.get(event.toolUseId)
   if (spawnOwner && spawnOwner.shellId === null) {
@@ -1342,7 +1406,7 @@ function applyBgShellToolResult(state: ChatTimelineState, event: ToolResultEvent
       ...spawnOwner,
       shellId: shellId ?? spawnOwner.shellId,
       // Spawn ack means the shell was accepted; promote pending → running.
-      status: event.isError ? 'failed' : 'running',
+      status: event.isError ? 'failed' : 'running'
     }
     return setBgShell(state, next)
   }
@@ -1365,7 +1429,7 @@ function applyBgShellToolResult(state: ChatTimelineState, event: ToolResultEvent
     exitCode: sig.exitCode ?? owner.exitCode,
     lastPolledAt: Date.now(),
     latestStdout: sig.stdout ? tail(sig.stdout, BG_OUTPUT_KEEP) : owner.latestStdout,
-    latestStderr: sig.stderr ? tail(sig.stderr, BG_OUTPUT_KEEP) : owner.latestStderr,
+    latestStderr: sig.stderr ? tail(sig.stderr, BG_OUTPUT_KEEP) : owner.latestStderr
   }
   return setBgShell(state, next)
 }

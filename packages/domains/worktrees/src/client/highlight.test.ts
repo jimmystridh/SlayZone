@@ -63,7 +63,7 @@ vi.mock('./tokenize-worker?worker', () => ({
       workerState.instances.push(w)
       return w as unknown as object
     }
-  },
+  }
 }))
 
 // Type-only import so tests can reference the signature; real module is
@@ -149,7 +149,7 @@ describe('highlight tokenize cache', () => {
     const oldContent = 'old-marker'
     const oldP = mod.tokenizeContent(oldContent, 'o.ts')
     respond(workerState.sent[workerState.sent.length - 1].id, [
-      [{ from: 0, to: 3, classes: 'initial' }],
+      [{ from: 0, to: 3, classes: 'initial' }]
     ])
     const oldRef = await oldP
 
@@ -165,7 +165,7 @@ describe('highlight tokenize cache', () => {
     const reP = mod.tokenizeContent(oldContent, 'o.ts')
     expect(workerState.sent.length).toBe(sentBefore + 1)
     respond(workerState.sent[workerState.sent.length - 1].id, [
-      [{ from: 0, to: 3, classes: 'fresh' }],
+      [{ from: 0, to: 3, classes: 'fresh' }]
     ])
     const reRef = await reP
     // Different span payload to prove we re-fetched vs returned cached.
@@ -179,15 +179,11 @@ describe('highlight tokenize cache', () => {
     const b = 'victim-content'
 
     const pa = mod.tokenizeContent(a, 'a.ts')
-    respond(workerState.sent[workerState.sent.length - 1].id, [
-      [{ from: 0, to: 3, classes: 'a' }],
-    ])
+    respond(workerState.sent[workerState.sent.length - 1].id, [[{ from: 0, to: 3, classes: 'a' }]])
     await pa
 
     const pb = mod.tokenizeContent(b, 'b.ts')
-    respond(workerState.sent[workerState.sent.length - 1].id, [
-      [{ from: 0, to: 3, classes: 'b' }],
-    ])
+    respond(workerState.sent[workerState.sent.length - 1].id, [[{ from: 0, to: 3, classes: 'b' }]])
     await pb
 
     // Touch `a` — promotes to MRU (delete + reinsert).

@@ -82,7 +82,12 @@ export async function parseOpenCodeFiles(
       }
     ]
 
-    results.push({ records, sourceFile: filePath, fileMtimeMs: fileStat.mtimeMs, endOffset: fileStat.size })
+    results.push({
+      records,
+      sourceFile: filePath,
+      fileMtimeMs: fileStat.mtimeMs,
+      endOffset: fileStat.size
+    })
   }
 
   return results

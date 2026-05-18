@@ -1,4 +1,11 @@
-import { defaultEncodeSubmit, type TerminalAdapter, type PromptInfo, type ActivityState, type ErrorInfo, type ValidationResult } from './types'
+import {
+  defaultEncodeSubmit,
+  type TerminalAdapter,
+  type PromptInfo,
+  type ActivityState,
+  type ErrorInfo,
+  type ValidationResult
+} from './types'
 import { whichBinary, validateShellEnv } from '../shell-env'
 
 /**
@@ -22,8 +29,8 @@ export class GeminiAdapter implements TerminalAdapter {
   private static stripAnsi(data: string): string {
     return data
       .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '') // OSC sequences
-      .replace(/\x1b\[[?0-9;:]*[ -/]*[@-~]/g, '')          // CSI sequences
-      .replace(/\x1b[()][AB012]/g, '')                       // Character set
+      .replace(/\x1b\[[?0-9;:]*[ -/]*[@-~]/g, '') // CSI sequences
+      .replace(/\x1b[()][AB012]/g, '') // Character set
   }
 
   detectActivity(data: string, _current: ActivityState): ActivityState | null {
@@ -43,7 +50,11 @@ export class GeminiAdapter implements TerminalAdapter {
       }
     }
 
-    if (/429|Too Many Requests|exceeded your current quota|Resource has been exhausted/i.test(stripped)) {
+    if (
+      /429|Too Many Requests|exceeded your current quota|Resource has been exhausted/i.test(
+        stripped
+      )
+    ) {
       return {
         code: 'RATE_LIMIT',
         message: 'API rate limit exceeded',
@@ -89,9 +100,7 @@ export class GeminiAdapter implements TerminalAdapter {
     )
     if (labeled) return labeled[1]
     // Last resort: any UUID in the output
-    const bare = stripped.match(
-      /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
-    )
+    const bare = stripped.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i)
     return bare ? bare[1] : null
   }
 }

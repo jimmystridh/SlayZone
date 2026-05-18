@@ -115,7 +115,11 @@ interface UpdateIssueMutation {
   }
 }
 
-async function requestLinear<T>(apiKey: string, query: string, variables: Record<string, unknown> = {}): Promise<T> {
+async function requestLinear<T>(
+  apiKey: string,
+  query: string,
+  variables: Record<string, unknown> = {}
+): Promise<T> {
   const res = await fetch(LINEAR_API_URL, {
     method: 'POST',
     headers: {
@@ -127,10 +131,12 @@ async function requestLinear<T>(apiKey: string, query: string, variables: Record
 
   if (!res.ok) {
     const bodyText = await res.text()
-    throw new Error(`Linear API request failed: HTTP ${res.status}${bodyText ? ` - ${bodyText}` : ''}`)
+    throw new Error(
+      `Linear API request failed: HTTP ${res.status}${bodyText ? ` - ${bodyText}` : ''}`
+    )
   }
 
-  const body = await res.json() as GraphQLResponse<T>
+  const body = (await res.json()) as GraphQLResponse<T>
   if (body.errors?.length) {
     throw new Error(body.errors.map((e) => e.message).join('; '))
   }
@@ -157,7 +163,9 @@ function mapIssue(issue: NonNullable<IssueQuery['issue']>): LinearIssueSummary {
   }
 }
 
-export async function getViewer(apiKey: string): Promise<{ workspaceId: string; workspaceName: string; accountLabel: string }> {
+export async function getViewer(
+  apiKey: string
+): Promise<{ workspaceId: string; workspaceName: string; accountLabel: string }> {
   const data = await requestLinear<ViewerQuery>(
     apiKey,
     `query ViewerAndOrg {
@@ -173,7 +181,9 @@ export async function getViewer(apiKey: string): Promise<{ workspaceId: string; 
   }
 }
 
-export async function listTeams(apiKey: string): Promise<{ teams: LinearTeam[]; orgUrlKey: string }> {
+export async function listTeams(
+  apiKey: string
+): Promise<{ teams: LinearTeam[]; orgUrlKey: string }> {
   const data = await requestLinear<TeamsQuery>(
     apiKey,
     `query Teams {
@@ -216,12 +226,25 @@ export async function listWorkflowStates(
 
   return data.workflowStates.nodes
     .filter((state) => state.team?.id === teamId)
-    .map((state) => ({ id: state.id, name: state.name, type: state.type, color: state.color, position: state.position }))
+    .map((state) => ({
+      id: state.id,
+      name: state.name,
+      type: state.type,
+      color: state.color,
+      position: state.position
+    }))
 }
 
 export async function listIssues(
   apiKey: string,
-  input: { teamId?: string; projectId?: string; first: number; after?: string | null; updatedAfter?: string | null; assignedToMe?: boolean }
+  input: {
+    teamId?: string
+    projectId?: string
+    first: number
+    after?: string | null
+    updatedAfter?: string | null
+    assignedToMe?: boolean
+  }
 ): Promise<{ issues: LinearIssueSummary[]; nextCursor: string | null }> {
   const variables: Record<string, unknown> = {
     first: input.first,
@@ -322,7 +345,10 @@ export async function listIssues(
   }
 }
 
-export async function getIssue(apiKey: string, issueId: string): Promise<LinearIssueSummary | null> {
+export async function getIssue(
+  apiKey: string,
+  issueId: string
+): Promise<LinearIssueSummary | null> {
   const data = await requestLinear<IssueQuery>(
     apiKey,
     `query Issue($issueId: String!) {

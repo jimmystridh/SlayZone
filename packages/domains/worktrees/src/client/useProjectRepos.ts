@@ -26,17 +26,29 @@ export function useProjectRepos(
   const [loading, setLoading] = useState(false)
   const [version, setVersion] = useState(0)
 
-  const refresh = useCallback(() => setVersion(v => v + 1), [])
+  const refresh = useCallback(() => setVersion((v) => v + 1), [])
 
   useEffect(() => {
-    if (!projectPath) { setRepos([]); return }
+    if (!projectPath) {
+      setRepos([])
+      return
+    }
     let cancelled = false
     setLoading(true)
-    window.api.git.listProjectRepos(projectPath, { taskBoundPath })
-      .then(list => { if (!cancelled) setRepos(list) })
-      .catch(() => { if (!cancelled) setRepos([]) })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
+    window.api.git
+      .listProjectRepos(projectPath, { taskBoundPath })
+      .then((list) => {
+        if (!cancelled) setRepos(list)
+      })
+      .catch(() => {
+        if (!cancelled) setRepos([])
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [projectPath, taskBoundPath, version])
 
   return { repos, loading, refresh }

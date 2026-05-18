@@ -1,7 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ExternalLink, Pencil, Star, Search, Plus, Trash2 } from 'lucide-react'
-import { Button, cn, IconButton, Input, Label, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@slayzone/ui'
+import {
+  Button,
+  cn,
+  IconButton,
+  Input,
+  Label,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from '@slayzone/ui'
 import { CURATED_MCP_SERVERS, type CuratedMcpServer } from '../shared/mcp-registry'
 import type { CliProvider, McpConfigFileResult, McpTarget, McpServerConfig } from '../shared'
 import { getConfigurableMcpTargets } from '../shared/provider-registry'
@@ -37,20 +48,35 @@ function matchesSearch(query: string, ...fields: (string | undefined)[]) {
   return fields.some((f) => f?.toLowerCase().includes(q))
 }
 
-function ServerCard({ server, actions, footer, className }: {
+function ServerCard({
+  server,
+  actions,
+  footer,
+  className
+}: {
   server: CuratedMcpServer
   actions?: React.ReactNode
   footer?: React.ReactNode
   className?: string
 }) {
   return (
-    <div className={cn("flex flex-col justify-between rounded-lg border bg-surface-3 p-4 transition-colors", className)}>
+    <div
+      className={cn(
+        'flex flex-col justify-between rounded-lg border bg-surface-3 p-4 transition-colors',
+        className
+      )}
+    >
       <div>
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-sm font-medium leading-tight">{server.name}</span>
           <div className="flex shrink-0 items-center gap-1">
             {actions}
-            <a href={server.url} target="_blank" rel="noopener noreferrer" className="rounded p-0.5 transition-colors hover:bg-muted">
+            <a
+              href={server.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded p-0.5 transition-colors hover:bg-muted"
+            >
               <ExternalLink className="size-3 text-muted-foreground" />
             </a>
           </div>
@@ -62,21 +88,38 @@ function ServerCard({ server, actions, footer, className }: {
   )
 }
 
-function CustomServerCard({ server, actions, footer, className }: {
+function CustomServerCard({
+  server,
+  actions,
+  footer,
+  className
+}: {
   server: CustomMcpServer
   actions?: React.ReactNode
   footer?: React.ReactNode
   className?: string
 }) {
   return (
-    <div className={cn("flex flex-col justify-between rounded-lg border bg-surface-3 p-4 transition-colors", className)}>
+    <div
+      className={cn(
+        'flex flex-col justify-between rounded-lg border bg-surface-3 p-4 transition-colors',
+        className
+      )}
+    >
       <div>
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-sm font-medium leading-tight">{server.name}</span>
           <div className="flex shrink-0 items-center gap-1">{actions}</div>
         </div>
-        {server.description && <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{server.description}</p>}
-        <p className={cn("text-xs leading-relaxed text-muted-foreground font-mono", server.description ? 'mt-1' : 'mt-2')}>
+        {server.description && (
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{server.description}</p>
+        )}
+        <p
+          className={cn(
+            'text-xs leading-relaxed text-muted-foreground font-mono',
+            server.description ? 'mt-1' : 'mt-2'
+          )}
+        >
           {server.config.command} {server.config.args.join(' ')}
         </p>
       </div>
@@ -104,7 +147,7 @@ const PROVIDER_LABELS: Partial<Record<McpTarget, string>> = {
   cursor: 'Cursor',
   gemini: 'Gemini',
   opencode: 'OpenCode',
-  copilot: 'Copilot',
+  copilot: 'Copilot'
 }
 
 const HEADER_ACTIONS_ID = 'context-manager-header-actions'
@@ -119,18 +162,32 @@ function useHeaderPortal() {
 
 const ALL_PROVIDERS: McpTarget[] = getConfigurableMcpTargets({ writableOnly: true })
 
-
-
 // ---------------------------------------------------------------------------
 // Add/Edit MCP Server dialog — shared between computer and project modes
 // ---------------------------------------------------------------------------
 
-function McpServerFormFields({ serverKey, setServerKey, description, setDescription, command, setCommand, args, setArgs, envVars, setEnvVars }: {
-  serverKey: string; setServerKey: (v: string) => void
-  description: string; setDescription: (v: string) => void
-  command: string; setCommand: (v: string) => void
-  args: string; setArgs: (v: string) => void
-  envVars: Array<{ key: string; value: string }>; setEnvVars: (v: Array<{ key: string; value: string }>) => void
+function McpServerFormFields({
+  serverKey,
+  setServerKey,
+  description,
+  setDescription,
+  command,
+  setCommand,
+  args,
+  setArgs,
+  envVars,
+  setEnvVars
+}: {
+  serverKey: string
+  setServerKey: (v: string) => void
+  description: string
+  setDescription: (v: string) => void
+  command: string
+  setCommand: (v: string) => void
+  args: string
+  setArgs: (v: string) => void
+  envVars: Array<{ key: string; value: string }>
+  setEnvVars: (v: Array<{ key: string; value: string }>) => void
 }) {
   return (
     <>
@@ -222,7 +279,11 @@ function McpServerFormFields({ serverKey, setServerKey, description, setDescript
   )
 }
 
-function buildConfig(command: string, args: string, envVars: Array<{ key: string; value: string }>): McpServerConfig {
+function buildConfig(
+  command: string,
+  args: string,
+  envVars: Array<{ key: string; value: string }>
+): McpServerConfig {
   const config: McpServerConfig = {
     command: command.trim(),
     args: args.trim() ? args.trim().split(/\s+/) : []
@@ -245,7 +306,12 @@ interface AddComputerMcpDialogProps {
   editTarget?: EditTarget | null
 }
 
-function AddComputerMcpDialog({ open, onOpenChange, onAdded, editTarget }: AddComputerMcpDialogProps) {
+function AddComputerMcpDialog({
+  open,
+  onOpenChange,
+  onAdded,
+  editTarget
+}: AddComputerMcpDialogProps) {
   const [serverKey, setServerKey] = useState('')
   const [description, setDescription] = useState('')
   const [command, setCommand] = useState('')
@@ -253,7 +319,13 @@ function AddComputerMcpDialog({ open, onOpenChange, onAdded, editTarget }: AddCo
   const [envVars, setEnvVars] = useState<Array<{ key: string; value: string }>>([])
   const [saving, setSaving] = useState(false)
 
-  const reset = () => { setServerKey(''); setDescription(''); setCommand(''); setArgs(''); setEnvVars([]) }
+  const reset = () => {
+    setServerKey('')
+    setDescription('')
+    setCommand('')
+    setArgs('')
+    setEnvVars([])
+  }
 
   useEffect(() => {
     if (!open) return
@@ -262,7 +334,9 @@ function AddComputerMcpDialog({ open, onOpenChange, onAdded, editTarget }: AddCo
       setDescription(editTarget.server.description ?? '')
       setCommand(editTarget.server.config.command)
       setArgs(editTarget.server.config.args?.join(' ') ?? '')
-      setEnvVars(Object.entries(editTarget.server.config.env ?? {}).map(([key, value]) => ({ key, value })))
+      setEnvVars(
+        Object.entries(editTarget.server.config.env ?? {}).map(([key, value]) => ({ key, value }))
+      )
     } else {
       reset()
     }
@@ -295,19 +369,28 @@ function AddComputerMcpDialog({ open, onOpenChange, onAdded, editTarget }: AddCo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editTarget ? 'Edit Custom MCP Server' : 'Add Custom MCP Server'}</DialogTitle>
+          <DialogTitle>
+            {editTarget ? 'Edit Custom MCP Server' : 'Add Custom MCP Server'}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <McpServerFormFields
-            serverKey={serverKey} setServerKey={setServerKey}
-            description={description} setDescription={setDescription}
-            command={command} setCommand={setCommand}
-            args={args} setArgs={setArgs}
-            envVars={envVars} setEnvVars={setEnvVars}
+            serverKey={serverKey}
+            setServerKey={setServerKey}
+            description={description}
+            setDescription={setDescription}
+            command={command}
+            setCommand={setCommand}
+            args={args}
+            setArgs={setArgs}
+            envVars={envVars}
+            setEnvVars={setEnvVars}
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
           <Button onClick={handleSave} disabled={!serverKey.trim() || !command.trim() || saving}>
             {saving ? 'Saving...' : editTarget ? 'Save Changes' : 'Add Server'}
           </Button>
@@ -331,7 +414,15 @@ interface AddProjectMcpDialogProps {
   editProviders?: McpTarget[]
 }
 
-function AddProjectMcpDialog({ open, onOpenChange, projectPath, availableProviders, onAdded, editTarget, editProviders }: AddProjectMcpDialogProps) {
+function AddProjectMcpDialog({
+  open,
+  onOpenChange,
+  projectPath,
+  availableProviders,
+  onAdded,
+  editTarget,
+  editProviders
+}: AddProjectMcpDialogProps) {
   const [serverKey, setServerKey] = useState('')
   const [description, setDescription] = useState('')
   const [command, setCommand] = useState('')
@@ -341,7 +432,11 @@ function AddProjectMcpDialog({ open, onOpenChange, projectPath, availableProvide
   const [saving, setSaving] = useState(false)
 
   const reset = () => {
-    setServerKey(''); setDescription(''); setCommand(''); setArgs(''); setEnvVars([])
+    setServerKey('')
+    setDescription('')
+    setCommand('')
+    setArgs('')
+    setEnvVars([])
     const flags: Partial<Record<McpTarget, boolean>> = {}
     for (const p of availableProviders) flags[p] = true
     setProviders(flags)
@@ -354,7 +449,9 @@ function AddProjectMcpDialog({ open, onOpenChange, projectPath, availableProvide
       setDescription(editTarget.server.description ?? '')
       setCommand(editTarget.server.config.command)
       setArgs(editTarget.server.config.args?.join(' ') ?? '')
-      setEnvVars(Object.entries(editTarget.server.config.env ?? {}).map(([key, value]) => ({ key, value })))
+      setEnvVars(
+        Object.entries(editTarget.server.config.env ?? {}).map(([key, value]) => ({ key, value }))
+      )
       const flags: Partial<Record<McpTarget, boolean>> = {}
       for (const p of availableProviders) flags[p] = editProviders?.includes(p) ?? false
       setProviders(flags)
@@ -417,15 +514,22 @@ function AddProjectMcpDialog({ open, onOpenChange, projectPath, availableProvide
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editTarget ? 'Edit Custom MCP Server' : 'Add Custom MCP Server'}</DialogTitle>
+          <DialogTitle>
+            {editTarget ? 'Edit Custom MCP Server' : 'Add Custom MCP Server'}
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <McpServerFormFields
-            serverKey={serverKey} setServerKey={setServerKey}
-            description={description} setDescription={setDescription}
-            command={command} setCommand={setCommand}
-            args={args} setArgs={setArgs}
-            envVars={envVars} setEnvVars={setEnvVars}
+            serverKey={serverKey}
+            setServerKey={setServerKey}
+            description={description}
+            setDescription={setDescription}
+            command={command}
+            setCommand={setCommand}
+            args={args}
+            setArgs={setArgs}
+            envVars={envVars}
+            setEnvVars={setEnvVars}
           />
           <div className="space-y-1.5">
             <Label className="text-xs">Write to providers</Label>
@@ -444,7 +548,9 @@ function AddProjectMcpDialog({ open, onOpenChange, projectPath, availableProvide
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
           <Button onClick={handleSave} disabled={!canSubmit || saving}>
             {saving ? 'Saving...' : editTarget ? 'Save Changes' : 'Add Server'}
           </Button>
@@ -478,9 +584,7 @@ function ComputerMcpPanel() {
   }, [loadCustom])
 
   const toggleFavorite = async (id: string) => {
-    const next = favorites.includes(id)
-      ? favorites.filter((f) => f !== id)
-      : [...favorites, id]
+    const next = favorites.includes(id) ? favorites.filter((f) => f !== id) : [...favorites, id]
     setFavorites(next)
     await window.api.settings.set('mcp_favorites', JSON.stringify(next))
   }
@@ -496,10 +600,11 @@ function ComputerMcpPanel() {
     setAddDialogOpen(true)
   }
 
-  const filteredCurated = useMemo(() =>
-    CURATED_MCP_SERVERS
-      .filter((s) => matchesSearch(search, s.name, s.description, s.category))
-      .sort((a, b) => {
+  const filteredCurated = useMemo(
+    () =>
+      CURATED_MCP_SERVERS.filter((s) =>
+        matchesSearch(search, s.name, s.description, s.category)
+      ).sort((a, b) => {
         const af = favorites.includes(a.id) ? 0 : 1
         const bf = favorites.includes(b.id) ? 0 : 1
         return af - bf || a.name.localeCompare(b.name)
@@ -507,17 +612,23 @@ function ComputerMcpPanel() {
     [favorites, search]
   )
 
-  const filteredCustom = useMemo(() =>
-    customServers
-      .filter((s) => matchesSearch(search, s.name, s.id))
-      .sort((a, b) => a.name.localeCompare(b.name)),
+  const filteredCustom = useMemo(
+    () =>
+      customServers
+        .filter((s) => matchesSearch(search, s.name, s.id))
+        .sort((a, b) => a.name.localeCompare(b.name)),
     [customServers, search]
   )
 
   const headerActions = (
     <div className="flex items-center gap-2">
       <SearchInput value={search} onChange={setSearch} />
-      <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={() => setAddDialogOpen(true)}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 text-xs shrink-0"
+        onClick={() => setAddDialogOpen(true)}
+      >
         <Plus className="size-3 mr-1" />
         Custom
       </Button>
@@ -530,7 +641,10 @@ function ComputerMcpPanel() {
 
       <AddComputerMcpDialog
         open={addDialogOpen}
-        onOpenChange={(open) => { setAddDialogOpen(open); if (!open) setEditTarget(null) }}
+        onOpenChange={(open) => {
+          setAddDialogOpen(open)
+          if (!open) setEditTarget(null)
+        }}
         onAdded={loadCustom}
         editTarget={editTarget}
       />
@@ -538,7 +652,9 @@ function ComputerMcpPanel() {
       {/* Custom servers */}
       {filteredCustom.length > 0 && (
         <div className="space-y-2">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Custom</p>
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Custom
+          </p>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-2">
             {filteredCustom.map((s) => (
               <CustomServerCard
@@ -572,7 +688,9 @@ function ComputerMcpPanel() {
       {filteredCurated.length > 0 && (
         <div className="space-y-2">
           {filteredCustom.length > 0 && (
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Curated</p>
+            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              Curated
+            </p>
           )}
           <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-2">
             {filteredCurated.map((s) => (
@@ -585,7 +703,13 @@ function ComputerMcpPanel() {
                     className="rounded p-0.5 transition-colors hover:bg-muted"
                     title={favorites.includes(s.id) ? 'Remove from favorites' : 'Add to favorites'}
                   >
-                    <Star className={favorites.includes(s.id) ? 'size-3.5 fill-amber-400 text-amber-400' : 'size-3.5 text-muted-foreground'} />
+                    <Star
+                      className={
+                        favorites.includes(s.id)
+                          ? 'size-3.5 fill-amber-400 text-amber-400'
+                          : 'size-3.5 text-muted-foreground'
+                      }
+                    />
                   </button>
                 }
               />
@@ -646,7 +770,9 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
     }
   }, [projectPath, projectId])
 
-  useEffect(() => { void loadConfigs() }, [loadConfigs])
+  useEffect(() => {
+    void loadConfigs()
+  }, [loadConfigs])
 
   const enabledMcpTargets = useMemo(
     () => ALL_PROVIDERS.filter((p) => enabledProviders.includes(p)),
@@ -665,9 +791,7 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
   )
 
   const toggleFavorite = async (id: string) => {
-    const next = favorites.includes(id)
-      ? favorites.filter((f) => f !== id)
-      : [...favorites, id]
+    const next = favorites.includes(id) ? favorites.filter((f) => f !== id) : [...favorites, id]
     setFavorites(next)
     await window.api.settings.set('mcp_favorites', JSON.stringify(next))
   }
@@ -701,7 +825,13 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
         if (!foundConfig) foundConfig = cfg.servers[cs.id]
       }
     }
-    merged.push({ key: cs.id, curated: null, custom: cs, config: foundConfig ?? cs.config, providers })
+    merged.push({
+      key: cs.id,
+      curated: null,
+      custom: cs,
+      config: foundConfig ?? cs.config,
+      providers
+    })
     seen.add(cs.id)
   }
 
@@ -752,7 +882,15 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
   const editServer = (s: MergedServer) => {
     const config = s.custom?.config ?? s.config
     if (!config) return
-    setEditTarget({ originalKey: s.key, server: { id: s.key, name: s.custom?.name ?? s.key, description: s.custom?.description, config } })
+    setEditTarget({
+      originalKey: s.key,
+      server: {
+        id: s.key,
+        name: s.custom?.name ?? s.key,
+        description: s.custom?.description,
+        config
+      }
+    })
     setEditProviders([...s.providers])
     setAddDialogOpen(true)
   }
@@ -766,8 +904,12 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading...</p>
 
-  const enabledServers = merged.filter((s) => isEnabled(s) && filterServer(s)).sort((a, b) => serverName(a).localeCompare(serverName(b)))
-  const availableServers = merged.filter((m) => !isEnabled(m) && (m.curated || m.custom) && filterServer(m))
+  const enabledServers = merged
+    .filter((s) => isEnabled(s) && filterServer(s))
+    .sort((a, b) => serverName(a).localeCompare(serverName(b)))
+  const availableServers = merged.filter(
+    (m) => !isEnabled(m) && (m.curated || m.custom) && filterServer(m)
+  )
 
   const warningFooter = (s: MergedServer) => {
     const missing = enabledMcpTargets.filter((p) => !s.providers.includes(p))
@@ -791,14 +933,34 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
 
   const toggleAction = (s: MergedServer) => {
     const enabled = isEnabled(s)
-    return enabled
-      ? <Button size="sm" variant="ghost" className="h-6 px-2 text-[10px] text-destructive" onClick={() => disableServer(s)}>Disable</Button>
-      : <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" onClick={() => enableServer(s)}>Enable</Button>
+    return enabled ? (
+      <Button
+        size="sm"
+        variant="ghost"
+        className="h-6 px-2 text-[10px] text-destructive"
+        onClick={() => disableServer(s)}
+      >
+        Disable
+      </Button>
+    ) : (
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-6 px-2 text-[10px]"
+        onClick={() => enableServer(s)}
+      >
+        Enable
+      </Button>
+    )
   }
 
   const availableCardClass = 'opacity-60'
 
-  const renderServerCard = (s: MergedServer, footer?: (s: MergedServer) => React.ReactNode, cardClass?: string) => {
+  const renderServerCard = (
+    s: MergedServer,
+    footer?: (s: MergedServer) => React.ReactNode,
+    cardClass?: string
+  ) => {
     const cardActions = (
       <>
         {!s.curated && (
@@ -816,7 +978,13 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
           className="rounded p-0.5 transition-colors hover:bg-muted"
           title={isFavorite(s.key) ? 'Remove from favorites' : 'Add to favorites'}
         >
-          <Star className={isFavorite(s.key) ? 'size-3.5 fill-amber-400 text-amber-400' : 'size-3.5 text-muted-foreground'} />
+          <Star
+            className={
+              isFavorite(s.key)
+                ? 'size-3.5 fill-amber-400 text-amber-400'
+                : 'size-3.5 text-muted-foreground'
+            }
+          />
         </button>
       </>
     )
@@ -844,7 +1012,13 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
     }
     // Unknown server from config files
     return (
-      <div key={s.key} className={cn("flex flex-col justify-between rounded-lg border bg-surface-3 p-4 transition-colors", cardClass)}>
+      <div
+        key={s.key}
+        className={cn(
+          'flex flex-col justify-between rounded-lg border bg-surface-3 p-4 transition-colors',
+          cardClass
+        )}
+      >
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-sm font-medium leading-tight">{s.key}</span>
           <div className="flex shrink-0 items-center gap-1">{cardActions}</div>
@@ -857,7 +1031,12 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
   const headerActions = (
     <div className="flex items-center gap-2">
       <SearchInput value={search} onChange={setSearch} />
-      <Button variant="outline" size="sm" className="h-8 text-xs shrink-0" onClick={() => setAddDialogOpen(true)}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-8 text-xs shrink-0"
+        onClick={() => setAddDialogOpen(true)}
+      >
         <Plus className="size-3 mr-1" />
         Custom
       </Button>
@@ -870,7 +1049,13 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
 
       <AddProjectMcpDialog
         open={addDialogOpen}
-        onOpenChange={(open) => { setAddDialogOpen(open); if (!open) { setEditTarget(null); setEditProviders([]) } }}
+        onOpenChange={(open) => {
+          setAddDialogOpen(open)
+          if (!open) {
+            setEditTarget(null)
+            setEditProviders([])
+          }
+        }}
         projectPath={projectPath}
         availableProviders={enabledMcpTargets}
         onAdded={loadConfigs}
@@ -881,7 +1066,9 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
       {/* Enabled servers */}
       {enabledServers.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold">Enabled <span className="text-muted-foreground">{enabledServers.length}</span></h3>
+          <h3 className="text-sm font-semibold">
+            Enabled <span className="text-muted-foreground">{enabledServers.length}</span>
+          </h3>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-2">
             {enabledServers.map((s) => renderServerCard(s, warningFooter))}
           </div>
@@ -891,13 +1078,17 @@ function ProjectMcpPanel({ projectPath, projectId }: ProjectMcpPanelProps) {
       {/* Available servers (curated + custom computer) */}
       {availableServers.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold">Available <span className="text-muted-foreground">{availableServers.length}</span></h3>
+          <h3 className="text-sm font-semibold">
+            Available <span className="text-muted-foreground">{availableServers.length}</span>
+          </h3>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-2">
-            {[...availableServers].sort((a, b) => {
-              const af = isFavorite(a.key) ? 0 : 1
-              const bf = isFavorite(b.key) ? 0 : 1
-              return af - bf || serverName(a).localeCompare(serverName(b))
-            }).map((s) => renderServerCard(s, undefined, availableCardClass))}
+            {[...availableServers]
+              .sort((a, b) => {
+                const af = isFavorite(a.key) ? 0 : 1
+                const bf = isFavorite(b.key) ? 0 : 1
+                return af - bf || serverName(a).localeCompare(serverName(b))
+              })
+              .map((s) => renderServerCard(s, undefined, availableCardClass))}
           </div>
         </div>
       )}

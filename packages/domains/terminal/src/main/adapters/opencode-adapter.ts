@@ -1,4 +1,11 @@
-import { defaultEncodeSubmit, type TerminalAdapter, type PromptInfo, type ActivityState, type ErrorInfo, type ValidationResult } from './types'
+import {
+  defaultEncodeSubmit,
+  type TerminalAdapter,
+  type PromptInfo,
+  type ActivityState,
+  type ErrorInfo,
+  type ValidationResult
+} from './types'
 import { whichBinary, validateShellEnv } from '../shell-env'
 
 /**
@@ -15,8 +22,8 @@ export class OpencodeAdapter implements TerminalAdapter {
   private static stripAnsi(data: string): string {
     return data
       .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '') // OSC sequences
-      .replace(/\x1b\[[?0-9;:]*[ -/]*[@-~]/g, '')          // CSI sequences
-      .replace(/\x1b[()][AB012]/g, '')                       // Character set
+      .replace(/\x1b\[[?0-9;:]*[ -/]*[@-~]/g, '') // CSI sequences
+      .replace(/\x1b[()][AB012]/g, '') // Character set
   }
 
   detectActivity(_data: string, _current: ActivityState): ActivityState | null {

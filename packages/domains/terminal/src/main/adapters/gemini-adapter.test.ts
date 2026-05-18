@@ -20,7 +20,8 @@ function test(name: string, fn: () => void) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     }
   }
 }
@@ -44,7 +45,9 @@ test('extracts UUID from real /stats box-drawing output', () => {
 })
 
 test('extracts UUID from plain Session ID: line', () => {
-  expect(adapter.detectConversationId('Session ID: aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee')).toBe('aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee')
+  expect(adapter.detectConversationId('Session ID: aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee')).toBe(
+    'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  )
 })
 
 test('falls back to bare UUID when label is mangled', () => {

@@ -31,7 +31,9 @@ export function startArtifactWatcher(artifactsDir: string): void {
   if (watcher) return
   try {
     fs.mkdirSync(artifactsDir, { recursive: true })
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   try {
     watcher = fs.watch(artifactsDir, { recursive: true }, (_eventType, filename) => {
       if (!filename) return
@@ -39,14 +41,17 @@ export function startArtifactWatcher(artifactsDir: string): void {
       if (!artifactId) return
       const prev = debounceMap.get(artifactId)
       if (prev) clearTimeout(prev)
-      debounceMap.set(artifactId, setTimeout(() => {
-        debounceMap.delete(artifactId)
-        for (const w of BrowserWindow.getAllWindows()) {
-          if (!w.isDestroyed()) {
-            w.webContents.send('artifacts:content-changed', artifactId)
+      debounceMap.set(
+        artifactId,
+        setTimeout(() => {
+          debounceMap.delete(artifactId)
+          for (const w of BrowserWindow.getAllWindows()) {
+            if (!w.isDestroyed()) {
+              w.webContents.send('artifacts:content-changed', artifactId)
+            }
           }
-        }
-      }, DEBOUNCE_MS))
+        }, DEBOUNCE_MS)
+      )
     })
   } catch {
     // fs.watch can fail (missing dir, unsupported fs) — silently no-op

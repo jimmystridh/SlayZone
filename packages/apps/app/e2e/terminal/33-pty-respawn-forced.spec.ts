@@ -1,9 +1,5 @@
 import { test, expect, seed, resetApp, TEST_PROJECT_PATH } from '../fixtures/electron'
-import {
-  getMainSessionId,
-  openTaskTerminal,
-  waitForPtySession
-} from '../fixtures/terminal'
+import { getMainSessionId, openTaskTerminal, waitForPtySession } from '../fixtures/terminal'
 
 /**
  * `POST /api/pty/respawn` (CLI: `slay pty respawn`) must:
@@ -16,17 +12,24 @@ import {
  */
 // Renderer-side `fetch('http://127.0.0.1:...')` is blocked by the CSP in dev
 // mode, so POST via Node http from the main-process eval context instead.
-function postRespawn(electronApp: import('playwright').ElectronApplication, port: number, body: Record<string, unknown>) {
-  return electronApp.evaluate(async (_, { port: p, body: b }) => {
-    // Main process is Node 22, so globalThis.fetch is available without any
-    // CSP gate (CSP only restricts the renderer).
-    const r = await fetch(`http://127.0.0.1:${p}/api/pty/respawn`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(b),
-    })
-    return { status: r.status, ok: r.ok }
-  }, { port, body })
+function postRespawn(
+  electronApp: import('playwright').ElectronApplication,
+  port: number,
+  body: Record<string, unknown>
+) {
+  return electronApp.evaluate(
+    async (_, { port: p, body: b }) => {
+      // Main process is Node 22, so globalThis.fetch is available without any
+      // CSP gate (CSP only restricts the renderer).
+      const r = await fetch(`http://127.0.0.1:${p}/api/pty/respawn`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(b)
+      })
+      return { status: r.status, ok: r.ok }
+    },
+    { port, body }
+  )
 }
 
 test.describe('Forced PTY respawn via REST', () => {
@@ -47,7 +50,11 @@ test.describe('Forced PTY respawn via REST', () => {
     expect(mcpPort).toBeTruthy()
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Force Respawn', color: '#f59e0b', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Force Respawn',
+      color: '#f59e0b',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
   })
@@ -56,18 +63,28 @@ test.describe('Forced PTY respawn via REST', () => {
   // onEnsureAlive; the test installs its own listener that acks immediately,
   // but res.ok still false. The retry mechanism may also be racing the test
   // subscriber.
-  test.skip('REST broadcasts pty:ensure-alive (force=true) to renderer', async ({ electronApp, mainWindow }) => {
+  test.skip('REST broadcasts pty:ensure-alive (force=true) to renderer', async ({
+    electronApp,
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
-    const task = await s.createTask({ projectId, title: 'Force respawn signal', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    const task = await s.createTask({
+      projectId,
+      title: 'Force respawn signal',
+      status: 'in_progress'
+    })
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     // Subscribe & ack so the REST call's await resolves. TaskDetailPage isn't
     // mounted in this signal-only test; we stand in for it.
     await mainWindow.evaluate((id) => {
-      (window as unknown as { __ensureAliveCalls: string[] }).__ensureAliveCalls = []
+      ;(window as unknown as { __ensureAliveCalls: string[] }).__ensureAliveCalls = []
       window.api.pty.onEnsureAlive((t, reqId, _force) => {
-        (window as unknown as { __ensureAliveCalls: string[] }).__ensureAliveCalls.push(t)
+        ;(window as unknown as { __ensureAliveCalls: string[] }).__ensureAliveCalls.push(t)
         window.api.pty.ackEnsureAlive(reqId, 'ok')
       })
       return id
@@ -76,16 +93,23 @@ test.describe('Forced PTY respawn via REST', () => {
     const res = await postRespawn(electronApp, mcpPort, { taskId: task.id })
     expect(res.ok).toBe(true)
 
-    await expect.poll(async () =>
-      mainWindow.evaluate(
-        (id) => (window as unknown as { __ensureAliveCalls: string[] }).__ensureAliveCalls.filter((t) => t === id).length,
-        task.id
+    await expect
+      .poll(async () =>
+        mainWindow.evaluate(
+          (id) =>
+            (window as unknown as { __ensureAliveCalls: string[] }).__ensureAliveCalls.filter(
+              (t) => t === id
+            ).length,
+          task.id
+        )
       )
-    ).toBeGreaterThan(0)
+      .toBeGreaterThan(0)
   })
 
   test('REST 404 when task does not exist', async ({ electronApp }) => {
-    const res = await postRespawn(electronApp, mcpPort, { taskId: '00000000-0000-0000-0000-000000000000' })
+    const res = await postRespawn(electronApp, mcpPort, {
+      taskId: '00000000-0000-0000-0000-000000000000'
+    })
     expect(res.status).toBe(404)
   })
 
@@ -94,10 +118,20 @@ test.describe('Forced PTY respawn via REST', () => {
     expect(res.status).toBe(400)
   })
 
-  test.skip('Force respawn restarts existing PTY (terminal mode)', async ({ electronApp, mainWindow }) => {
+  test.skip('Force respawn restarts existing PTY (terminal mode)', async ({
+    electronApp,
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
-    const task = await s.createTask({ projectId, title: 'Force respawn restart', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    const task = await s.createTask({
+      projectId,
+      title: 'Force respawn restart',
+      status: 'in_progress'
+    })
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     const sessionId = getMainSessionId(task.id)
@@ -112,11 +146,15 @@ test.describe('Forced PTY respawn via REST', () => {
 
     await postRespawn(electronApp, mcpPort, { taskId: task.id })
 
-    await expect.poll(async () =>
-      mainWindow.evaluate(async (id) => {
-        const list = await window.api.pty.list()
-        return list.find((s) => s.sessionId === id)?.createdAt ?? null
-      }, sessionId)
-    , { timeout: 10_000 }).not.toBe(originalCreatedAt)
+    await expect
+      .poll(
+        async () =>
+          mainWindow.evaluate(async (id) => {
+            const list = await window.api.pty.list()
+            return list.find((s) => s.sessionId === id)?.createdAt ?? null
+          }, sessionId),
+        { timeout: 10_000 }
+      )
+      .not.toBe(originalCreatedAt)
   })
 })

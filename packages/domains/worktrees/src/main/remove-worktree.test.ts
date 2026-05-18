@@ -27,14 +27,25 @@ async function test(name: string, fn: () => Promise<void>) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     },
-    toBeTruthy() { if (!actual) throw new Error(`Expected truthy, got ${JSON.stringify(actual)}`) },
-    toBeFalsy() { if (actual) throw new Error(`Expected falsy, got ${JSON.stringify(actual)}`) },
+    toBeTruthy() {
+      if (!actual) throw new Error(`Expected truthy, got ${JSON.stringify(actual)}`)
+    },
+    toBeFalsy() {
+      if (actual) throw new Error(`Expected falsy, got ${JSON.stringify(actual)}`)
+    }
   }
 }
 
-const gitEnv = { ...process.env, GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 'test@test.com', GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 'test@test.com' }
+const gitEnv = {
+  ...process.env,
+  GIT_AUTHOR_NAME: 'Test',
+  GIT_AUTHOR_EMAIL: 'test@test.com',
+  GIT_COMMITTER_NAME: 'Test',
+  GIT_COMMITTER_EMAIL: 'test@test.com'
+}
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'slayzone-rm-wt-'))
 const repoPath = path.join(root, 'repo')
 fs.mkdirSync(repoPath)
@@ -135,8 +146,8 @@ await test('handles + prefix for worktree branches', async () => {
   const wtPath = path.join(root, 'wt-plus')
   await createWorktree(repoPath, wtPath, 'feature-plus')
   const branches = await listBranches(repoPath)
-  expect(branches.some(b => b === 'feature-plus')).toBe(true)
-  expect(branches.every(b => !b.startsWith('+'))).toBe(true)
+  expect(branches.some((b) => b === 'feature-plus')).toBe(true)
+  expect(branches.every((b) => !b.startsWith('+'))).toBe(true)
   await removeWorktree(repoPath, wtPath)
 })
 

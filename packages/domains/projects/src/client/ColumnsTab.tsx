@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
-import {
-  Plus,
-  Trash2,
-  ChevronUp,
-  ChevronDown
-} from 'lucide-react'
+import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
 import { Button, IconButton } from '@slayzone/ui'
 import { Input } from '@slayzone/ui'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@slayzone/ui'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@slayzone/ui'
 import { cn } from '@slayzone/ui'
 import {
   DEFAULT_COLUMNS,
@@ -41,9 +41,11 @@ export function ColumnsTab({ project, onUpdated, lockedByProvider }: ColumnsTabP
     columns.map((column, index) => ({ ...column, position: index }))
 
   const updateColumn = (id: string, update: Partial<ColumnConfig>) => {
-    setColumnsDraft((prev) => normalizePositions(prev.map((column) => (
-      column.id === id ? { ...column, ...update } : column
-    ))))
+    setColumnsDraft((prev) =>
+      normalizePositions(
+        prev.map((column) => (column.id === id ? { ...column, ...update } : column))
+      )
+    )
   }
 
   const moveColumn = (id: string, category: WorkflowCategory, direction: -1 | 1) => {
@@ -53,18 +55,17 @@ export function ColumnsTab({ project, onUpdated, lockedByProvider }: ColumnsTabP
       const categoryColumns = sorted.filter((column) => column.category === category)
       const categoryIndex = categoryColumns.findIndex((column) => column.id === id)
       const nextCategoryIndex = categoryIndex + direction
-      if (categoryIndex < 0 || nextCategoryIndex < 0 || nextCategoryIndex >= categoryColumns.length) return prev
+      if (categoryIndex < 0 || nextCategoryIndex < 0 || nextCategoryIndex >= categoryColumns.length)
+        return prev
 
       const nextCategoryColumns = [...categoryColumns]
       const [moved] = nextCategoryColumns.splice(categoryIndex, 1)
       nextCategoryColumns.splice(nextCategoryIndex, 0, moved)
 
       let replacementIndex = 0
-      const next = sorted.map((column) => (
-        column.category === category
-          ? nextCategoryColumns[replacementIndex++]
-          : column
-      ))
+      const next = sorted.map((column) =>
+        column.category === category ? nextCategoryColumns[replacementIndex++] : column
+      )
 
       return normalizePositions(next)
     })
@@ -210,7 +211,9 @@ export function ColumnsTab({ project, onUpdated, lockedByProvider }: ColumnsTabP
                         )}
                         <Input
                           value={column.label}
-                          onChange={(event) => updateColumn(column.id, { label: event.target.value })}
+                          onChange={(event) =>
+                            updateColumn(column.id, { label: event.target.value })
+                          }
                           placeholder="Status label"
                           disabled={Boolean(lockedByProvider)}
                           className="h-8 border-0 !bg-transparent dark:!bg-transparent px-0 text-sm font-medium shadow-none focus:bg-transparent focus-visible:!bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"

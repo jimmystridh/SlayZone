@@ -17,21 +17,22 @@ function buildTaskTagsChangedEvents(
     return []
   }
 
-  return [{
-    entityType: 'task' as const,
-    entityId: task.id,
-    projectId: task.project_id,
-    taskId: task.id,
-    kind: 'task.tags_changed' as const,
-    actorType: 'user' as const,
-    source: 'task' as const,
-    summary: 'Tags updated',
-    payload: { addedTagIds, removedTagIds },
-  }]
+  return [
+    {
+      entityType: 'task' as const,
+      entityId: task.id,
+      projectId: task.project_id,
+      taskId: task.id,
+      kind: 'task.tags_changed' as const,
+      actorType: 'user' as const,
+      source: 'task' as const,
+      summary: 'Tags updated',
+      payload: { addedTagIds, removedTagIds }
+    }
+  ]
 }
 
 export function registerTagHandlers(ipcMain: IpcMain, db: Database): void {
-
   // Tags CRUD
   ipcMain.handle('db:tags:getAll', () => {
     return db.prepare('SELECT * FROM tags ORDER BY sort_order, name').all()
@@ -39,8 +40,12 @@ export function registerTagHandlers(ipcMain: IpcMain, db: Database): void {
 
   ipcMain.handle('db:tags:create', (_, data: CreateTagInput) => {
     const id = crypto.randomUUID()
-    const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order), -1) as m FROM tags WHERE project_id = ?').get(data.projectId) as { m: number }
-    db.prepare('INSERT INTO tags (id, project_id, name, color, text_color, sort_order) VALUES (?, ?, ?, ?, ?, ?)').run(
+    const maxOrder = db
+      .prepare('SELECT COALESCE(MAX(sort_order), -1) as m FROM tags WHERE project_id = ?')
+      .get(data.projectId) as { m: number }
+    db.prepare(
+      'INSERT INTO tags (id, project_id, name, color, text_color, sort_order) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(
       id,
       data.projectId,
       data.name,
@@ -107,7 +112,10 @@ export function registerTagHandlers(ipcMain: IpcMain, db: Database): void {
   })
 
   ipcMain.handle('db:taskTags:getAll', () => {
-    const rows = db.prepare('SELECT task_id, tag_id FROM task_tags').all() as { task_id: string; tag_id: string }[]
+    const rows = db.prepare('SELECT task_id, tag_id FROM task_tags').all() as {
+      task_id: string
+      tag_id: string
+    }[]
     const map: Record<string, string[]> = {}
     for (const row of rows) {
       if (!map[row.task_id]) map[row.task_id] = []
@@ -120,14 +128,18 @@ export function registerTagHandlers(ipcMain: IpcMain, db: Database): void {
     const deleteStmt = db.prepare('DELETE FROM task_tags WHERE task_id = ?')
     const insertStmt = db.prepare('INSERT INTO task_tags (task_id, tag_id) VALUES (?, ?)')
     db.transaction(() => {
-      const previousRows = db.prepare('SELECT tag_id FROM task_tags WHERE task_id = ? ORDER BY tag_id ASC').all(taskId) as Array<{ tag_id: string }>
+      const previousRows = db
+        .prepare('SELECT tag_id FROM task_tags WHERE task_id = ? ORDER BY tag_id ASC')
+        .all(taskId) as Array<{ tag_id: string }>
       const previousTagIds = previousRows.map((row) => row.tag_id)
       deleteStmt.run(taskId)
       for (const tagId of tagIds) {
         insertStmt.run(taskId, tagId)
       }
 
-      const taskRow = db.prepare('SELECT id, project_id FROM tasks WHERE id = ?').get(taskId) as { id: string; project_id: string } | undefined
+      const taskRow = db.prepare('SELECT id, project_id FROM tasks WHERE id = ?').get(taskId) as
+        | { id: string; project_id: string }
+        | undefined
       if (taskRow) {
         recordActivityEvents(db, buildTaskTagsChangedEvents(taskRow, previousTagIds, tagIds))
       }

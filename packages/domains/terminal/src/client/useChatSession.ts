@@ -5,7 +5,7 @@ import {
   reducer,
   isInFlight,
   type ChatTimelineState,
-  type TimelineItem,
+  type TimelineItem
 } from './chat-timeline'
 
 // We don't import ElectronAPI types here to avoid a cycle. The `chat` namespace shape
@@ -42,7 +42,11 @@ interface ChatApi {
     args: {
       requestId: string
       decision:
-        | { behavior: 'allow'; updatedInput?: Record<string, unknown>; updatedPermissions?: unknown[] }
+        | {
+            behavior: 'allow'
+            updatedInput?: Record<string, unknown>
+            updatedPermissions?: unknown[]
+          }
         | { behavior: 'deny'; message: string; interrupt?: boolean }
     }
   ) => Promise<boolean>
@@ -117,7 +121,11 @@ export interface UseChatSessionResult {
    * adapter accepted the structured result, false when it lacks a structured-
    * input channel — caller should fall back to `sendMessage`.
    */
-  sendToolResult: (args: { toolUseId: string; content: string; isError?: boolean }) => Promise<boolean>
+  sendToolResult: (args: {
+    toolUseId: string
+    content: string
+    isError?: boolean
+  }) => Promise<boolean>
   /**
    * Reply to an inbound permission_request. `decision.behavior:'allow'` carries
    * `updatedInput` (e.g. AskUserQuestion answers) — the CLI runs the tool
@@ -126,7 +134,11 @@ export interface UseChatSessionResult {
   respondPermission: (args: {
     requestId: string
     decision:
-      | { behavior: 'allow'; updatedInput?: Record<string, unknown>; updatedPermissions?: unknown[] }
+      | {
+          behavior: 'allow'
+          updatedInput?: Record<string, unknown>
+          updatedPermissions?: unknown[]
+        }
       | { behavior: 'deny'; message: string; interrupt?: boolean }
   }) => Promise<boolean>
   interrupt: () => Promise<void>
@@ -195,7 +207,7 @@ export function useChatSession(opts: UseChatSessionOpts): UseChatSessionResult {
           next.set(event.toolUseId, {
             requestId: event.requestId,
             toolName: event.toolName,
-            input: event.input,
+            input: event.input
           })
           return next
         })
@@ -240,14 +252,14 @@ export function useChatSession(opts: UseChatSessionOpts): UseChatSessionResult {
           taskId: opts.taskId,
           mode: opts.mode,
           cwd: opts.cwd,
-          providerFlagsOverride: opts.providerFlagsOverride ?? null,
+          providerFlagsOverride: opts.providerFlagsOverride ?? null
         })
       } catch (e) {
         // Surface hydrate failure but still attempt replay (e.g. session may
         // exist from a previous reattach despite this hydrate rejecting).
         dispatch({
           type: 'event',
-          event: { kind: 'error', message: (e as Error).message ?? String(e) },
+          event: { kind: 'error', message: (e as Error).message ?? String(e) }
         })
       }
       if (cancelled) return
@@ -284,21 +296,24 @@ export function useChatSession(opts: UseChatSessionOpts): UseChatSessionResult {
 
   // Stable ref so consumers (autocomplete `sources` useMemo, ChatPanel chatApi)
   // don't reinitialize on every parent render. dispatch is stable from useReducer.
-  const sendMessage = useCallback(async (text: string): Promise<void> => {
-    const chat = getChatApi()
-    // Optimistic: paint the user-text immediately so the UI doesn't lag the IPC
-    // roundtrip. Main still emits the canonical `user-message` event and the
-    // reducer confirms-in-place (FIFO) when it arrives — single source of truth
-    // for replay. `user-sent` is renderer-only; never persisted.
-    dispatch({ type: 'user-sent', text })
-    try {
-      const ok = await chat.send(opts.tabId, text)
-      if (!ok) dispatch({ type: 'user-send-failed' })
-    } catch (err) {
-      dispatch({ type: 'user-send-failed' })
-      throw err
-    }
-  }, [opts.tabId])
+  const sendMessage = useCallback(
+    async (text: string): Promise<void> => {
+      const chat = getChatApi()
+      // Optimistic: paint the user-text immediately so the UI doesn't lag the IPC
+      // roundtrip. Main still emits the canonical `user-message` event and the
+      // reducer confirms-in-place (FIFO) when it arrives — single source of truth
+      // for replay. `user-sent` is renderer-only; never persisted.
+      dispatch({ type: 'user-sent', text })
+      try {
+        const ok = await chat.send(opts.tabId, text)
+        if (!ok) dispatch({ type: 'user-send-failed' })
+      } catch (err) {
+        dispatch({ type: 'user-send-failed' })
+        throw err
+      }
+    },
+    [opts.tabId]
+  )
 
   const sendToolResult = async (args: {
     toolUseId: string
@@ -312,7 +327,11 @@ export function useChatSession(opts: UseChatSessionOpts): UseChatSessionResult {
   const respondPermission = async (args: {
     requestId: string
     decision:
-      | { behavior: 'allow'; updatedInput?: Record<string, unknown>; updatedPermissions?: unknown[] }
+      | {
+          behavior: 'allow'
+          updatedInput?: Record<string, unknown>
+          updatedPermissions?: unknown[]
+        }
       | { behavior: 'deny'; message: string; interrupt?: boolean }
   }): Promise<boolean> => {
     const chat = getChatApi()
@@ -342,7 +361,7 @@ export function useChatSession(opts: UseChatSessionOpts): UseChatSessionResult {
       taskId: opts.taskId,
       mode: opts.mode,
       cwd: opts.cwd,
-      providerFlagsOverride: opts.providerFlagsOverride ?? null,
+      providerFlagsOverride: opts.providerFlagsOverride ?? null
     })
   }
 
@@ -357,7 +376,7 @@ export function useChatSession(opts: UseChatSessionOpts): UseChatSessionResult {
       taskId: opts.taskId,
       mode: opts.mode,
       cwd: opts.cwd,
-      providerFlagsOverride: opts.providerFlagsOverride ?? null,
+      providerFlagsOverride: opts.providerFlagsOverride ?? null
     })
   }
 
@@ -384,6 +403,6 @@ export function useChatSession(opts: UseChatSessionOpts): UseChatSessionResult {
     interrupt,
     abortAndPop,
     kill,
-    reset,
+    reset
   }
 }

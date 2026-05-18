@@ -25,27 +25,27 @@ export function useUsageAnalytics() {
 
   // Load enabled modes + default provider from settings on mount
   useEffect(() => {
-    Promise.all([
-      window.api.settings.get('default_terminal_mode'),
-      window.api.terminalModes.list()
-    ]).then(([defaultMode, modes]) => {
-      const options: ProviderOption[] = modes
-        .filter((m) => m.enabled && m.id !== 'terminal')
-        .map((m) => ({
-          id: m.id,
-          label: m.label,
-          hasUsageData: PROVIDER_USAGE_SUPPORT[m.id]?.supported ?? false
-        }))
-      setProviderOptions(options)
+    Promise.all([window.api.settings.get('default_terminal_mode'), window.api.terminalModes.list()])
+      .then(([defaultMode, modes]) => {
+        const options: ProviderOption[] = modes
+          .filter((m) => m.enabled && m.id !== 'terminal')
+          .map((m) => ({
+            id: m.id,
+            label: m.label,
+            hasUsageData: PROVIDER_USAGE_SUPPORT[m.id]?.supported ?? false
+          }))
+        setProviderOptions(options)
 
-      if (defaultMode && options.some((o) => o.id === defaultMode)) {
-        setSelectedProvider(defaultMode)
-      }
-      setDefaultLoaded(true)
-    }).catch(() => setDefaultLoaded(true))
+        if (defaultMode && options.some((o) => o.id === defaultMode)) {
+          setSelectedProvider(defaultMode)
+        }
+        setDefaultLoaded(true)
+      })
+      .catch(() => setDefaultLoaded(true))
   }, [])
 
-  const providerSupported = selectedProvider === ALL_PROVIDERS ||
+  const providerSupported =
+    selectedProvider === ALL_PROVIDERS ||
     (PROVIDER_USAGE_SUPPORT[selectedProvider]?.supported ?? false)
 
   // Filtered view
@@ -63,7 +63,8 @@ export function useUsageAnalytics() {
     const totalCacheWriteTokens = byProvider.reduce((s, p) => s + p.cacheWriteTokens, 0)
     const totalSessions = byProvider.reduce((s, p) => s + p.sessions, 0)
     const totalInput = totalInputTokens + totalCacheWriteTokens
-    const cacheHitPercent = totalInput > 0 ? (totalCacheReadTokens / (totalInput + totalCacheReadTokens)) * 100 : 0
+    const cacheHitPercent =
+      totalInput > 0 ? (totalCacheReadTokens / (totalInput + totalCacheReadTokens)) * 100 : 0
 
     return {
       ...rawData,
@@ -90,16 +91,21 @@ export function useUsageAnalytics() {
     })
 
     setLoading(true)
-    window.api.usageAnalytics.refresh(range).then((fresh) => {
-      if (!cancelled) {
-        setRawData(fresh)
-        setLoading(false)
-      }
-    }).catch(() => {
-      if (!cancelled) setLoading(false)
-    })
+    window.api.usageAnalytics
+      .refresh(range)
+      .then((fresh) => {
+        if (!cancelled) {
+          setRawData(fresh)
+          setLoading(false)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoading(false)
+      })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [range, defaultLoaded])
 
   const refresh = useCallback(async () => {

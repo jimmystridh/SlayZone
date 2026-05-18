@@ -2,7 +2,12 @@
  * agent-turns:list IPC handler — filter + rethread of empty-diff turns.
  * Run: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm --loader ./packages/shared/test-utils/loader.ts packages/domains/agent-turns/src/main/handlers.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerAgentTurnsHandlers } from './handlers.js'
 import { recordTurnBoundary } from './turn-tracker.js'
 import { spawnSync } from 'node:child_process'
@@ -40,8 +45,12 @@ function freshTask(): { taskId: string; tabId: string; repo: string } {
   repos.push(repo)
   const taskId = crypto.randomUUID()
   const tabId = `tab-${taskId.slice(0, 8)}`
-  h.db.prepare('INSERT INTO tasks (id, project_id, title, worktree_path) VALUES (?, ?, ?, ?)').run(taskId, projectId, 'T', repo)
-  h.db.prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)').run(tabId, taskId, 'claude-code', 0)
+  h.db
+    .prepare('INSERT INTO tasks (id, project_id, title, worktree_path) VALUES (?, ?, ?, ?)')
+    .run(taskId, projectId, 'T', repo)
+  h.db
+    .prepare('INSERT INTO terminal_tabs (id, task_id, mode, position) VALUES (?, ?, ?, ?)')
+    .run(tabId, taskId, 'claude-code', 0)
   return { taskId, tabId, repo }
 }
 
@@ -56,10 +65,24 @@ await describe('list filters empty-diff turns + re-threads prev_snapshot_sha', (
     // Inject a malformed legacy turn: snapshot_sha = the latest, so prev..this is empty.
     // head_sha_at_snap mirrors the latest row's, so Rule 1 doesn't drop it — the
     // empty-diff Rule 2 is what we want to exercise here.
-    const latest = h.db.prepare('SELECT snapshot_sha, head_sha_at_snap FROM agent_turns WHERE worktree_path = ? ORDER BY created_at DESC LIMIT 1').get(repo) as { snapshot_sha: string; head_sha_at_snap: string }
-    h.db.prepare('INSERT INTO agent_turns (id, worktree_path, task_id, terminal_tab_id, snapshot_sha, head_sha_at_snap, prompt_preview, created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?)').run(
-      crypto.randomUUID(), repo, tabId, latest.snapshot_sha, latest.head_sha_at_snap, 'noop', Date.now() + 1000
-    )
+    const latest = h.db
+      .prepare(
+        'SELECT snapshot_sha, head_sha_at_snap FROM agent_turns WHERE worktree_path = ? ORDER BY created_at DESC LIMIT 1'
+      )
+      .get(repo) as { snapshot_sha: string; head_sha_at_snap: string }
+    h.db
+      .prepare(
+        'INSERT INTO agent_turns (id, worktree_path, task_id, terminal_tab_id, snapshot_sha, head_sha_at_snap, prompt_preview, created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?)'
+      )
+      .run(
+        crypto.randomUUID(),
+        repo,
+        tabId,
+        latest.snapshot_sha,
+        latest.head_sha_at_snap,
+        'noop',
+        Date.now() + 1000
+      )
 
     const list = (await h.invoke('agent-turns:list', repo)) as AgentTurnRange[]
     expect(list).toHaveLength(2) // legacy noop dropped
@@ -74,16 +97,33 @@ await describe('list filters empty-diff turns + re-threads prev_snapshot_sha', (
     fs.writeFileSync(path.join(repo, 'b.txt'), 'third')
     await recordTurnBoundary(h.db, tabId, 'p3')
 
-    const rows = h.db.prepare('SELECT * FROM agent_turns WHERE worktree_path = ? ORDER BY created_at ASC').all(repo) as Array<{ id: string; snapshot_sha: string; head_sha_at_snap: string; created_at: number }>
+    const rows = h.db
+      .prepare('SELECT * FROM agent_turns WHERE worktree_path = ? ORDER BY created_at ASC')
+      .all(repo) as Array<{
+      id: string
+      snapshot_sha: string
+      head_sha_at_snap: string
+      created_at: number
+    }>
     expect(rows.length).toBe(3)
 
     // Inject a malformed duplicate slotted BETWEEN row[0] and row[1] in time
     // (snap = row[0].snap so prev..this is empty → must be filtered).
     // head_sha_at_snap matches so Rule 1 doesn't pre-empt the test.
     const between = (rows[0].created_at + rows[1].created_at) / 2 + 0.5
-    h.db.prepare('INSERT INTO agent_turns (id, worktree_path, task_id, terminal_tab_id, snapshot_sha, head_sha_at_snap, prompt_preview, created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?)').run(
-      crypto.randomUUID(), repo, tabId, rows[0].snapshot_sha, rows[0].head_sha_at_snap, 'dup', Math.round(between)
-    )
+    h.db
+      .prepare(
+        'INSERT INTO agent_turns (id, worktree_path, task_id, terminal_tab_id, snapshot_sha, head_sha_at_snap, prompt_preview, created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?)'
+      )
+      .run(
+        crypto.randomUUID(),
+        repo,
+        tabId,
+        rows[0].snapshot_sha,
+        rows[0].head_sha_at_snap,
+        'dup',
+        Math.round(between)
+      )
 
     const list = (await h.invoke('agent-turns:list', repo)) as AgentTurnRange[]
     expect(list).toHaveLength(3) // dup filtered
@@ -184,20 +224,30 @@ await describe('list filters empty-diff turns + re-threads prev_snapshot_sha', (
     const file = path.join(repo, 'a.txt')
 
     // Cycle 1: 3 turns at HEAD0
-    fs.writeFileSync(file, 'c1-1'); await recordTurnBoundary(h.db, tabId, '1')
-    fs.writeFileSync(file, 'c1-2'); await recordTurnBoundary(h.db, tabId, '2')
-    fs.writeFileSync(file, 'c1-3'); await recordTurnBoundary(h.db, tabId, '3')
-    git(repo, 'add', '.'); git(repo, 'commit', '-m', 'cycle-1')
+    fs.writeFileSync(file, 'c1-1')
+    await recordTurnBoundary(h.db, tabId, '1')
+    fs.writeFileSync(file, 'c1-2')
+    await recordTurnBoundary(h.db, tabId, '2')
+    fs.writeFileSync(file, 'c1-3')
+    await recordTurnBoundary(h.db, tabId, '3')
+    git(repo, 'add', '.')
+    git(repo, 'commit', '-m', 'cycle-1')
 
     // Cycle 2: 2 turns at HEAD1
-    fs.writeFileSync(file, 'c2-1'); await recordTurnBoundary(h.db, tabId, '4')
-    fs.writeFileSync(file, 'c2-2'); await recordTurnBoundary(h.db, tabId, '5')
-    git(repo, 'add', '.'); git(repo, 'commit', '-m', 'cycle-2')
+    fs.writeFileSync(file, 'c2-1')
+    await recordTurnBoundary(h.db, tabId, '4')
+    fs.writeFileSync(file, 'c2-2')
+    await recordTurnBoundary(h.db, tabId, '5')
+    git(repo, 'add', '.')
+    git(repo, 'commit', '-m', 'cycle-2')
 
     // Cycle 3: 2 turns at HEAD2 (current)
-    fs.writeFileSync(file, 'c3-1'); await recordTurnBoundary(h.db, tabId, '6')
-    fs.writeFileSync(file, 'c3-2'); await recordTurnBoundary(h.db, tabId, '7')
-    git(repo, 'add', '.'); git(repo, 'commit', '-m', 'cycle-3')
+    fs.writeFileSync(file, 'c3-1')
+    await recordTurnBoundary(h.db, tabId, '6')
+    fs.writeFileSync(file, 'c3-2')
+    await recordTurnBoundary(h.db, tabId, '7')
+    git(repo, 'add', '.')
+    git(repo, 'commit', '-m', 'cycle-3')
 
     // Working tree clean after final commit → 0 turns
     let list = (await h.invoke('agent-turns:list', repo)) as AgentTurnRange[]
@@ -229,7 +279,8 @@ await describe('list filters empty-diff turns + re-threads prev_snapshot_sha', (
         fs.writeFileSync(fileB, `cycle${cycle}-t${t}-B`)
         await recordTurnBoundary(h.db, tabId, `c${cycle}-t${t}`)
       }
-      git(repo, 'add', '.'); git(repo, 'commit', '-m', `cycle-${cycle}`)
+      git(repo, 'add', '.')
+      git(repo, 'commit', '-m', `cycle-${cycle}`)
     }
 
     // After all commits, working tree is clean → 0 turns
@@ -260,7 +311,8 @@ await describe('list filters empty-diff turns + re-threads prev_snapshot_sha', (
 
     fs.writeFileSync(file, 'v1')
     await recordTurnBoundary(h.db, tabId, 'stale')
-    git(repo, 'add', '.'); git(repo, 'commit', '-m', 'commit-stale')
+    git(repo, 'add', '.')
+    git(repo, 'commit', '-m', 'commit-stale')
 
     fs.writeFileSync(file, 'v2')
     await recordTurnBoundary(h.db, tabId, 'fresh')
@@ -281,10 +333,14 @@ await describe('list filters empty-diff turns + re-threads prev_snapshot_sha', (
 
     // Inject a NULL-head row with valid snap pointing to live snap (so file
     // overlap would otherwise pass).
-    const live = h.db.prepare('SELECT snapshot_sha FROM agent_turns WHERE worktree_path = ? LIMIT 1').get(repo) as { snapshot_sha: string }
-    h.db.prepare('INSERT INTO agent_turns (id, worktree_path, task_id, terminal_tab_id, snapshot_sha, head_sha_at_snap, prompt_preview, created_at) VALUES (?, ?, NULL, ?, ?, NULL, ?, ?)').run(
-      crypto.randomUUID(), repo, tabId, live.snapshot_sha, 'legacy', Date.now() + 1000
-    )
+    const live = h.db
+      .prepare('SELECT snapshot_sha FROM agent_turns WHERE worktree_path = ? LIMIT 1')
+      .get(repo) as { snapshot_sha: string }
+    h.db
+      .prepare(
+        'INSERT INTO agent_turns (id, worktree_path, task_id, terminal_tab_id, snapshot_sha, head_sha_at_snap, prompt_preview, created_at) VALUES (?, ?, NULL, ?, ?, NULL, ?, ?)'
+      )
+      .run(crypto.randomUUID(), repo, tabId, live.snapshot_sha, 'legacy', Date.now() + 1000)
 
     const list = (await h.invoke('agent-turns:list', repo)) as AgentTurnRange[]
     expect(list).toHaveLength(1) // only the live one
@@ -301,12 +357,24 @@ await describe('list filters empty-diff turns + re-threads prev_snapshot_sha', (
     fs.writeFileSync(path.join(repo, 'live.txt'), 'live')
     await recordTurnBoundary(h.db, tabId, 'live')
 
-    const live = h.db.prepare('SELECT snapshot_sha FROM agent_turns WHERE worktree_path = ? LIMIT 1').get(repo) as { snapshot_sha: string }
+    const live = h.db
+      .prepare('SELECT snapshot_sha FROM agent_turns WHERE worktree_path = ? LIMIT 1')
+      .get(repo) as { snapshot_sha: string }
     // Fake stale-HEAD value — definitely not current HEAD.
     const fakeStaleHead = '0000000000000000000000000000000000000000'
-    h.db.prepare('INSERT INTO agent_turns (id, worktree_path, task_id, terminal_tab_id, snapshot_sha, head_sha_at_snap, prompt_preview, created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?)').run(
-      crypto.randomUUID(), repo, tabId, live.snapshot_sha, fakeStaleHead, 'stale', Date.now() + 1000
-    )
+    h.db
+      .prepare(
+        'INSERT INTO agent_turns (id, worktree_path, task_id, terminal_tab_id, snapshot_sha, head_sha_at_snap, prompt_preview, created_at) VALUES (?, ?, NULL, ?, ?, ?, ?, ?)'
+      )
+      .run(
+        crypto.randomUUID(),
+        repo,
+        tabId,
+        live.snapshot_sha,
+        fakeStaleHead,
+        'stale',
+        Date.now() + 1000
+      )
 
     const list = (await h.invoke('agent-turns:list', repo)) as AgentTurnRange[]
     expect(list).toHaveLength(1)
@@ -388,16 +456,23 @@ await describe('list filters empty-diff turns + re-threads prev_snapshot_sha', (
     const fileB = path.join(repo, 'b.txt')
     const externalFile = path.join(repo, 'ext.txt')
 
-    fs.writeFileSync(fileA, 'a-v1'); await recordTurnBoundary(h.db, tabId, 't1')
-    fs.writeFileSync(fileA, 'a-v2'); await recordTurnBoundary(h.db, tabId, 't2')
-    fs.writeFileSync(fileB, 'b-v1'); await recordTurnBoundary(h.db, tabId, 't3')
+    fs.writeFileSync(fileA, 'a-v1')
+    await recordTurnBoundary(h.db, tabId, 't1')
+    fs.writeFileSync(fileA, 'a-v2')
+    await recordTurnBoundary(h.db, tabId, 't2')
+    fs.writeFileSync(fileB, 'b-v1')
+    await recordTurnBoundary(h.db, tabId, 't3')
 
     let list = (await h.invoke('agent-turns:list', repo)) as AgentTurnRange[]
     expect(list).toHaveLength(3)
 
     // Two external commits while session continues — HEAD advances twice.
-    fs.writeFileSync(externalFile, 'e1'); git(repo, 'add', 'ext.txt'); git(repo, 'commit', '-m', 'ext1')
-    fs.writeFileSync(externalFile, 'e2'); git(repo, 'add', 'ext.txt'); git(repo, 'commit', '-m', 'ext2')
+    fs.writeFileSync(externalFile, 'e1')
+    git(repo, 'add', 'ext.txt')
+    git(repo, 'commit', '-m', 'ext1')
+    fs.writeFileSync(externalFile, 'e2')
+    git(repo, 'add', 'ext.txt')
+    git(repo, 'commit', '-m', 'ext2')
 
     // a.txt and b.txt are still dirty (never committed by this session).
     list = (await h.invoke('agent-turns:list', repo)) as AgentTurnRange[]
@@ -408,6 +483,10 @@ await describe('list filters empty-diff turns + re-threads prev_snapshot_sha', (
 
 // Cleanup
 for (const r of repos) {
-  try { fs.rmSync(r, { recursive: true, force: true }) } catch { /* ignore */ }
+  try {
+    fs.rmSync(r, { recursive: true, force: true })
+  } catch {
+    /* ignore */
+  }
 }
 h.cleanup()

@@ -1,8 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-  Button, Input, Label, Textarea,
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  Button,
+  Input,
+  Label,
+  Textarea,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@slayzone/ui'
 import type { LoopConfig, CriteriaType } from './useLoopMode'
 
@@ -65,7 +76,10 @@ export function LoopModeDialog({ open, onOpenChange, config, onSave }: LoopModeD
           <div className="space-y-1.5">
             <Label>Acceptance criteria</Label>
             <div className="flex items-center gap-2">
-              <Select value={criteriaType} onValueChange={(v) => setCriteriaType(v as CriteriaType)}>
+              <Select
+                value={criteriaType}
+                onValueChange={(v) => setCriteriaType(v as CriteriaType)}
+              >
                 <SelectTrigger className="h-8 text-sm w-36 shrink-0">
                   <SelectValue />
                 </SelectTrigger>
@@ -98,8 +112,12 @@ export function LoopModeDialog({ open, onOpenChange, config, onSave }: LoopModeD
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button disabled={!canSave} onClick={handleSave}>Save</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button disabled={!canSave} onClick={handleSave}>
+            Save
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -21,26 +21,26 @@ const PROJECT_DATA: ProjectData[] = [
     backlog: [
       { id: 'sz1', title: 'Set up authentication', priority: 1 },
       { id: 'sz2', title: 'Design system tokens', priority: 3 },
-      { id: 'sz3', title: 'Write integration tests', priority: 5 },
+      { id: 'sz3', title: 'Write integration tests', priority: 5 }
     ],
     inProgress: [{ id: 'sz4', title: 'Build kanban board', priority: 1 }],
-    done: [{ id: 'sz5', title: 'Landing page', priority: 4 }],
+    done: [{ id: 'sz5', title: 'Landing page', priority: 4 }]
   },
   {
     backlog: [
       { id: 'be1', title: 'Rate limiting', priority: 2 },
-      { id: 'be2', title: 'DB migrations', priority: 3 },
+      { id: 'be2', title: 'DB migrations', priority: 3 }
     ],
     inProgress: [
       { id: 'be3', title: 'REST API routes', priority: 1 },
-      { id: 'be4', title: 'Auth middleware', priority: 2 },
+      { id: 'be4', title: 'Auth middleware', priority: 2 }
     ],
     done: [
       { id: 'be5', title: 'Project setup', priority: 5 },
-      { id: 'be6', title: 'Docker config', priority: 4 },
-    ],
+      { id: 'be6', title: 'Docker config', priority: 4 }
+    ]
   },
-  { backlog: [], inProgress: [], done: [] },
+  { backlog: [], inProgress: [], done: [] }
 ]
 
 const PRIORITY_COLORS: Record<number, string> = {
@@ -48,7 +48,7 @@ const PRIORITY_COLORS: Record<number, string> = {
   2: 'bg-orange-500',
   3: 'bg-yellow-500',
   4: 'bg-blue-400',
-  5: 'bg-muted-foreground/30',
+  5: 'bg-muted-foreground/30'
 }
 
 function PriorityBars({ priority }: { priority: number }): React.JSX.Element {
@@ -85,7 +85,7 @@ function KanbanBoard({ project }: { project: ProjectData }): React.JSX.Element {
   const cols = [
     { title: 'Backlog', tasks: project.backlog },
     { title: 'In Progress', tasks: project.inProgress },
-    { title: 'Done', tasks: project.done },
+    { title: 'Done', tasks: project.done }
   ]
   return (
     <div className="flex gap-4 p-4 flex-1 overflow-hidden">
@@ -122,10 +122,7 @@ export function SceneProjects(): React.JSX.Element {
   return (
     <SceneShell
       activeProject={activeIdx}
-      tabs={[
-        { label: 'Set up auth' },
-        { label: 'Build kanban' },
-      ]}
+      tabs={[{ label: 'Set up auth' }, { label: 'Build kanban' }]}
     >
       {/* Kanban — animates when project switches */}
       <AnimatePresence mode="wait">
@@ -140,10 +137,12 @@ export function SceneProjects(): React.JSX.Element {
           <KanbanBoard project={PROJECT_DATA[activeIdx]} />
         </motion.div>
       </AnimatePresence>
-      <AnimatedCursor waypoints={[
-        { x: '50%', y: '50%', delay: 0.5, click: false },
-        { x: '3%', y: '18%', delay: 1.6 },
-      ]} />
+      <AnimatedCursor
+        waypoints={[
+          { x: '50%', y: '50%', delay: 0.5, click: false },
+          { x: '3%', y: '18%', delay: 1.6 }
+        ]}
+      />
     </SceneShell>
   )
 }

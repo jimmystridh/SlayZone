@@ -25,16 +25,23 @@ async function rest(
   path: string,
   body: Record<string, unknown>
 ): Promise<RestResult> {
-  return electronApp.evaluate(async (_, args) => {
-    const r = await fetch(`http://127.0.0.1:${args.p}${args.url}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(args.b)
-    })
-    let parsed: unknown = null
-    try { parsed = await r.json() } catch { /* may be empty */ }
-    return { status: r.status, body: parsed }
-  }, { p: port, b: body, url: path })
+  return electronApp.evaluate(
+    async (_, args) => {
+      const r = await fetch(`http://127.0.0.1:${args.p}${args.url}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(args.b)
+      })
+      let parsed: unknown = null
+      try {
+        parsed = await r.json()
+      } catch {
+        /* may be empty */
+      }
+      return { status: r.status, body: parsed }
+    },
+    { p: port, b: body, url: path }
+  )
 }
 
 test.describe('Tab create/split via REST', () => {
@@ -55,7 +62,11 @@ test.describe('Tab create/split via REST', () => {
     expect(mcpPort).toBeTruthy()
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Tabs REST', color: '#10b981', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Tabs REST',
+      color: '#10b981',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
   })
@@ -72,10 +83,20 @@ test.describe('Tab create/split via REST', () => {
     expect(res.status).toBe(404)
   })
 
-  test('create inserts tab row + spawns PTY when task is open', async ({ electronApp, mainWindow }) => {
+  test('create inserts tab row + spawns PTY when task is open', async ({
+    electronApp,
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
-    const task = await s.createTask({ projectId, title: 'Tabs create spawn', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    const task = await s.createTask({
+      projectId,
+      title: 'Tabs create spawn',
+      status: 'in_progress'
+    })
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     // Open task so TerminalContainer is mounted and listens for tabs:changed.
@@ -100,7 +121,10 @@ test.describe('Tab create/split via REST', () => {
   test('split adds pane in same group', async ({ electronApp, mainWindow }) => {
     const s = seed(mainWindow)
     const task = await s.createTask({ projectId, title: 'Tabs split spawn', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     await openTaskTerminal(mainWindow, { projectAbbrev, taskTitle: 'Tabs split spawn' })
@@ -115,7 +139,9 @@ test.describe('Tab create/split via REST', () => {
     await waitForPtySession(mainWindow, createBody.sessionId)
 
     // Split it.
-    const splitRes = await rest(electronApp, mcpPort, '/api/tabs/split', { tabId: createBody.tab.id })
+    const splitRes = await rest(electronApp, mcpPort, '/api/tabs/split', {
+      tabId: createBody.tab.id
+    })
     expect(splitRes.status).toBe(200)
     const splitBody = splitRes.body as { tab: { id: string; groupId: string }; sessionId: string }
 

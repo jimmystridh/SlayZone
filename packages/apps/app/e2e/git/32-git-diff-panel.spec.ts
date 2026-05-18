@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, resetApp, createIsolatedGitRepo } from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  resetApp,
+  createIsolatedGitRepo
+} from '../fixtures/electron'
 import { execSync } from 'child_process'
 import { writeFileSync } from 'fs'
 import path from 'path'
@@ -17,13 +25,25 @@ test.describe('Git diff panel', () => {
     gitDir = createIsolatedGitRepo('diff-panel')
 
     // Clean working tree
-    try { git('git checkout -- .') } catch { /* ignore */ }
-    try { git('git clean -fd') } catch { /* ignore */ }
+    try {
+      git('git checkout -- .')
+    } catch {
+      /* ignore */
+    }
+    try {
+      git('git clean -fd')
+    } catch {
+      /* ignore */
+    }
 
     // Create baseline file and commit
     writeFileSync(path.join(gitDir, 'base.txt'), 'line1\nline2\nline3\n')
     git('git add base.txt')
-    try { git('git commit -m "add base.txt"') } catch { /* already committed */ }
+    try {
+      git('git commit -m "add base.txt"')
+    } catch {
+      /* already committed */
+    }
 
     const s = seed(mainWindow)
     const p = await s.createProject({ name: 'Diff Panel Test', color: '#8b5cf6', path: gitDir })
@@ -36,20 +56,32 @@ test.describe('Git diff panel', () => {
     await expect(mainWindow.getByText('Diff panel task').first()).toBeVisible({ timeout: 5_000 })
 
     await mainWindow.getByText('Diff panel task').first().click()
-    await expect(mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()).toBeVisible({ timeout: 5_000 })
+    await expect(
+      mainWindow.locator('[data-testid="terminal-mode-trigger"]:visible').first()
+    ).toBeVisible({ timeout: 5_000 })
 
     // Open git panel (general tab) then switch to changes tab
     await mainWindow.keyboard.press('Meta+g')
     await expect(mainWindow.getByTestId('task-git-panel')).toBeVisible({ timeout: 5_000 })
     // Click the "Diff" tab to switch to changes view
-    await mainWindow.getByTestId('task-git-panel').getByRole('button', { name: /^Diff(?:\s|$)/ }).click()
+    await mainWindow
+      .getByTestId('task-git-panel')
+      .getByRole('button', { name: /^Diff(?:\s|$)/ })
+      .click()
     await expect(mainWindow.getByTestId('git-diff-panel').last()).toBeVisible({ timeout: 5_000 })
-
   })
 
   test.afterAll(() => {
-    try { git('git checkout -- .') } catch { /* ignore */ }
-    try { git('git clean -fd') } catch { /* ignore */ }
+    try {
+      git('git checkout -- .')
+    } catch {
+      /* ignore */
+    }
+    try {
+      git('git clean -fd')
+    } catch {
+      /* ignore */
+    }
   })
 
   /** Scope to the visible git diff panel (test 19 leaves a hidden tab with its own panel) */
@@ -84,7 +116,9 @@ test.describe('Git diff panel', () => {
     writeFileSync(path.join(gitDir, 'newfile.txt'), 'new content\n')
     await refresh(mainWindow)
 
-    const fileRow = panel(mainWindow).locator('.font-mono.text-xs').filter({ hasText: 'newfile.txt' })
+    const fileRow = panel(mainWindow)
+      .locator('.font-mono.text-xs')
+      .filter({ hasText: 'newfile.txt' })
     await expect(fileRow).toBeVisible()
     await expect(fileRow.locator('.font-bold').first()).toHaveText('?')
   })
@@ -168,7 +202,9 @@ test.describe('Git diff panel', () => {
     await expect(firstEntry).toHaveClass(/bg-primary\/10/)
   })
 
-  test('turns chip row stays mounted across clean ↔ dirty transitions (continuous-flow)', async ({ mainWindow }) => {
+  test('turns chip row stays mounted across clean ↔ dirty transitions (continuous-flow)', async ({
+    mainWindow
+  }) => {
     // Regression: chip row used to live inside the snapshot-gated main-content
     // branch, so it unmounted on every snapshot=null transition (turn click,
     // working-tree-clean state) — losing horizontal scroll position. Now hoisted
@@ -194,18 +230,23 @@ test.describe('Git diff panel', () => {
 
     // Clean working tree: prior tests left untracked files (e.g. newfile.txt
     // from test 83) — sweep them so the "Working tree clean" assertion holds.
-    try { git('git checkout -- base.txt') } catch { /* not tracked yet — ignore */ }
-    try { git('git reset --hard HEAD') } catch { /* no HEAD — ignore */ }
+    try {
+      git('git checkout -- base.txt')
+    } catch {
+      /* not tracked yet — ignore */
+    }
+    try {
+      git('git reset --hard HEAD')
+    } catch {
+      /* no HEAD — ignore */
+    }
     git('git clean -fd')
     await refresh(mainWindow)
     await expect(p.getByText('Working tree clean')).toBeVisible({ timeout: 5_000 })
     await expect(chipRow).toBeVisible()
 
     // Same DOM node — no remount happened
-    const stillSame = await mainWindow.evaluate(
-      (el) => document.body.contains(el),
-      chipRowHandle
-    )
+    const stillSame = await mainWindow.evaluate((el) => document.body.contains(el), chipRowHandle)
     expect(stillSame).toBe(true)
 
     // Restore for subsequent tests + disable continuous-flow
@@ -226,7 +267,8 @@ test.describe('Git diff panel', () => {
     await refresh(mainWindow)
 
     // Verify the diff panel updated — base.txt should still be visible with changes
-    await expect(panel(mainWindow).locator('.font-mono.text-xs').filter({ hasText: 'base.txt' }))
-      .toBeVisible({ timeout: 10_000 })
+    await expect(
+      panel(mainWindow).locator('.font-mono.text-xs').filter({ hasText: 'base.txt' })
+    ).toBeVisible({ timeout: 10_000 })
   })
 })

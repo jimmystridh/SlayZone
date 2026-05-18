@@ -40,6 +40,6 @@ export function useSlayNudge({ projectId, projectPath }: UseSlayNudgeOptions) {
   return {
     showBanner: !dismissed && !slayConfigured,
     dismiss,
-    recheck,
+    recheck
   }
 }

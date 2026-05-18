@@ -41,7 +41,7 @@ export const rosePine: UnifiedThemeDefinition = {
       surface2: '#26233a',
       surface3: '#2d2a42',
       modal: '#14121f',
-      modalBorder: 'rgba(255, 255, 255, 0.25)',
+      modalBorder: 'rgba(255, 255, 255, 0.25)'
     },
     terminal: {
       background: '#191724',
@@ -65,7 +65,7 @@ export const rosePine: UnifiedThemeDefinition = {
       brightBlue: '#9ccfd8',
       brightMagenta: '#c4a7e7',
       brightCyan: '#ebbcba',
-      brightWhite: '#e0def4',
+      brightWhite: '#e0def4'
     },
     editor: {
       background: '#191724',
@@ -85,8 +85,8 @@ export const rosePine: UnifiedThemeDefinition = {
       variable: '#e0def4',
       property: '#ebbcba',
       link: '#9ccfd8',
-      heading: '#e0def4',
-    },
+      heading: '#e0def4'
+    }
   },
   light: {
     chrome: {
@@ -126,7 +126,7 @@ export const rosePine: UnifiedThemeDefinition = {
       surface2: '#fffaf3',
       surface3: '#ffffff',
       modal: '#e8e3dc',
-      modalBorder: 'rgba(0, 0, 0, 0.35)',
+      modalBorder: 'rgba(0, 0, 0, 0.35)'
     },
     terminal: {
       background: '#faf4ed',
@@ -150,7 +150,7 @@ export const rosePine: UnifiedThemeDefinition = {
       brightBlue: '#56949f',
       brightMagenta: '#907aa9',
       brightCyan: '#d7827e',
-      brightWhite: '#575279',
+      brightWhite: '#575279'
     },
     editor: {
       background: '#faf4ed',
@@ -170,7 +170,7 @@ export const rosePine: UnifiedThemeDefinition = {
       variable: '#575279',
       property: '#d7827e',
       link: '#56949f',
-      heading: '#575279',
-    },
-  },
+      heading: '#575279'
+    }
+  }
 }

@@ -22,7 +22,7 @@ import {
   openTaskTerminal,
   waitForPtySession,
   waitForNoPtySession,
-  waitForPtyState,
+  waitForPtyState
 } from '../fixtures/terminal'
 
 /**
@@ -33,10 +33,7 @@ import {
  */
 async function activeTaskIds(page: import('@playwright/test').Page): Promise<string[]> {
   return page.evaluate(async () => {
-    const [ptys, chats] = await Promise.all([
-      window.api.pty.list(),
-      window.api.chat.list(),
-    ])
+    const [ptys, chats] = await Promise.all([window.api.pty.list(), window.api.chat.list()])
     const set = new Set<string>()
     for (const p of ptys) if (p.state !== 'dead') set.add(p.taskId)
     for (const c of chats) if (c.state !== 'dead') set.add(c.taskId)
@@ -51,15 +48,28 @@ test.describe('useActiveSessionTaskIds: dead session filter', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Active Filter', color: '#a855f7', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Active Filter',
+      color: '#a855f7',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
   })
 
-  test('alive PTY → task in active set; killed PTY → task removed within bounded window', async ({ mainWindow }) => {
+  test('alive PTY → task in active set; killed PTY → task removed within bounded window', async ({
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
-    const task = await s.createTask({ projectId, title: 'Active filter task', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    const task = await s.createTask({
+      projectId,
+      title: 'Active filter task',
+      status: 'in_progress'
+    })
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     const sessionId = getMainSessionId(task.id)
@@ -87,10 +97,19 @@ test.describe('useActiveSessionTaskIds: dead session filter', () => {
     await waitForNoPtySession(mainWindow, sessionId)
   })
 
-  test('eager kill: filter clears active flag even before session is evicted from the map', async ({ mainWindow }) => {
+  test('eager kill: filter clears active flag even before session is evicted from the map', async ({
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
-    const task = await s.createTask({ projectId, title: 'Eager-kill filter task', status: 'in_progress' })
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), task.id)
+    const task = await s.createTask({
+      projectId,
+      title: 'Eager-kill filter task',
+      status: 'in_progress'
+    })
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      task.id
+    )
     await s.refreshData()
 
     const sessionId = getMainSessionId(task.id)
@@ -114,7 +133,9 @@ test.describe('useActiveSessionTaskIds: dead session filter', () => {
     // Wait until the renderer has observed state→'dead' for this session.
     await expect
       .poll(async () =>
-        mainWindow.evaluate(() => (window as unknown as { __deadAt: number | null }).__deadAt !== null)
+        mainWindow.evaluate(
+          () => (window as unknown as { __deadAt: number | null }).__deadAt !== null
+        )
       )
       .toBe(true)
 

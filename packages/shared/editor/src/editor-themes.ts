@@ -33,7 +33,7 @@ const slay: EditorThemeColors = {
   variable: '#d4d4d8',
   property: '#f87171',
   link: '#93c5fd',
-  heading: '#c4b5fd',
+  heading: '#c4b5fd'
 }
 
 const slaySpecial: EditorThemeColors = {
@@ -54,7 +54,7 @@ const slaySpecial: EditorThemeColors = {
   variable: '#ffddaa',
   property: '#ff00ff',
   link: '#00aaff',
-  heading: '#ff4444',
+  heading: '#ff4444'
 }
 
 const defaultDark: EditorThemeColors = {
@@ -75,7 +75,7 @@ const defaultDark: EditorThemeColors = {
   variable: '#e5e5e5',
   property: '#f87171',
   link: '#60a5fa',
-  heading: '#d8b4fe',
+  heading: '#d8b4fe'
 }
 
 const ghostty: EditorThemeColors = {
@@ -96,7 +96,7 @@ const ghostty: EditorThemeColors = {
   variable: '#abb2bf',
   property: '#e06c75',
   link: '#61afef',
-  heading: '#e06c75',
+  heading: '#e06c75'
 }
 
 const catppuccinMocha: EditorThemeColors = {
@@ -117,7 +117,7 @@ const catppuccinMocha: EditorThemeColors = {
   variable: '#cdd6f4',
   property: '#f38ba8',
   link: '#89b4fa',
-  heading: '#cba6f7',
+  heading: '#cba6f7'
 }
 
 const dracula: EditorThemeColors = {
@@ -138,7 +138,7 @@ const dracula: EditorThemeColors = {
   variable: '#f8f8f2',
   property: '#66d9ef',
   link: '#8be9fd',
-  heading: '#bd93f9',
+  heading: '#bd93f9'
 }
 
 const tokyoNight: EditorThemeColors = {
@@ -159,7 +159,7 @@ const tokyoNight: EditorThemeColors = {
   variable: '#c0caf5',
   property: '#73daca',
   link: '#7aa2f7',
-  heading: '#bb9af7',
+  heading: '#bb9af7'
 }
 
 const gruvboxDark: EditorThemeColors = {
@@ -180,7 +180,7 @@ const gruvboxDark: EditorThemeColors = {
   variable: '#ebdbb2',
   property: '#8ec07c',
   link: '#83a598',
-  heading: '#fabd2f',
+  heading: '#fabd2f'
 }
 
 const nord: EditorThemeColors = {
@@ -201,7 +201,7 @@ const nord: EditorThemeColors = {
   variable: '#d8dee9',
   property: '#d08770',
   link: '#88c0d0',
-  heading: '#81a1c1',
+  heading: '#81a1c1'
 }
 
 const solarizedDark: EditorThemeColors = {
@@ -222,7 +222,7 @@ const solarizedDark: EditorThemeColors = {
   variable: '#839496',
   property: '#268bd2',
   link: '#268bd2',
-  heading: '#cb4b16',
+  heading: '#cb4b16'
 }
 
 const oneDark: EditorThemeColors = {
@@ -243,7 +243,7 @@ const oneDark: EditorThemeColors = {
   variable: '#abb2bf',
   property: '#e06c75',
   link: '#61afef',
-  heading: '#e06c75',
+  heading: '#e06c75'
 }
 
 const rosePine: EditorThemeColors = {
@@ -264,7 +264,7 @@ const rosePine: EditorThemeColors = {
   variable: '#e0def4',
   property: '#ebbcba',
   link: '#9ccfd8',
-  heading: '#c4a7e7',
+  heading: '#c4a7e7'
 }
 
 const kanagawa: EditorThemeColors = {
@@ -285,7 +285,7 @@ const kanagawa: EditorThemeColors = {
   variable: '#dcd7ba',
   property: '#e6c384',
   link: '#7e9cd8',
-  heading: '#957fb8',
+  heading: '#957fb8'
 }
 
 // ---------------------------------------------------------------------------
@@ -310,7 +310,7 @@ const slayLight: EditorThemeColors = {
   variable: '#27272a',
   property: '#dc2626',
   link: '#2563eb',
-  heading: '#7c3aed',
+  heading: '#7c3aed'
 }
 
 const slaySpecialLight: EditorThemeColors = {
@@ -331,7 +331,7 @@ const slaySpecialLight: EditorThemeColors = {
   variable: '#441100',
   property: '#dd0088',
   link: '#0066ff',
-  heading: '#ff0000',
+  heading: '#ff0000'
 }
 
 const defaultLight: EditorThemeColors = {
@@ -352,7 +352,7 @@ const defaultLight: EditorThemeColors = {
   variable: '#1a1a1a',
   property: '#dc2626',
   link: '#2563eb',
-  heading: '#9333ea',
+  heading: '#9333ea'
 }
 
 const catppuccinLatte: EditorThemeColors = {
@@ -373,7 +373,7 @@ const catppuccinLatte: EditorThemeColors = {
   variable: '#4c4f69',
   property: '#d20f39',
   link: '#1e66f5',
-  heading: '#8839ef',
+  heading: '#8839ef'
 }
 
 const solarizedLight: EditorThemeColors = {
@@ -394,7 +394,7 @@ const solarizedLight: EditorThemeColors = {
   variable: '#657b83',
   property: '#268bd2',
   link: '#268bd2',
-  heading: '#cb4b16',
+  heading: '#cb4b16'
 }
 
 const tokyoNightLight: EditorThemeColors = {
@@ -415,7 +415,7 @@ const tokyoNightLight: EditorThemeColors = {
   variable: '#343b58',
   property: '#8c4351',
   link: '#34548a',
-  heading: '#5a4a78',
+  heading: '#5a4a78'
 }
 
 const rosePineDawn: EditorThemeColors = {
@@ -436,7 +436,7 @@ const rosePineDawn: EditorThemeColors = {
   variable: '#575279',
   property: '#d7827e',
   link: '#56949f',
-  heading: '#907aa9',
+  heading: '#907aa9'
 }
 
 // ---------------------------------------------------------------------------
@@ -465,17 +465,21 @@ export const editorThemes: EditorThemeDefinition[] = [
   { id: 'catppuccin-latte', name: 'Catppuccin Latte', variant: 'light', colors: catppuccinLatte },
   { id: 'solarized-light', name: 'Solarized', variant: 'light', colors: solarizedLight },
   { id: 'tokyo-night-light', name: 'Tokyo Night', variant: 'light', colors: tokyoNightLight },
-  { id: 'rose-pine-dawn', name: 'Rosé Pine Dawn', variant: 'light', colors: rosePineDawn },
+  { id: 'rose-pine-dawn', name: 'Rosé Pine Dawn', variant: 'light', colors: rosePineDawn }
 ]
 
-export const darkEditorThemes = editorThemes.filter(t => t.variant === 'dark')
-export const lightEditorThemes = editorThemes.filter(t => t.variant === 'light')
+export const darkEditorThemes = editorThemes.filter((t) => t.variant === 'dark')
+export const lightEditorThemes = editorThemes.filter((t) => t.variant === 'light')
 
 export function getEditorThemeById(id: string): EditorThemeColors {
-  return editorThemes.find(t => t.id === id)?.colors ?? slay
+  return editorThemes.find((t) => t.id === id)?.colors ?? slay
 }
 
-export function getEditorTheme(appTheme: Theme, themeDark: string, themeLight: string): EditorThemeColors {
+export function getEditorTheme(
+  appTheme: Theme,
+  themeDark: string,
+  themeLight: string
+): EditorThemeColors {
   const id = appTheme === 'dark' ? themeDark : themeLight
   return getEditorThemeById(id)
 }

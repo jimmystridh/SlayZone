@@ -31,8 +31,12 @@ export function AiConfigTab({ project, onOpenContextManager }: AiConfigTabProps)
           className="shrink-0"
         >
           <TabsList>
-            <TabsTrigger value="config" data-testid="project-context-tab-config">Config</TabsTrigger>
-            <TabsTrigger value="files" data-testid="project-context-tab-files">Files</TabsTrigger>
+            <TabsTrigger value="config" data-testid="project-context-tab-config">
+              Config
+            </TabsTrigger>
+            <TabsTrigger value="files" data-testid="project-context-tab-files">
+              Files
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>

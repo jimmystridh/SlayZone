@@ -19,7 +19,19 @@ interface ProjectSettingsDialogProps {
   project: Project | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  initialTab?: 'general' | 'environment' | 'tasks' | 'tasks/general' | 'tasks/statuses' | 'tasks/tags' | 'worktrees' | 'repos' | 'integrations' | 'ai-config' | 'tests' | 'templates'
+  initialTab?:
+    | 'general'
+    | 'environment'
+    | 'tasks'
+    | 'tasks/general'
+    | 'tasks/statuses'
+    | 'tasks/tags'
+    | 'worktrees'
+    | 'repos'
+    | 'integrations'
+    | 'ai-config'
+    | 'tests'
+    | 'templates'
   groupBy?: 'none' | 'path' | 'label'
   onGroupByChange?: (value: 'none' | 'path' | 'label') => void
   integrationOnboardingProvider?: IntegrationProvider | null
@@ -43,8 +55,21 @@ export function ProjectSettingsDialog({
   onChanged,
   renderTemplatesTab
 }: ProjectSettingsDialogProps) {
-  const [activeTab, setActiveTab] = useState<'general' | 'environment' | 'tasks' | 'tasks/general' | 'tasks/statuses' | 'tasks/tags' | 'worktrees' | 'repos' | 'templates' | 'integrations' | 'ai-config' | 'tests'>('general')
-  const detectedRepos = useDetectedRepos(open ? project?.path ?? null : null)
+  const [activeTab, setActiveTab] = useState<
+    | 'general'
+    | 'environment'
+    | 'tasks'
+    | 'tasks/general'
+    | 'tasks/statuses'
+    | 'tasks/tags'
+    | 'worktrees'
+    | 'repos'
+    | 'templates'
+    | 'integrations'
+    | 'ai-config'
+    | 'tests'
+  >('general')
+  const detectedRepos = useDetectedRepos(open ? (project?.path ?? null) : null)
   const [lockedByProvider, setLockedByProvider] = useState<string | null>(null)
 
   const checkIntegrationLock = useCallback(async () => {
@@ -81,7 +106,6 @@ export function ProjectSettingsDialog({
     setActiveTab('integrations')
   }, [open, integrationOnboardingProvider])
 
-
   const navItems = [
     { key: 'general', label: 'General' },
     { key: 'environment', label: 'Environment' },
@@ -91,14 +115,14 @@ export function ProjectSettingsDialog({
       children: [
         { key: 'tasks/general', label: 'General' },
         { key: 'tasks/statuses', label: 'Statuses' },
-        { key: 'tasks/tags', label: 'Tags' },
+        { key: 'tasks/tags', label: 'Tags' }
       ]
     },
     ...(renderTemplatesTab ? [{ key: 'templates' as const, label: 'Task Templates' }] : []),
     { key: 'worktrees', label: 'Worktrees' },
     ...(detectedRepos.length > 0 ? [{ key: 'repos' as const, label: 'Repositories' }] : []),
     { key: 'tests', label: 'Tests' },
-    { key: 'integrations' as const, label: 'Integrations' },
+    { key: 'integrations' as const, label: 'Integrations' }
   ]
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,11 +165,7 @@ export function ProjectSettingsDialog({
           )}
 
           {activeTab === 'repos' && project && (
-            <ReposTab
-              project={project}
-              repos={detectedRepos}
-              onUpdated={onUpdated}
-            />
+            <ReposTab project={project} repos={detectedRepos} onUpdated={onUpdated} />
           )}
 
           {activeTab === 'tasks/general' && project && (
@@ -164,15 +184,16 @@ export function ProjectSettingsDialog({
             <IntegrationsTab
               project={project}
               open={open}
-              onUpdated={(p) => { onUpdated(p); void checkIntegrationLock() }}
+              onUpdated={(p) => {
+                onUpdated(p)
+                void checkIntegrationLock()
+              }}
               integrationOnboardingProvider={integrationOnboardingProvider}
               onIntegrationOnboardingHandled={onIntegrationOnboardingHandled}
             />
           )}
 
-          {activeTab === 'tasks/tags' && project && (
-            <TagsSettingsTab projectId={project.id} />
-          )}
+          {activeTab === 'tasks/tags' && project && <TagsSettingsTab projectId={project.id} />}
 
           {activeTab === 'templates' && project && renderTemplatesTab?.(project.id)}
 
@@ -183,7 +204,6 @@ export function ProjectSettingsDialog({
               onGroupByChange={onGroupByChange ?? (() => {})}
             />
           )}
-
         </SettingsLayout>
       </DialogContent>
     </Dialog>

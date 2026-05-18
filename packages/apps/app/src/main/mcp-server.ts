@@ -25,19 +25,32 @@ function createMcpServer(db: Database): McpServer {
 }
 
 export function stopMcpServer(): void {
-  if (idleTimer) { clearInterval(idleTimer); idleTimer = null }
-  if (httpServer) { httpServer.close(); httpServer = null }
+  if (idleTimer) {
+    clearInterval(idleTimer)
+    idleTimer = null
+  }
+  if (httpServer) {
+    httpServer.close()
+    httpServer = null
+  }
 }
 
 function getPreferredPort(db: Database): number {
   try {
-    const row = db.prepare("SELECT value FROM settings WHERE key = 'mcp_preferred_port' LIMIT 1").get() as { value: string } | undefined
+    const row = db
+      .prepare("SELECT value FROM settings WHERE key = 'mcp_preferred_port' LIMIT 1")
+      .get() as { value: string } | undefined
     const port = parseInt(row?.value ?? '', 10)
-    return (port >= 1024 && port <= 65535) ? port : 0
-  } catch { return 0 }
+    return port >= 1024 && port <= 65535 ? port : 0
+  } catch {
+    return 0
+  }
 }
 
-export function startMcpServer(db: Database, opts?: { automationEngine?: { executeManual(id: string): Promise<unknown> } }): void {
+export function startMcpServer(
+  db: Database,
+  opts?: { automationEngine?: { executeManual(id: string): Promise<unknown> } }
+): void {
   const port = getPreferredPort(db)
   const app = express()
   app.use(express.json())
@@ -59,7 +72,11 @@ export function startMcpServer(db: Database, opts?: { automationEngine?: { execu
     const now = Date.now()
     for (const [sid, lastActive] of sessionActivity) {
       if (now - lastActive > SESSION_IDLE_TIMEOUT) {
-        try { transports.get(sid)?.close() } catch { /* already closed */ }
+        try {
+          transports.get(sid)?.close()
+        } catch {
+          /* already closed */
+        }
         removeSession(sid)
       }
     }
@@ -96,7 +113,9 @@ export function startMcpServer(db: Database, opts?: { automationEngine?: { execu
         return
       }
 
-      res.status(400).json({ error: 'Invalid request — missing session or not an initialize request' })
+      res
+        .status(400)
+        .json({ error: 'Invalid request — missing session or not an initialize request' })
     } catch (err) {
       console.error('[MCP] POST error:', err)
       if (!res.headersSent) res.status(500).json({ error: 'Internal error' })
@@ -139,7 +158,7 @@ export function startMcpServer(db: Database, opts?: { automationEngine?: { execu
   registerRestApi(app, {
     db,
     notifyRenderer,
-    automationEngine: opts?.automationEngine,
+    automationEngine: opts?.automationEngine
   })
 
   stopMcpServer()
@@ -149,8 +168,12 @@ export function startMcpServer(db: Database, opts?: { automationEngine?: { execu
     const actualPort = typeof addr === 'object' && addr ? addr.port : port
     ;(globalThis as Record<string, unknown>).__mcpPort = actualPort
     try {
-      db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_server_port', ?)").run(String(actualPort))
-    } catch { /* non-fatal — CLI falls back to default port */ }
+      db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('mcp_server_port', ?)").run(
+        String(actualPort)
+      )
+    } catch {
+      /* non-fatal — CLI falls back to default port */
+    }
     console.log(`[MCP] Server listening on http://127.0.0.1:${actualPort}/mcp`)
   }
 

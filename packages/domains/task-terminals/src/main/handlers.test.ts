@@ -2,7 +2,12 @@
  * Terminal tabs handler contract tests
  * Run with: ELECTRON_RUN_AS_NODE=1 npx electron --import tsx/esm packages/domains/task-terminals/src/main/handlers.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerTerminalTabsHandlers } from './handlers.js'
 
 const h = await createTestHarness()
@@ -12,11 +17,20 @@ registerTerminalTabsHandlers(h.ipcMain as never, h.db)
 const projectId = crypto.randomUUID()
 h.db.prepare('INSERT INTO projects (id, name, color) VALUES (?, ?, ?)').run(projectId, 'P', '#000')
 const taskId = crypto.randomUUID()
-h.db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)').run(taskId, projectId, 'T1', 'inbox', 3, 0)
+h.db
+  .prepare(
+    'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+  )
+  .run(taskId, projectId, 'T1', 'inbox', 3, 0)
 
 describe('tabs:ensureMain', () => {
   test('creates main tab if none exists', () => {
-    const tab = h.invoke('tabs:ensureMain', taskId, 'claude-code') as { id: string; isMain: boolean; mode: string; position: number }
+    const tab = h.invoke('tabs:ensureMain', taskId, 'claude-code') as {
+      id: string
+      isMain: boolean
+      mode: string
+      position: number
+    }
     expect(tab.isMain).toBe(true)
     expect(tab.mode).toBe('claude-code')
     expect(tab.position).toBe(0)
@@ -24,7 +38,10 @@ describe('tabs:ensureMain', () => {
   })
 
   test('returns existing main tab (idempotent)', () => {
-    const tab = h.invoke('tabs:ensureMain', taskId, 'claude-code') as { id: string; isMain: boolean }
+    const tab = h.invoke('tabs:ensureMain', taskId, 'claude-code') as {
+      id: string
+      isMain: boolean
+    }
     expect(tab.id).toBe(taskId)
     expect(tab.isMain).toBe(true)
   })
@@ -45,7 +62,12 @@ describe('tabs:list', () => {
 
 describe('tabs:create', () => {
   test('creates non-main tab with auto position', () => {
-    const tab = h.invoke('tabs:create', { taskId, mode: 'terminal' }) as { isMain: boolean; position: number; label: string; mode: string }
+    const tab = h.invoke('tabs:create', { taskId, mode: 'terminal' }) as {
+      isMain: boolean
+      position: number
+      label: string
+      mode: string
+    }
     expect(tab.isMain).toBe(false)
     expect(tab.position).toBe(1)
     expect(tab.label).toBeNull()
@@ -53,7 +75,10 @@ describe('tabs:create', () => {
   })
 
   test('creates with custom label', () => {
-    const tab = h.invoke('tabs:create', { taskId, label: 'Build', mode: 'terminal' }) as { label: string; position: number }
+    const tab = h.invoke('tabs:create', { taskId, label: 'Build', mode: 'terminal' }) as {
+      label: string
+      position: number
+    }
     expect(tab.label).toBe('Build')
     expect(tab.position).toBe(2)
   })
@@ -68,7 +93,9 @@ describe('tabs:update', () => {
   test('updates label', () => {
     const tabs = h.invoke('tabs:list', taskId) as { id: string }[]
     const nonMain = tabs.find((t: { id: string }) => t.id !== taskId)!
-    const updated = h.invoke('tabs:update', { id: nonMain.id, label: 'Renamed' }) as { label: string }
+    const updated = h.invoke('tabs:update', { id: nonMain.id, label: 'Renamed' }) as {
+      label: string
+    }
     expect(updated.label).toBe('Renamed')
   })
 
@@ -78,7 +105,9 @@ describe('tabs:update', () => {
     // Set a label first
     h.invoke('tabs:update', { id: nonMain.id, label: 'Custom' })
     // Clear it
-    const updated = h.invoke('tabs:update', { id: nonMain.id, label: null }) as { label: string | null }
+    const updated = h.invoke('tabs:update', { id: nonMain.id, label: null }) as {
+      label: string | null
+    }
     expect(updated.label).toBeNull()
   })
 

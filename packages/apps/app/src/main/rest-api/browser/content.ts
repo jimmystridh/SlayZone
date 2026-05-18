@@ -9,11 +9,13 @@ export function registerBrowserContentRoute(app: Express, _deps: RestApiDeps): v
       (req.query.panel as 'visible' | 'hidden') ?? 'hidden',
       res,
       undefined,
-      req.query.tabId as string | undefined,
+      req.query.tabId as string | undefined
     )
     if (!bwc) return
     try {
-      const content = await execJs(bwc.wc, `(() => {
+      const content = await execJs(
+        bwc.wc,
+        `(() => {
         const url = location.href;
         const title = document.title;
         const text = (document.body?.innerText || '').slice(0, 50000);
@@ -32,7 +34,8 @@ export function registerBrowserContentRoute(app: Express, _deps: RestApiDeps): v
             return o;
           });
         return { url, title, text, interactive };
-      })()`)
+      })()`
+      )
       res.json(content)
     } catch (err) {
       res.status(500).json({ error: err instanceof Error ? err.message : String(err) })

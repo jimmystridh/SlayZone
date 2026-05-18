@@ -31,7 +31,7 @@ function expect(actual: unknown) {
       if (JSON.stringify(actual) !== JSON.stringify(expected)) {
         throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
       }
-    },
+    }
   }
 }
 
@@ -52,8 +52,12 @@ test('normalizes and de-duplicates slugs per scope/type bucket', () => {
     db.pragma('user_version = 46')
 
     const projectId = crypto.randomUUID()
-    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
-      .run(projectId, 'Migration', '#000', '/tmp/migration')
+    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(
+      projectId,
+      'Migration',
+      '#000',
+      '/tmp/migration'
+    )
 
     const insertItem = db.prepare(`
       INSERT INTO ai_config_items (
@@ -63,22 +67,66 @@ test('normalizes and de-duplicates slugs per scope/type bucket', () => {
 
     const g1 = crypto.randomUUID()
     const g2 = crypto.randomUUID()
-    insertItem.run(g1, 'skill', 'global', null, 'My Skill!!!', 'My Skill!!!', '', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
-    insertItem.run(g2, 'skill', 'global', null, 'my-skill', 'my-skill', '', '2025-01-02 00:00:00', '2025-01-02 00:00:00')
+    insertItem.run(
+      g1,
+      'skill',
+      'global',
+      null,
+      'My Skill!!!',
+      'My Skill!!!',
+      '',
+      '2025-01-01 00:00:00',
+      '2025-01-01 00:00:00'
+    )
+    insertItem.run(
+      g2,
+      'skill',
+      'global',
+      null,
+      'my-skill',
+      'my-skill',
+      '',
+      '2025-01-02 00:00:00',
+      '2025-01-02 00:00:00'
+    )
 
     const p1 = crypto.randomUUID()
     const p2 = crypto.randomUUID()
-    insertItem.run(p1, 'command', 'project', projectId, 'Deploy Plan', 'Deploy Plan', '', '2025-01-01 00:00:00', '2025-01-01 00:00:00')
-    insertItem.run(p2, 'command', 'project', projectId, 'deploy-plan', 'deploy-plan', '', '2025-01-02 00:00:00', '2025-01-02 00:00:00')
+    insertItem.run(
+      p1,
+      'command',
+      'project',
+      projectId,
+      'Deploy Plan',
+      'Deploy Plan',
+      '',
+      '2025-01-01 00:00:00',
+      '2025-01-01 00:00:00'
+    )
+    insertItem.run(
+      p2,
+      'command',
+      'project',
+      projectId,
+      'deploy-plan',
+      'deploy-plan',
+      '',
+      '2025-01-02 00:00:00',
+      '2025-01-02 00:00:00'
+    )
 
     runMigrations(db)
 
     const byId = new Map(
-      (db.prepare('SELECT id, slug, name FROM ai_config_items WHERE id IN (?, ?, ?, ?)').all(g1, g2, p1, p2) as Array<{
-        id: string
-        slug: string
-        name: string
-      }>).map((row) => [row.id, row])
+      (
+        db
+          .prepare('SELECT id, slug, name FROM ai_config_items WHERE id IN (?, ?, ?, ?)')
+          .all(g1, g2, p1, p2) as Array<{
+          id: string
+          slug: string
+          name: string
+        }>
+      ).map((row) => [row.id, row])
     )
 
     expect(byId.get(g1)?.slug).toBe('my-skill')

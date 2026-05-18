@@ -17,10 +17,7 @@ import type { AgentEvent } from '@slayzone/terminal/shared'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-export const FIXTURES_DIR = join(
-  __dirname,
-  '../../../../../terminal/test/fixtures/claude-stream',
-)
+export const FIXTURES_DIR = join(__dirname, '../../../../../terminal/test/fixtures/claude-stream')
 
 export function listFixtures(): string[] {
   return readdirSync(FIXTURES_DIR)
@@ -57,7 +54,7 @@ export interface ReplayOpts {
 
 const DEFAULT_OPTS: Required<ReplayOpts> = {
   iterations: 200,
-  trimSlowestPct: 0,
+  trimSlowestPct: 0
 }
 
 export function replayFixture(name: string, opts: ReplayOpts = {}): ReplayMetrics {
@@ -80,10 +77,14 @@ export function replayFixture(name: string, opts: ReplayOpts = {}): ReplayMetric
 
   samples.sort((a, b) => a - b)
   const trimmed =
-    trimSlowestPct > 0 ? samples.slice(0, Math.floor(samples.length * (1 - trimSlowestPct))) : samples
+    trimSlowestPct > 0
+      ? samples.slice(0, Math.floor(samples.length * (1 - trimSlowestPct)))
+      : samples
   const longestReducerMs = trimmed[trimmed.length - 1] ?? 0
   const meanReducerMs = trimmed.length ? trimmed.reduce((s, x) => s + x, 0) / trimmed.length : 0
-  const p99ReducerMs = trimmed.length ? trimmed[Math.floor(trimmed.length * 0.99)] ?? longestReducerMs : 0
+  const p99ReducerMs = trimmed.length
+    ? (trimmed[Math.floor(trimmed.length * 0.99)] ?? longestReducerMs)
+    : 0
 
   return {
     fixture: name,
@@ -93,7 +94,7 @@ export function replayFixture(name: string, opts: ReplayOpts = {}): ReplayMetric
     totalReducerMs,
     longestReducerMs,
     meanReducerMs,
-    p99ReducerMs,
+    p99ReducerMs
   }
 }
 

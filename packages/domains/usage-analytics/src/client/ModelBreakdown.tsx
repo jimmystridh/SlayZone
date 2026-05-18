@@ -3,9 +3,7 @@ import type { ModelSummary } from '../shared/types'
 import { formatTokens, TOOLTIP_STYLE, TICK_STYLE } from './chart-theme'
 
 function shortenModel(model: string): string {
-  return model
-    .replace('claude-', '')
-    .replace(/-\d{8}$/, '')
+  return model.replace('claude-', '').replace(/-\d{8}$/, '')
 }
 
 interface Props {

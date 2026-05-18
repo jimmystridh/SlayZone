@@ -5,7 +5,10 @@ export interface BlockingOpts {
   json?: boolean
 }
 
-export async function blockingAction(taskId: string | undefined, opts: BlockingOpts): Promise<void> {
+export async function blockingAction(
+  taskId: string | undefined,
+  opts: BlockingOpts
+): Promise<void> {
   taskId = resolveId(taskId)
   const db = openDb()
 
@@ -13,9 +16,14 @@ export async function blockingAction(taskId: string | undefined, opts: BlockingO
     `SELECT id FROM tasks WHERE id LIKE :prefix || '%' LIMIT 2`,
     { ':prefix': taskId }
   )
-  if (tasks.length === 0) { console.error(`Task not found: ${taskId}`); process.exit(1) }
+  if (tasks.length === 0) {
+    console.error(`Task not found: ${taskId}`)
+    process.exit(1)
+  }
   if (tasks.length > 1) {
-    console.error(`Ambiguous id prefix "${taskId}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${taskId}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
 

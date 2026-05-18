@@ -46,8 +46,12 @@ export function captureMcpServer(): CapturedMcpServer {
   return {
     server,
     tools,
-    has(name) { return tools.has(name) },
-    get(name) { return tools.get(name) },
+    has(name) {
+      return tools.has(name)
+    },
+    get(name) {
+      return tools.get(name)
+    },
     async invoke(name, input, extra) {
       const tool = tools.get(name)
       if (!tool) throw new Error(`No tool registered: ${name}`)

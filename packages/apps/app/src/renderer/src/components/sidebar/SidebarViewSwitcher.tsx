@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
   TooltipContent,
   cn,
-  useShortcutDisplay,
+  useShortcutDisplay
 } from '@slayzone/ui'
 import { Check, PanelLeftClose } from 'lucide-react'
 import { viewRegistry, getView } from './views/registry'
@@ -26,7 +26,7 @@ export function SidebarViewSwitcher({
   onChange,
   compact,
   autoHide,
-  onToggleAutoHide,
+  onToggleAutoHide
 }: SidebarViewSwitcherProps) {
   const view = getView(current)
   const Icon = view.icon
@@ -64,11 +64,7 @@ export function SidebarViewSwitcher({
           const VIcon = v.icon
           const selected = v.id === current
           return (
-            <DropdownMenuItem
-              key={v.id}
-              onSelect={() => onChange(v.id)}
-              className="cursor-pointer"
-            >
+            <DropdownMenuItem key={v.id} onSelect={() => onChange(v.id)} className="cursor-pointer">
               <VIcon className="size-4" />
               <span>{v.label}</span>
               {selected && <Check className="size-4 col-start-3" />}

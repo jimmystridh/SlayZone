@@ -41,7 +41,7 @@ const DEFAULTS = {
   fitOnMount: true,
   fitOnResize: true,
   wheelZoom: 'always' as const,
-  doubleClickToReset: true,
+  doubleClickToReset: true
 }
 
 const IDENTITY: PanZoomTransform = { x: 0, y: 0, scale: 1 }
@@ -101,7 +101,7 @@ export function usePanZoom(opts: PanZoomOptions = {}): UsePanZoomReturn {
       transformRef.current = next
       schedule()
     },
-    [schedule],
+    [schedule]
   )
 
   const fit = useCallback(() => {
@@ -132,10 +132,10 @@ export function usePanZoom(opts: PanZoomOptions = {}): UsePanZoomReturn {
       apply({
         x: ax - (ax - t.x) * ratio,
         y: ay - (ay - t.y) * ratio,
-        scale: newScale,
+        scale: newScale
       })
     },
-    [apply],
+    [apply]
   )
 
   const zoomCenter = useCallback(
@@ -146,7 +146,7 @@ export function usePanZoom(opts: PanZoomOptions = {}): UsePanZoomReturn {
       userInteractedRef.current = true
       zoomAt(r.width / 2, r.height / 2, factor)
     },
-    [zoomAt],
+    [zoomAt]
   )
 
   const ZOOM_STEP = 1 + cfg.zoomScaleSensitivity
@@ -157,7 +157,7 @@ export function usePanZoom(opts: PanZoomOptions = {}): UsePanZoomReturn {
     (t: PanZoomTransform) => {
       apply({ x: t.x, y: t.y, scale: t.scale })
     },
-    [apply],
+    [apply]
   )
 
   const getTransform = useCallback(() => ({ ...transformRef.current }), [])
@@ -280,11 +280,22 @@ export function usePanZoom(opts: PanZoomOptions = {}): UsePanZoomReturn {
       pointersRef.current.clear()
       pinchRef.current = null
     }
-  }, [apply, fit, flush, reset, zoomAt, cfg.doubleClickToReset, cfg.fitOnMount, cfg.fitOnResize, cfg.wheelZoom, cfg.zoomScaleSensitivity])
+  }, [
+    apply,
+    fit,
+    flush,
+    reset,
+    zoomAt,
+    cfg.doubleClickToReset,
+    cfg.fitOnMount,
+    cfg.fitOnResize,
+    cfg.wheelZoom,
+    cfg.zoomScaleSensitivity
+  ])
 
   const controls = useMemo<PanZoomControls>(
     () => ({ zoomIn, zoomOut, reset, fit, setTransform, getTransform }),
-    [zoomIn, zoomOut, reset, fit, setTransform, getTransform],
+    [zoomIn, zoomOut, reset, fit, setTransform, getTransform]
   )
 
   return { hostRef, contentRef, controls }

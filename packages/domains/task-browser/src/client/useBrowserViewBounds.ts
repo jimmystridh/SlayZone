@@ -72,13 +72,20 @@ export function useBrowserViewBounds(
       }
 
       // Check if a dialog overlay or popover overlaps this view
-      const overlayEls = document.querySelectorAll('[data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"], [data-radix-popper-content-wrapper]')
+      const overlayEls = document.querySelectorAll(
+        '[data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"], [data-radix-popper-content-wrapper]'
+      )
       const viewRect = el.getBoundingClientRect()
       let overlaps = false
       for (const oel of overlayEls) {
         const or = oel.getBoundingClientRect()
         // Two rects overlap when neither is fully left/right/above/below the other
-        if (or.left < viewRect.right && or.right > viewRect.left && or.top < viewRect.bottom && or.bottom > viewRect.top) {
+        if (
+          or.left < viewRect.right &&
+          or.right > viewRect.left &&
+          or.top < viewRect.bottom &&
+          or.bottom > viewRect.top
+        ) {
           overlaps = true
           break
         }
@@ -105,7 +112,13 @@ export function useBrowserViewBounds(
         const height = Math.round(viewRect.height * zoomFactor)
 
         const last = lastBoundsRef.current
-        if (!last || last.x !== x || last.y !== y || last.width !== width || last.height !== height) {
+        if (
+          !last ||
+          last.x !== x ||
+          last.y !== y ||
+          last.width !== width ||
+          last.height !== height
+        ) {
           lastBoundsRef.current = { x, y, width, height }
           if (width > 0 && height > 0) {
             void window.api.browser.setBounds(vid, { x, y, width, height })
@@ -147,24 +160,27 @@ export function useBrowserViewBounds(
   }, [])
 
   // Callback ref — handles conditional mounting
-  const placeholderRef = useCallback((el: HTMLDivElement | null) => {
-    const prev = elementRef.current
-    elementRef.current = el
+  const placeholderRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      const prev = elementRef.current
+      elementRef.current = el
 
-    if (el && !prev) {
-      // Attached — start loop if conditions met
-      el.addEventListener('mousedown', handleMouseDown)
-      if (viewIdRef.current && effectivelyVisibleRef.current) {
-        lastBoundsRef.current = null // force initial sync
-        startLoop()
+      if (el && !prev) {
+        // Attached — start loop if conditions met
+        el.addEventListener('mousedown', handleMouseDown)
+        if (viewIdRef.current && effectivelyVisibleRef.current) {
+          lastBoundsRef.current = null // force initial sync
+          startLoop()
+        }
+      } else if (!el && prev) {
+        // Detached — stop loop
+        prev.removeEventListener('mousedown', handleMouseDown)
+        stopLoop()
+        lastBoundsRef.current = null
       }
-    } else if (!el && prev) {
-      // Detached — stop loop
-      prev.removeEventListener('mousedown', handleMouseDown)
-      stopLoop()
-      lastBoundsRef.current = null
-    }
-  }, [handleMouseDown, startLoop, stopLoop])
+    },
+    [handleMouseDown, startLoop, stopLoop]
+  )
 
   return { placeholderRef, hiddenByOverlay }
 }

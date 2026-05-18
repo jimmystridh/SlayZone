@@ -30,10 +30,12 @@ export function registerUnarchiveTaskTool(server: McpServer, deps: McpToolsDeps)
       }
       deps.notifyRenderer()
       return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify(unarchived, null, 2)
-        }]
+        content: [
+          {
+            type: 'text' as const,
+            text: JSON.stringify(unarchived, null, 2)
+          }
+        ]
       }
     }
   )

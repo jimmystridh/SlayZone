@@ -1,12 +1,15 @@
 import { validateReparent, type ReparentTaskRow } from './reparent-validation'
 
 function makeLookup(rows: ReparentTaskRow[]): (id: string) => ReparentTaskRow | null {
-  const map = new Map(rows.map(r => [r.id, r]))
+  const map = new Map(rows.map((r) => [r.id, r]))
   return (id) => map.get(id) ?? null
 }
 
 function assert(cond: boolean, msg: string): void {
-  if (!cond) { console.error('FAIL:', msg); process.exit(1) }
+  if (!cond) {
+    console.error('FAIL:', msg)
+    process.exit(1)
+  }
 }
 
 // Self-parent
@@ -18,7 +21,10 @@ function assert(cond: boolean, msg: string): void {
 
 // Detach
 {
-  const lookup = makeLookup([{ id: 'a', project_id: 'p', parent_id: 'b' }, { id: 'b', project_id: 'p', parent_id: null }])
+  const lookup = makeLookup([
+    { id: 'a', project_id: 'p', parent_id: 'b' },
+    { id: 'b', project_id: 'p', parent_id: null }
+  ])
   const r = validateReparent({ taskId: 'a', parentId: null, lookup })
   assert(r.ok, 'detach should succeed')
 }
@@ -41,7 +47,7 @@ function assert(cond: boolean, msg: string): void {
 {
   const lookup = makeLookup([
     { id: 'a', project_id: 'p', parent_id: null },
-    { id: 'b', project_id: 'p', parent_id: null, archived_at: '2026-01-01' },
+    { id: 'b', project_id: 'p', parent_id: null, archived_at: '2026-01-01' }
   ])
   const r = validateReparent({ taskId: 'a', parentId: 'b', lookup })
   assert(!r.ok && r.error === 'archived-parent', 'archived parent')
@@ -51,7 +57,7 @@ function assert(cond: boolean, msg: string): void {
 {
   const lookup = makeLookup([
     { id: 'a', project_id: 'p1', parent_id: null },
-    { id: 'b', project_id: 'p2', parent_id: null },
+    { id: 'b', project_id: 'p2', parent_id: null }
   ])
   const r = validateReparent({ taskId: 'a', parentId: 'b', lookup })
   assert(!r.ok && r.error === 'cross-project', 'cross-project')
@@ -62,7 +68,7 @@ function assert(cond: boolean, msg: string): void {
   const lookup = makeLookup([
     { id: 'a', project_id: 'p', parent_id: null },
     { id: 'b', project_id: 'p', parent_id: 'a' },
-    { id: 'c', project_id: 'p', parent_id: 'b' },
+    { id: 'c', project_id: 'p', parent_id: 'b' }
   ])
   const r = validateReparent({ taskId: 'a', parentId: 'c', lookup })
   assert(!r.ok && r.error === 'cycle', 'cycle detect')
@@ -72,7 +78,7 @@ function assert(cond: boolean, msg: string): void {
 {
   const lookup = makeLookup([
     { id: 'a', project_id: 'p', parent_id: null },
-    { id: 'b', project_id: 'p', parent_id: null },
+    { id: 'b', project_id: 'p', parent_id: null }
   ])
   const r = validateReparent({ taskId: 'a', parentId: 'b', lookup })
   assert(r.ok, 'happy path reparent')
@@ -83,7 +89,7 @@ function assert(cond: boolean, msg: string): void {
   const lookup = makeLookup([
     { id: 'g', project_id: 'p', parent_id: null },
     { id: 'mid', project_id: 'p', parent_id: 'g' },
-    { id: 'c', project_id: 'p', parent_id: null },
+    { id: 'c', project_id: 'p', parent_id: null }
   ])
   const r = validateReparent({ taskId: 'c', parentId: 'mid', lookup })
   assert(r.ok, 'depth >1 allowed')

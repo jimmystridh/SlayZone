@@ -1,14 +1,24 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  ArrowLeft, AlertTriangle, ChevronRight,
-  Plus, Sparkles, Server, FileText, FolderTree, Settings2,
+  ArrowLeft,
+  AlertTriangle,
+  ChevronRight,
+  Plus,
+  Sparkles,
+  Server,
+  FileText,
+  FolderTree,
+  Settings2,
   type LucideIcon
 } from 'lucide-react'
 import { Button, cn, Switch, Tooltip, TooltipContent, TooltipTrigger } from '@slayzone/ui'
 import { buildDefaultSkillContent } from '../shared'
 import type {
-  AiConfigItem, AiConfigScope, CliProvider,
-  CliProviderInfo, UpdateAiConfigItemInput
+  AiConfigItem,
+  AiConfigScope,
+  CliProvider,
+  CliProviderInfo,
+  UpdateAiConfigItemInput
 } from '../shared'
 import { PROVIDER_LABELS } from '../shared/provider-registry'
 import { ContextItemEditor } from './ContextItemEditor'
@@ -20,7 +30,15 @@ import { ProjectInstructions } from './ProjectInstructions'
 import { SkillHelpCard } from './SkillHelpCard'
 import { getSkillValidation } from './skill-validation'
 
-export type ContextManagerSection = 'providers' | 'instructions' | 'skill' | 'mcp' | 'files' | 'provider-sync' | 'skills' | 'mcps'
+export type ContextManagerSection =
+  | 'providers'
+  | 'instructions'
+  | 'skill'
+  | 'mcp'
+  | 'files'
+  | 'provider-sync'
+  | 'skills'
+  | 'mcps'
 type Section = ContextManagerSection
 
 interface ContextManagerSettingsProps {
@@ -38,7 +56,12 @@ export type ProjectContextManagerTab = 'config' | 'files'
 function formatTimestamp(value: string): string {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Recently'
-  return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+  return date.toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  })
 }
 
 function nextAvailableSlug(base: string, existingSlugs: Set<string>): string {
@@ -52,7 +75,13 @@ function nextAvailableSlug(base: string, existingSlugs: Set<string>): string {
 // Shared overview card
 // ---------------------------------------------------------------------------
 
-function OverviewCard({ testId, icon: Icon, label, detail, onClick }: {
+function OverviewCard({
+  testId,
+  icon: Icon,
+  label,
+  detail,
+  onClick
+}: {
   testId: string
   icon: LucideIcon
   label: string
@@ -69,7 +98,9 @@ function OverviewCard({ testId, icon: Icon, label, detail, onClick }: {
       <div className="min-w-0 flex-1">
         <span className="text-sm font-medium">{label}</span>
       </div>
-      {detail && <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">{detail}</span>}
+      {detail && (
+        <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">{detail}</span>
+      )}
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
     </button>
   )
@@ -124,19 +155,21 @@ function OverviewPanel({
         setData({
           instructions: { content: instrContent },
           skills,
-          providers,
+          providers
         })
       } catch {
         // silently fail — cards will show loading state
       }
     })()
-    return () => { stale = true }
+    return () => {
+      stale = true
+    }
   }, [version])
 
   if (!data) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3, 4].map(i => (
+        {[1, 2, 3, 4].map((i) => (
           <div key={i} className="h-20 animate-pulse rounded-lg border bg-muted/20" />
         ))}
       </div>
@@ -144,16 +177,44 @@ function OverviewPanel({
   }
 
   const skillCount = data.skills.length
-  const enabledProviders = data.providers.filter(p => p.enabled)
+  const enabledProviders = data.providers.filter((p) => p.enabled)
   const hasContent = !!data.instructions?.content
 
   return (
     <div className="space-y-2.5">
-      <OverviewCard testId="context-overview-providers" icon={Settings2} label="Providers" detail={`${enabledProviders.length} enabled`} onClick={() => onNavigate('providers')} />
-      <OverviewCard testId="context-overview-instructions" icon={FileText} label="Instructions" detail={hasContent ? 'Saved' : 'Empty'} onClick={() => onNavigate('instructions')} />
-      <OverviewCard testId="context-overview-skills" icon={Sparkles} label="Skills" detail={`${skillCount} defined`} onClick={() => onNavigate('skill')} />
-      <OverviewCard testId="context-overview-mcp" icon={Server} label="MCP Servers" onClick={() => onNavigate('mcp')} />
-      <OverviewCard testId="context-overview-files" icon={FolderTree} label="Files" onClick={() => onNavigate('files')} />
+      <OverviewCard
+        testId="context-overview-providers"
+        icon={Settings2}
+        label="Providers"
+        detail={`${enabledProviders.length} enabled`}
+        onClick={() => onNavigate('providers')}
+      />
+      <OverviewCard
+        testId="context-overview-instructions"
+        icon={FileText}
+        label="Instructions"
+        detail={hasContent ? 'Saved' : 'Empty'}
+        onClick={() => onNavigate('instructions')}
+      />
+      <OverviewCard
+        testId="context-overview-skills"
+        icon={Sparkles}
+        label="Skills"
+        detail={`${skillCount} defined`}
+        onClick={() => onNavigate('skill')}
+      />
+      <OverviewCard
+        testId="context-overview-mcp"
+        icon={Server}
+        label="MCP Servers"
+        onClick={() => onNavigate('mcp')}
+      />
+      <OverviewCard
+        testId="context-overview-files"
+        icon={FolderTree}
+        label="Files"
+        onClick={() => onNavigate('files')}
+      />
     </div>
   )
 }
@@ -176,7 +237,9 @@ function ProvidersPanel() {
       }
     }
     void fetch()
-    const handler = () => { void fetch() }
+    const handler = () => {
+      void fetch()
+    }
     window.addEventListener('sz:settings-changed', handler)
     return () => window.removeEventListener('sz:settings-changed', handler)
   }, [])
@@ -185,7 +248,9 @@ function ProvidersPanel() {
     if (provider.isDefault) return
     const newEnabled = !provider.enabled
     await window.api.aiConfig.toggleProvider(provider.id, newEnabled)
-    setProviders(prev => prev.map(p => p.id === provider.id ? { ...p, enabled: newEnabled } : p))
+    setProviders((prev) =>
+      prev.map((p) => (p.id === provider.id ? { ...p, enabled: newEnabled } : p))
+    )
   }
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading...</p>
@@ -195,7 +260,7 @@ function ProvidersPanel() {
       <p className="text-xs text-muted-foreground">
         Enable the providers you use. Skills and instructions will sync to enabled providers.
       </p>
-      {providers.map(provider => {
+      {providers.map((provider) => {
         const isPlaceholder = provider.status === 'placeholder'
         return (
           <div
@@ -209,9 +274,7 @@ function ProvidersPanel() {
               <p className="text-sm font-medium">
                 {PROVIDER_LABELS[provider.kind as CliProvider] ?? provider.name}
               </p>
-              {isPlaceholder && (
-                <p className="text-[11px] text-muted-foreground">Coming soon</p>
-              )}
+              {isPlaceholder && <p className="text-[11px] text-muted-foreground">Coming soon</p>}
               {provider.isDefault && (
                 <p className="text-[11px] text-muted-foreground">Default provider</p>
               )}
@@ -257,12 +320,7 @@ export function ContextManagerSettings({
 
   if (isProject) {
     if (activeProjectTab === 'files') {
-      return (
-        <ProjectContextFilesView
-          projectId={projectId!}
-          projectPath={projectPath!}
-        />
-      )
+      return <ProjectContextFilesView projectId={projectId!} projectPath={projectPath!} />
     }
 
     return (
@@ -282,7 +340,11 @@ export function ContextManagerSettings({
 // Legacy (pre-shell) context manager — own component so hooks are unconditional
 // ---------------------------------------------------------------------------
 
-function LegacyContextManager({ initialSection }: { initialSection: ContextManagerSection | null }) {
+function LegacyContextManager({
+  initialSection
+}: {
+  initialSection: ContextManagerSection | null
+}) {
   const [section, setSection] = useState<Section | null>(initialSection)
   const [items, setItems] = useState<AiConfigItem[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -364,9 +426,10 @@ function LegacyContextManager({ initialSection }: { initialSection: ContextManag
 
     return items.map((item) => {
       const validation = getSkillValidation(item)
-      const validationStatus = validation?.status === 'invalid' || validation?.status === 'warning'
-        ? validation.status
-        : null
+      const validationStatus =
+        validation?.status === 'invalid' || validation?.status === 'warning'
+          ? validation.status
+          : null
 
       return (
         <div key={item.id}>
@@ -410,13 +473,26 @@ function LegacyContextManager({ initialSection }: { initialSection: ContextManag
             className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="size-3.5" />
-            {{ 'providers': 'Providers', 'provider-sync': 'Providers', 'instructions': 'Instructions', 'skill': 'Skills', 'skills': 'Skills', 'mcp': 'MCP Servers', 'mcps': 'MCP Servers', 'files': 'Files' }[section]}
+            {
+              {
+                providers: 'Providers',
+                'provider-sync': 'Providers',
+                instructions: 'Instructions',
+                skill: 'Skills',
+                skills: 'Skills',
+                mcp: 'MCP Servers',
+                mcps: 'MCP Servers',
+                files: 'Files'
+              }[section]
+            }
           </button>
 
           <span className="flex-1 text-right text-xs text-muted-foreground">
             {section === 'providers' && 'Choose which AI coding tools to sync content to.'}
-            {section === 'instructions' && 'Library instructions stored in the database. Not synced to any file.'}
-            {section === 'skill' && 'Library skills shared across all projects. Synced to enabled providers.'}
+            {section === 'instructions' &&
+              'Library instructions stored in the database. Not synced to any file.'}
+            {section === 'skill' &&
+              'Library skills shared across all projects. Synced to enabled providers.'}
             {section === 'mcp' && 'Browse and favorite MCP servers from the curated catalog.'}
             {section === 'files' && 'Computer-level config files across all provider directories.'}
           </span>
@@ -424,11 +500,7 @@ function LegacyContextManager({ initialSection }: { initialSection: ContextManag
           <div className="flex items-center gap-2">
             <div id="context-manager-header-actions" />
             {isItemSection && (
-              <Button
-                size="sm"
-                onClick={handleCreate}
-                data-testid={`context-new-${section}`}
-              >
+              <Button size="sm" onClick={handleCreate} data-testid={`context-new-${section}`}>
                 <Plus className="mr-1 size-3.5" />
                 New
               </Button>
@@ -440,10 +512,7 @@ function LegacyContextManager({ initialSection }: { initialSection: ContextManag
       {/* Content area */}
       <div className="min-h-0 flex-1">
         {section === null ? (
-          <OverviewPanel
-            onNavigate={setSection}
-            version={providerVersion + syncCheckVersion}
-          />
+          <OverviewPanel onNavigate={setSection} version={providerVersion + syncCheckVersion} />
         ) : section === 'providers' ? (
           <ProvidersPanel />
         ) : section === 'instructions' ? (
@@ -454,9 +523,7 @@ function LegacyContextManager({ initialSection }: { initialSection: ContextManag
           <ComputerContextFiles />
         ) : isItemSection ? (
           <div className="flex h-full min-h-0 flex-col">
-            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
-              {librarySkillContent}
-            </div>
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">{librarySkillContent}</div>
             <SkillHelpCard testId="library-skill-help-card" className="mt-3 shrink-0" />
           </div>
         ) : null}

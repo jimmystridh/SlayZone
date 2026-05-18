@@ -16,7 +16,7 @@ import {
   ensureBrowserPanelHidden,
   openTaskViaSearch,
   getViewsForTask,
-  testInvoke,
+  testInvoke
 } from '../fixtures/browser-view'
 
 test.describe('Browser panel — WCV cleanup', () => {
@@ -25,12 +25,19 @@ test.describe('Browser panel — WCV cleanup', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Browser Cleanup', color: '#0ea5e9', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Browser Cleanup',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
     projectId = p.id
     await s.refreshData()
   })
 
-  async function newTaskAndOpen(mainWindow: import('@playwright/test').Page, title: string): Promise<string> {
+  async function newTaskAndOpen(
+    mainWindow: import('@playwright/test').Page,
+    title: string
+  ): Promise<string> {
     const s = seed(mainWindow)
     const t = await s.createTask({ projectId, title, status: 'todo' })
     await s.refreshData()
@@ -43,7 +50,9 @@ test.describe('Browser panel — WCV cleanup', () => {
     await ensureBrowserPanelVisible(mainWindow)
     await newTabBtn(mainWindow).click()
     await newTabBtn(mainWindow).click()
-    await expect.poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 }).toBe(3)
+    await expect
+      .poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 })
+      .toBe(3)
 
     // Close every tab via the X button. Browser panel auto-hides on last close.
     for (let i = 0; i < 3; i++) {
@@ -61,7 +70,9 @@ test.describe('Browser panel — WCV cleanup', () => {
     await ensureBrowserPanelVisible(mainWindow)
     await newTabBtn(mainWindow).click()
     await newTabBtn(mainWindow).click()
-    await expect.poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 }).toBe(3)
+    await expect
+      .poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 })
+      .toBe(3)
 
     // Close the task tab via the same code path the X button + Cmd+W use.
     await mainWindow.evaluate((id) => {
@@ -80,7 +91,9 @@ test.describe('Browser panel — WCV cleanup', () => {
     const taskId = await newTaskAndOpen(mainWindow, 'Panel-toggle task')
     await ensureBrowserPanelVisible(mainWindow)
     await newTabBtn(mainWindow).click()
-    await expect.poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 }).toBe(2)
+    await expect
+      .poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 })
+      .toBe(2)
 
     await ensureBrowserPanelHidden(mainWindow)
 
@@ -89,11 +102,15 @@ test.describe('Browser panel — WCV cleanup', () => {
       .toBe(0)
   })
 
-  test('switching to another task tab does NOT destroy the inactive task WCVs (they hide)', async ({ mainWindow }) => {
+  test('switching to another task tab does NOT destroy the inactive task WCVs (they hide)', async ({
+    mainWindow
+  }) => {
     const taskA = await newTaskAndOpen(mainWindow, 'Active task')
     await ensureBrowserPanelVisible(mainWindow)
     await newTabBtn(mainWindow).click()
-    await expect.poll(async () => (await getViewsForTask(mainWindow, taskA)).length, { timeout: 10_000 }).toBe(2)
+    await expect
+      .poll(async () => (await getViewsForTask(mainWindow, taskA)).length, { timeout: 10_000 })
+      .toBe(2)
 
     // Open a second task — switches active tab, but task A's BrowserPanel stays mounted (display:none)
     await newTaskAndOpen(mainWindow, 'Other task')
@@ -110,33 +127,52 @@ test.describe('Browser panel — WCV cleanup', () => {
     const taskA = await newTaskAndOpen(mainWindow, 'Background WCV task')
     await ensureBrowserPanelVisible(mainWindow)
     await newTabBtn(mainWindow).click()
-    await expect.poll(async () => (await getViewsForTask(mainWindow, taskA)).length, { timeout: 10_000 }).toBe(2)
+    await expect
+      .poll(async () => (await getViewsForTask(mainWindow, taskA)).length, { timeout: 10_000 })
+      .toBe(2)
     const aViewIds = await getViewsForTask(mainWindow, taskA)
 
     // Switch to another task → A's BrowserPanel goes display:none and its WCVs hide
     await newTaskAndOpen(mainWindow, 'Foreground task')
 
     // Hidden WCVs should not be natively attached
-    await expect.poll(async () => {
-      const list = (await testInvoke(mainWindow, 'browser:list-views')) as Array<{ viewId: string; nativelyAttached: boolean }>
-      return list.filter((v) => aViewIds.includes(v.viewId)).every((v) => !v.nativelyAttached)
-    }, { timeout: 10_000 }).toBe(true)
+    await expect
+      .poll(
+        async () => {
+          const list = (await testInvoke(mainWindow, 'browser:list-views')) as Array<{
+            viewId: string
+            nativelyAttached: boolean
+          }>
+          return list.filter((v) => aViewIds.includes(v.viewId)).every((v) => !v.nativelyAttached)
+        },
+        { timeout: 10_000 }
+      )
+      .toBe(true)
 
     // Simulate the user clicking out of and back into the app (window focus event)
-    await mainWindow.evaluate(() => { window.dispatchEvent(new FocusEvent('focus')) })
+    await mainWindow.evaluate(() => {
+      window.dispatchEvent(new FocusEvent('focus'))
+    })
     await mainWindow.waitForTimeout(200)
 
     // A's hidden WCVs must STILL not be attached after the focus event
-    const list = (await testInvoke(mainWindow, 'browser:list-views')) as Array<{ viewId: string; nativelyAttached: boolean }>
+    const list = (await testInvoke(mainWindow, 'browser:list-views')) as Array<{
+      viewId: string
+      nativelyAttached: boolean
+    }>
     const reattached = list.filter((v) => aViewIds.includes(v.viewId) && v.nativelyAttached)
     expect(reattached, 'hidden background-task WCVs leaked back onto the active window').toEqual([])
   })
 
-  test('closing then reopening a task does not leave orphan WCVs from the prior session', async ({ mainWindow }) => {
+  test('closing then reopening a task does not leave orphan WCVs from the prior session', async ({
+    mainWindow
+  }) => {
     const taskId = await newTaskAndOpen(mainWindow, 'Round-trip task')
     await ensureBrowserPanelVisible(mainWindow)
     await newTabBtn(mainWindow).click()
-    await expect.poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 }).toBe(2)
+    await expect
+      .poll(async () => (await getViewsForTask(mainWindow, taskId)).length, { timeout: 10_000 })
+      .toBe(2)
 
     await mainWindow.evaluate((id) => {
       const w = window as unknown as {

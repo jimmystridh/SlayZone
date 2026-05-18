@@ -53,9 +53,9 @@ export function markTabSpawned(db: Database, tabId: string, wasSpawned: boolean)
  * Used in conjunction with the renderer's `getMainSessionId(t) => ${t}:${t}`.
  */
 export function ensureMainTab(db: Database, taskId: string, mode: string): TerminalTab {
-  const existing = db.prepare(
-    'SELECT * FROM terminal_tabs WHERE task_id = ? AND is_main = 1'
-  ).get(taskId) as TabRow | undefined
+  const existing = db
+    .prepare('SELECT * FROM terminal_tabs WHERE task_id = ? AND is_main = 1')
+    .get(taskId) as TabRow | undefined
 
   if (existing) {
     if (existing.mode !== mode) {
@@ -95,9 +95,9 @@ export function createTabRow(db: Database, input: CreateTerminalTabInput): Termi
   const id = crypto.randomUUID()
   const mode = input.mode || 'terminal'
 
-  const maxPos = db.prepare(
-    'SELECT COALESCE(MAX(position), -1) as max_pos FROM terminal_tabs WHERE task_id = ?'
-  ).get(input.taskId) as { max_pos: number }
+  const maxPos = db
+    .prepare('SELECT COALESCE(MAX(position), -1) as max_pos FROM terminal_tabs WHERE task_id = ?')
+    .get(input.taskId) as { max_pos: number }
   const position = maxPos.max_pos + 1
 
   const label = input.label ?? null
@@ -128,22 +128,28 @@ export function createTabRow(db: Database, input: CreateTerminalTabInput): Termi
 export function createPtyEnricher(db: Database): (raw: PtyInfo[]) => PtyInfo[] {
   return (raw) => {
     if (raw.length === 0) return raw
-    const taskIds = [...new Set(raw.map(r => r.taskId))]
+    const taskIds = [...new Set(raw.map((r) => r.taskId))]
     const placeholders = taskIds.map(() => '?').join(',')
-    const tabs = db.prepare(
-      `SELECT id, task_id, label, is_main FROM terminal_tabs WHERE task_id IN (${placeholders})`
-    ).all(...taskIds) as Array<{ id: string; task_id: string; label: string | null; is_main: number }>
+    const tabs = db
+      .prepare(
+        `SELECT id, task_id, label, is_main FROM terminal_tabs WHERE task_id IN (${placeholders})`
+      )
+      .all(...taskIds) as Array<{
+      id: string
+      task_id: string
+      label: string | null
+      is_main: number
+    }>
     const byPaneId = new Map<string, { id: string; label: string | null }>()
     const mainByTaskId = new Map<string, { id: string; label: string | null }>()
     for (const t of tabs) {
       byPaneId.set(t.id, { id: t.id, label: t.label })
       if (t.is_main) mainByTaskId.set(t.task_id, { id: t.id, label: t.label })
     }
-    return raw.map(r => {
+    return raw.map((r) => {
       const colon = r.sessionId.indexOf(':')
-      const tab = colon >= 0
-        ? byPaneId.get(r.sessionId.slice(colon + 1))
-        : mainByTaskId.get(r.taskId)
+      const tab =
+        colon >= 0 ? byPaneId.get(r.sessionId.slice(colon + 1)) : mainByTaskId.get(r.taskId)
       return { ...r, tabId: tab?.id ?? '', label: tab?.label ?? null }
     })
   }
@@ -152,7 +158,9 @@ export function createPtyEnricher(db: Database): (raw: PtyInfo[]) => PtyInfo[] {
 /** Pure DB write — update a tab. Returns null if not found.
  *  Used by both IPC handler (`tabs:update`) and REST route. */
 export function updateTabRow(db: Database, input: UpdateTerminalTabInput): TerminalTab | null {
-  const existing = db.prepare('SELECT * FROM terminal_tabs WHERE id = ?').get(input.id) as TabRow | undefined
+  const existing = db.prepare('SELECT * FROM terminal_tabs WHERE id = ?').get(input.id) as
+    | TabRow
+    | undefined
   if (!existing) return null
 
   const mode = input.mode ?? existing.mode
@@ -174,15 +182,19 @@ export function updateTabRow(db: Database, input: UpdateTerminalTabInput): Termi
  *  Returns null if target not found. Used by both IPC handler (`tabs:split`)
  *  and REST route (`POST /api/tabs/split`). */
 export function splitTabRow(db: Database, tabId: string): TerminalTab | null {
-  const target = db.prepare('SELECT * FROM terminal_tabs WHERE id = ?').get(tabId) as TabRow | undefined
+  const target = db.prepare('SELECT * FROM terminal_tabs WHERE id = ?').get(tabId) as
+    | TabRow
+    | undefined
   if (!target) return null
 
   const groupId = target.group_id || target.id
   const id = crypto.randomUUID()
 
-  const maxPos = db.prepare(
-    'SELECT COALESCE(MAX(position), -1) as max_pos FROM terminal_tabs WHERE task_id = ? AND group_id = ?'
-  ).get(target.task_id, groupId) as { max_pos: number }
+  const maxPos = db
+    .prepare(
+      'SELECT COALESCE(MAX(position), -1) as max_pos FROM terminal_tabs WHERE task_id = ? AND group_id = ?'
+    )
+    .get(target.task_id, groupId) as { max_pos: number }
   const position = maxPos.max_pos + 1
 
   const now = new Date().toISOString()
@@ -207,9 +219,9 @@ export function splitTabRow(db: Database, tabId: string): TerminalTab | null {
 export function registerTerminalTabsHandlers(ipcMain: IpcMain, db: Database): void {
   // List tabs for a task
   ipcMain.handle('tabs:list', (_, taskId: string): TerminalTab[] => {
-    const rows = db.prepare(
-      'SELECT * FROM terminal_tabs WHERE task_id = ? ORDER BY position ASC'
-    ).all(taskId) as TabRow[]
+    const rows = db
+      .prepare('SELECT * FROM terminal_tabs WHERE task_id = ? ORDER BY position ASC')
+      .all(taskId) as TabRow[]
 
     return rows.map(rowToTab)
   })
@@ -225,15 +237,20 @@ export function registerTerminalTabsHandlers(ipcMain: IpcMain, db: Database): vo
   })
 
   // Move a tab to a different group (or create a new group if targetGroupId is null)
-  ipcMain.handle('tabs:moveToGroup', (_, tabId: string, targetGroupId: string | null): TerminalTab | null => {
-    const tab = db.prepare('SELECT * FROM terminal_tabs WHERE id = ?').get(tabId) as TabRow | undefined
-    if (!tab) return null
+  ipcMain.handle(
+    'tabs:moveToGroup',
+    (_, tabId: string, targetGroupId: string | null): TerminalTab | null => {
+      const tab = db.prepare('SELECT * FROM terminal_tabs WHERE id = ?').get(tabId) as
+        | TabRow
+        | undefined
+      if (!tab) return null
 
-    const newGroupId = targetGroupId ?? tabId // null = become own group
-    db.prepare('UPDATE terminal_tabs SET group_id = ? WHERE id = ?').run(newGroupId, tabId)
-    tab.group_id = newGroupId
-    return rowToTab(tab)
-  })
+      const newGroupId = targetGroupId ?? tabId // null = become own group
+      db.prepare('UPDATE terminal_tabs SET group_id = ? WHERE id = ?').run(newGroupId, tabId)
+      tab.group_id = newGroupId
+      return rowToTab(tab)
+    }
+  )
 
   // Update a tab
   ipcMain.handle('tabs:update', (_, input: UpdateTerminalTabInput): TerminalTab | null => {
@@ -242,7 +259,9 @@ export function registerTerminalTabsHandlers(ipcMain: IpcMain, db: Database): vo
 
   // Delete a tab (reject if main)
   ipcMain.handle('tabs:delete', (_, tabId: string): boolean => {
-    const tab = db.prepare('SELECT is_main, task_id FROM terminal_tabs WHERE id = ?').get(tabId) as { is_main: number; task_id: string } | undefined
+    const tab = db.prepare('SELECT is_main, task_id FROM terminal_tabs WHERE id = ?').get(tabId) as
+      | { is_main: number; task_id: string }
+      | undefined
     if (!tab) return false
     if (tab.is_main === 1) return false // Can't delete main tab
 

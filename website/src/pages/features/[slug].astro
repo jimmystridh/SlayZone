@@ -23,17 +23,27 @@ import AttentionPanel from '../../components/features/visuals/attention-panel.as
 import McpBoard from '../../components/features/visuals/mcp-board.astro'
 
 const visuals: Record<string, any> = {
-  'board': Board, 'terminals': Terminals, 'embedded-browser': EmbeddedBrowser,
-  'worktrees': Worktrees, 'git-workflow': GitWorkflow, 'diff-viewer': DiffViewer,
-  'commit-graph': CommitGraph, 'pull-requests': PullRequests, 'notes-editor': NotesEditor,
-  'dev-servers': DevServers, 'usage-meter': UsageMeter, 'usage-reports': UsageReports,
-  'issue-sync': IssueSync, 'explode-mode': ExplodeMode, 'attention-panel': AttentionPanel,
-  'mcp-board': McpBoard,
+  board: Board,
+  terminals: Terminals,
+  'embedded-browser': EmbeddedBrowser,
+  worktrees: Worktrees,
+  'git-workflow': GitWorkflow,
+  'diff-viewer': DiffViewer,
+  'commit-graph': CommitGraph,
+  'pull-requests': PullRequests,
+  'notes-editor': NotesEditor,
+  'dev-servers': DevServers,
+  'usage-meter': UsageMeter,
+  'usage-reports': UsageReports,
+  'issue-sync': IssueSync,
+  'explode-mode': ExplodeMode,
+  'attention-panel': AttentionPanel,
+  'mcp-board': McpBoard
 }
 
 export function getStaticPaths() {
   return features.map((feature) => ({
-    params: { slug: feature.slug },
+    params: { slug: feature.slug }
   }))
 }
 

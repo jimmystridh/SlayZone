@@ -40,12 +40,8 @@ export function seedInitialVersions(
      (id, artifact_id, version_num, content_hash, size, name, author_type, author_id, parent_id)
      VALUES (?, ?, 1, ?, ?, NULL, NULL, NULL, NULL)`
   )
-  const insertBlob = db.prepare(
-    'INSERT OR IGNORE INTO artifact_blobs (hash, size) VALUES (?, ?)'
-  )
-  const setCurrent = db.prepare(
-    'UPDATE task_artifacts SET current_version_id = ? WHERE id = ?'
-  )
+  const insertBlob = db.prepare('INSERT OR IGNORE INTO artifact_blobs (hash, size) VALUES (?, ?)')
+  const setCurrent = db.prepare('UPDATE task_artifacts SET current_version_id = ? WHERE id = ?')
 
   const total = needsSeed.length
   for (let i = 0; i < needsSeed.length; i++) {

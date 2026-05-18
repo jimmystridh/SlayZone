@@ -1,11 +1,40 @@
 import { useState, useEffect } from 'react'
-import { GitBranch, GitMerge, GitPullRequest, FolderTree, FolderGit2, Link2, Loader2, AlertTriangle, ChevronDown, Trash2 } from 'lucide-react'
 import {
-  Button, Tooltip, TooltipContent, TooltipTrigger,
-  Popover, PopoverContent, PopoverTrigger,
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  GitBranch,
+  GitMerge,
+  GitPullRequest,
+  FolderTree,
+  FolderGit2,
+  Link2,
+  Loader2,
+  AlertTriangle,
+  ChevronDown,
+  Trash2
+} from 'lucide-react'
+import {
+  Button,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Input
 } from '@slayzone/ui'
 import type { ConsolidatedGeneralData } from './useConsolidatedGeneralData'
@@ -14,22 +43,43 @@ import type { GhPullRequest } from '../shared/types'
 // --- Not a git repo / no project fallbacks ---
 
 export function NoProjectFallback() {
-  return <div className="p-4 text-xs text-muted-foreground">Set a project path to use Git features</div>
+  return (
+    <div className="p-4 text-xs text-muted-foreground">Set a project path to use Git features</div>
+  )
 }
 
 export function CheckingFallback() {
   return <div className="p-4 text-xs text-muted-foreground">Checking...</div>
 }
 
-export function NotGitRepoFallback({ onInit, initializing }: { onInit: () => void; initializing: boolean }) {
+export function NotGitRepoFallback({
+  onInit,
+  initializing
+}: {
+  onInit: () => void
+  initializing: boolean
+}) {
   return (
     <div className="h-full flex flex-col items-center justify-center gap-4 p-8 text-center">
       <div className="rounded-full bg-muted p-4">
         <FolderGit2 className="size-8 text-muted-foreground" />
       </div>
       <p className="text-sm font-medium">Not a git repository</p>
-      <Button variant="default" size="sm" onClick={onInit} disabled={initializing} className="gap-2">
-        {initializing ? <><Loader2 className="size-3.5 animate-spin" />Initializing...</> : 'Initialize Git'}
+      <Button
+        variant="default"
+        size="sm"
+        onClick={onInit}
+        disabled={initializing}
+        className="gap-2"
+      >
+        {initializing ? (
+          <>
+            <Loader2 className="size-3.5 animate-spin" />
+            Initializing...
+          </>
+        ) : (
+          'Initialize Git'
+        )}
       </Button>
     </div>
   )
@@ -37,7 +87,13 @@ export function NotGitRepoFallback({ onInit, initializing }: { onInit: () => voi
 
 // --- Merge/rebase banner ---
 
-export function MergeBanner({ mergeState, onSwitchTab }: { mergeState: string; onSwitchTab: (tab: 'changes' | 'conflicts') => void }) {
+export function MergeBanner({
+  mergeState,
+  onSwitchTab
+}: {
+  mergeState: string
+  onSwitchTab: (tab: 'changes' | 'conflicts') => void
+}) {
   return (
     <button
       onClick={() => onSwitchTab(mergeState === 'uncommitted' ? 'changes' : 'conflicts')}
@@ -45,9 +101,11 @@ export function MergeBanner({ mergeState, onSwitchTab }: { mergeState: string; o
     >
       <AlertTriangle className="h-4 w-4 text-purple-400 shrink-0" />
       <span className="text-xs font-medium text-purple-300">
-        {mergeState === 'uncommitted' ? 'Merge — reviewing changes'
-          : mergeState === 'rebase-conflicts' ? 'Rebase — resolving conflicts'
-          : 'Merge — resolving conflicts'}
+        {mergeState === 'uncommitted'
+          ? 'Merge — reviewing changes'
+          : mergeState === 'rebase-conflicts'
+            ? 'Rebase — resolving conflicts'
+            : 'Merge — resolving conflicts'}
       </span>
     </button>
   )
@@ -55,7 +113,13 @@ export function MergeBanner({ mergeState, onSwitchTab }: { mergeState: string; o
 
 // --- Status chips ---
 
-export function StatusChips({ data, onSwitchTab }: { data: ConsolidatedGeneralData; onSwitchTab: (tab: 'changes' | 'conflicts') => void }) {
+export function StatusChips({
+  data,
+  onSwitchTab
+}: {
+  data: ConsolidatedGeneralData
+  onSwitchTab: (tab: 'changes' | 'conflicts') => void
+}) {
   const { statusSummary, totalChanges } = data
   if (!statusSummary || totalChanges === 0) {
     return <span className="text-xs text-muted-foreground">No changes</span>
@@ -63,17 +127,26 @@ export function StatusChips({ data, onSwitchTab }: { data: ConsolidatedGeneralDa
   return (
     <>
       {statusSummary.staged > 0 && (
-        <button onClick={() => onSwitchTab('changes')} className="px-2 py-0.5 rounded text-xs font-medium text-green-400 bg-green-500/10 hover:opacity-80 transition-opacity">
+        <button
+          onClick={() => onSwitchTab('changes')}
+          className="px-2 py-0.5 rounded text-xs font-medium text-green-400 bg-green-500/10 hover:opacity-80 transition-opacity"
+        >
           {statusSummary.staged} staged
         </button>
       )}
       {statusSummary.unstaged > 0 && (
-        <button onClick={() => onSwitchTab('changes')} className="px-2 py-0.5 rounded text-xs font-medium text-yellow-400 bg-yellow-500/10 hover:opacity-80 transition-opacity">
+        <button
+          onClick={() => onSwitchTab('changes')}
+          className="px-2 py-0.5 rounded text-xs font-medium text-yellow-400 bg-yellow-500/10 hover:opacity-80 transition-opacity"
+        >
           {statusSummary.unstaged} modified
         </button>
       )}
       {statusSummary.untracked > 0 && (
-        <button onClick={() => onSwitchTab('changes')} className="px-2 py-0.5 rounded text-xs font-medium text-muted-foreground bg-muted hover:opacity-80 transition-opacity">
+        <button
+          onClick={() => onSwitchTab('changes')}
+          className="px-2 py-0.5 rounded text-xs font-medium text-muted-foreground bg-muted hover:opacity-80 transition-opacity"
+        >
           {statusSummary.untracked} untracked
         </button>
       )}
@@ -92,7 +165,13 @@ export function WorktreeButton({ data }: { data: ConsolidatedGeneralData }) {
     <div className="flex">
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="outline" size="sm" onClick={data.handleAddWorktree} disabled={data.creating} className="gap-2 rounded-r-none border-r-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={data.handleAddWorktree}
+            disabled={data.creating}
+            className="gap-2 rounded-r-none border-r-0"
+          >
             <FolderTree className="h-3.5 w-3.5 shrink-0" />
             {data.creating ? 'Creating...' : 'Branch to worktree'}
           </Button>
@@ -101,20 +180,31 @@ export function WorktreeButton({ data }: { data: ConsolidatedGeneralData }) {
       </Tooltip>
       <Popover open={menuOpen} onOpenChange={setMenuOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" disabled={data.creating} className="px-1.5 rounded-l-none">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={data.creating}
+            className="px-1.5 rounded-l-none"
+          >
             <ChevronDown className="h-3 w-3" />
           </Button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-56 p-1">
           <button
-            onClick={() => { setMenuOpen(false); setLinkDialog(true) }}
+            onClick={() => {
+              setMenuOpen(false)
+              setLinkDialog(true)
+            }}
             className="flex items-center gap-2 w-full px-2 py-1.5 text-xs hover:bg-muted rounded transition-colors text-left"
           >
             <Link2 className="h-3 w-3 shrink-0 text-muted-foreground" />
             Link existing worktree
           </button>
           <button
-            onClick={() => { setMenuOpen(false); setBranchDialog(true) }}
+            onClick={() => {
+              setMenuOpen(false)
+              setBranchDialog(true)
+            }}
             className="flex items-center gap-2 w-full px-2 py-1.5 text-xs hover:bg-muted rounded transition-colors text-left"
           >
             <GitBranch className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -139,19 +229,30 @@ export function WorktreeButton({ data }: { data: ConsolidatedGeneralData }) {
   )
 }
 
-function LinkWorktreeDialog({ open, onOpenChange, worktrees, onSelect }: {
+function LinkWorktreeDialog({
+  open,
+  onOpenChange,
+  worktrees,
+  onSelect
+}: {
   open: boolean
   onOpenChange: (open: boolean) => void
   worktrees: ConsolidatedGeneralData['detectedWorktrees']
   onSelect: (wt: ConsolidatedGeneralData['detectedWorktrees'][number]) => void
 }) {
   const [search, setSearch] = useState('')
-  const filtered = worktrees.filter(wt =>
+  const filtered = worktrees.filter((wt) =>
     (wt.branch ?? wt.path).toLowerCase().includes(search.toLowerCase())
   )
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setSearch('') }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o)
+        if (!o) setSearch('')
+      }}
+    >
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Link existing worktree</DialogTitle>
@@ -169,20 +270,30 @@ function LinkWorktreeDialog({ open, onOpenChange, worktrees, onSelect }: {
             />
             <div className="max-h-[250px] overflow-y-auto space-y-0.5">
               {filtered.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-4 text-center">No matching worktrees</p>
-              ) : filtered.map(wt => (
-                <button
-                  key={wt.path}
-                  onClick={() => { onOpenChange(false); setSearch(''); onSelect(wt) }}
-                  className="flex items-center gap-2 w-full px-2 py-2 text-xs hover:bg-muted rounded transition-colors text-left"
-                >
-                  <FolderTree className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <div className="min-w-0">
-                    <div className="font-medium truncate">{wt.branch ?? 'detached HEAD'}</div>
-                    <div className="text-[10px] text-muted-foreground font-mono truncate">{wt.path}</div>
-                  </div>
-                </button>
-              ))}
+                <p className="text-xs text-muted-foreground py-4 text-center">
+                  No matching worktrees
+                </p>
+              ) : (
+                filtered.map((wt) => (
+                  <button
+                    key={wt.path}
+                    onClick={() => {
+                      onOpenChange(false)
+                      setSearch('')
+                      onSelect(wt)
+                    }}
+                    className="flex items-center gap-2 w-full px-2 py-2 text-xs hover:bg-muted rounded transition-colors text-left"
+                  >
+                    <FolderTree className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{wt.branch ?? 'detached HEAD'}</div>
+                      <div className="text-[10px] text-muted-foreground font-mono truncate">
+                        {wt.path}
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
             </div>
           </>
         )}
@@ -191,7 +302,12 @@ function LinkWorktreeDialog({ open, onOpenChange, worktrees, onSelect }: {
   )
 }
 
-function BranchPickerDialog({ open, onOpenChange, projectPath, onSelect }: {
+function BranchPickerDialog({
+  open,
+  onOpenChange,
+  projectPath,
+  onSelect
+}: {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectPath: string | null
@@ -204,18 +320,23 @@ function BranchPickerDialog({ open, onOpenChange, projectPath, onSelect }: {
   useEffect(() => {
     if (!open || !projectPath) return
     setLoading(true)
-    window.api.git.listBranches(projectPath)
+    window.api.git
+      .listBranches(projectPath)
       .then(setBranches)
       .catch(() => setBranches([]))
       .finally(() => setLoading(false))
   }, [open, projectPath])
 
-  const filtered = branches.filter(b =>
-    b.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = branches.filter((b) => b.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) setSearch('') }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o)
+        if (!o) setSearch('')
+      }}
+    >
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Use existing branch</DialogTitle>
@@ -229,19 +350,27 @@ function BranchPickerDialog({ open, onOpenChange, projectPath, onSelect }: {
         />
         <div className="max-h-[250px] overflow-y-auto space-y-0.5">
           {loading ? (
-            <div className="py-4 text-center text-xs text-muted-foreground">Loading branches...</div>
+            <div className="py-4 text-center text-xs text-muted-foreground">
+              Loading branches...
+            </div>
           ) : filtered.length === 0 ? (
             <p className="text-xs text-muted-foreground py-4 text-center">No branches found</p>
-          ) : filtered.map(b => (
-            <button
-              key={b}
-              onClick={() => { onOpenChange(false); setSearch(''); onSelect(b) }}
-              className="flex items-center gap-2 w-full px-2 py-2 text-xs hover:bg-muted rounded transition-colors text-left"
-            >
-              <GitBranch className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              <span className="truncate">{b}</span>
-            </button>
-          ))}
+          ) : (
+            filtered.map((b) => (
+              <button
+                key={b}
+                onClick={() => {
+                  onOpenChange(false)
+                  setSearch('')
+                  onSelect(b)
+                }}
+                className="flex items-center gap-2 w-full px-2 py-2 text-xs hover:bg-muted rounded transition-colors text-left"
+              >
+                <GitBranch className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <span className="truncate">{b}</span>
+              </button>
+            ))
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -263,11 +392,17 @@ export function WorktreeRemoveButton({ data }: { data: ConsolidatedGeneralData }
             disabled={data.removing}
             className="gap-1.5 text-destructive hover:text-destructive"
           >
-            {data.removing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+            {data.removing ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Trash2 className="h-3 w-3" />
+            )}
             Delete worktree
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Delete worktree directory from disk. Branch is kept, but uncommitted changes will be lost.</TooltipContent>
+        <TooltipContent>
+          Delete worktree directory from disk. Branch is kept, but uncommitted changes will be lost.
+        </TooltipContent>
       </Tooltip>
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent className="max-w-lg">
@@ -275,9 +410,16 @@ export function WorktreeRemoveButton({ data }: { data: ConsolidatedGeneralData }
             <AlertDialogTitle>Delete worktree</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4 pt-1">
-                <p>This will permanently delete the worktree directory from disk and unlink it from this task.</p>
-                <p className="font-mono text-[11px] bg-muted px-3 py-2 rounded break-all">{data.metadata?.path ?? data.targetPath}</p>
-                <p className="text-xs text-destructive font-medium">Any uncommitted changes in the worktree will be permanently lost.</p>
+                <p>
+                  This will permanently delete the worktree directory from disk and unlink it from
+                  this task.
+                </p>
+                <p className="font-mono text-[11px] bg-muted px-3 py-2 rounded break-all">
+                  {data.metadata?.path ?? data.targetPath}
+                </p>
+                <p className="text-xs text-destructive font-medium">
+                  Any uncommitted changes in the worktree will be permanently lost.
+                </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -293,7 +435,9 @@ export function WorktreeRemoveButton({ data }: { data: ConsolidatedGeneralData }
               <AlertDialogAction
                 className="bg-destructive text-white hover:bg-destructive/90"
                 disabled={!(data.worktreeBranch ?? data.taskBranch)}
-                onClick={() => data.handleRemoveWorktree(data.worktreeBranch ?? data.taskBranch ?? undefined)}
+                onClick={() =>
+                  data.handleRemoveWorktree(data.worktreeBranch ?? data.taskBranch ?? undefined)
+                }
               >
                 Delete worktree & branch
               </AlertDialogAction>
@@ -308,11 +452,22 @@ export function WorktreeRemoveButton({ data }: { data: ConsolidatedGeneralData }
 // --- PR status chip (shown when PR is linked) ---
 
 export function PrStatusChip({ pr, onClick }: { pr: GhPullRequest; onClick: () => void }) {
-  const stateLabel = pr.state === 'MERGED' ? 'Merged' : pr.state === 'CLOSED' ? 'Closed' : pr.isDraft ? 'Draft' : 'Open'
-  const stateClass = pr.state === 'MERGED' ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400'
-    : pr.state === 'CLOSED' ? 'bg-red-500/20 text-red-600 dark:text-red-400'
-    : pr.isDraft ? 'bg-muted text-muted-foreground'
-    : 'bg-green-500/20 text-green-600 dark:text-green-400'
+  const stateLabel =
+    pr.state === 'MERGED'
+      ? 'Merged'
+      : pr.state === 'CLOSED'
+        ? 'Closed'
+        : pr.isDraft
+          ? 'Draft'
+          : 'Open'
+  const stateClass =
+    pr.state === 'MERGED'
+      ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400'
+      : pr.state === 'CLOSED'
+        ? 'bg-red-500/20 text-red-600 dark:text-red-400'
+        : pr.isDraft
+          ? 'bg-muted text-muted-foreground'
+          : 'bg-green-500/20 text-green-600 dark:text-green-400'
 
   return (
     <Button variant="outline" size="sm" onClick={onClick} className="gap-4">
@@ -326,13 +481,24 @@ export function PrStatusChip({ pr, onClick }: { pr: GhPullRequest; onClick: () =
 
 // --- PR buttons ---
 
-export function PrButtons({ onCreatePr, onLinkPr }: { onCreatePr: () => void; onLinkPr: () => void }) {
+export function PrButtons({
+  onCreatePr,
+  onLinkPr
+}: {
+  onCreatePr: () => void
+  onLinkPr: () => void
+}) {
   const [menuOpen, setMenuOpen] = useState(false)
   return (
     <div className="flex">
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="outline" size="sm" onClick={onCreatePr} className="gap-2 rounded-r-none border-r-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onCreatePr}
+            className="gap-2 rounded-r-none border-r-0"
+          >
             <GitPullRequest className="h-3.5 w-3.5 shrink-0" /> Create PR
           </Button>
         </TooltipTrigger>
@@ -346,7 +512,10 @@ export function PrButtons({ onCreatePr, onLinkPr }: { onCreatePr: () => void; on
         </PopoverTrigger>
         <PopoverContent align="end" className="w-44 p-1">
           <button
-            onClick={() => { setMenuOpen(false); onLinkPr() }}
+            onClick={() => {
+              setMenuOpen(false)
+              onLinkPr()
+            }}
             className="flex items-center gap-2 w-full px-2 py-1.5 text-xs hover:bg-muted rounded transition-colors text-left"
           >
             <Link2 className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -365,7 +534,9 @@ export function StaleNudge({ data }: { data: ConsolidatedGeneralData }) {
   return (
     <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-yellow-500/30 bg-yellow-500/10 text-[11px] text-yellow-600 dark:text-yellow-400">
       <AlertTriangle className="h-3 w-3 shrink-0" />
-      <span>{data.baseCount} behind {data.parentBranch}</span>
+      <span>
+        {data.baseCount} behind {data.parentBranch}
+      </span>
     </div>
   )
 }
@@ -396,14 +567,22 @@ export function RebaseMergeButtons({ data }: { data: ConsolidatedGeneralData }) 
             </DropdownMenuTrigger>
           </span>
         </TooltipTrigger>
-        <TooltipContent>{hasBehind ? `${baseCount} commit${baseCount === 1 ? '' : 's'} behind ${parentBranch}` : `Already up to date with ${parentBranch}`}</TooltipContent>
+        <TooltipContent>
+          {hasBehind
+            ? `${baseCount} commit${baseCount === 1 ? '' : 's'} behind ${parentBranch}`
+            : `Already up to date with ${parentBranch}`}
+        </TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => handleConfirmedAction('rebase', `Rebase onto ${parentBranch}`)}>
+        <DropdownMenuItem
+          onClick={() => handleConfirmedAction('rebase', `Rebase onto ${parentBranch}`)}
+        >
           <GitMerge className="h-3.5 w-3.5" />
           Rebase onto parent
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleConfirmedAction('merge', `Merge ${parentBranch} in`)}>
+        <DropdownMenuItem
+          onClick={() => handleConfirmedAction('merge', `Merge ${parentBranch} in`)}
+        >
           <GitMerge className="h-3.5 w-3.5 rotate-180" />
           Merge parent into branch
         </DropdownMenuItem>
@@ -415,12 +594,24 @@ export function RebaseMergeButtons({ data }: { data: ConsolidatedGeneralData }) 
 // --- Merge to parent split button + confirmation dialog ---
 
 export function MergeToParentButton({ data }: { data: ConsolidatedGeneralData }) {
-  const { actionLoading, handleMergeToParent, confirmMergeToParent, cancelMergeToParent, mergeToParentDialog, parentBranch, featureCount, totalChanges } = data
+  const {
+    actionLoading,
+    handleMergeToParent,
+    confirmMergeToParent,
+    cancelMergeToParent,
+    mergeToParentDialog,
+    parentBranch,
+    featureCount,
+    totalChanges
+  } = data
   const [menuOpen, setMenuOpen] = useState(false)
   const canMerge = featureCount > 0 && totalChanges === 0
   const busy = actionLoading !== null
   const disabled = busy || !canMerge
-  const disabledReason = featureCount === 0 ? `No commits ahead of ${parentBranch}` : 'Uncommitted changes — commit or stash first'
+  const disabledReason =
+    featureCount === 0
+      ? `No commits ahead of ${parentBranch}`
+      : 'Uncommitted changes — commit or stash first'
 
   return (
     <>
@@ -435,7 +626,11 @@ export function MergeToParentButton({ data }: { data: ConsolidatedGeneralData })
                 disabled={disabled}
                 className="gap-1.5 rounded-r-none border-r-0"
               >
-                {actionLoading === 'mergeToParent' ? <Loader2 className="h-3 w-3 animate-spin" /> : <GitMerge className="h-3 w-3" />}
+                {actionLoading === 'mergeToParent' ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <GitMerge className="h-3 w-3" />
+                )}
                 Merge to {parentBranch}
               </Button>
             </span>
@@ -444,13 +639,21 @@ export function MergeToParentButton({ data }: { data: ConsolidatedGeneralData })
         </Tooltip>
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" disabled={disabled} className="px-1.5 rounded-l-none">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={disabled}
+              className="px-1.5 rounded-l-none"
+            >
               <ChevronDown className="h-3 w-3" />
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-fit p-1">
             <button
-              onClick={() => { setMenuOpen(false); handleMergeToParent(false) }}
+              onClick={() => {
+                setMenuOpen(false)
+                handleMergeToParent(false)
+              }}
               className="flex items-center gap-2 w-full px-2 py-1.5 text-xs hover:bg-muted rounded transition-colors text-left"
             >
               <GitMerge className="h-3 w-3 shrink-0 text-muted-foreground" />
@@ -459,18 +662,27 @@ export function MergeToParentButton({ data }: { data: ConsolidatedGeneralData })
           </PopoverContent>
         </Popover>
       </div>
-      <AlertDialog open={mergeToParentDialog.open} onOpenChange={(open) => !open && cancelMergeToParent()}>
+      <AlertDialog
+        open={mergeToParentDialog.open}
+        onOpenChange={(open) => !open && cancelMergeToParent()}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Merge branch into {parentBranch}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
-                <p>This will check out <span className="font-mono font-medium">{parentBranch}</span> in the main repository and merge the worktree branch into it.</p>
+                <p>
+                  This will check out <span className="font-mono font-medium">{parentBranch}</span>{' '}
+                  in the main repository and merge the worktree branch into it.
+                </p>
                 {mergeToParentDialog.deleteWorktree && (
                   <p>The worktree directory will be deleted after merging.</p>
                 )}
                 {mergeToParentDialog.hasMainChanges && (
-                  <p className="text-destructive font-medium">The main repository has uncommitted changes that may be affected by this checkout.</p>
+                  <p className="text-destructive font-medium">
+                    The main repository has uncommitted changes that may be affected by this
+                    checkout.
+                  </p>
                 )}
               </div>
             </AlertDialogDescription>
@@ -487,14 +699,23 @@ export function MergeToParentButton({ data }: { data: ConsolidatedGeneralData })
   )
 }
 
-
 // --- Section helper ---
 
-export function Section({ label, right, children }: { label: React.ReactNode; right?: React.ReactNode; children: React.ReactNode }) {
+export function Section({
+  label,
+  right,
+  children
+}: {
+  label: React.ReactNode
+  right?: React.ReactNode
+  children: React.ReactNode
+}) {
   return (
     <div>
       <div className="flex items-baseline gap-2 mb-2">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</div>
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          {label}
+        </div>
         {right && <div className="flex-1 min-w-0 flex justify-end">{right}</div>}
       </div>
       {children}

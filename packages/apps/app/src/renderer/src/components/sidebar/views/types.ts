@@ -38,11 +38,20 @@ export interface SidebarViewContext {
    * - 'status': status id (e.g. 'in_progress')
    * - 'priority': 'p1'..'p5'
    */
-  onTaskMove?: (taskId: string, newColumnId: string, targetIndex: number, groupBy: 'none' | 'status' | 'priority') => void
+  onTaskMove?: (
+    taskId: string,
+    newColumnId: string,
+    targetIndex: number,
+    groupBy: 'none' | 'status' | 'priority'
+  ) => void
   /** Reparent a task — sets new parent_id (or null) and rewrites sibling order. */
   onTaskReparent?: (taskId: string, newParentId: string | null, newSiblingTaskIds: string[]) => void
   /** Bulk variant of reparent — used when dragging a multi-selection. */
-  onTaskBulkReparent?: (taskIds: string[], newParentId: string | null, newSiblingTaskIds: string[]) => void
+  onTaskBulkReparent?: (
+    taskIds: string[],
+    newParentId: string | null,
+    newSiblingTaskIds: string[]
+  ) => void
   /** Patch a task with a partial update (used for orderBy field inheritance on drop). */
   onTaskFieldUpdate?: (taskId: string, updates: Partial<Task>) => void
   /** Bulk variant of field update — used for groupBy inheritance on multi-drag. */

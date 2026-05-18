@@ -47,8 +47,8 @@ const CRITICAL_SETTINGS_KEYS = new Set([
   CONFIG_KEYS.retentionDays
 ])
 
-let settingsDb: Database | null = null  // main DB — reads/writes diagnostics config from settings table
-let diagnosticsDb: Database | null = null  // separate diagnostics-only DB — writes events to slayzone.dev.diagnostics.sqlite
+let settingsDb: Database | null = null // main DB — reads/writes diagnostics config from settings table
+let diagnosticsDb: Database | null = null // separate diagnostics-only DB — writes events to slayzone.dev.diagnostics.sqlite
 let isIpcInstrumented = false
 let cachedConfig: DiagnosticsConfig | null = null
 
@@ -100,7 +100,9 @@ function intFromSetting(value: string | null | undefined, fallback: number): num
 }
 
 function getSetting(db: Database, key: string): string | null {
-  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as { value: string } | undefined
+  const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key) as
+    | { value: string }
+    | undefined
   return row?.value ?? null
 }
 
@@ -150,10 +152,16 @@ function maybeTrimLongString(value: string): string {
 function redactString(value: string): string {
   let redacted = value
   redacted = redacted.replace(/Bearer\s+[A-Za-z0-9._\-+/=]+/gi, 'Bearer [REDACTED]')
-  redacted = redacted.replace(/(token|api[_-]?key|secret|password)\s*[:=]\s*[^\s,;]+/gi, '$1=[REDACTED]')
+  redacted = redacted.replace(
+    /(token|api[_-]?key|secret|password)\s*[:=]\s*[^\s,;]+/gi,
+    '$1=[REDACTED]'
+  )
   redacted = redacted.replace(/sk-[A-Za-z0-9]{16,}/g, 'sk-[REDACTED]')
   redacted = redacted.replace(/ghp_[A-Za-z0-9]{20,}/g, 'ghp_[REDACTED]')
-  redacted = redacted.replace(/-----BEGIN [A-Z ]+-----[\s\S]*?-----END [A-Z ]+-----/g, '[REDACTED_KEY_MATERIAL]')
+  redacted = redacted.replace(
+    /-----BEGIN [A-Z ]+-----[\s\S]*?-----END [A-Z ]+-----/g,
+    '[REDACTED_KEY_MATERIAL]'
+  )
   return maybeTrimLongString(redacted)
 }
 
@@ -166,7 +174,13 @@ function redactValue(value: unknown): unknown {
     const output: Record<string, unknown> = {}
     for (const [key, raw] of Object.entries(value as Record<string, unknown>)) {
       const lower = key.toLowerCase()
-      if (lower.includes('token') || lower.includes('secret') || lower.includes('password') || lower.includes('authorization') || lower.includes('cookie')) {
+      if (
+        lower.includes('token') ||
+        lower.includes('secret') ||
+        lower.includes('password') ||
+        lower.includes('authorization') ||
+        lower.includes('cookie')
+      ) {
         output[key] = '[REDACTED]'
         continue
       }
@@ -320,7 +334,8 @@ function summarizeArgs(args: unknown[]): unknown {
     if (typeof arg === 'string') return { type: 'string', length: arg.length }
     if (typeof arg === 'number' || typeof arg === 'boolean') return { type: typeof arg }
     if (Array.isArray(arg)) return { type: 'array', length: arg.length }
-    if (typeof arg === 'object') return { type: 'object', keys: Object.keys(arg as Record<string, unknown>).slice(0, 20) }
+    if (typeof arg === 'object')
+      return { type: 'object', keys: Object.keys(arg as Record<string, unknown>).slice(0, 20) }
     return { type: typeof arg }
   })
 }
@@ -493,7 +508,8 @@ function instrumentIpcMain(ipcMain: IpcMain): void {
     return originalHandle(channel, wrapped as (...args: unknown[]) => unknown)
   }
 
-  ;(ipcMain as unknown as { handle: typeof ipcMain.handle }).handle = patchedHandle as typeof ipcMain.handle
+  ;(ipcMain as unknown as { handle: typeof ipcMain.handle }).handle =
+    patchedHandle as typeof ipcMain.handle
 }
 
 function normalizeClientError(input: ClientErrorEventInput): DiagnosticEvent {
@@ -629,15 +645,15 @@ async function runExport(request: DiagnosticsExportRequest): Promise<Diagnostics
 
   const saveResult = focusedWindow
     ? await dialog.showSaveDialog(focusedWindow, {
-      title: 'Export Diagnostics',
-      defaultPath,
-      filters: [{ name: 'JSON', extensions: ['json'] }]
-    })
+        title: 'Export Diagnostics',
+        defaultPath,
+        filters: [{ name: 'JSON', extensions: ['json'] }]
+      })
     : await dialog.showSaveDialog({
-      title: 'Export Diagnostics',
-      defaultPath,
-      filters: [{ name: 'JSON', extensions: ['json'] }]
-    })
+        title: 'Export Diagnostics',
+        defaultPath,
+        filters: [{ name: 'JSON', extensions: ['json'] }]
+      })
 
   if (saveResult.canceled || !saveResult.filePath) {
     return { success: false, canceled: true }
@@ -664,9 +680,13 @@ async function runExport(request: DiagnosticsExportRequest): Promise<Diagnostics
   }
 }
 
-export function registerDiagnosticsHandlers(ipcMain: IpcMain, db: Database, eventsDb: Database): void {
-  settingsDb = db      // main DB — for config settings reads/writes
-  diagnosticsDb = eventsDb  // separate diagnostics DB — writes to slayzone.dev.diagnostics.sqlite
+export function registerDiagnosticsHandlers(
+  ipcMain: IpcMain,
+  db: Database,
+  eventsDb: Database
+): void {
+  settingsDb = db // main DB — for config settings reads/writes
+  diagnosticsDb = eventsDb // separate diagnostics DB — writes to slayzone.dev.diagnostics.sqlite
   cachedConfig = null
 
   // Flush events buffered before registration. Splice out so re-registration
@@ -703,14 +723,26 @@ export function registerDiagnosticsHandlers(ipcMain: IpcMain, db: Database, even
 }
 
 const CONSOLE_RING_SIZE = 50
-const consoleRing: Array<{ ts: number; level: string; message: string; sourceId: string; line: number }> = []
+const consoleRing: Array<{
+  ts: number
+  level: string
+  message: string
+  sourceId: string
+  line: number
+}> = []
 
 export function registerProcessDiagnostics(electronApp: App): void {
   // Capture renderer console output in a rolling buffer — flushed into crash diagnostics
   electronApp.on('web-contents-created', (_event, webContents) => {
     webContents.on('console-message', ({ level, message, lineNumber, sourceId }) => {
       if (consoleRing.length >= CONSOLE_RING_SIZE) consoleRing.shift()
-      consoleRing.push({ ts: Date.now(), level, message: message.slice(0, 500), sourceId, line: lineNumber })
+      consoleRing.push({
+        ts: Date.now(),
+        level,
+        message: message.slice(0, 500),
+        sourceId,
+        line: lineNumber
+      })
     })
   })
 
@@ -736,10 +768,18 @@ export function registerProcessDiagnostics(electronApp: App): void {
 
   electronApp.on('render-process-gone', async (_, webContents, details) => {
     let gpuInfo: unknown = null
-    try { gpuInfo = await electronApp.getGPUInfo('basic') } catch { /* GPU info unavailable */ }
+    try {
+      gpuInfo = await electronApp.getGPUInfo('basic')
+    } catch {
+      /* GPU info unavailable */
+    }
 
     let memoryInfo: unknown = null
-    try { memoryInfo = process.memoryUsage() } catch { /* ignore */ }
+    try {
+      memoryInfo = process.memoryUsage()
+    } catch {
+      /* ignore */
+    }
 
     recordDiagnosticEvent({
       level: 'error',
@@ -762,7 +802,11 @@ export function registerProcessDiagnostics(electronApp: App): void {
   electronApp.on('child-process-gone', async (_, details) => {
     let gpuInfo: unknown = null
     if (details.type === 'GPU') {
-      try { gpuInfo = await electronApp.getGPUInfo('basic') } catch { /* ignore */ }
+      try {
+        gpuInfo = await electronApp.getGPUInfo('basic')
+      } catch {
+        /* ignore */
+      }
     }
 
     recordDiagnosticEvent({

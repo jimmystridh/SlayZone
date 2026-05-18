@@ -18,12 +18,23 @@ function loadResults(runDir: string): ScenarioResult[] {
     .filter((r) => r && Array.isArray(r.runs))
 }
 
-function aggregateProfilerCommits(runs: IterationResult[]): Array<{ id: string; phase: string; count: number; totalActual: number; maxActual: number }> {
-  const map = new Map<string, { id: string; phase: string; count: number; totalActual: number; maxActual: number }>()
+function aggregateProfilerCommits(
+  runs: IterationResult[]
+): Array<{ id: string; phase: string; count: number; totalActual: number; maxActual: number }> {
+  const map = new Map<
+    string,
+    { id: string; phase: string; count: number; totalActual: number; maxActual: number }
+  >()
   for (const run of runs) {
     for (const commit of run.profilerCommits) {
       const key = `${commit.id}::${commit.phase}`
-      const existing = map.get(key) ?? { id: commit.id, phase: commit.phase, count: 0, totalActual: 0, maxActual: 0 }
+      const existing = map.get(key) ?? {
+        id: commit.id,
+        phase: commit.phase,
+        count: 0,
+        totalActual: 0,
+        maxActual: 0
+      }
       existing.count += 1
       existing.totalActual += commit.actualDuration
       if (commit.actualDuration > existing.maxActual) existing.maxActual = commit.actualDuration
@@ -37,7 +48,12 @@ function aggregateIpc(runs: IterationResult[]): IpcCallSummary[] {
   const map = new Map<string, IpcCallSummary>()
   for (const run of runs) {
     for (const call of run.ipcCalls) {
-      const existing = map.get(call.channel) ?? { channel: call.channel, count: 0, totalMs: 0, maxMs: 0 }
+      const existing = map.get(call.channel) ?? {
+        channel: call.channel,
+        count: 0,
+        totalMs: 0,
+        maxMs: 0
+      }
       existing.count += call.count
       existing.totalMs += call.totalMs
       if (call.maxMs > existing.maxMs) existing.maxMs = call.maxMs
@@ -47,7 +63,11 @@ function aggregateIpc(runs: IterationResult[]): IpcCallSummary[] {
   return Array.from(map.values()).sort((a, b) => b.totalMs - a.totalMs)
 }
 
-function aggregateLongTasks(runs: IterationResult[]): { count: number; totalMs: number; maxMs: number } {
+function aggregateLongTasks(runs: IterationResult[]): {
+  count: number
+  totalMs: number
+  maxMs: number
+} {
   let count = 0
   let totalMs = 0
   let maxMs = 0
@@ -72,7 +92,9 @@ function renderScenario(result: ScenarioResult): string {
   lines.push(`> ${result.description}`)
   lines.push('')
   lines.push(`- iterations: ${result.iterations} (warmup dropped: ${result.warmupDropped})`)
-  lines.push(`- wall time: p50=**${fmtMs(result.summary.wallP50).trim()}** p95=**${fmtMs(result.summary.wallP95).trim()}** max=${fmtMs(result.summary.wallMax).trim()}`)
+  lines.push(
+    `- wall time: p50=**${fmtMs(result.summary.wallP50).trim()}** p95=**${fmtMs(result.summary.wallP95).trim()}** max=${fmtMs(result.summary.wallMax).trim()}`
+  )
   lines.push(`- profiler actual duration p95: ${result.summary.profilerActualP95.toFixed(1)}ms`)
   lines.push(`- long task total p95: ${fmtMs(result.summary.longTaskP95).trim()}`)
   lines.push(`- IPC calls per iteration p50: ${result.summary.ipcCountP50}`)
@@ -83,7 +105,9 @@ function renderScenario(result: ScenarioResult): string {
   lines.push('|------|------|---------:|-----------------:|---------:|---------:|')
   for (const run of result.runs) {
     const profilerActual = run.profilerCommits.reduce((s, c) => s + c.actualDuration, 0)
-    lines.push(`| ${run.index} | ${run.wallMs}ms | ${run.longTaskTotalMs}ms | ${profilerActual.toFixed(1)}ms | ${run.ipcTotal.count} | ${run.heapAfterMB - run.heapBeforeMB} |`)
+    lines.push(
+      `| ${run.index} | ${run.wallMs}ms | ${run.longTaskTotalMs}ms | ${profilerActual.toFixed(1)}ms | ${run.ipcTotal.count} | ${run.heapAfterMB - run.heapBeforeMB} |`
+    )
   }
   lines.push('')
 
@@ -95,7 +119,9 @@ function renderScenario(result: ScenarioResult): string {
     lines.push('| component (id) | phase | commits | Σ actual | max |')
     lines.push('|---|---|---:|---:|---:|')
     for (const c of profilerHot) {
-      lines.push(`| ${c.id} | ${c.phase} | ${c.count} | ${c.totalActual.toFixed(1)}ms | ${c.maxActual.toFixed(1)}ms |`)
+      lines.push(
+        `| ${c.id} | ${c.phase} | ${c.count} | ${c.totalActual.toFixed(1)}ms | ${c.maxActual.toFixed(1)}ms |`
+      )
     }
     lines.push('')
   } else {
@@ -126,7 +152,9 @@ function renderScenario(result: ScenarioResult): string {
   }
 
   // CPU profiles
-  const profiles = result.runs.filter((r) => r.cpuProfilePath).map((r) => r.cpuProfilePath as string)
+  const profiles = result.runs
+    .filter((r) => r.cpuProfilePath)
+    .map((r) => r.cpuProfilePath as string)
   if (profiles.length > 0) {
     lines.push('### CPU profiles')
     lines.push('')

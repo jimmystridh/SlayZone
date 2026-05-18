@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 test.describe('Tag management', () => {
@@ -12,9 +12,11 @@ test.describe('Tag management', () => {
 
   const openTagsSection = async (mainWindow: import('@playwright/test').Page) => {
     await mainWindow.evaluate((id) => {
-      window.dispatchEvent(new CustomEvent('open-project-settings', {
-        detail: { projectId: id, tab: 'tasks/tags' }
-      }))
+      window.dispatchEvent(
+        new CustomEvent('open-project-settings', {
+          detail: { projectId: id, tab: 'tasks/tags' }
+        })
+      )
     }, projectId)
     const dialog = projectSettingsDialog(mainWindow)
     await expect(dialog).toBeVisible({ timeout: 5_000 })
@@ -35,7 +37,10 @@ test.describe('Tag management', () => {
     await openTagsSection(mainWindow)
 
     await projectSettingsDialog(mainWindow).getByRole('button', { name: 'New tag' }).click()
-    const createDialog = mainWindow.locator('[role="dialog"]:visible').filter({ hasText: 'New Tag' }).last()
+    const createDialog = mainWindow
+      .locator('[role="dialog"]:visible')
+      .filter({ hasText: 'New Tag' })
+      .last()
     await createDialog.locator('#tag-name').fill(tagA)
     await createDialog.getByRole('button', { name: 'Create' }).click()
 
@@ -90,13 +95,18 @@ test.describe('Tag management', () => {
     await clickProject(mainWindow, projectAbbrev)
 
     // Open the Filter popover (ListFilter icon)
-    const filterBtn = mainWindow.locator('button').filter({ has: mainWindow.locator('.lucide-list-filter') }).first()
+    const filterBtn = mainWindow
+      .locator('button')
+      .filter({ has: mainWindow.locator('.lucide-list-filter') })
+      .first()
     await expect(filterBtn).toBeVisible({ timeout: 5_000 })
     await filterBtn.click()
 
     const popover = mainWindow.locator('[data-radix-popper-content-wrapper]').last()
     // Tags section with individual tag pill buttons
-    await expect(popover.locator('button').filter({ hasText: tagA }).first()).toBeVisible({ timeout: 5_000 })
+    await expect(popover.locator('button').filter({ hasText: tagA }).first()).toBeVisible({
+      timeout: 5_000
+    })
 
     // Close popover
     await mainWindow.keyboard.press('Escape')
@@ -111,10 +121,13 @@ test.describe('Tag management', () => {
     await s.deleteTag(tag!.id)
 
     await expect
-      .poll(async () => {
-        const tagsAfter = await s.getTags()
-        return tagsAfter.some((t: { name: string }) => t.name === tagB)
-      }, { timeout: 3_000 })
+      .poll(
+        async () => {
+          const tagsAfter = await s.getTags()
+          return tagsAfter.some((t: { name: string }) => t.name === tagB)
+        },
+        { timeout: 3_000 }
+      )
       .toBe(false)
   })
 })

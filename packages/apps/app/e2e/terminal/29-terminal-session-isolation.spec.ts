@@ -1,4 +1,4 @@
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import {
   getMainSessionId,
@@ -7,7 +7,7 @@ import {
   readFullBuffer,
   runCommand,
   waitForBufferContains,
-  waitForPtySession,
+  waitForPtySession
 } from '../fixtures/terminal'
 
 test.describe('Terminal session isolation', () => {
@@ -18,20 +18,35 @@ test.describe('Terminal session isolation', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Bravo Isolation', color: '#84cc16', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Bravo Isolation',
+      color: '#84cc16',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const taskA = await s.createTask({ projectId: p.id, title: 'Isolation task A', status: 'in_progress' })
-    const taskB = await s.createTask({ projectId: p.id, title: 'Isolation task B', status: 'in_progress' })
+    const taskA = await s.createTask({
+      projectId: p.id,
+      title: 'Isolation task A',
+      status: 'in_progress'
+    })
+    const taskB = await s.createTask({
+      projectId: p.id,
+      title: 'Isolation task B',
+      status: 'in_progress'
+    })
     taskAId = taskA.id
     taskBId = taskB.id
 
-    await mainWindow.evaluate((ids) => {
-      return Promise.all([
-        window.api.db.updateTask({ id: ids.a, terminalMode: 'terminal' }),
-        window.api.db.updateTask({ id: ids.b, terminalMode: 'terminal' }),
-      ])
-    }, { a: taskAId, b: taskBId })
+    await mainWindow.evaluate(
+      (ids) => {
+        return Promise.all([
+          window.api.db.updateTask({ id: ids.a, terminalMode: 'terminal' }),
+          window.api.db.updateTask({ id: ids.b, terminalMode: 'terminal' })
+        ])
+      },
+      { a: taskAId, b: taskBId }
+    )
 
     await s.refreshData()
   })
@@ -48,7 +63,10 @@ test.describe('Terminal session isolation', () => {
     await runCommand(mainWindow, sessionA1, `echo ${markerA1}`)
     await waitForBufferContains(mainWindow, sessionA1, markerA1)
 
-    await mainWindow.locator('[data-testid="terminal-tabbar"]:visible [data-testid="terminal-tab-add"]').first().click()
+    await mainWindow
+      .locator('[data-testid="terminal-tabbar"]:visible [data-testid="terminal-tab-add"]')
+      .first()
+      .click()
 
     await expect
       .poll(async () => {

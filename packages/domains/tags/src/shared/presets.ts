@@ -43,5 +43,5 @@ export const TAG_PRESETS: TagPreset[] = [
   // Grays
   { bg: '#e5e7eb', text: '#1f2937' },
   { bg: '#6b7280', text: '#ffffff' },
-  { bg: '#374151', text: '#e5e7eb' },
+  { bg: '#374151', text: '#e5e7eb' }
 ]

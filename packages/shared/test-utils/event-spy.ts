@@ -29,14 +29,20 @@ export function spyTaskEvents(emitter: AnyEmitter, ...events: string[]): EventSp
   const calls: EventSpyCall[] = []
   const listeners = new Map<string, (payload: unknown) => void>()
   for (const event of events) {
-    const listener = (payload: unknown) => { calls.push({ event, payload }) }
+    const listener = (payload: unknown) => {
+      calls.push({ event, payload })
+    }
     listeners.set(event, listener)
     emitter.on(event, listener)
   }
   return {
     calls,
-    callsFor(event: string) { return calls.filter((c) => c.event === event) },
-    reset() { calls.length = 0 },
+    callsFor(event: string) {
+      return calls.filter((c) => c.event === event)
+    },
+    reset() {
+      calls.length = 0
+    },
     stop() {
       for (const [event, listener] of listeners) emitter.off(event, listener)
       listeners.clear()

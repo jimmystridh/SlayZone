@@ -78,7 +78,11 @@ function createMermaidCodeBlockView(initialNode: ProseNode): NodeView {
     const r = root
     root = null
     queueMicrotask(() => {
-      try { r.unmount() } catch { /* ignore */ }
+      try {
+        r.unmount()
+      } catch {
+        /* ignore */
+      }
     })
   }
 
@@ -99,10 +103,14 @@ function createMermaidCodeBlockView(initialNode: ProseNode): NodeView {
   // Capture-phase mousedown on the whole toolbar prevents ProseMirror's own
   // mousedown handler (which moves the selection to the click point and may
   // steal focus before the click event resolves on the button).
-  toolbar.addEventListener('mousedown', (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }, true)
+  toolbar.addEventListener(
+    'mousedown',
+    (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+    },
+    true
+  )
   for (const btn of [segPreview, segRaw]) {
     btn.addEventListener('click', (e) => {
       e.preventDefault()
@@ -139,7 +147,7 @@ function createMermaidCodeBlockView(initialNode: ProseNode): NodeView {
     },
     destroy() {
       unmountPreview()
-    },
+    }
   }
 }
 
@@ -152,8 +160,8 @@ export const mermaidRenderPlugin = $prose(
           code_block: (node) => {
             if (node.attrs.language !== 'mermaid') return undefined as unknown as NodeView
             return createMermaidCodeBlockView(node)
-          },
-        },
-      },
-    }),
+          }
+        }
+      }
+    })
 )

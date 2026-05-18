@@ -8,14 +8,23 @@ let pass = 0
 let fail = 0
 
 function test(name: string, fn: () => void) {
-  try { fn(); console.log(`  \u2713 ${name}`); pass++ }
-  catch (e) { console.log(`  \u2717 ${name}`); console.error(`    ${e}`); fail++; process.exitCode = 1 }
+  try {
+    fn()
+    console.log(`  \u2713 ${name}`)
+    pass++
+  } catch (e) {
+    console.log(`  \u2717 ${name}`)
+    console.error(`    ${e}`)
+    fail++
+    process.exitCode = 1
+  }
 }
 
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     },
     toEqual(expected: unknown) {
       if (JSON.stringify(actual) !== JSON.stringify(expected))
@@ -39,7 +48,7 @@ function makeRow(overrides: Partial<AutomationRow> = {}): AutomationRow {
     sort_order: 0,
     created_at: '2026-01-01 00:00:00',
     updated_at: '2026-01-01 00:00:00',
-    ...overrides,
+    ...overrides
   }
 }
 
@@ -58,13 +67,17 @@ test('enabled: 0 → false', () => {
 console.log('\nparseAutomationRow — JSON parsing')
 
 test('parses trigger_config JSON', () => {
-  const result = parseAutomationRow(makeRow({ trigger_config: '{"type":"task_status_change","params":{"toStatus":"done"}}' }))
+  const result = parseAutomationRow(
+    makeRow({ trigger_config: '{"type":"task_status_change","params":{"toStatus":"done"}}' })
+  )
   expect(result.trigger_config.type).toBe('task_status_change')
   expect((result.trigger_config.params as { toStatus: string }).toStatus).toBe('done')
 })
 
 test('parses actions JSON', () => {
-  const result = parseAutomationRow(makeRow({ actions: '[{"type":"run_command","params":{"command":"ls"}}]' }))
+  const result = parseAutomationRow(
+    makeRow({ actions: '[{"type":"run_command","params":{"command":"ls"}}]' })
+  )
   expect(result.actions.length).toBe(1)
   expect(result.actions[0].type).toBe('run_command')
 })
@@ -75,7 +88,12 @@ test('conditions null → empty array', () => {
 })
 
 test('parses conditions JSON array', () => {
-  const result = parseAutomationRow(makeRow({ conditions: '[{"type":"task_property","params":{"field":"status","operator":"equals","value":"done"}}]' }))
+  const result = parseAutomationRow(
+    makeRow({
+      conditions:
+        '[{"type":"task_property","params":{"field":"status","operator":"equals","value":"done"}}]'
+    })
+  )
   expect(result.conditions.length).toBe(1)
   expect(result.conditions[0].type).toBe('task_property')
 })
@@ -88,7 +106,9 @@ test('empty actions array parses correctly', () => {
 console.log('\nparseAutomationRow — passthrough fields')
 
 test('preserves id, project_id, name, description', () => {
-  const result = parseAutomationRow(makeRow({ id: 'xyz', project_id: 'p99', name: 'My Auto', description: 'desc' }))
+  const result = parseAutomationRow(
+    makeRow({ id: 'xyz', project_id: 'p99', name: 'My Auto', description: 'desc' })
+  )
   expect(result.id).toBe('xyz')
   expect(result.project_id).toBe('p99')
   expect(result.name).toBe('My Auto')
@@ -102,7 +122,9 @@ test('preserves run_count and last_run_at', () => {
 })
 
 test('preserves sort_order, created_at, updated_at', () => {
-  const result = parseAutomationRow(makeRow({ sort_order: 5, created_at: '2026-01-01', updated_at: '2026-02-01' }))
+  const result = parseAutomationRow(
+    makeRow({ sort_order: 5, created_at: '2026-01-01', updated_at: '2026-02-01' })
+  )
   expect(result.sort_order).toBe(5)
   expect(result.created_at).toBe('2026-01-01')
   expect(result.updated_at).toBe('2026-02-01')

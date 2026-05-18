@@ -2,7 +2,11 @@
  * Tests for PTY exit strategy decision logic.
  * Run with: npx tsx packages/domains/terminal/src/main/pty-exit-strategy.test.ts
  */
-import { shouldShellFallback, shouldNotifySessionNotFound, buildRecoveryMessage } from './pty-exit-strategy.js'
+import {
+  shouldShellFallback,
+  shouldNotifySessionNotFound,
+  buildRecoveryMessage
+} from './pty-exit-strategy.js'
 
 let passed = 0
 let failed = 0
@@ -22,7 +26,8 @@ function test(name: string, fn: () => void) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     }
   }
 }
@@ -32,7 +37,13 @@ function describe(name: string, fn: () => void) {
   fn()
 }
 
-const base = { exitCode: 1, terminalMode: 'codex', hasPostSpawnCommand: true, resuming: false, usedShellFallback: false }
+const base = {
+  exitCode: 1,
+  terminalMode: 'codex',
+  hasPostSpawnCommand: true,
+  resuming: false,
+  usedShellFallback: false
+}
 
 // --- shouldShellFallback ---
 

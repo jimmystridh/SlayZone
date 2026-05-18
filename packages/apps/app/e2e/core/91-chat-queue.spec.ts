@@ -14,7 +14,11 @@ test.describe('Chat queue persistence', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Chat Queue', color: '#22d3ee', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Chat Queue',
+      color: '#22d3ee',
+      path: TEST_PROJECT_PATH
+    })
 
     const task = await s.createTask({ projectId: p.id, title: 'Queue task', status: 'in_progress' })
     taskId = task.id
@@ -26,20 +30,14 @@ test.describe('Chat queue persistence', () => {
     await s.refreshData()
 
     // Materialize a main tab so chat_queue rows have a valid FK target.
-    mainTabId = await mainWindow.evaluate(
-      async (id) => {
-        const tab = await window.api.tabs.ensureMain(id, 'claude-code')
-        return tab.id
-      },
-      taskId
-    )
+    mainTabId = await mainWindow.evaluate(async (id) => {
+      const tab = await window.api.tabs.ensureMain(id, 'claude-code')
+      return tab.id
+    }, taskId)
   })
 
   test('push/list maintains FIFO order', async ({ mainWindow }) => {
-    await mainWindow.evaluate(
-      async (id) => window.api.chatQueue.clear(id),
-      mainTabId
-    )
+    await mainWindow.evaluate(async (id) => window.api.chatQueue.clear(id), mainTabId)
 
     await mainWindow.evaluate(
       async (id) => window.api.chatQueue.push(id, 'first send', 'first og'),
@@ -50,10 +48,7 @@ test.describe('Chat queue persistence', () => {
       mainTabId
     )
 
-    const list = await mainWindow.evaluate(
-      async (id) => window.api.chatQueue.list(id),
-      mainTabId
-    )
+    const list = await mainWindow.evaluate(async (id) => window.api.chatQueue.list(id), mainTabId)
     expect(list).toHaveLength(2)
     expect(list[0]?.send).toBe('first send')
     expect(list[0]?.original).toBe('first og')
@@ -62,10 +57,7 @@ test.describe('Chat queue persistence', () => {
   })
 
   test('remove drops one item and preserves the rest', async ({ mainWindow }) => {
-    const list = await mainWindow.evaluate(
-      async (id) => window.api.chatQueue.list(id),
-      mainTabId
-    )
+    const list = await mainWindow.evaluate(async (id) => window.api.chatQueue.list(id), mainTabId)
     const firstId = list[0]!.id
 
     const removed = await mainWindow.evaluate(
@@ -74,10 +66,7 @@ test.describe('Chat queue persistence', () => {
     )
     expect(removed).toBe(true)
 
-    const after = await mainWindow.evaluate(
-      async (id) => window.api.chatQueue.list(id),
-      mainTabId
-    )
+    const after = await mainWindow.evaluate(async (id) => window.api.chatQueue.list(id), mainTabId)
     expect(after).toHaveLength(1)
     expect(after[0]?.send).toBe('second send')
   })
@@ -89,10 +78,7 @@ test.describe('Chat queue persistence', () => {
     )
     expect(cleared).toBeGreaterThanOrEqual(1)
 
-    const after = await mainWindow.evaluate(
-      async (id) => window.api.chatQueue.list(id),
-      mainTabId
-    )
+    const after = await mainWindow.evaluate(async (id) => window.api.chatQueue.list(id), mainTabId)
     expect(after).toEqual([])
   })
 
@@ -103,14 +89,8 @@ test.describe('Chat queue persistence', () => {
     )
 
     // Force a fresh roundtrip — list always reads SQLite, no in-memory cache.
-    const list1 = await mainWindow.evaluate(
-      async (id) => window.api.chatQueue.list(id),
-      mainTabId
-    )
-    const list2 = await mainWindow.evaluate(
-      async (id) => window.api.chatQueue.list(id),
-      mainTabId
-    )
+    const list1 = await mainWindow.evaluate(async (id) => window.api.chatQueue.list(id), mainTabId)
+    const list2 = await mainWindow.evaluate(async (id) => window.api.chatQueue.list(id), mainTabId)
     expect(list1).toEqual(list2)
     expect(list1).toHaveLength(1)
     expect(list1[0]?.send).toBe('persisted')
@@ -138,13 +118,10 @@ test.describe('Chat queue persistence', () => {
 
   test('FK cascade clears queue when tab deleted', async ({ mainWindow }) => {
     // Make a fresh tab so we can delete it without affecting other tests.
-    const ephemeralTabId = await mainWindow.evaluate(
-      async (id) => {
-        const tab = await window.api.tabs.create({ taskId: id, mode: 'claude-code' })
-        return tab.id
-      },
-      taskId
-    )
+    const ephemeralTabId = await mainWindow.evaluate(async (id) => {
+      const tab = await window.api.tabs.create({ taskId: id, mode: 'claude-code' })
+      return tab.id
+    }, taskId)
 
     await mainWindow.evaluate(
       async (id) => window.api.chatQueue.push(id, 'will cascade', 'will cascade'),
@@ -156,10 +133,7 @@ test.describe('Chat queue persistence', () => {
     )
     expect(before).toHaveLength(1)
 
-    await mainWindow.evaluate(
-      async (id) => window.api.tabs.delete(id),
-      ephemeralTabId
-    )
+    await mainWindow.evaluate(async (id) => window.api.tabs.delete(id), ephemeralTabId)
 
     const after = await mainWindow.evaluate(
       async (id) => window.api.chatQueue.list(id),

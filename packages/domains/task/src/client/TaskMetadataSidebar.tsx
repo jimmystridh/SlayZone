@@ -1,6 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { format } from 'date-fns'
-import { ArrowDownToLineIcon, ArrowUpToLineIcon, CalendarIcon, Gauge, ListChecks, Loader2, MessageSquare, X, AlarmClock, SearchIcon } from 'lucide-react'
+import {
+  ArrowDownToLineIcon,
+  ArrowUpToLineIcon,
+  CalendarIcon,
+  Gauge,
+  ListChecks,
+  Loader2,
+  MessageSquare,
+  X,
+  AlarmClock,
+  SearchIcon
+} from 'lucide-react'
 import type { Task } from '@slayzone/task/shared'
 import { priorityOptions } from '@slayzone/task/shared'
 import type { Project } from '@slayzone/projects/shared'
@@ -9,13 +20,7 @@ import { TaskProgressPopover } from './TaskProgressPopover'
 import type { Tag } from '@slayzone/tags/shared'
 import { TagSelector } from '@slayzone/tags/client'
 import type { ExternalLink, TaskSyncStatus } from '@slayzone/integrations/shared'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@slayzone/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@slayzone/ui'
 import { Popover, PopoverContent, PopoverTrigger } from '@slayzone/ui'
 import { SplitButton, SplitButtonItem } from '@slayzone/ui'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@slayzone/ui'
@@ -127,7 +132,11 @@ export function TaskMetadataSidebar({
 
   const handleUnblock = async (): Promise<void> => {
     track('task_unblocked')
-    const updated = await window.api.db.updateTask({ id: task.id, isBlocked: false, blockedComment: null })
+    const updated = await window.api.db.updateTask({
+      id: task.id,
+      isBlocked: false,
+      blockedComment: null
+    })
     onUpdate(updated)
   }
 
@@ -144,17 +153,24 @@ export function TaskMetadataSidebar({
   }
 
   const columnsByProject = new Map(projects.map((project) => [project.id, project.columns_config]))
-  const availableBlockers = allTasks.filter((t) => (
-    !blockers.some((b) => b.id === t.id) && !isTerminalStatus(t.status, columnsByProject.get(t.project_id))
-  ))
-  const filteredAvailableBlockers = availableBlockers.filter((blocker) => matchesTaskSearch(blocker, addBlockerSearch))
+  const availableBlockers = allTasks.filter(
+    (t) =>
+      !blockers.some((b) => b.id === t.id) &&
+      !isTerminalStatus(t.status, columnsByProject.get(t.project_id))
+  )
+  const filteredAvailableBlockers = availableBlockers.filter((blocker) =>
+    matchesTaskSearch(blocker, addBlockerSearch)
+  )
   const selectedProject = projects.find((project) => project.id === task.project_id)
   const statusOptions = buildStatusOptions(selectedProject?.columns_config)
 
   const handleStatusChange = async (status: string): Promise<void> => {
     track('task_status_changed', { from: task.status, to: status })
     if (isTerminalStatus(status, selectedProject?.columns_config)) {
-      track('task_completed', { provider: task.terminal_mode ?? 'terminal', had_worktree: Boolean(task.worktree_path) })
+      track('task_completed', {
+        provider: task.terminal_mode ?? 'terminal',
+        had_worktree: Boolean(task.worktree_path)
+      })
     }
     const updated = await window.api.db.updateTask({ id: task.id, status })
     onUpdate(updated)
@@ -217,7 +233,10 @@ export function TaskMetadataSidebar({
     if (!el) return
     const measure = () => {
       const children = Array.from(el.querySelectorAll('[data-tag]')) as HTMLElement[]
-      if (children.length === 0) { setMaxVisible(Infinity); return }
+      if (children.length === 0) {
+        setMaxVisible(Infinity)
+        return
+      }
       const containerRight = el.getBoundingClientRect().right
       const reserve = children.length > 1 ? 32 : 0
       let count = 0
@@ -296,10 +315,15 @@ export function TaskMetadataSidebar({
                 )}
               >
                 <CalendarIcon className="mr-2 size-4" />
-                <span className="flex-1">{task.due_date ? format(new Date(task.due_date), 'MMM d, yyyy') : 'No date'}</span>
+                <span className="flex-1">
+                  {task.due_date ? format(new Date(task.due_date), 'MMM d, yyyy') : 'No date'}
+                </span>
                 {task.due_date && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleDueDateChange(undefined) }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDueDateChange(undefined)
+                    }}
                     className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="size-3.5" />
@@ -325,8 +349,13 @@ export function TaskMetadataSidebar({
           {isSnoozed ? (
             <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm">
               <AlarmClock className="size-3.5 text-muted-foreground shrink-0" />
-              <span className="flex-1 truncate">{format(new Date(task.snoozed_until!), 'MMM d · h:mm a')}</span>
-              <button onClick={handleUnsnooze} className="text-muted-foreground hover:text-foreground shrink-0">
+              <span className="flex-1 truncate">
+                {format(new Date(task.snoozed_until!), 'MMM d · h:mm a')}
+              </span>
+              <button
+                onClick={handleUnsnooze}
+                className="text-muted-foreground hover:text-foreground shrink-0"
+              >
                 <X className="size-3.5" />
               </button>
             </div>
@@ -362,7 +391,7 @@ export function TaskMetadataSidebar({
                   className={cn(
                     'flex-1 justify-start min-w-0',
                     (task.progress ?? 0) > 0 && 'rounded-r-none border-r-0',
-                    (task.progress ?? 0) === 0 && 'text-muted-foreground',
+                    (task.progress ?? 0) === 0 && 'text-muted-foreground'
                   )}
                 >
                   <Gauge className="mr-2 size-4 shrink-0" />
@@ -397,9 +426,17 @@ export function TaskMetadataSidebar({
               ) : (
                 <>
                   {/* Hidden measurement layer — renders all tags to measure which fit */}
-                  <div ref={measureContainerRef} className="flex flex-nowrap gap-1 absolute inset-0 p-1 pointer-events-none opacity-0" aria-hidden="true">
+                  <div
+                    ref={measureContainerRef}
+                    className="flex flex-nowrap gap-1 absolute inset-0 p-1 pointer-events-none opacity-0"
+                    aria-hidden="true"
+                  >
                     {selectedTags.map((tag) => (
-                      <span key={tag.id} data-tag className="rounded px-1.5 py-1 text-xs font-medium shrink-0">
+                      <span
+                        key={tag.id}
+                        data-tag
+                        className="rounded px-1.5 py-1 text-xs font-medium shrink-0"
+                      >
                         {tag.name}
                       </span>
                     ))}
@@ -416,7 +453,10 @@ export function TaskMetadataSidebar({
                       </span>
                     ))}
                     {selectedTags.length > maxVisible && (
-                      <span data-overflow="true" className="rounded px-1.5 py-1 text-xs font-medium shrink-0 bg-muted text-muted-foreground">
+                      <span
+                        data-overflow="true"
+                        className="rounded px-1.5 py-1 text-xs font-medium shrink-0 bg-muted text-muted-foreground"
+                      >
                         +{selectedTags.length - maxVisible}
                       </span>
                     )}
@@ -448,7 +488,10 @@ export function TaskMetadataSidebar({
             <span className="flex-1 whitespace-pre-wrap">{task.blocked_comment}</span>
             <button
               onClick={async () => {
-                const updated = await window.api.db.updateTask({ id: task.id, blockedComment: null })
+                const updated = await window.api.db.updateTask({
+                  id: task.id,
+                  blockedComment: null
+                })
                 onUpdate(updated)
               }}
               className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground"
@@ -464,7 +507,10 @@ export function TaskMetadataSidebar({
                 key={blocker.id}
                 className="flex items-center gap-2 rounded bg-muted/50 px-2 py-1 text-sm"
               >
-                <BlockerStatusIcon task={blocker} columns={columnsByProject.get(blocker.project_id)} />
+                <BlockerStatusIcon
+                  task={blocker}
+                  columns={columnsByProject.get(blocker.project_id)}
+                />
                 <span className="flex-1 truncate">{blocker.title}</span>
                 <button
                   onClick={() => handleRemoveBlocker(blocker.id)}
@@ -483,15 +529,22 @@ export function TaskMetadataSidebar({
           className="flex-1"
           menu={(close) => (
             <>
-              <SplitButtonItem onClick={() => { close(); setBlockerDialogOpen(true) }}>
+              <SplitButtonItem
+                onClick={() => {
+                  close()
+                  setBlockerDialogOpen(true)
+                }}
+              >
                 <ListChecks className="h-3 w-3 shrink-0 text-muted-foreground" />
                 Set blocking task
               </SplitButtonItem>
-              <SplitButtonItem onClick={() => {
-                close()
-                setBlockedComment(task.blocked_comment ?? '')
-                setCommentDialogOpen(true)
-              }}>
+              <SplitButtonItem
+                onClick={() => {
+                  close()
+                  setBlockedComment(task.blocked_comment ?? '')
+                  setCommentDialogOpen(true)
+                }}
+              >
                 <MessageSquare className="h-3 w-3 shrink-0 text-muted-foreground" />
                 Set blocked with comment
               </SplitButtonItem>
@@ -502,7 +555,13 @@ export function TaskMetadataSidebar({
         </SplitButton>
 
         {/* Blocking task dialog */}
-        <Dialog open={blockerDialogOpen} onOpenChange={(open) => { setBlockerDialogOpen(open); if (!open) setAddBlockerSearch('') }}>
+        <Dialog
+          open={blockerDialogOpen}
+          onOpenChange={(open) => {
+            setBlockerDialogOpen(open)
+            if (!open) setAddBlockerSearch('')
+          }}
+        >
           <DialogContent className="max-w-sm">
             <DialogHeader>
               <DialogTitle>Add blocking task</DialogTitle>
@@ -528,7 +587,10 @@ export function TaskMetadataSidebar({
                     {filteredAvailableBlockers.map((t) => (
                       <button
                         key={t.id}
-                        onClick={() => { handleAddBlocker(t.id); setBlockerDialogOpen(false) }}
+                        onClick={() => {
+                          handleAddBlocker(t.id)
+                          setBlockerDialogOpen(false)
+                        }}
                         className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-muted"
                       >
                         <BlockerStatusIcon task={t} columns={columnsByProject.get(t.project_id)} />
@@ -543,7 +605,13 @@ export function TaskMetadataSidebar({
         </Dialog>
 
         {/* Blocked with comment dialog */}
-        <Dialog open={commentDialogOpen} onOpenChange={(open) => { setCommentDialogOpen(open); if (!open) setBlockedComment('') }}>
+        <Dialog
+          open={commentDialogOpen}
+          onOpenChange={(open) => {
+            setCommentDialogOpen(open)
+            if (!open) setBlockedComment('')
+          }}
+        >
           <DialogContent className="max-w-sm">
             <DialogHeader>
               <DialogTitle>Set blocked with comment</DialogTitle>
@@ -555,13 +623,16 @@ export function TaskMetadataSidebar({
               rows={3}
             />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => setCommentDialogOpen(false)}>Cancel</Button>
-              <Button size="sm" onClick={handleSetBlockedWithComment}>Set blocked</Button>
+              <Button variant="outline" size="sm" onClick={() => setCommentDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleSetBlockedWithComment}>
+                Set blocked
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
-
     </div>
   )
 }
@@ -602,7 +673,9 @@ function toUnknownSyncStatus(link: ExternalLink, taskId: string): TaskSyncStatus
 export function ExternalSyncCard({ taskId, onUpdate }: ExternalSyncCardProps) {
   const [links, setLinks] = useState<ExternalLink[]>([])
   const [syncStatusByLinkId, setSyncStatusByLinkId] = useState<Record<string, TaskSyncStatus>>({})
-  const [linkLoadingById, setLinkLoadingById] = useState<Record<string, 'open' | 'pull' | 'push' | undefined>>({})
+  const [linkLoadingById, setLinkLoadingById] = useState<
+    Record<string, 'open' | 'pull' | 'push' | undefined>
+  >({})
 
   useEffect(() => {
     let cancelled = false
@@ -613,7 +686,9 @@ export function ExternalSyncCard({ taskId, onUpdate }: ExternalSyncCardProps) {
           window.api.integrations.getLink(taskId, 'github')
         ])
 
-        const loadedLinks = [linearLink, githubLink].filter((link): link is ExternalLink => Boolean(link))
+        const loadedLinks = [linearLink, githubLink].filter((link): link is ExternalLink =>
+          Boolean(link)
+        )
         if (cancelled) return
         setLinks(loadedLinks)
 
@@ -622,14 +697,16 @@ export function ExternalSyncCard({ taskId, onUpdate }: ExternalSyncCardProps) {
           return
         }
 
-        const statusEntries = await Promise.all(loadedLinks.map(async (link) => {
-          try {
-            const status = await window.api.integrations.getTaskSyncStatus(taskId, link.provider)
-            return [link.id, status] as const
-          } catch {
-            return [link.id, toUnknownSyncStatus(link, taskId)] as const
-          }
-        }))
+        const statusEntries = await Promise.all(
+          loadedLinks.map(async (link) => {
+            try {
+              const status = await window.api.integrations.getTaskSyncStatus(taskId, link.provider)
+              return [link.id, status] as const
+            } catch {
+              return [link.id, toUnknownSyncStatus(link, taskId)] as const
+            }
+          })
+        )
 
         if (cancelled) return
         setSyncStatusByLinkId(Object.fromEntries(statusEntries))
@@ -649,7 +726,10 @@ export function ExternalSyncCard({ taskId, onUpdate }: ExternalSyncCardProps) {
       const status = await window.api.integrations.getTaskSyncStatus(taskId, link.provider)
       setSyncStatusByLinkId((current) => ({ ...current, [link.id]: status }))
     } catch {
-      setSyncStatusByLinkId((current) => ({ ...current, [link.id]: toUnknownSyncStatus(link, taskId) }))
+      setSyncStatusByLinkId((current) => ({
+        ...current,
+        [link.id]: toUnknownSyncStatus(link, taskId)
+      }))
     }
   }
 
@@ -696,7 +776,9 @@ export function ExternalSyncCard({ taskId, onUpdate }: ExternalSyncCardProps) {
         taskId,
         provider: 'github'
       })
-      const message = result.message ?? (result.pulled ? 'Pulled remote changes from GitHub' : 'No pull performed')
+      const message =
+        result.message ??
+        (result.pulled ? 'Pulled remote changes from GitHub' : 'No pull performed')
       if (result.pulled) toast.success(message)
       else toast(message)
       if (result.pulled) {
@@ -732,7 +814,8 @@ export function ExternalSyncCard({ taskId, onUpdate }: ExternalSyncCardProps) {
         taskId,
         provider: 'github'
       })
-      const message = result.message ?? (result.pushed ? 'Pushed local changes to GitHub' : 'No push performed')
+      const message =
+        result.message ?? (result.pushed ? 'Pushed local changes to GitHub' : 'No push performed')
       if (result.pushed) toast.success(message)
       else toast(message)
       if (result.pushed) {

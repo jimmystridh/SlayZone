@@ -40,7 +40,11 @@ interface UseTasksDataReturn {
   // Project handlers
   updateProject: (project: Project) => void
   reorderProjects: (projectIds: string[]) => void
-  deleteProject: (projectId: string, selectedProjectId: string, setSelectedProjectId: (id: string) => void) => void
+  deleteProject: (
+    projectId: string,
+    selectedProjectId: string,
+    setSelectedProjectId: (id: string) => void
+  ) => void
 }
 
 export function useTasksData(): UseTasksDataReturn {
@@ -57,44 +61,52 @@ export function useTasksData(): UseTasksDataReturn {
     let firstLoad = true
 
     const loadData = () => {
-      if (inFlight) { pending = true; return }
+      if (inFlight) {
+        pending = true
+        return
+      }
       inFlight = true
       pending = false
       if (firstLoad) {
         performance.mark('sz:loadBoardData:start')
         window.api.app.bootMark?.('loadBoardData start')
       }
-      window.api.db.loadBoardData().then((data) => {
-        setTasks(data.tasks as Task[])
-        setProjects(data.projects as Project[])
-        setTags(data.tags as Tag[])
-        setTaskTags(new Map(Object.entries(data.taskTags)))
-        setBlockedTaskIds(new Set(data.blockedTaskIds))
-      }).finally(() => {
-        if (firstLoad) {
-          performance.mark('sz:loadBoardData:end')
-          firstLoad = false
-          performance.mark('sz:dataReady')
-          window.api.app.bootMark?.('dataReady (loadBoardData done)')
-          window.api.app.dataReady()
-        }
-        inFlight = false
-        if (pending) loadData()
-      })
+      window.api.db
+        .loadBoardData()
+        .then((data) => {
+          setTasks(data.tasks as Task[])
+          setProjects(data.projects as Project[])
+          setTags(data.tags as Tag[])
+          setTaskTags(new Map(Object.entries(data.taskTags)))
+          setBlockedTaskIds(new Set(data.blockedTaskIds))
+        })
+        .finally(() => {
+          if (firstLoad) {
+            performance.mark('sz:loadBoardData:end')
+            firstLoad = false
+            performance.mark('sz:dataReady')
+            window.api.app.bootMark?.('dataReady (loadBoardData done)')
+            window.api.app.dataReady()
+          }
+          inFlight = false
+          if (pending) loadData()
+        })
     }
     loadData()
     ;(window as any).__slayzone_refreshData = loadData
     const cleanup = window.api?.app?.onTasksChanged?.(loadData)
     const handleTagCreated = (e: Event) => {
       const tag = (e as CustomEvent).detail as Tag
-      setTags((prev) => prev.some((t) => t.id === tag.id) ? prev : [...prev, tag])
+      setTags((prev) => (prev.some((t) => t.id === tag.id) ? prev : [...prev, tag]))
     }
     const handleTagUpdated = (e: Event) => {
       const tag = (e as CustomEvent).detail as Tag
-      setTags((prev) => prev.map((t) => t.id === tag.id ? tag : t))
+      setTags((prev) => prev.map((t) => (t.id === tag.id ? tag : t)))
     }
     const handleBlockedChanged = () => {
-      window.api.taskDependencies.getAllBlockedTaskIds().then(ids => setBlockedTaskIds(new Set(ids)))
+      window.api.taskDependencies
+        .getAllBlockedTaskIds()
+        .then((ids) => setBlockedTaskIds(new Set(ids)))
     }
     window.addEventListener('slayzone:tag-created', handleTagCreated)
     window.addEventListener('slayzone:tag-updated', handleTagUpdated)
@@ -120,113 +132,109 @@ export function useTasksData(): UseTasksDataReturn {
   }, [])
 
   // Move task between columns (status/priority)
-  const moveTask = useCallback((
-    taskId: string,
-    newColumnId: string,
-    targetIndex: number,
-    groupBy: GroupKey
-  ) => {
-    if (groupBy === 'due_date') return
+  const moveTask = useCallback(
+    (taskId: string, newColumnId: string, targetIndex: number, groupBy: GroupKey) => {
+      if (groupBy === 'due_date') return
 
-    const fieldUpdate =
-      groupBy === 'status'
-        ? { status: newColumnId as TaskStatus }
-        : { priority: parseInt(newColumnId.slice(1), 10) }
+      const fieldUpdate =
+        groupBy === 'status'
+          ? { status: newColumnId as TaskStatus }
+          : { priority: parseInt(newColumnId.slice(1), 10) }
 
-    let snapshot: Task[] = []
-    let newColumnTaskIds: string[] = []
+      let snapshot: Task[] = []
+      let newColumnTaskIds: string[] = []
 
-    setTasks((prevTasks) => {
-      snapshot = prevTasks
+      setTasks((prevTasks) => {
+        snapshot = prevTasks
 
-      const targetColumnTasks = prevTasks.filter((t) => {
-        if (t.id === taskId) return false
-        if (groupBy === 'status') return t.status === newColumnId
-        return t.priority === parseInt(newColumnId.slice(1), 10)
+        const targetColumnTasks = prevTasks.filter((t) => {
+          if (t.id === taskId) return false
+          if (groupBy === 'status') return t.status === newColumnId
+          return t.priority === parseInt(newColumnId.slice(1), 10)
+        })
+
+        newColumnTaskIds = [...targetColumnTasks.map((t) => t.id)]
+        newColumnTaskIds.splice(targetIndex, 0, taskId)
+
+        return prevTasks.map((t) => {
+          if (t.id === taskId) {
+            return { ...t, ...fieldUpdate, order: targetIndex }
+          }
+          const newOrder = newColumnTaskIds.indexOf(t.id)
+          if (newOrder >= 0) {
+            return { ...t, order: newOrder }
+          }
+          return t
+        })
       })
 
-      newColumnTaskIds = [...targetColumnTasks.map((t) => t.id)]
-      newColumnTaskIds.splice(targetIndex, 0, taskId)
+      const updatePayload =
+        groupBy === 'status'
+          ? { id: taskId, status: newColumnId as TaskStatus }
+          : { id: taskId, priority: parseInt(newColumnId.slice(1), 10) }
 
-      return prevTasks.map((t) => {
-        if (t.id === taskId) {
-          return { ...t, ...fieldUpdate, order: targetIndex }
-        }
-        const newOrder = newColumnTaskIds.indexOf(t.id)
-        if (newOrder >= 0) {
-          return { ...t, order: newOrder }
-        }
-        return t
+      Promise.all([
+        window.api.db.updateTask(updatePayload),
+        window.api.db.reorderTasks(newColumnTaskIds)
+      ]).catch(() => {
+        setTasks(snapshot)
       })
-    })
-
-    const updatePayload =
-      groupBy === 'status'
-        ? { id: taskId, status: newColumnId as TaskStatus }
-        : { id: taskId, priority: parseInt(newColumnId.slice(1), 10) }
-
-    Promise.all([
-      window.api.db.updateTask(updatePayload),
-      window.api.db.reorderTasks(newColumnTaskIds)
-    ]).catch(() => {
-      setTasks(snapshot)
-    })
-  }, [])
+    },
+    []
+  )
 
   // Move multiple tasks to another column at targetIndex (cross-column).
   // Inserts ids consecutively at targetIndex preserving their input order.
-  const bulkMove = useCallback((
-    taskIds: string[],
-    newColumnId: string,
-    targetIndex: number,
-    groupBy: GroupKey
-  ) => {
-    if (groupBy === 'due_date' || taskIds.length === 0) return
+  const bulkMove = useCallback(
+    (taskIds: string[], newColumnId: string, targetIndex: number, groupBy: GroupKey) => {
+      if (groupBy === 'due_date' || taskIds.length === 0) return
 
-    const idSet = new Set(taskIds)
-    const fieldUpdate =
-      groupBy === 'status'
-        ? { status: newColumnId as TaskStatus }
-        : { priority: parseInt(newColumnId.slice(1), 10) }
+      const idSet = new Set(taskIds)
+      const fieldUpdate =
+        groupBy === 'status'
+          ? { status: newColumnId as TaskStatus }
+          : { priority: parseInt(newColumnId.slice(1), 10) }
 
-    let snapshot: Task[] = []
-    let newColumnTaskIds: string[] = []
+      let snapshot: Task[] = []
+      let newColumnTaskIds: string[] = []
 
-    setTasks((prevTasks) => {
-      snapshot = prevTasks
+      setTasks((prevTasks) => {
+        snapshot = prevTasks
 
-      const targetColumnTasks = prevTasks.filter((t) => {
-        if (idSet.has(t.id)) return false
-        if (groupBy === 'status') return t.status === newColumnId
-        return t.priority === parseInt(newColumnId.slice(1), 10)
-      })
+        const targetColumnTasks = prevTasks.filter((t) => {
+          if (idSet.has(t.id)) return false
+          if (groupBy === 'status') return t.status === newColumnId
+          return t.priority === parseInt(newColumnId.slice(1), 10)
+        })
 
-      newColumnTaskIds = [...targetColumnTasks.map((t) => t.id)]
-      newColumnTaskIds.splice(targetIndex, 0, ...taskIds)
+        newColumnTaskIds = [...targetColumnTasks.map((t) => t.id)]
+        newColumnTaskIds.splice(targetIndex, 0, ...taskIds)
 
-      return prevTasks.map((t) => {
-        if (idSet.has(t.id)) {
+        return prevTasks.map((t) => {
+          if (idSet.has(t.id)) {
+            const newOrder = newColumnTaskIds.indexOf(t.id)
+            return { ...t, ...fieldUpdate, order: newOrder }
+          }
           const newOrder = newColumnTaskIds.indexOf(t.id)
-          return { ...t, ...fieldUpdate, order: newOrder }
-        }
-        const newOrder = newColumnTaskIds.indexOf(t.id)
-        if (newOrder >= 0) return { ...t, order: newOrder }
-        return t
+          if (newOrder >= 0) return { ...t, order: newOrder }
+          return t
+        })
       })
-    })
 
-    const updatePayload =
-      groupBy === 'status'
-        ? { status: newColumnId as TaskStatus }
-        : { priority: parseInt(newColumnId.slice(1), 10) }
+      const updatePayload =
+        groupBy === 'status'
+          ? { status: newColumnId as TaskStatus }
+          : { priority: parseInt(newColumnId.slice(1), 10) }
 
-    Promise.all([
-      window.api.db.updateTasks({ ids: taskIds, updates: updatePayload }),
-      window.api.db.reorderTasks(newColumnTaskIds)
-    ]).catch(() => {
-      setTasks(snapshot)
-    })
-  }, [])
+      Promise.all([
+        window.api.db.updateTasks({ ids: taskIds, updates: updatePayload }),
+        window.api.db.reorderTasks(newColumnTaskIds)
+      ]).catch(() => {
+        setTasks(snapshot)
+      })
+    },
+    []
+  )
 
   // Reorder tasks within column
   const reorderTasks = useCallback((taskIds: string[]) => {
@@ -249,71 +257,69 @@ export function useTasksData(): UseTasksDataReturn {
   }, [])
 
   // Reparent task + reorder its new sibling list. Used by tree drag-into-task.
-  const reparentTask = useCallback((
-    taskId: string,
-    newParentId: string | null,
-    newSiblingTaskIds: string[]
-  ) => {
-    let snapshot: Task[] = []
-    setTasks((prevTasks) => {
-      snapshot = prevTasks
-      return prevTasks.map((t) => {
-        if (t.id === taskId) {
-          const newOrder = newSiblingTaskIds.indexOf(taskId)
-          return { ...t, parent_id: newParentId, order: newOrder >= 0 ? newOrder : t.order }
-        }
-        const idx = newSiblingTaskIds.indexOf(t.id)
-        if (idx >= 0) return { ...t, order: idx }
-        return t
+  const reparentTask = useCallback(
+    (taskId: string, newParentId: string | null, newSiblingTaskIds: string[]) => {
+      let snapshot: Task[] = []
+      setTasks((prevTasks) => {
+        snapshot = prevTasks
+        return prevTasks.map((t) => {
+          if (t.id === taskId) {
+            const newOrder = newSiblingTaskIds.indexOf(taskId)
+            return { ...t, parent_id: newParentId, order: newOrder >= 0 ? newOrder : t.order }
+          }
+          const idx = newSiblingTaskIds.indexOf(t.id)
+          if (idx >= 0) return { ...t, order: idx }
+          return t
+        })
       })
-    })
-    Promise.all([
-      window.api.db.updateTask({ id: taskId, parentId: newParentId }),
-      window.api.db.reorderTasks(newSiblingTaskIds),
-    ]).catch(() => setTasks(snapshot))
-  }, [])
+      Promise.all([
+        window.api.db.updateTask({ id: taskId, parentId: newParentId }),
+        window.api.db.reorderTasks(newSiblingTaskIds)
+      ]).catch(() => setTasks(snapshot))
+    },
+    []
+  )
 
   // Bulk variant — used when dragging a multi-selection in the tree view.
   // All `taskIds` get the same `newParentId`; `newSiblingTaskIds` is the new
   // ordered sibling list under that parent (which contains the moved ids in
   // their target positions plus any pre-existing siblings).
-  const bulkReparent = useCallback((
-    taskIds: string[],
-    newParentId: string | null,
-    newSiblingTaskIds: string[]
-  ) => {
-    if (taskIds.length === 0) return
-    const idSet = new Set(taskIds)
-    let snapshot: Task[] = []
-    setTasks((prevTasks) => {
-      snapshot = prevTasks
-      return prevTasks.map((t) => {
-        if (idSet.has(t.id)) {
-          const newOrder = newSiblingTaskIds.indexOf(t.id)
-          return { ...t, parent_id: newParentId, order: newOrder >= 0 ? newOrder : t.order }
-        }
-        const idx = newSiblingTaskIds.indexOf(t.id)
-        if (idx >= 0) return { ...t, order: idx }
-        return t
+  const bulkReparent = useCallback(
+    (taskIds: string[], newParentId: string | null, newSiblingTaskIds: string[]) => {
+      if (taskIds.length === 0) return
+      const idSet = new Set(taskIds)
+      let snapshot: Task[] = []
+      setTasks((prevTasks) => {
+        snapshot = prevTasks
+        return prevTasks.map((t) => {
+          if (idSet.has(t.id)) {
+            const newOrder = newSiblingTaskIds.indexOf(t.id)
+            return { ...t, parent_id: newParentId, order: newOrder >= 0 ? newOrder : t.order }
+          }
+          const idx = newSiblingTaskIds.indexOf(t.id)
+          if (idx >= 0) return { ...t, order: idx }
+          return t
+        })
       })
-    })
-    Promise.all([
-      window.api.db.updateTasks({ ids: taskIds, updates: { parentId: newParentId } }),
-      window.api.db.reorderTasks(newSiblingTaskIds),
-    ]).catch(() => setTasks(snapshot))
-  }, [])
+      Promise.all([
+        window.api.db.updateTasks({ ids: taskIds, updates: { parentId: newParentId } }),
+        window.api.db.reorderTasks(newSiblingTaskIds)
+      ]).catch(() => setTasks(snapshot))
+    },
+    []
+  )
 
   // Archive single task
   const archiveTask = useCallback(async (taskId: string) => {
     const now = new Date().toISOString()
-    setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, archived_at: now } : t))
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, archived_at: now } : t)))
     await window.api.db.archiveTask(taskId)
   }, [])
 
   // Archive multiple tasks
   const archiveTasks = useCallback(async (taskIds: string[]) => {
     const now = new Date().toISOString()
-    setTasks((prev) => prev.map((t) => taskIds.includes(t.id) ? { ...t, archived_at: now } : t))
+    setTasks((prev) => prev.map((t) => (taskIds.includes(t.id) ? { ...t, archived_at: now } : t)))
     await window.api.db.archiveTasks(taskIds)
   }, [])
 
@@ -350,7 +356,7 @@ export function useTasksData(): UseTasksDataReturn {
     })
 
     if (updates.is_blocked !== undefined) {
-      setBlockedTaskIds(prev => {
+      setBlockedTaskIds((prev) => {
         const next = new Set(prev)
         if (updates.is_blocked) next.add(taskId)
         else next.delete(taskId)
@@ -372,7 +378,7 @@ export function useTasksData(): UseTasksDataReturn {
     } catch {
       setTasks(previousTasks)
       if (updates.is_blocked !== undefined) {
-        setBlockedTaskIds(prev => {
+        setBlockedTaskIds((prev) => {
           const next = new Set(prev)
           if (updates.is_blocked) next.delete(taskId)
           else next.add(taskId)
@@ -393,7 +399,7 @@ export function useTasksData(): UseTasksDataReturn {
     })
 
     if (updates.is_blocked !== undefined) {
-      setBlockedTaskIds(prev => {
+      setBlockedTaskIds((prev) => {
         const next = new Set(prev)
         if (updates.is_blocked) for (const id of taskIds) next.add(id)
         else for (const id of taskIds) next.delete(id)
@@ -417,7 +423,7 @@ export function useTasksData(): UseTasksDataReturn {
     } catch {
       setTasks(previousTasks)
       if (updates.is_blocked !== undefined) {
-        setBlockedTaskIds(prev => {
+        setBlockedTaskIds((prev) => {
           const next = new Set(prev)
           if (updates.is_blocked) for (const id of taskIds) next.delete(id)
           else for (const id of taskIds) next.add(id)
@@ -430,7 +436,7 @@ export function useTasksData(): UseTasksDataReturn {
   // Clear all dependency blockers (used when dragging out of __blocked__ col)
   const clearBlockers = useCallback(async (taskId: string) => {
     await window.api.taskDependencies.setBlockers(taskId, [])
-    setBlockedTaskIds(prev => {
+    setBlockedTaskIds((prev) => {
       const next = new Set(prev)
       next.delete(taskId)
       return next
@@ -467,20 +473,19 @@ export function useTasksData(): UseTasksDataReturn {
   }, [])
 
   // Delete project and its tasks
-  const deleteProject = useCallback((
-    projectId: string,
-    selectedProjectId: string,
-    setSelectedProjectId: (id: string) => void
-  ) => {
-    setProjects((prev) => {
-      const remaining = prev.filter((p) => p.id !== projectId)
-      if (selectedProjectId === projectId) {
-        setSelectedProjectId(remaining.length > 0 ? remaining[0].id : '')
-      }
-      return remaining
-    })
-    setTasks((prev) => prev.filter((t) => t.project_id !== projectId))
-  }, [])
+  const deleteProject = useCallback(
+    (projectId: string, selectedProjectId: string, setSelectedProjectId: (id: string) => void) => {
+      setProjects((prev) => {
+        const remaining = prev.filter((p) => p.id !== projectId)
+        if (selectedProjectId === projectId) {
+          setSelectedProjectId(remaining.length > 0 ? remaining[0].id : '')
+        }
+        return remaining
+      })
+      setTasks((prev) => prev.filter((t) => t.project_id !== projectId))
+    },
+    []
+  )
 
   return {
     tasks,

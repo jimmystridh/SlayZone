@@ -11,7 +11,12 @@ import {
   type DragStartEvent,
   type DragEndEvent
 } from '@dnd-kit/core'
-import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove
+} from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Task } from '@slayzone/task/shared'
 import type { Project } from '@slayzone/projects/shared'
@@ -19,10 +24,25 @@ import type { ColumnConfig } from '@slayzone/projects/shared'
 import { isTerminalStatus } from '@slayzone/projects/shared'
 import type { TerminalState } from '@slayzone/terminal/shared'
 import type { Tag } from '@slayzone/tags/shared'
-import { groupTasksBy, columnToCreateTaskDraft, PRIORITY_LABELS, todayISO, type Column } from './kanban'
+import {
+  groupTasksBy,
+  columnToCreateTaskDraft,
+  PRIORITY_LABELS,
+  todayISO,
+  type Column
+} from './kanban'
 import type { ViewConfig, CardProperties } from './FilterState'
 import { TaskContextMenu } from './TaskContextMenu'
-import { cn, getColumnStatusStyle, getTerminalStateStyle, TerminalProgressDot, Tooltip, TooltipContent, TooltipTrigger, PriorityIcon } from '@slayzone/ui'
+import {
+  cn,
+  getColumnStatusStyle,
+  getTerminalStateStyle,
+  TerminalProgressDot,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  PriorityIcon
+} from '@slayzone/ui'
 import { IconButton } from '@slayzone/ui'
 import { ChevronDown, Plus, AlertCircle, AlarmClockOff, Check, GitMerge, Link2 } from 'lucide-react'
 import { usePty, useActiveTaskIds } from '@slayzone/terminal'
@@ -66,7 +86,9 @@ function PriorityBar({ priority }: { priority: number }): React.JSX.Element {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="shrink-0"><PriorityIcon priority={priority} /></span>
+        <span className="shrink-0">
+          <PriorityIcon priority={priority} />
+        </span>
       </TooltipTrigger>
       <TooltipContent>{PRIORITY_LABELS[priority]}</TooltipContent>
     </Tooltip>
@@ -129,33 +151,34 @@ function SortableListRow(props: ListRowProps): React.JSX.Element {
 
   const row = <ListRowContent {...props} isDragging={isDragging} />
 
-  const wrapped = props.allProjects && props.onUpdateTask && props.onArchiveTask && props.onDeleteTask ? (
-    <TaskContextMenu
-      task={task}
-      projects={props.allProjects}
-      columns={props.columns}
-      tags={props.tags}
-      taskTagIds={props.taskTagIds}
-      isBlocked={props.isBlocked}
-      onUpdateTask={props.onUpdateTask}
-      onArchiveTask={props.onArchiveTask}
-      onDeleteTask={props.onDeleteTask}
-      onTaskTagsChange={props.onTaskTagsChange}
-      onShutdownAgent={
-        props.activeAgentTaskIds?.has(task.id) && props.onShutdownAgent
-          ? () => props.onShutdownAgent!(task.id)
-          : undefined
-      }
-    >
+  const wrapped =
+    props.allProjects && props.onUpdateTask && props.onArchiveTask && props.onDeleteTask ? (
+      <TaskContextMenu
+        task={task}
+        projects={props.allProjects}
+        columns={props.columns}
+        tags={props.tags}
+        taskTagIds={props.taskTagIds}
+        isBlocked={props.isBlocked}
+        onUpdateTask={props.onUpdateTask}
+        onArchiveTask={props.onArchiveTask}
+        onDeleteTask={props.onDeleteTask}
+        onTaskTagsChange={props.onTaskTagsChange}
+        onShutdownAgent={
+          props.activeAgentTaskIds?.has(task.id) && props.onShutdownAgent
+            ? () => props.onShutdownAgent!(task.id)
+            : undefined
+        }
+      >
+        <div ref={setNodeRef} style={style} {...dragProps}>
+          {row}
+        </div>
+      </TaskContextMenu>
+    ) : (
       <div ref={setNodeRef} style={style} {...dragProps}>
         {row}
       </div>
-    </TaskContextMenu>
-  ) : (
-    <div ref={setNodeRef} style={style} {...dragProps}>
-      {row}
-    </div>
-  )
+    )
 
   return wrapped
 }
@@ -170,7 +193,8 @@ function ListRowContent({
   isDragging
 }: ListRowProps & { isDragging?: boolean }): React.JSX.Element {
   const today = todayISO()
-  const isOverdue = task.due_date && task.due_date < today && !isTerminalStatus(task.status, columns)
+  const isOverdue =
+    task.due_date && task.due_date < today && !isTerminalStatus(task.status, columns)
 
   return (
     <div
@@ -185,7 +209,12 @@ function ListRowContent({
       {(cp?.priority ?? true) && <PriorityBar priority={task.priority} />}
 
       {/* Title */}
-      <span className={cn('flex-1 text-sm font-medium truncate', isTerminalStatus(task.status, columns) && 'line-through text-muted-foreground')}>
+      <span
+        className={cn(
+          'flex-1 text-sm font-medium truncate',
+          isTerminalStatus(task.status, columns) && 'line-through text-muted-foreground'
+        )}
+      >
         {task.title}
       </span>
 
@@ -198,7 +227,9 @@ function ListRowContent({
         {(cp?.merge ?? true) && task.merge_state && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="shrink-0"><GitMerge className="h-3 w-3 text-purple-400" /></span>
+              <span className="shrink-0">
+                <GitMerge className="h-3 w-3 text-purple-400" />
+              </span>
             </TooltipTrigger>
             <TooltipContent>Merging</TooltipContent>
           </Tooltip>
@@ -222,9 +253,14 @@ function ListRowContent({
         )}
         {/* Snoozed */}
         {task.snoozed_until && new Date(task.snoozed_until) > new Date() && (
-          <span className="flex items-center gap-0.5 text-orange-500 shrink-0" title={`Snoozed until ${new Date(task.snoozed_until).toLocaleString()}`}>
+          <span
+            className="flex items-center gap-0.5 text-orange-500 shrink-0"
+            title={`Snoozed until ${new Date(task.snoozed_until).toLocaleString()}`}
+          >
             <AlarmClockOff className="h-3 w-3" />
-            <span className="text-[10px] font-medium">{formatSnoozeTimeLeft(task.snoozed_until)}</span>
+            <span className="text-[10px] font-medium">
+              {formatSnoozeTimeLeft(task.snoozed_until)}
+            </span>
           </span>
         )}
 
@@ -241,10 +277,12 @@ function ListRowContent({
 
         {/* Sub-tasks */}
         {(cp?.subtasks ?? true) && subTaskCount && subTaskCount.total > 0 && (
-          <span className={cn(
-            'flex items-center gap-0.5 text-[10px] shrink-0',
-            subTaskCount.done === subTaskCount.total ? 'text-green-500' : 'text-muted-foreground'
-          )}>
+          <span
+            className={cn(
+              'flex items-center gap-0.5 text-[10px] shrink-0',
+              subTaskCount.done === subTaskCount.total ? 'text-green-500' : 'text-muted-foreground'
+            )}
+          >
             <Check className="size-3" />
             {subTaskCount.done}/{subTaskCount.total}
           </span>
@@ -256,7 +294,13 @@ function ListRowContent({
 
 // ── Droppable group wrapper ──
 
-function DroppableGroup({ columnId, children }: { columnId: string; children: React.ReactNode }): React.JSX.Element {
+function DroppableGroup({
+  columnId,
+  children
+}: {
+  columnId: string
+  children: React.ReactNode
+}): React.JSX.Element {
   const { setNodeRef } = useDroppable({ id: `group:${columnId}` })
   return <div ref={setNodeRef}>{children}</div>
 }
@@ -317,7 +361,12 @@ function GroupSection({
         <div className="flex items-center gap-3 px-2.5 py-2 rounded-md bg-muted/50 select-none">
           <button className="flex items-center gap-3 flex-1 min-w-0" onClick={onToggle}>
             <span className="flex items-center justify-center w-[14px] shrink-0">
-              <ChevronDown className={cn('size-3.5 text-muted-foreground transition-transform', collapsed && '-rotate-90')} />
+              <ChevronDown
+                className={cn(
+                  'size-3.5 text-muted-foreground transition-transform',
+                  collapsed && '-rotate-90'
+                )}
+              />
             </span>
             {(() => {
               const style = getColumnStatusStyle(column.id, columns)
@@ -326,10 +375,18 @@ function GroupSection({
               return <Icon className={cn('size-4', style.iconClass)} strokeWidth={2.5} />
             })()}
             <span className="text-base font-semibold text-muted-foreground">{column.title}</span>
-            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{column.tasks.length}</span>
+            <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              {column.tasks.length}
+            </span>
           </button>
           {onCreateTask && (
-            <IconButton variant="ghost" aria-label="Add task" className="h-6 w-6 shrink-0" onClick={() => onCreateTask(column)} title="Add task">
+            <IconButton
+              variant="ghost"
+              aria-label="Add task"
+              className="h-6 w-6 shrink-0"
+              onClick={() => onCreateTask(column)}
+              title="Add task"
+            >
               <Plus className="h-4 w-4" />
             </IconButton>
           )}
@@ -339,10 +396,20 @@ function GroupSection({
       {/* Tasks */}
       {(!showHeader || !collapsed) && (
         <DroppableGroup columnId={column.id}>
-          <SortableContext items={column.tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+          <SortableContext
+            items={column.tasks.map((t) => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
             <div className="flex flex-col gap-1">
               {column.tasks.length === 0 && (
-                <div className={cn('px-2.5 py-3 text-xs text-center rounded-md transition-colors', isDragging ? 'text-muted-foreground/50 bg-muted/30 border border-dashed border-muted-foreground/20' : 'text-transparent')}>
+                <div
+                  className={cn(
+                    'px-2.5 py-3 text-xs text-center rounded-md transition-colors',
+                    isDragging
+                      ? 'text-muted-foreground/50 bg-muted/30 border border-dashed border-muted-foreground/20'
+                      : 'text-transparent'
+                  )}
+                >
                   Drop here
                 </div>
               )}
@@ -399,7 +466,8 @@ export function KanbanListView({
   const { groupBy, sortBy, showEmptyColumns } = viewConfig
 
   const handleCreateTask = useMemo(() => {
-    return (column: Column) => useDialogStore.getState().openCreateTask(columnToCreateTaskDraft(column, groupBy))
+    return (column: Column) =>
+      useDialogStore.getState().openCreateTask(columnToCreateTaskDraft(column, groupBy))
   }, [groupBy])
   const disableDrag = groupBy === 'due_date'
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -413,7 +481,10 @@ export function KanbanListView({
   const activeTaskIds = useActiveTaskIds()
 
   const allColumns = useMemo(() => {
-    const base = groupTasksBy(tasks, groupBy, sortBy, projectColumns, { blockedTaskIds, viewConfig })
+    const base = groupTasksBy(tasks, groupBy, sortBy, projectColumns, {
+      blockedTaskIds,
+      viewConfig
+    })
     if (shouldTrackActive && base.length === 1) {
       const all = base[0].tasks
       const active: Task[] = []
@@ -423,14 +494,18 @@ export function KanbanListView({
         else rest.push(t)
       }
       const cols: Column[] = []
-      if (active.length > 0 || showEmptyColumns) cols.push({ id: 'active', title: 'Active', tasks: active })
-      if (rest.length > 0 || showEmptyColumns) cols.push({ id: 'inactive', title: 'Inactive', tasks: rest })
+      if (active.length > 0 || showEmptyColumns)
+        cols.push({ id: 'active', title: 'Active', tasks: active })
+      if (rest.length > 0 || showEmptyColumns)
+        cols.push({ id: 'inactive', title: 'Inactive', tasks: rest })
       return cols
     }
     return base
   }, [tasks, projectColumns, groupBy, sortBy, shouldTrackActive, showEmptyColumns, activeTaskIds])
 
-  const visibleColumns = showEmptyColumns ? allColumns : allColumns.filter((c) => c.tasks.length > 0)
+  const visibleColumns = showEmptyColumns
+    ? allColumns
+    : allColumns.filter((c) => c.tasks.length > 0)
   const activeTask = activeId ? tasks.find((t) => t.id === activeId) : null
 
   const subTaskCounts = useMemo(() => {

@@ -4,8 +4,11 @@ import type { RestApiDeps } from '../types'
 
 export function registerProcessesFollowRoute(app: Express, _deps: RestApiDeps): void {
   app.get('/api/processes/:id/follow', (req, res) => {
-    const proc = listAllProcesses().find(p => p.id === req.params.id)
-    if (!proc) { res.status(404).json({ error: `Process not found` }); return }
+    const proc = listAllProcesses().find((p) => p.id === req.params.id)
+    if (!proc) {
+      res.status(404).json({ error: `Process not found` })
+      return
+    }
 
     // Already finished: dump buffer and close
     if (proc.status !== 'running') {

@@ -26,7 +26,8 @@ export class ScopeTracker {
         this._focusedBrowserPanelId = null
       } else if (target.closest('[data-browser-panel]')) {
         this.focusedComponentScope = 'browser'
-        this._focusedBrowserPanelId = target.closest('[data-browser-panel]')?.getAttribute('data-browser-panel') ?? null
+        this._focusedBrowserPanelId =
+          target.closest('[data-browser-panel]')?.getAttribute('data-browser-panel') ?? null
       } else {
         this.focusedComponentScope = null
         this._focusedBrowserPanelId = null

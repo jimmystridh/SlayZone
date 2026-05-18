@@ -4,13 +4,13 @@ import { useShortcutStore } from './useShortcutStore'
 // Mock window.api
 const mockSettings = {
   get: vi.fn<(key: string) => Promise<string | null>>(),
-  set: vi.fn<(key: string, value: string) => Promise<void>>(),
+  set: vi.fn<(key: string, value: string) => Promise<void>>()
 }
 const mockShortcuts = { changed: vi.fn() }
 
 Object.defineProperty(globalThis, 'window', {
   value: { api: { settings: mockSettings, shortcuts: mockShortcuts } },
-  writable: true,
+  writable: true
 })
 
 beforeEach(() => {
@@ -45,16 +45,21 @@ describe('load', () => {
 
   describe('default migrations', () => {
     it('clears user overrides matching retired defaults', async () => {
-      mockSettings.get.mockResolvedValue(JSON.stringify({
-        'zen-mode': 'mod+j',
-        'panel-settings': 'mod+s',
-        search: 'mod+shift+p', // unrelated, should persist
-      }))
+      mockSettings.get.mockResolvedValue(
+        JSON.stringify({
+          'zen-mode': 'mod+j',
+          'panel-settings': 'mod+s',
+          search: 'mod+shift+p' // unrelated, should persist
+        })
+      )
       await useShortcutStore.getState().load()
       expect(useShortcutStore.getState().overrides).toEqual({ search: 'mod+shift+p' })
       // Single persist write + single notify for the whole migration pass
       expect(mockSettings.set).toHaveBeenCalledOnce()
-      expect(mockSettings.set).toHaveBeenCalledWith('custom_shortcuts', JSON.stringify({ search: 'mod+shift+p' }))
+      expect(mockSettings.set).toHaveBeenCalledWith(
+        'custom_shortcuts',
+        JSON.stringify({ search: 'mod+shift+p' })
+      )
       expect(mockShortcuts.changed).toHaveBeenCalledOnce()
     })
 
@@ -81,15 +86,20 @@ describe('load', () => {
       await useShortcutStore.getState().load()
       expect(useShortcutStore.getState().overrides).toEqual({ 'global-agent-panel': 'mod+shift+a' })
       expect(mockSettings.set).toHaveBeenCalledOnce()
-      expect(mockSettings.set).toHaveBeenCalledWith('custom_shortcuts', JSON.stringify({ 'global-agent-panel': 'mod+shift+a' }))
+      expect(mockSettings.set).toHaveBeenCalledWith(
+        'custom_shortcuts',
+        JSON.stringify({ 'global-agent-panel': 'mod+shift+a' })
+      )
       expect(mockShortcuts.changed).toHaveBeenCalledOnce()
     })
 
     it('keeps existing new-id override when both legacy and new ids present', async () => {
-      mockSettings.get.mockResolvedValue(JSON.stringify({
-        'agent-panel': 'mod+shift+a',
-        'global-agent-panel': 'mod+alt+a',
-      }))
+      mockSettings.get.mockResolvedValue(
+        JSON.stringify({
+          'agent-panel': 'mod+shift+a',
+          'global-agent-panel': 'mod+alt+a'
+        })
+      )
       await useShortcutStore.getState().load()
       expect(useShortcutStore.getState().overrides).toEqual({ 'global-agent-panel': 'mod+alt+a' })
     })
@@ -192,7 +202,7 @@ describe('setOverride', () => {
     await useShortcutStore.getState().setOverride('search', 'mod+shift+p')
     expect(useShortcutStore.getState().overrides).toEqual({
       'zen-mode': 'mod+shift+j',
-      search: 'mod+shift+p',
+      search: 'mod+shift+p'
     })
   })
 })
@@ -201,7 +211,7 @@ describe('batchSetOverrides', () => {
   it('sets multiple overrides with single persist and notify', async () => {
     await useShortcutStore.getState().batchSetOverrides({
       search: 'mod+shift+p',
-      'zen-mode': 'mod+shift+j',
+      'zen-mode': 'mod+shift+j'
     })
     expect(useShortcutStore.getState().overrides.search).toBe('mod+shift+p')
     expect(useShortcutStore.getState().overrides['zen-mode']).toBe('mod+shift+j')

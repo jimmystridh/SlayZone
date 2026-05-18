@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
+  TooltipTrigger
 } from '@slayzone/ui'
 import type { ProviderUsage, UsageWindow } from '@slayzone/terminal/shared'
 
@@ -60,7 +60,7 @@ function WindowRow({
   label,
   w,
   pinned,
-  onTogglePin,
+  onTogglePin
 }: {
   label: string
   w: UsageWindow
@@ -78,7 +78,7 @@ function WindowRow({
           }}
           className={cn(
             'shrink-0 transition-colors outline-none',
-            pinned ? 'text-foreground' : 'text-muted-foreground/30 hover:text-muted-foreground/60',
+            pinned ? 'text-foreground' : 'text-muted-foreground/30 hover:text-muted-foreground/60'
           )}
         >
           <Circle className={cn('size-2.5', pinned && 'fill-current')} />
@@ -92,9 +92,7 @@ function WindowRow({
         />
       </div>
       <span className="text-xs tabular-nums w-8 text-right">{Math.round(w.utilization)}%</span>
-      <span className="text-[10px] text-muted-foreground w-16 shrink-0 text-right">
-        {reset}
-      </span>
+      <span className="text-[10px] text-muted-foreground w-16 shrink-0 text-right">{reset}</span>
     </div>
   )
 }
@@ -102,7 +100,7 @@ function WindowRow({
 function ProviderSection({
   usage,
   pinned,
-  onTogglePin,
+  onTogglePin
 }: {
   usage: ProviderUsage
   pinned: string[]
@@ -131,23 +129,29 @@ function ProviderSection({
     <div className="space-y-1.5">
       <div className="flex items-center gap-2">
         <span className="text-xs font-medium flex-1">{usage.label}</span>
-        <span className="text-[10px] text-muted-foreground w-16 shrink-0 text-right">Resets in</span>
+        <span className="text-[10px] text-muted-foreground w-16 shrink-0 text-right">
+          Resets in
+        </span>
       </div>
       {isStale && (
         <div className="flex items-center gap-1 text-[10px] text-yellow-500/80">
           <AlertTriangle className="size-2.5 shrink-0" />
-          <span>{usage.error} · {staleAge} old</span>
+          <span>
+            {usage.error} · {staleAge} old
+          </span>
         </div>
       )}
-      {[...usage.windows].sort((a, b) => a.label.localeCompare(b.label)).map((w) => (
-        <WindowRow
-          key={w.key}
-          label={w.label}
-          w={w}
-          pinned={pinned.includes(w.key)}
-          onTogglePin={() => onTogglePin(w.key)}
-        />
-      ))}
+      {[...usage.windows]
+        .sort((a, b) => a.label.localeCompare(b.label))
+        .map((w) => (
+          <WindowRow
+            key={w.key}
+            label={w.label}
+            w={w}
+            pinned={pinned.includes(w.key)}
+            onTogglePin={() => onTogglePin(w.key)}
+          />
+        ))}
     </div>
   )
 }
@@ -205,7 +209,7 @@ export function UsagePopover({ data, onRefresh }: UsagePopoverProps) {
         return next
       })
     },
-    [data],
+    [data]
   )
 
   const handleEnter = () => {
@@ -216,16 +220,18 @@ export function UsagePopover({ data, onRefresh }: UsagePopoverProps) {
     closeTimer.current = setTimeout(() => setOpen(false), 200)
   }
 
-  const inlineBars: { label: string; pct: number }[] = data.flatMap((p) => {
-    const keys = effectivePinned[p.provider]
-    if (!keys) return []
-    return keys
-      .map((k) => {
-        const w = p.windows.find((w) => w.key === k)
-        return w ? { label: `${p.label} ${w.label}`, pct: w.utilization } : null
-      })
-      .filter(Boolean) as { label: string; pct: number }[]
-  }).sort((a, b) => a.label.localeCompare(b.label))
+  const inlineBars: { label: string; pct: number }[] = data
+    .flatMap((p) => {
+      const keys = effectivePinned[p.provider]
+      if (!keys) return []
+      return keys
+        .map((k) => {
+          const w = p.windows.find((w) => w.key === k)
+          return w ? { label: `${p.label} ${w.label}`, pct: w.utilization } : null
+        })
+        .filter(Boolean) as { label: string; pct: number }[]
+    })
+    .sort((a, b) => a.label.localeCompare(b.label))
 
   const hasError = data.some((p) => p.error !== null)
 
@@ -245,7 +251,10 @@ export function UsagePopover({ data, onRefresh }: UsagePopoverProps) {
                 <AlertTriangle className="size-3 text-yellow-500 shrink-0" />
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-xs max-w-64">
-                {data.filter((p) => p.error).map((p) => `${p.label}: ${p.error}`).join('\n')}
+                {data
+                  .filter((p) => p.error)
+                  .map((p) => `${p.label}: ${p.error}`)
+                  .join('\n')}
               </TooltipContent>
             </Tooltip>
           )}
@@ -263,19 +272,19 @@ export function UsagePopover({ data, onRefresh }: UsagePopoverProps) {
         onMouseEnter={handleEnter}
         onMouseLeave={handleLeave}
       >
-        {[...data].sort((a, b) => a.label.localeCompare(b.label)).map((p) => (
-          <ProviderSection
-            key={p.provider}
-            usage={p}
-            pinned={effectivePinned[p.provider] ?? []}
-            onTogglePin={(key) => togglePin(p.provider, key)}
-          />
-        ))}
+        {[...data]
+          .sort((a, b) => a.label.localeCompare(b.label))
+          .map((p) => (
+            <ProviderSection
+              key={p.provider}
+              usage={p}
+              pinned={effectivePinned[p.provider] ?? []}
+              onTogglePin={(key) => togglePin(p.provider, key)}
+            />
+          ))}
         <div className="flex items-center justify-between pt-1 border-t">
           <span className="text-[10px] text-muted-foreground">
-            {data[0]?.fetchedAt
-              ? `Updated ${formatAgo(data[0].fetchedAt)} ago`
-              : ''}
+            {data[0]?.fetchedAt ? `Updated ${formatAgo(data[0].fetchedAt)} ago` : ''}
           </span>
           <button
             onClick={(e) => {

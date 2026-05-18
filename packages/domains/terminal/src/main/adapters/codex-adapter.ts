@@ -1,7 +1,14 @@
 import { open, readdir, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { defaultEncodeSubmit, type TerminalAdapter, type PromptInfo, type ActivityState, type ErrorInfo, type ValidationResult } from './types'
+import {
+  defaultEncodeSubmit,
+  type TerminalAdapter,
+  type PromptInfo,
+  type ActivityState,
+  type ErrorInfo,
+  type ValidationResult
+} from './types'
 import { whichBinary, validateShellEnv } from '../shell-env'
 
 /**
@@ -25,8 +32,8 @@ export class CodexAdapter implements TerminalAdapter {
   private static stripAnsi(data: string): string {
     return data
       .replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '') // OSC sequences
-      .replace(/\x1b\[[?0-9;:]*[ -/]*[@-~]/g, '')            // CSI sequences
-      .replace(/\x1b[()][AB012]/g, '')            // Character set
+      .replace(/\x1b\[[?0-9;:]*[ -/]*[@-~]/g, '') // CSI sequences
+      .replace(/\x1b[()][AB012]/g, '') // Character set
   }
 
   private static normalizeText(data: string): string {
@@ -34,8 +41,10 @@ export class CodexAdapter implements TerminalAdapter {
   }
 
   private static hasWorkingIndicator(text: string): boolean {
-    return /\b(?:esc|escape)\s+to\s+(?:interrupt|cancel|stop)\b/i.test(text)
-      || /\b(?:ctrl\s*\+\s*c|control-c)\s+to\s+(?:interrupt|cancel|stop)\b/i.test(text)
+    return (
+      /\b(?:esc|escape)\s+to\s+(?:interrupt|cancel|stop)\b/i.test(text) ||
+      /\b(?:ctrl\s*\+\s*c|control-c)\s+to\s+(?:interrupt|cancel|stop)\b/i.test(text)
+    )
   }
 
   /**
@@ -57,7 +66,9 @@ export class CodexAdapter implements TerminalAdapter {
     if (!hasNumbered) return false
     const hasDeny = /\bNo,\s+and\s+tell\s+Codex\b/i.test(text)
     if (hasDeny) return true
-    return /\b(?:Would\s+you\s+like\s+to\s+(?:run|grant|make)|Do\s+you\s+(?:want\s+to\s+approve|trust\s+the\s+contents)|needs\s+your\s+approval)/i.test(text)
+    return /\b(?:Would\s+you\s+like\s+to\s+(?:run|grant|make)|Do\s+you\s+(?:want\s+to\s+approve|trust\s+the\s+contents)|needs\s+your\s+approval)/i.test(
+      text
+    )
   }
 
   detectActivity(data: string, _current: ActivityState): ActivityState | null {
@@ -75,9 +86,9 @@ export class CodexAdapter implements TerminalAdapter {
 
     // Codex resume session not found variants.
     if (
-      /no saved session found with id/i.test(stripped)
-      || /no conversation found with (?:session )?id/i.test(stripped)
-      || /session \S+ not found/i.test(stripped)
+      /no saved session found with id/i.test(stripped) ||
+      /no conversation found with (?:session )?id/i.test(stripped) ||
+      /session \S+ not found/i.test(stripped)
     ) {
       return {
         code: 'SESSION_NOT_FOUND',
@@ -100,7 +111,11 @@ export class CodexAdapter implements TerminalAdapter {
   }
 
   async validate(): Promise<ValidationResult[]> {
-    const [shell, node, codex] = await Promise.all([validateShellEnv(), whichBinary('node'), whichBinary('codex')])
+    const [shell, node, codex] = await Promise.all([
+      validateShellEnv(),
+      whichBinary('node'),
+      whichBinary('codex')
+    ])
     const results: ValidationResult[] = []
     if (!shell.ok) results.push(shell)
     results.push(
@@ -150,19 +165,26 @@ export class CodexAdapter implements TerminalAdapter {
 
     for (const dp of datePaths) {
       const dir = join(
-        homedir(), '.codex', 'sessions',
+        homedir(),
+        '.codex',
+        'sessions',
         String(dp.y),
         String(dp.m).padStart(2, '0'),
         String(dp.d).padStart(2, '0')
       )
 
       try {
-        const files = (await readdir(dir)).filter(f => f.endsWith('.jsonl')).sort().reverse()
+        const files = (await readdir(dir))
+          .filter((f) => f.endsWith('.jsonl'))
+          .sort()
+          .reverse()
         for (const file of files) {
           const info = await stat(join(dir, file))
           // 5s grace window for clock skew between spawn timestamp and file creation
           if (info.birthtimeMs < spawnedAt - 5000) break // files are sorted newest-first
-          const match = file.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/i)
+          const match = file.match(
+            /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$/i
+          )
           if (!match) continue
 
           // Verify cwd matches to disambiguate concurrent sessions.
@@ -222,9 +244,7 @@ export class CodexAdapter implements TerminalAdapter {
     )
     if (rollout) return rollout[1]
     // Last resort: any UUID in the output (handles box-drawing chars, cursor artifacts)
-    const bare = stripped.match(
-      /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i
-    )
+    const bare = stripped.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i)
     return bare ? bare[1] : null
   }
 }

@@ -11,7 +11,7 @@ export function registerArchiveTaskRoute(app: Express, deps: RestApiDeps): void 
       const input = ArchiveTaskInput.parse({ id: req.params.id })
       const task = await archiveTaskOp(deps.db, input.id, {
         ipcMain,
-        onMutation: deps.notifyRenderer,
+        onMutation: deps.notifyRenderer
       })
       if (!task) {
         res.status(404).json({ ok: false, error: 'Task not found' })

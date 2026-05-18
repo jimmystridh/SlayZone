@@ -26,7 +26,7 @@ export function binaryOnPath(name: string): boolean {
 export const CLI_PATHS = {
   'cursor-agent': `${homedir()}/.local/bin/cursor-agent`,
   gemini: 'gemini', // on PATH
-  opencode: `${homedir()}/.opencode/bin/opencode`,
+  opencode: `${homedir()}/.opencode/bin/opencode`
 } as const
 
 function activeModeTrigger(page: Page) {
@@ -55,7 +55,9 @@ export async function openTaskTerminal(
     await taskCardTitle.click()
   } else {
     await pressShortcut(page, 'search')
-    const searchInput = page.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
+    const searchInput = page.getByPlaceholder(
+      'Search files, folders, commands, projects, and tasks...'
+    )
     await expect(searchInput).toBeVisible()
     await searchInput.fill(opts.taskTitle)
     const dialog = page.locator('[role="dialog"]:visible').last()
@@ -74,7 +76,7 @@ export async function switchTerminalMode(page: Page, mode: TerminalMode): Promis
     gemini: ['Gemini'],
     opencode: ['OpenCode'],
     copilot: ['Copilot'],
-    terminal: ['Terminal'],
+    terminal: ['Terminal']
   }
 
   // Dismiss any blocking overlay (dialog, popover, select) that may linger from a previous test
@@ -103,13 +105,27 @@ export async function switchTerminalMode(page: Page, mode: TerminalMode): Promis
     if (await dropdownBtn.isVisible({ timeout: 500 }).catch(() => false)) {
       await dropdownBtn.click().catch(() => {})
     }
-    if (await page.getByRole('menuitemradio').first().isVisible({ timeout: 600 }).catch(() => false)) return true
+    if (
+      await page
+        .getByRole('menuitemradio')
+        .first()
+        .isVisible({ timeout: 600 })
+        .catch(() => false)
+    )
+      return true
     // Strategy 2: native right-click on the tab body
     const tab = trigger.locator('xpath=ancestor::*[@data-tab-main="true"]').first()
     if (await tab.isVisible({ timeout: 500 }).catch(() => false)) {
       await tab.click({ button: 'right' })
     }
-    if (await page.getByRole('menuitemradio').first().isVisible({ timeout: 600 }).catch(() => false)) return true
+    if (
+      await page
+        .getByRole('menuitemradio')
+        .first()
+        .isVisible({ timeout: 600 })
+        .catch(() => false)
+    )
+      return true
     return false
   }
   const menuOpen = await tryOpenMenu()
@@ -136,22 +152,37 @@ export async function switchTerminalMode(page: Page, mode: TerminalMode): Promis
   // clear all conversationIds, set the new mode, force a refresh. End-state
   // matches the UI path; only the menu interaction is bypassed.
   const taskId = await page.evaluate(() => {
-    const store = (window as { __slayzone_tabStore?: { getState: () => { tabs: { type: string; taskId?: string }[]; activeTabIndex: number } } }).__slayzone_tabStore
+    const store = (
+      window as {
+        __slayzone_tabStore?: {
+          getState: () => { tabs: { type: string; taskId?: string }[]; activeTabIndex: number }
+        }
+      }
+    ).__slayzone_tabStore
     const state = store?.getState()
     const tab = state?.tabs[state.activeTabIndex]
     return tab?.type === 'task' ? tab.taskId : null
   })
-  if (!taskId) throw new Error(`switchTerminalMode fallback: no active task tab found (mode=${mode})`)
-  await page.evaluate(async ({ id, m }) => {
-    try { await window.api.pty.kill(`${id}:${id}`) } catch { /* may not exist */ }
-    const t = await window.api.db.getTask(id)
-    const cfg = t?.provider_config ?? null
-    const cleared: Record<string, { conversationId: null }> = {}
-    for (const k of Object.keys(cfg ?? {})) cleared[k] = { conversationId: null }
-    await window.api.db.updateTask({ id, terminalMode: m, providerConfig: cleared })
-    const refresh = (window as { __slayzone_refreshData?: () => Promise<void> | void }).__slayzone_refreshData
-    await refresh?.()
-  }, { id: taskId, m: mode })
+  if (!taskId)
+    throw new Error(`switchTerminalMode fallback: no active task tab found (mode=${mode})`)
+  await page.evaluate(
+    async ({ id, m }) => {
+      try {
+        await window.api.pty.kill(`${id}:${id}`)
+      } catch {
+        /* may not exist */
+      }
+      const t = await window.api.db.getTask(id)
+      const cfg = t?.provider_config ?? null
+      const cleared: Record<string, { conversationId: null }> = {}
+      for (const k of Object.keys(cfg ?? {})) cleared[k] = { conversationId: null }
+      await window.api.db.updateTask({ id, terminalMode: m, providerConfig: cleared })
+      const refresh = (window as { __slayzone_refreshData?: () => Promise<void> | void })
+        .__slayzone_refreshData
+      await refresh?.()
+    },
+    { id: taskId, m: mode }
+  )
   // Force a TaskDetailPage remount by toggling tabs — handleModeChange in
   // source does this implicitly via markSkipCache + remountTerminal. Without
   // the remount, Terminal's useEffect won't re-run and no new PTY will spawn
@@ -167,7 +198,7 @@ export async function switchTerminalMode(page: Page, mode: TerminalMode): Promis
     const store = (window as unknown as { __slayzone_tabStore?: Store }).__slayzone_tabStore
     if (!store) return
     const state = store.getState()
-    const idx = state.tabs.findIndex(t => t.type === 'task' && t.taskId === id)
+    const idx = state.tabs.findIndex((t) => t.type === 'task' && t.taskId === id)
     if (idx < 0) return
     const otherIdx = idx === 0 ? Math.min(1, state.tabs.length - 1) : 0
     state.setActiveTabIndex(otherIdx)
@@ -189,10 +220,9 @@ export async function waitForPtySession(
   timeoutMs = 20_000
 ): Promise<void> {
   await expect
-    .poll(
-      async () => page.evaluate((id) => window.api.pty.exists(id), sessionId),
-      { timeout: timeoutMs }
-    )
+    .poll(async () => page.evaluate((id) => window.api.pty.exists(id), sessionId), {
+      timeout: timeoutMs
+    })
     .toBe(true)
 }
 
@@ -202,10 +232,9 @@ export async function waitForNoPtySession(
   timeoutMs = 20_000
 ): Promise<void> {
   await expect
-    .poll(
-      async () => page.evaluate((id) => window.api.pty.exists(id), sessionId),
-      { timeout: timeoutMs }
-    )
+    .poll(async () => page.evaluate((id) => window.api.pty.exists(id), sessionId), {
+      timeout: timeoutMs
+    })
     .toBe(false)
 }
 
@@ -216,10 +245,9 @@ export async function waitForPtyState(
   timeoutMs = 10_000
 ): Promise<void> {
   await expect
-    .poll(
-      async () => page.evaluate((id) => window.api.pty.getState(id), sessionId),
-      { timeout: timeoutMs }
-    )
+    .poll(async () => page.evaluate((id) => window.api.pty.getState(id), sessionId), {
+      timeout: timeoutMs
+    })
     .toBe(state)
 }
 
@@ -235,10 +263,10 @@ export async function readBufferSince(
   sessionId: string,
   afterSeq: number
 ): Promise<{ currentSeq: number; chunks: Array<{ seq: number; data: string }> } | null> {
-  return page.evaluate(
-    ({ id, after }) => window.api.pty.getBufferSince(id, after),
-    { id: sessionId, after: afterSeq }
-  )
+  return page.evaluate(({ id, after }) => window.api.pty.getBufferSince(id, after), {
+    id: sessionId,
+    after: afterSeq
+  })
 }
 
 export async function runCommand(page: Page, sessionId: string, command: string): Promise<void> {
@@ -257,47 +285,61 @@ export async function waitForBufferContains(
   timeoutMs = 10_000
 ): Promise<void> {
   await expect
-    .poll(async () => {
-      const buffer = await readFullBuffer(page, sessionId)
-      return buffer.includes(needle)
-    }, { timeout: timeoutMs })
+    .poll(
+      async () => {
+        const buffer = await readFullBuffer(page, sessionId)
+        return buffer.includes(needle)
+      },
+      { timeout: timeoutMs }
+    )
     .toBe(true)
 }
 
 /** Read only the visible viewport rows (not full scrollback) */
 export async function getViewportLines(page: Page, sessionId: string): Promise<string[] | null> {
-  return page.evaluate(({ sid }) => {
-    const links = (window as any).__slayzone_terminalLinks as
-      Record<string, { _terminal: any }> | undefined
-    const terminal = links?.[sid]?._terminal
-    if (!terminal) return null
-    const buf = terminal.buffer.active
-    const lines: string[] = []
-    for (let i = 0; i < terminal.rows; i++) {
-      const line = buf.getLine(buf.viewportY + i)
-      if (line) lines.push(line.translateToString(true))
-    }
-    return lines
-  }, { sid: sessionId })
+  return page.evaluate(
+    ({ sid }) => {
+      const links = (window as any).__slayzone_terminalLinks as
+        | Record<string, { _terminal: any }>
+        | undefined
+      const terminal = links?.[sid]?._terminal
+      if (!terminal) return null
+      const buf = terminal.buffer.active
+      const lines: string[] = []
+      for (let i = 0; i < terminal.rows; i++) {
+        const line = buf.getLine(buf.viewportY + i)
+        if (line) lines.push(line.translateToString(true))
+      }
+      return lines
+    },
+    { sid: sessionId }
+  )
 }
 
 /** Read xterm cursor position and visible buffer lines via the terminal links hook */
-export async function getTerminalState(page: Page, sessionId: string): Promise<{
+export async function getTerminalState(
+  page: Page,
+  sessionId: string
+): Promise<{
   cursorY: number
   cursorX: number
   lines: string[]
 } | null> {
-  return page.evaluate(({ sid }) => {
-    const links = (window as any).__slayzone_terminalLinks as
-      Record<string, { _terminal: any }> | undefined
-    const terminal = links?.[sid]?._terminal
-    if (!terminal) return null
-    const buf = terminal.buffer.active
-    const lines: string[] = []
-    for (let i = 0; i < buf.length; i++) {
-      const line = buf.getLine(i)
-      if (line) lines.push(line.translateToString(true))
-    }
-    return { cursorY: buf.cursorY, cursorX: buf.cursorX, lines }
-  }, { sid: sessionId })
+  return page.evaluate(
+    ({ sid }) => {
+      const links = (window as any).__slayzone_terminalLinks as
+        | Record<string, { _terminal: any }>
+        | undefined
+      const terminal = links?.[sid]?._terminal
+      if (!terminal) return null
+      const buf = terminal.buffer.active
+      const lines: string[] = []
+      for (let i = 0; i < buf.length; i++) {
+        const line = buf.getLine(i)
+        if (line) lines.push(line.translateToString(true))
+      }
+      return { cursorY: buf.cursorY, cursorX: buf.cursorX, lines }
+    },
+    { sid: sessionId }
+  )
 }

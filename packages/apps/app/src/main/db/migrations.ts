@@ -1,6 +1,10 @@
 import Database from 'better-sqlite3'
 import { spawnSync } from 'node:child_process'
-import { parseSkillFrontmatter, renderSkillFrontmatter, validateSkillFrontmatter } from '@slayzone/ai-config/shared'
+import {
+  parseSkillFrontmatter,
+  renderSkillFrontmatter,
+  validateSkillFrontmatter
+} from '@slayzone/ai-config/shared'
 
 interface Migration {
   version: number
@@ -265,7 +269,9 @@ const migrations: Migration[] = [
   {
     version: 14,
     up: (db) => {
-      db.exec(`ALTER TABLE tasks ADD COLUMN dangerously_skip_permissions INTEGER NOT NULL DEFAULT 0;`)
+      db.exec(
+        `ALTER TABLE tasks ADD COLUMN dangerously_skip_permissions INTEGER NOT NULL DEFAULT 0;`
+      )
     }
   },
   {
@@ -322,7 +328,11 @@ const migrations: Migration[] = [
 
       // Migrate existing browser_url values to browser_tabs JSON
       // Using task_id as tab id since we need deterministic IDs in migration
-      const tasks = db.prepare(`SELECT id, browser_url FROM tasks WHERE browser_url IS NOT NULL AND browser_url != ''`).all() as Array<{ id: string; browser_url: string }>
+      const tasks = db
+        .prepare(
+          `SELECT id, browser_url FROM tasks WHERE browser_url IS NOT NULL AND browser_url != ''`
+        )
+        .all() as Array<{ id: string; browser_url: string }>
       const updateStmt = db.prepare(`UPDATE tasks SET browser_tabs = ? WHERE id = ?`)
       for (const task of tasks) {
         const tabId = `tab-${task.id.slice(0, 8)}`
@@ -355,7 +365,10 @@ const migrations: Migration[] = [
       // Create main tab for each existing task using its terminal_mode
       // Use taskId as tab id (unique since each task has one main tab)
       // Use INSERT OR IGNORE to skip tasks that already have a main tab
-      const tasks = db.prepare(`SELECT id, terminal_mode FROM tasks`).all() as Array<{ id: string; terminal_mode: string | null }>
+      const tasks = db.prepare(`SELECT id, terminal_mode FROM tasks`).all() as Array<{
+        id: string
+        terminal_mode: string | null
+      }>
       const insertStmt = db.prepare(`
         INSERT OR IGNORE INTO terminal_tabs (id, task_id, label, mode, is_main, position, created_at)
         VALUES (?, ?, NULL, ?, 1, 0, datetime('now'))
@@ -378,10 +391,14 @@ const migrations: Migration[] = [
         ALTER TABLE tasks ADD COLUMN claude_flags TEXT NOT NULL DEFAULT '';
         ALTER TABLE tasks ADD COLUMN codex_flags TEXT NOT NULL DEFAULT '';
       `)
-      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`)
-        .run('default_claude_flags', '--allow-dangerously-skip-permissions')
-      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`)
-        .run('default_codex_flags', '--sandbox workspace-write')
+      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`).run(
+        'default_claude_flags',
+        '--allow-dangerously-skip-permissions'
+      )
+      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`).run(
+        'default_codex_flags',
+        '--sandbox workspace-write'
+      )
     }
   },
   {
@@ -409,14 +426,22 @@ const migrations: Migration[] = [
         CREATE INDEX IF NOT EXISTS idx_diag_source_event_ts ON diagnostics_events(source, event, ts_ms);
       `)
 
-      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`)
-        .run('diagnostics_enabled', '1')
-      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`)
-        .run('diagnostics_verbose', '0')
-      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`)
-        .run('diagnostics_include_pty_output', '0')
-      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`)
-        .run('diagnostics_retention_days', '14')
+      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`).run(
+        'diagnostics_enabled',
+        '1'
+      )
+      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`).run(
+        'diagnostics_verbose',
+        '0'
+      )
+      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`).run(
+        'diagnostics_include_pty_output',
+        '0'
+      )
+      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`).run(
+        'diagnostics_retention_days',
+        '14'
+      )
     }
   },
   {
@@ -575,15 +600,21 @@ const migrations: Migration[] = [
         ALTER TABLE projects
           ADD COLUMN auto_create_worktree_on_task_create INTEGER DEFAULT NULL;
       `)
-      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`)
-        .run('auto_create_worktree_on_task_create', '0')
+      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`).run(
+        'auto_create_worktree_on_task_create',
+        '0'
+      )
     }
   },
   {
     version: 29,
     up: (db) => {
-      db.prepare(`UPDATE settings SET value = '--allow-dangerously-skip-permissions' WHERE key = 'default_claude_flags' AND value = '--dangerously-skip-permissions'`).run()
-      db.prepare(`UPDATE tasks SET claude_flags = '--allow-dangerously-skip-permissions' WHERE claude_flags = '--dangerously-skip-permissions'`).run()
+      db.prepare(
+        `UPDATE settings SET value = '--allow-dangerously-skip-permissions' WHERE key = 'default_claude_flags' AND value = '--dangerously-skip-permissions'`
+      ).run()
+      db.prepare(
+        `UPDATE tasks SET claude_flags = '--allow-dangerously-skip-permissions' WHERE claude_flags = '--dangerously-skip-permissions'`
+      ).run()
     }
   },
   {
@@ -611,7 +642,9 @@ const migrations: Migration[] = [
       `)
 
       // Seed CLI providers into existing ai_config_sources table
-      const stmt = db.prepare(`INSERT OR IGNORE INTO ai_config_sources (id, name, kind, enabled, status) VALUES (?, ?, ?, ?, ?)`)
+      const stmt = db.prepare(
+        `INSERT OR IGNORE INTO ai_config_sources (id, name, kind, enabled, status) VALUES (?, ?, ?, ?, ?)`
+      )
       stmt.run('provider-claude', 'Claude Code', 'claude', 1, 'active')
       stmt.run('provider-codex', 'Codex', 'codex', 0, 'active')
       stmt.run('provider-gemini', 'Gemini', 'gemini', 0, 'placeholder')
@@ -652,7 +685,9 @@ const migrations: Migration[] = [
       stmt.run('default_opencode_flags', '')
 
       // Seed new CLI providers into ai_config_sources
-      const insertStmt = db.prepare(`INSERT OR IGNORE INTO ai_config_sources (id, name, kind, enabled, status) VALUES (?, ?, ?, ?, ?)`)
+      const insertStmt = db.prepare(
+        `INSERT OR IGNORE INTO ai_config_sources (id, name, kind, enabled, status) VALUES (?, ?, ?, ?, ?)`
+      )
       insertStmt.run('provider-cursor', 'Cursor Agent', 'cursor', 0, 'active')
       insertStmt.run('provider-opencode', 'OpenCode', 'opencode', 0, 'active')
 
@@ -667,13 +702,15 @@ const migrations: Migration[] = [
       db.exec(`ALTER TABLE tasks ADD COLUMN provider_config TEXT NOT NULL DEFAULT '{}'`)
 
       // Migrate existing per-provider data into provider_config
-      const tasks = db.prepare(`
+      const tasks = db
+        .prepare(`
         SELECT id,
           claude_conversation_id, codex_conversation_id, cursor_conversation_id,
           gemini_conversation_id, opencode_conversation_id,
           claude_flags, codex_flags, cursor_flags, gemini_flags, opencode_flags
         FROM tasks
-      `).all() as Array<{
+      `)
+        .all() as Array<{
         id: string
         claude_conversation_id: string | null
         codex_conversation_id: string | null
@@ -695,7 +732,7 @@ const migrations: Migration[] = [
           { mode: 'codex', convId: task.codex_conversation_id, flags: task.codex_flags },
           { mode: 'cursor-agent', convId: task.cursor_conversation_id, flags: task.cursor_flags },
           { mode: 'gemini', convId: task.gemini_conversation_id, flags: task.gemini_flags },
-          { mode: 'opencode', convId: task.opencode_conversation_id, flags: task.opencode_flags },
+          { mode: 'opencode', convId: task.opencode_conversation_id, flags: task.opencode_flags }
         ]
         for (const p of providers) {
           if (p.convId || p.flags) {
@@ -771,7 +808,9 @@ const migrations: Migration[] = [
     version: 42,
     up: (db) => {
       // Idempotent for drifted local DBs where column exists but user_version < 42.
-      const projectColumns = db.prepare(`PRAGMA table_info(projects)`).all() as Array<{ name: string }>
+      const projectColumns = db.prepare(`PRAGMA table_info(projects)`).all() as Array<{
+        name: string
+      }>
       const hasColumnsConfig = projectColumns.some((column) => column.name === 'columns_config')
       if (!hasColumnsConfig) {
         db.exec(`ALTER TABLE projects ADD COLUMN columns_config TEXT DEFAULT NULL`)
@@ -788,14 +827,18 @@ const migrations: Migration[] = [
       db.prepare(`DELETE FROM ai_config_project_selections WHERE provider = 'codex'`).run()
 
       // 2) Ensure codex is globally disabled in provider source state.
-      db.prepare(`UPDATE ai_config_sources SET enabled = 0, updated_at = datetime('now') WHERE kind = 'codex'`).run()
+      db.prepare(
+        `UPDATE ai_config_sources SET enabled = 0, updated_at = datetime('now') WHERE kind = 'codex'`
+      ).run()
 
       // 3) Strip codex from per-project provider settings payloads.
-      const rows = db.prepare(`
+      const rows = db
+        .prepare(`
         SELECT key, value
         FROM settings
         WHERE key LIKE 'ai_providers:%'
-      `).all() as Array<{ key: string; value: string }>
+      `)
+        .all() as Array<{ key: string; value: string }>
       const updateStmt = db.prepare(`UPDATE settings SET value = ? WHERE key = ?`)
 
       for (const row of rows) {
@@ -807,7 +850,9 @@ const migrations: Migration[] = [
         }
         if (!Array.isArray(parsed)) continue
 
-        const filtered = parsed.filter((provider): provider is string => typeof provider === 'string' && provider !== 'codex')
+        const filtered = parsed.filter(
+          (provider): provider is string => typeof provider === 'string' && provider !== 'codex'
+        )
         if (filtered.length !== parsed.length) {
           updateStmt.run(JSON.stringify(filtered), row.key)
         }
@@ -833,11 +878,13 @@ const migrations: Migration[] = [
       `).run(...removedProviders)
 
       // 3) Strip removed providers from per-project provider settings payloads.
-      const rows = db.prepare(`
+      const rows = db
+        .prepare(`
         SELECT key, value
         FROM settings
         WHERE key LIKE 'ai_providers:%'
-      `).all() as Array<{ key: string; value: string }>
+      `)
+        .all() as Array<{ key: string; value: string }>
       const updateStmt = db.prepare(`UPDATE settings SET value = ? WHERE key = ?`)
       const removedSet = new Set(removedProviders)
 
@@ -850,7 +897,10 @@ const migrations: Migration[] = [
         }
         if (!Array.isArray(parsed)) continue
 
-        const filtered = parsed.filter((provider): provider is string => typeof provider === 'string' && !removedSet.has(provider))
+        const filtered = parsed.filter(
+          (provider): provider is string =>
+            typeof provider === 'string' && !removedSet.has(provider)
+        )
         if (filtered.length !== parsed.length) {
           updateStmt.run(JSON.stringify(filtered), row.key)
         }
@@ -861,7 +911,9 @@ const migrations: Migration[] = [
     version: 45,
     up: (db) => {
       // Repair drifted schemas where user_version was already 42+ but projects.columns_config was never created.
-      const projectColumns = db.prepare(`PRAGMA table_info(projects)`).all() as Array<{ name: string }>
+      const projectColumns = db.prepare(`PRAGMA table_info(projects)`).all() as Array<{
+        name: string
+      }>
       const hasColumnsConfig = projectColumns.some((column) => column.name === 'columns_config')
       if (!hasColumnsConfig) {
         db.exec(`ALTER TABLE projects ADD COLUMN columns_config TEXT DEFAULT NULL`)
@@ -872,11 +924,13 @@ const migrations: Migration[] = [
     version: 46,
     up: (db) => {
       // Enforce unique item slugs per logical scope after repairing any legacy duplicates.
-      const rows = db.prepare(`
+      const rows = db
+        .prepare(`
         SELECT id, scope, project_id, type, slug
         FROM ai_config_items
         ORDER BY created_at ASC, id ASC
-      `).all() as Array<{
+      `)
+        .all() as Array<{
         id: string
         scope: 'global' | 'project'
         project_id: string | null
@@ -884,13 +938,16 @@ const migrations: Migration[] = [
         slug: string
       }>
 
-      const updateSlug = db.prepare('UPDATE ai_config_items SET slug = ?, name = ?, updated_at = datetime(\'now\') WHERE id = ?')
+      const updateSlug = db.prepare(
+        "UPDATE ai_config_items SET slug = ?, name = ?, updated_at = datetime('now') WHERE id = ?"
+      )
       const seenByBucket = new Map<string, Set<string>>()
 
       for (const row of rows) {
-        const bucket = row.scope === 'global'
-          ? `global:${row.type}`
-          : `project:${row.project_id ?? ''}:${row.type}`
+        const bucket =
+          row.scope === 'global'
+            ? `global:${row.type}`
+            : `project:${row.project_id ?? ''}:${row.type}`
         const seen = seenByBucket.get(bucket) ?? new Set<string>()
         seenByBucket.set(bucket, seen)
 
@@ -933,14 +990,22 @@ const migrations: Migration[] = [
       `)
 
       const normalizeSlug = (value: string): string => {
-        return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'untitled'
+        return (
+          value
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '') || 'untitled'
+        )
       }
 
-      const rows = db.prepare(`
+      const rows = db
+        .prepare(`
         SELECT id, scope, project_id, type, slug
         FROM ai_config_items
         ORDER BY created_at ASC, id ASC
-      `).all() as Array<{
+      `)
+        .all() as Array<{
         id: string
         scope: 'global' | 'project'
         project_id: string | null
@@ -948,13 +1013,16 @@ const migrations: Migration[] = [
         slug: string
       }>
 
-      const updateSlug = db.prepare('UPDATE ai_config_items SET slug = ?, name = ?, updated_at = datetime(\'now\') WHERE id = ?')
+      const updateSlug = db.prepare(
+        "UPDATE ai_config_items SET slug = ?, name = ?, updated_at = datetime('now') WHERE id = ?"
+      )
       const seenByBucket = new Map<string, Set<string>>()
 
       for (const row of rows) {
-        const bucket = row.scope === 'global'
-          ? `global:${row.type}`
-          : `project:${row.project_id ?? ''}:${row.type}`
+        const bucket =
+          row.scope === 'global'
+            ? `global:${row.type}`
+            : `project:${row.project_id ?? ''}:${row.type}`
         const seen = seenByBucket.get(bucket) ?? new Set<string>()
         seenByBucket.set(bucket, seen)
 
@@ -1016,8 +1084,12 @@ const migrations: Migration[] = [
     version: 51,
     up: (db) => {
       // Idempotent for drifted local DBs where column exists but user_version < 51.
-      const projectColumns = db.prepare(`PRAGMA table_info(projects)`).all() as Array<{ name: string }>
-      const hasWorktreeSourceBranch = projectColumns.some((column) => column.name === 'worktree_source_branch')
+      const projectColumns = db.prepare(`PRAGMA table_info(projects)`).all() as Array<{
+        name: string
+      }>
+      const hasWorktreeSourceBranch = projectColumns.some(
+        (column) => column.name === 'worktree_source_branch'
+      )
       if (!hasWorktreeSourceBranch) {
         db.exec(`ALTER TABLE projects ADD COLUMN worktree_source_branch TEXT DEFAULT NULL`)
       }
@@ -1033,7 +1105,10 @@ const migrations: Migration[] = [
     version: 53,
     up: (db) => {
       db.exec(`ALTER TABLE tasks ADD COLUMN ccs_profile TEXT DEFAULT NULL`)
-      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`).run('ccs_enabled', '0')
+      db.prepare(`INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`).run(
+        'ccs_enabled',
+        '0'
+      )
     }
   },
   {
@@ -1177,7 +1252,7 @@ const migrations: Migration[] = [
         ['default_codex_flags', 'codex'],
         ['default_cursor_flags', 'cursor-agent'],
         ['default_gemini_flags', 'gemini'],
-        ['default_opencode_flags', 'opencode'],
+        ['default_opencode_flags', 'opencode']
       ]
       const readSetting = db.prepare('SELECT value FROM settings WHERE key = ?')
       const updateMode = db.prepare('UPDATE terminal_modes SET default_flags = ? WHERE id = ?')
@@ -1282,24 +1357,35 @@ const migrations: Migration[] = [
   {
     version: 69,
     up: (db) => {
-      const row = db.prepare(`SELECT value FROM settings WHERE key = 'panel_config'`).get() as { value: string } | undefined
+      const row = db.prepare(`SELECT value FROM settings WHERE key = 'panel_config'`).get() as
+        | { value: string }
+        | undefined
       if (!row) return
       try {
-        const config = JSON.parse(row.value) as { builtinEnabled?: Record<string, boolean>; viewEnabled?: Record<string, Record<string, boolean>>; [k: string]: unknown }
+        const config = JSON.parse(row.value) as {
+          builtinEnabled?: Record<string, boolean>
+          viewEnabled?: Record<string, Record<string, boolean>>
+          [k: string]: unknown
+        }
         if (config.viewEnabled) {
-          if (config.builtinEnabled) { delete config.builtinEnabled }
-          else return
+          if (config.builtinEnabled) {
+            delete config.builtinEnabled
+          } else return
         } else {
           const legacy = config.builtinEnabled ?? {}
           delete config.builtinEnabled
           const homeIds = new Set(['git', 'diff', 'editor', 'processes', 'tests'])
           config.viewEnabled = {
             home: Object.fromEntries(Object.entries(legacy).filter(([id]) => homeIds.has(id))),
-            task: { ...legacy },
+            task: { ...legacy }
           }
         }
-        db.prepare(`UPDATE settings SET value = ? WHERE key = 'panel_config'`).run(JSON.stringify(config))
-      } catch { /* malformed JSON, skip */ }
+        db.prepare(`UPDATE settings SET value = ? WHERE key = 'panel_config'`).run(
+          JSON.stringify(config)
+        )
+      } catch {
+        /* malformed JSON, skip */
+      }
     }
   },
   {
@@ -1409,11 +1495,13 @@ const migrations: Migration[] = [
   {
     version: 78,
     up: (db) => {
-      const rows = db.prepare(`
+      const rows = db
+        .prepare(`
         SELECT id, slug, content, metadata_json
         FROM ai_config_items
         WHERE type = 'skill'
-      `).all() as Array<{
+      `)
+        .all() as Array<{
         id: string
         slug: string
         content: string
@@ -1447,7 +1535,10 @@ const migrations: Migration[] = [
 
         const nextMetadata = parseJsonObject(row.metadata_json)
         delete nextMetadata.skillCanonical
-        nextMetadata.skillValidation = validateSkillFrontmatter(row.slug, parseSkillFrontmatter(nextContent))
+        nextMetadata.skillValidation = validateSkillFrontmatter(
+          row.slug,
+          parseSkillFrontmatter(nextContent)
+        )
         const nextMetadataJson = JSON.stringify(nextMetadata)
 
         if (nextContent !== row.content || nextMetadataJson !== row.metadata_json) {
@@ -1460,8 +1551,9 @@ const migrations: Migration[] = [
     version: 79,
     up: (db) => {
       // Seed Qwen Code as a new CLI provider in the Context Manager
-      db.prepare(`INSERT OR IGNORE INTO ai_config_sources (id, name, kind, enabled, status) VALUES (?, ?, ?, ?, ?)`)
-        .run('provider-qwen', 'Qwen Code', 'qwen', 0, 'active')
+      db.prepare(
+        `INSERT OR IGNORE INTO ai_config_sources (id, name, kind, enabled, status) VALUES (?, ?, ?, ?, ?)`
+      ).run('provider-qwen', 'Qwen Code', 'qwen', 0, 'active')
     }
   },
   {
@@ -1478,14 +1570,18 @@ const migrations: Migration[] = [
   {
     version: 81,
     up: (db) => {
-      const stmt = db.prepare(`INSERT OR IGNORE INTO ai_config_sources (id, name, kind, enabled, status) VALUES (?, ?, ?, ?, ?)`)
+      const stmt = db.prepare(
+        `INSERT OR IGNORE INTO ai_config_sources (id, name, kind, enabled, status) VALUES (?, ?, ?, ?, ?)`
+      )
       stmt.run('provider-copilot', 'Copilot', 'copilot', 0, 'active')
     }
   },
   {
     version: 82,
     up: (db) => {
-      db.exec(`ALTER TABLE integration_project_mappings ADD COLUMN assigned_to_me INTEGER DEFAULT 0`)
+      db.exec(
+        `ALTER TABLE integration_project_mappings ADD COLUMN assigned_to_me INTEGER DEFAULT 0`
+      )
     }
   },
   {
@@ -1498,7 +1594,9 @@ const migrations: Migration[] = [
     version: 84,
     up: (db) => {
       // Scope tags to projects + add sort_order
-      const firstProject = db.prepare('SELECT id FROM projects ORDER BY sort_order LIMIT 1').get() as { id: string } | undefined
+      const firstProject = db
+        .prepare('SELECT id FROM projects ORDER BY sort_order LIMIT 1')
+        .get() as { id: string } | undefined
       const fallbackProjectId = firstProject?.id ?? ''
 
       db.exec(`
@@ -1514,8 +1612,15 @@ const migrations: Migration[] = [
       `)
 
       // Migrate existing tags with alphabetical sort_order
-      const existingTags = db.prepare('SELECT * FROM tags ORDER BY name').all() as { id: string; name: string; color: string; created_at: string }[]
-      const insertTag = db.prepare('INSERT INTO tags_new (id, project_id, name, color, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+      const existingTags = db.prepare('SELECT * FROM tags ORDER BY name').all() as {
+        id: string
+        name: string
+        color: string
+        created_at: string
+      }[]
+      const insertTag = db.prepare(
+        'INSERT INTO tags_new (id, project_id, name, color, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+      )
       for (let i = 0; i < existingTags.length; i++) {
         const t = existingTags[i]
         insertTag.run(t.id, fallbackProjectId, t.name, t.color, i, t.created_at)
@@ -1795,23 +1900,39 @@ const migrations: Migration[] = [
 
       // Backfill: append extension to title if missing, set render_mode override if needed
       const typeToExt: Record<string, string> = {
-        markdown: '.md', code: '.txt', html: '.html', svg: '.svg', mermaid: '.mmd'
+        markdown: '.md',
+        code: '.txt',
+        html: '.html',
+        svg: '.svg',
+        mermaid: '.mmd'
       }
       const typeToRenderMode: Record<string, string> = {
-        markdown: 'markdown', code: 'code', html: 'html-preview', svg: 'svg-preview', mermaid: 'mermaid-preview'
+        markdown: 'markdown',
+        code: 'code',
+        html: 'html-preview',
+        svg: 'svg-preview',
+        mermaid: 'mermaid-preview'
       }
       // Extension → inferred render mode (mirrors EXTENSION_RENDER_MODES in types.ts)
       const extToRenderMode: Record<string, string> = {
-        '.md': 'markdown', '.mdx': 'markdown',
-        '.html': 'html-preview', '.htm': 'html-preview',
+        '.md': 'markdown',
+        '.mdx': 'markdown',
+        '.html': 'html-preview',
+        '.htm': 'html-preview',
         '.svg': 'svg-preview',
-        '.mmd': 'mermaid-preview', '.mermaid': 'mermaid-preview',
-        '.txt': 'code',
+        '.mmd': 'mermaid-preview',
+        '.mermaid': 'mermaid-preview',
+        '.txt': 'code'
       }
 
-      const assets = db.prepare('SELECT id, title, type FROM task_assets').all() as
-        { id: string; title: string; type: string }[]
-      const updateStmt = db.prepare('UPDATE task_assets SET title = ?, render_mode = ? WHERE id = ?')
+      const assets = db.prepare('SELECT id, title, type FROM task_assets').all() as {
+        id: string
+        title: string
+        type: string
+      }[]
+      const updateStmt = db.prepare(
+        'UPDATE task_assets SET title = ?, render_mode = ? WHERE id = ?'
+      )
 
       for (const asset of assets) {
         const ext = typeToExt[asset.type] ?? '.txt'
@@ -1936,15 +2057,21 @@ const migrations: Migration[] = [
       // Disable floating agent panel by default — alwaysOnTop + visibleOnAllWorkspaces
       // broke macOS tiling window managers (Magnet, Rectangle). Reset existing users
       // who had the old default (true) so they don't stay broken.
-      const row = db.prepare("SELECT value FROM settings WHERE key = 'agentPanelState'").get() as { value: string } | undefined
+      const row = db.prepare("SELECT value FROM settings WHERE key = 'agentPanelState'").get() as
+        | { value: string }
+        | undefined
       if (!row) return
       try {
         const state = JSON.parse(row.value)
         if (state.floatingEnabled === true) {
           state.floatingEnabled = false
-          db.prepare("UPDATE settings SET value = ? WHERE key = 'agentPanelState'").run(JSON.stringify(state))
+          db.prepare("UPDATE settings SET value = ? WHERE key = 'agentPanelState'").run(
+            JSON.stringify(state)
+          )
         }
-      } catch { /* malformed JSON, skip */ }
+      } catch {
+        /* malformed JSON, skip */
+      }
     }
   },
   {
@@ -2146,16 +2273,14 @@ const migrations: Migration[] = [
       // poisoning surface). Backfill via git for existing rows; rows whose
       // repo can't be reached stay NULL → filter treats as stale (drops).
       db.exec(`ALTER TABLE agent_turns ADD COLUMN head_sha_at_snap TEXT`)
-      const rows = db.prepare(
-        `SELECT id, worktree_path, snapshot_sha FROM agent_turns`
-      ).all() as Array<{ id: string; worktree_path: string; snapshot_sha: string }>
-      const update = db.prepare(
-        `UPDATE agent_turns SET head_sha_at_snap = ? WHERE id = ?`
-      )
+      const rows = db
+        .prepare(`SELECT id, worktree_path, snapshot_sha FROM agent_turns`)
+        .all() as Array<{ id: string; worktree_path: string; snapshot_sha: string }>
+      const update = db.prepare(`UPDATE agent_turns SET head_sha_at_snap = ? WHERE id = ?`)
       for (const row of rows) {
         const r = spawnSync('git', ['rev-parse', `${row.snapshot_sha}^`], {
           cwd: row.worktree_path,
-          encoding: 'utf-8',
+          encoding: 'utf-8'
         })
         if (r.status === 0) {
           const sha = r.stdout.trim()
@@ -2200,7 +2325,7 @@ const migrations: Migration[] = [
         { bg: '#9d174d', text: '#fce7f3' },
         { bg: '#e5e7eb', text: '#1f2937' },
         { bg: '#6b7280', text: '#ffffff' },
-        { bg: '#374151', text: '#e5e7eb' },
+        { bg: '#374151', text: '#e5e7eb' }
       ]
       const presetKey = (bg: string, text: string) => `${bg}:${text}`
       const presetSet = new Set(PRESETS.map((p) => presetKey(p.bg, p.text)))
@@ -2208,7 +2333,11 @@ const migrations: Migration[] = [
         const m = /^#([0-9a-f]{6})$/i.exec(hex)
         if (!m) return null
         const v = m[1]
-        return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)]
+        return [
+          parseInt(v.slice(0, 2), 16),
+          parseInt(v.slice(2, 4), 16),
+          parseInt(v.slice(4, 6), 16)
+        ]
       }
       const nearestPreset = (bg: string): { bg: string; text: string } => {
         const rgb = parseHex(bg)
@@ -2222,7 +2351,10 @@ const migrations: Migration[] = [
           const dg = rgb[1] - prgb[1]
           const db = rgb[2] - prgb[2]
           const dist = dr * dr + dg * dg + db * db
-          if (dist < bestDist) { bestDist = dist; best = p }
+          if (dist < bestDist) {
+            bestDist = dist
+            best = p
+          }
         }
         return best
       }
@@ -2230,9 +2362,11 @@ const migrations: Migration[] = [
       const updateColor = db.prepare('UPDATE tags SET color = ?, text_color = ? WHERE id = ?')
 
       // Step 1 — force all custom (non-preset) colors to nearest preset.
-      const allTags = db.prepare(
-        'SELECT id, project_id, color, text_color FROM tags ORDER BY created_at ASC, id ASC'
-      ).all() as Array<{ id: string; project_id: string; color: string; text_color: string }>
+      const allTags = db
+        .prepare(
+          'SELECT id, project_id, color, text_color FROM tags ORDER BY created_at ASC, id ASC'
+        )
+        .all() as Array<{ id: string; project_id: string; color: string; text_color: string }>
       for (const tag of allTags) {
         if (!presetSet.has(presetKey(tag.color, tag.text_color))) {
           const np = nearestPreset(tag.color)
@@ -2285,9 +2419,11 @@ const migrations: Migration[] = [
       }
 
       // Step 3 — boot-safe unique index. Skip if collisions remain (overflow).
-      const remaining = db.prepare(
-        `SELECT 1 FROM tags GROUP BY project_id, color, text_color HAVING COUNT(*) > 1 LIMIT 1`
-      ).get() as unknown
+      const remaining = db
+        .prepare(
+          `SELECT 1 FROM tags GROUP BY project_id, color, text_color HAVING COUNT(*) > 1 LIMIT 1`
+        )
+        .get() as unknown
       if (!remaining) {
         db.exec(
           `CREATE UNIQUE INDEX IF NOT EXISTS tags_project_color_unique ON tags(project_id, color, text_color)`
@@ -2312,8 +2448,8 @@ const migrations: Migration[] = [
       // CLI invocation w/ {prompt} + {flags} slots. Powers automations' AI action.
       // Null = mode does not support headless mode (e.g. plain 'terminal').
       // Builtins seeded by startup-sync; users can edit per-row for custom modes.
-      const cols = db.prepare("PRAGMA table_info(terminal_modes)").all() as { name: string }[]
-      if (!cols.some(c => c.name === 'headless_command')) {
+      const cols = db.prepare('PRAGMA table_info(terminal_modes)').all() as { name: string }[]
+      if (!cols.some((c) => c.name === 'headless_command')) {
         db.exec(`ALTER TABLE terminal_modes ADD COLUMN headless_command TEXT;`)
       }
     }
@@ -2433,7 +2569,9 @@ const migrations: Migration[] = [
             }
           }
           if (changed) {
-            db.prepare(`UPDATE settings SET value = ? WHERE key = 'panel_config'`).run(JSON.stringify(cfg))
+            db.prepare(`UPDATE settings SET value = ? WHERE key = 'panel_config'`).run(
+              JSON.stringify(cfg)
+            )
           }
         } catch {
           /* malformed JSON, skip */
@@ -2499,7 +2637,7 @@ const migrations: Migration[] = [
       //   floatingAgentConfig       → floatingGlobalAgentPanelConfig
       const renames: Array<[string, string]> = [
         ['floatingAgentExpandedSize', 'floatingGlobalAgentPanelExpandedSize'],
-        ['floatingAgentConfig', 'floatingGlobalAgentPanelConfig'],
+        ['floatingAgentConfig', 'floatingGlobalAgentPanelConfig']
       ]
       for (const [from, to] of renames) {
         db.prepare(`
@@ -2507,7 +2645,7 @@ const migrations: Migration[] = [
           WHERE key = ?
             AND NOT EXISTS (SELECT 1 FROM settings WHERE key = ?)
         `).run(to, from, to)
-        db.prepare("DELETE FROM settings WHERE key = ?").run(from)
+        db.prepare('DELETE FROM settings WHERE key = ?').run(from)
       }
     }
   },
@@ -2518,7 +2656,7 @@ const migrations: Migration[] = [
         ['--full-auto', '--sandbox workspace-write'],
         ['--full-auto --search', '--sandbox workspace-write'],
         ['--full-auto --disable apps', '--sandbox workspace-write --disable apps'],
-        ['--full-auto --search --disable apps', '--sandbox workspace-write --disable apps'],
+        ['--full-auto --search --disable apps', '--sandbox workspace-write --disable apps']
       ])
 
       const migrateFlags = (flags: unknown): string | null => {
@@ -2548,11 +2686,13 @@ const migrations: Migration[] = [
         updateTaskFlags.run(to, from)
       }
 
-      const rows = db.prepare(`
+      const rows = db
+        .prepare(`
         SELECT id, provider_config
         FROM tasks
         WHERE provider_config LIKE '%--full-auto%'
-      `).all() as Array<{ id: string; provider_config: string | null }>
+      `)
+        .all() as Array<{ id: string; provider_config: string | null }>
       const updateProviderConfig = db.prepare(`
         UPDATE tasks
         SET provider_config = ?, updated_at = datetime('now')

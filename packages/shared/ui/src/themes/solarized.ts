@@ -41,7 +41,7 @@ export const solarized: UnifiedThemeDefinition = {
       surface2: '#073642',
       surface3: '#0d4050',
       modal: '#00212b',
-      modalBorder: 'rgba(255, 255, 255, 0.25)',
+      modalBorder: 'rgba(255, 255, 255, 0.25)'
     },
     terminal: {
       background: '#002b36',
@@ -65,7 +65,7 @@ export const solarized: UnifiedThemeDefinition = {
       brightBlue: '#839496',
       brightMagenta: '#6c71c4',
       brightCyan: '#93a1a1',
-      brightWhite: '#fdf6e3',
+      brightWhite: '#fdf6e3'
     },
     editor: {
       background: '#002b36',
@@ -85,8 +85,8 @@ export const solarized: UnifiedThemeDefinition = {
       variable: '#839496',
       property: '#268bd2',
       link: '#268bd2',
-      heading: '#839496',
-    },
+      heading: '#839496'
+    }
   },
   light: {
     chrome: {
@@ -126,7 +126,7 @@ export const solarized: UnifiedThemeDefinition = {
       surface2: '#fdf6e3',
       surface3: '#ffffff',
       modal: '#e8e2d0',
-      modalBorder: 'rgba(0, 0, 0, 0.35)',
+      modalBorder: 'rgba(0, 0, 0, 0.35)'
     },
     terminal: {
       background: '#fdf6e3',
@@ -150,7 +150,7 @@ export const solarized: UnifiedThemeDefinition = {
       brightBlue: '#839496',
       brightMagenta: '#6c71c4',
       brightCyan: '#93a1a1',
-      brightWhite: '#fdf6e3',
+      brightWhite: '#fdf6e3'
     },
     editor: {
       background: '#fdf6e3',
@@ -170,7 +170,7 @@ export const solarized: UnifiedThemeDefinition = {
       variable: '#657b83',
       property: '#268bd2',
       link: '#268bd2',
-      heading: '#657b83',
-    },
-  },
+      heading: '#657b83'
+    }
+  }
 }

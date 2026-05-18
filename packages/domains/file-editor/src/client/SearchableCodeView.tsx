@@ -1,14 +1,41 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, type MutableRefObject } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  type MutableRefObject
+} from 'react'
 import { useTheme } from '@slayzone/settings/client'
 import { getThemeEditorColors } from '@slayzone/ui'
-import { EditorView, lineNumbers, highlightActiveLineGutter, highlightActiveLine, drawSelection, dropCursor } from '@codemirror/view'
-import { EditorState, Compartment, StateField, StateEffect, RangeSetBuilder } from '@codemirror/state'
+import {
+  EditorView,
+  lineNumbers,
+  highlightActiveLineGutter,
+  highlightActiveLine,
+  drawSelection,
+  dropCursor
+} from '@codemirror/view'
+import {
+  EditorState,
+  Compartment,
+  StateField,
+  StateEffect,
+  RangeSetBuilder
+} from '@codemirror/state'
 import { buildMinimap as buildMinimapExt, cmScrollbarTheme } from './cm-shared-themes'
 import { Decoration } from '@codemirror/view'
 import { SearchCursor, RegExpCursor } from '@codemirror/search'
 import { history, defaultKeymap, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { keymap } from '@codemirror/view'
-import { indentUnit, bracketMatching, syntaxHighlighting, defaultHighlightStyle, foldGutter, foldKeymap } from '@codemirror/language'
+import {
+  indentUnit,
+  bracketMatching,
+  syntaxHighlighting,
+  defaultHighlightStyle,
+  foldGutter,
+  foldKeymap
+} from '@codemirror/language'
 import { javascript } from '@codemirror/lang-javascript'
 import { json } from '@codemirror/lang-json'
 import { css } from '@codemirror/lang-css'
@@ -23,19 +50,39 @@ import { buildCodeMirrorTheme } from './codemirror-theme'
 
 function getLanguageByExt(ext: string | undefined) {
   switch (ext?.toLowerCase()) {
-    case 'js': case 'jsx': case 'mjs': return javascript()
-    case 'ts': case 'mts': return javascript({ typescript: true })
-    case 'tsx': return javascript({ typescript: true, jsx: true })
-    case 'json': return json()
-    case 'css': return css()
-    case 'html': case 'htm': return html()
-    case 'md': case 'mdx': return markdown()
-    case 'py': return python()
-    case 'go': return go()
-    case 'yaml': case 'yml': return yaml()
-    case 'sql': return sql()
-    case 'tf': case 'tfvars': return hcl()
-    default: return null
+    case 'js':
+    case 'jsx':
+    case 'mjs':
+      return javascript()
+    case 'ts':
+    case 'mts':
+      return javascript({ typescript: true })
+    case 'tsx':
+      return javascript({ typescript: true, jsx: true })
+    case 'json':
+      return json()
+    case 'css':
+      return css()
+    case 'html':
+    case 'htm':
+      return html()
+    case 'md':
+    case 'mdx':
+      return markdown()
+    case 'py':
+      return python()
+    case 'go':
+      return go()
+    case 'yaml':
+    case 'yml':
+      return yaml()
+    case 'sql':
+      return sql()
+    case 'tf':
+    case 'tfvars':
+      return hcl()
+    default:
+      return null
   }
 }
 
@@ -50,9 +97,19 @@ interface SearchState {
   matches: Array<{ from: number; to: number }>
 }
 
-const setSearchEffect = StateEffect.define<{ query: string; activeIndex: number; matchCase: boolean; regex: boolean }>()
+const setSearchEffect = StateEffect.define<{
+  query: string
+  activeIndex: number
+  matchCase: boolean
+  regex: boolean
+}>()
 
-function computeMatches(state: EditorState, query: string, matchCase: boolean, regex: boolean): Array<{ from: number; to: number }> {
+function computeMatches(
+  state: EditorState,
+  query: string,
+  matchCase: boolean,
+  regex: boolean
+): Array<{ from: number; to: number }> {
   if (!query.trim()) return []
   const result: Array<{ from: number; to: number }> = []
   try {
@@ -63,13 +120,21 @@ function computeMatches(state: EditorState, query: string, matchCase: boolean, r
         if (v.to > v.from) result.push({ from: v.from, to: v.to })
       }
     } else {
-      const cursor = new SearchCursor(state.doc, query, 0, state.doc.length, matchCase ? undefined : (x: string) => x.toLowerCase())
+      const cursor = new SearchCursor(
+        state.doc,
+        query,
+        0,
+        state.doc.length,
+        matchCase ? undefined : (x: string) => x.toLowerCase()
+      )
       while (!cursor.next().done) {
         const v = cursor.value
         if (v.to > v.from) result.push({ from: v.from, to: v.to })
       }
     }
-  } catch { /* invalid regex */ }
+  } catch {
+    /* invalid regex */
+  }
   return result
 }
 
@@ -81,7 +146,13 @@ function buildSearchField() {
       let recompute = false
       for (const e of tr.effects) {
         if (e.is(setSearchEffect)) {
-          next = { ...next, query: e.value.query, activeIndex: e.value.activeIndex, matchCase: e.value.matchCase, regex: e.value.regex }
+          next = {
+            ...next,
+            query: e.value.query,
+            activeIndex: e.value.activeIndex,
+            matchCase: e.value.matchCase,
+            regex: e.value.regex
+          }
           recompute = true
         }
       }
@@ -89,12 +160,12 @@ function buildSearchField() {
       if (!recompute) return next
       const matches = computeMatches(tr.state, next.query, next.matchCase, next.regex)
       return { ...next, matches }
-    },
+    }
   })
 }
 
 function searchDecorations(field: StateField<SearchState>) {
-  return EditorView.decorations.compute([field], state => {
+  return EditorView.decorations.compute([field], (state) => {
     const s = state.field(field)
     if (s.matches.length === 0) return Decoration.none
     const builder = new RangeSetBuilder<Decoration>()
@@ -129,154 +200,191 @@ export interface SearchableCodeViewHandle {
   focusLine: (line: number) => void
 }
 
-export const SearchableCodeView = forwardRef<SearchableCodeViewHandle, SearchableCodeViewProps>(function SearchableCodeView({
-  value, onChange, fileExt, version,
-  searchQuery = '', searchActiveIndex = 0, searchMatchCase = false, searchRegex = false,
-  onSearchMatchCountChange,
-  fontSize = 12,
-  placeholder,
-  minimap,
-  viewHandleRef,
-}, ref) {
-  const { editorThemeId, contentVariant } = useTheme()
-  const themeExt = useMemo(
-    () => buildCodeMirrorTheme(getThemeEditorColors(editorThemeId, contentVariant), contentVariant === 'dark'),
-    [editorThemeId, contentVariant]
-  )
-  const sizeTheme = useMemo(() => EditorView.theme({
-    '&': { height: '100%', fontSize: `${fontSize}px` },
-    '.cm-content': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' },
-  }), [fontSize])
+export const SearchableCodeView = forwardRef<SearchableCodeViewHandle, SearchableCodeViewProps>(
+  function SearchableCodeView(
+    {
+      value,
+      onChange,
+      fileExt,
+      version,
+      searchQuery = '',
+      searchActiveIndex = 0,
+      searchMatchCase = false,
+      searchRegex = false,
+      onSearchMatchCountChange,
+      fontSize = 12,
+      placeholder,
+      minimap,
+      viewHandleRef
+    },
+    ref
+  ) {
+    const { editorThemeId, contentVariant } = useTheme()
+    const themeExt = useMemo(
+      () =>
+        buildCodeMirrorTheme(
+          getThemeEditorColors(editorThemeId, contentVariant),
+          contentVariant === 'dark'
+        ),
+      [editorThemeId, contentVariant]
+    )
+    const sizeTheme = useMemo(
+      () =>
+        EditorView.theme({
+          '&': { height: '100%', fontSize: `${fontSize}px` },
+          '.cm-content': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }
+        }),
+      [fontSize]
+    )
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const viewRef = useRef<EditorView | null>(null)
-  const searchFieldRef = useRef<StateField<SearchState> | null>(null)
-  const onChangeRef = useRef(onChange)
-  const onMatchCountRef = useRef(onSearchMatchCountChange)
-  const contentRef = useRef(value)
-  const suppressOnChange = useRef(false)
-  onChangeRef.current = onChange
-  onMatchCountRef.current = onSearchMatchCountChange
-  contentRef.current = value
+    const containerRef = useRef<HTMLDivElement>(null)
+    const viewRef = useRef<EditorView | null>(null)
+    const searchFieldRef = useRef<StateField<SearchState> | null>(null)
+    const onChangeRef = useRef(onChange)
+    const onMatchCountRef = useRef(onSearchMatchCountChange)
+    const contentRef = useRef(value)
+    const suppressOnChange = useRef(false)
+    onChangeRef.current = onChange
+    onMatchCountRef.current = onSearchMatchCountChange
+    contentRef.current = value
 
-  const themeComp = useRef(new Compartment())
-  const minimapComp = useRef(new Compartment())
+    const themeComp = useRef(new Compartment())
+    const minimapComp = useRef(new Compartment())
 
-  // Create editor on mount / language change
-  useEffect(() => {
-    if (!containerRef.current) return
+    // Create editor on mount / language change
+    useEffect(() => {
+      if (!containerRef.current) return
 
-    const searchField = buildSearchField()
-    searchFieldRef.current = searchField
-    const lang = getLanguageByExt(fileExt)
+      const searchField = buildSearchField()
+      searchFieldRef.current = searchField
+      const lang = getLanguageByExt(fileExt)
 
-    const lastReportedCount = { n: -1 }
+      const lastReportedCount = { n: -1 }
 
-    const extensions = [
-      lineNumbers(),
-      highlightActiveLineGutter(),
-      highlightActiveLine(),
-      history(),
-      drawSelection(),
-      dropCursor(),
-      foldGutter(),
-      bracketMatching(),
-      syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-      EditorView.lineWrapping,
-      indentUnit.of('  '),
-      keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap, indentWithTab]),
-      themeComp.current.of(themeExt),
-      cmScrollbarTheme,
-      minimapComp.current.of(minimap ? buildMinimapExt() : []),
-      sizeTheme,
-      searchField,
-      searchDecorations(searchField),
-      EditorView.updateListener.of((update) => {
-        if (update.docChanged && !suppressOnChange.current) {
-          onChangeRef.current(update.state.doc.toString())
-        }
-        const count = update.state.field(searchField).matches.length
-        if (count !== lastReportedCount.n) {
-          lastReportedCount.n = count
-          onMatchCountRef.current?.(count)
-        }
-      }),
-    ]
-    if (lang) extensions.splice(0, 0, lang)
+      const extensions = [
+        lineNumbers(),
+        highlightActiveLineGutter(),
+        highlightActiveLine(),
+        history(),
+        drawSelection(),
+        dropCursor(),
+        foldGutter(),
+        bracketMatching(),
+        syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+        EditorView.lineWrapping,
+        indentUnit.of('  '),
+        keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap, indentWithTab]),
+        themeComp.current.of(themeExt),
+        cmScrollbarTheme,
+        minimapComp.current.of(minimap ? buildMinimapExt() : []),
+        sizeTheme,
+        searchField,
+        searchDecorations(searchField),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged && !suppressOnChange.current) {
+            onChangeRef.current(update.state.doc.toString())
+          }
+          const count = update.state.field(searchField).matches.length
+          if (count !== lastReportedCount.n) {
+            lastReportedCount.n = count
+            onMatchCountRef.current?.(count)
+          }
+        })
+      ]
+      if (lang) extensions.splice(0, 0, lang)
 
-    const state = EditorState.create({ doc: value, extensions })
-    const view = new EditorView({ state, parent: containerRef.current })
-    viewRef.current = view
-    if (viewHandleRef) viewHandleRef.current = view
+      const state = EditorState.create({ doc: value, extensions })
+      const view = new EditorView({ state, parent: containerRef.current })
+      viewRef.current = view
+      if (viewHandleRef) viewHandleRef.current = view
 
-    return () => {
-      view.destroy()
-      viewRef.current = null
-      if (viewHandleRef) viewHandleRef.current = null
-      searchFieldRef.current = null
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fileExt, sizeTheme])
+      return () => {
+        view.destroy()
+        viewRef.current = null
+        if (viewHandleRef) viewHandleRef.current = null
+        searchFieldRef.current = null
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fileExt, sizeTheme])
 
-  // Reconfigure theme at runtime
-  useEffect(() => {
-    const view = viewRef.current
-    if (!view) return
-    view.dispatch({ effects: [themeComp.current.reconfigure(themeExt)] })
-  }, [themeExt])
-
-  // Reconfigure minimap at runtime
-  useEffect(() => {
-    const view = viewRef.current
-    if (!view) return
-    view.dispatch({ effects: [minimapComp.current.reconfigure(minimap ? buildMinimapExt() : [])] })
-  }, [minimap])
-
-  // Replace editor content when version bumps
-  useEffect(() => {
-    if (version === undefined || !viewRef.current) return
-    const view = viewRef.current
-    const currentDoc = view.state.doc.toString()
-    if (currentDoc !== contentRef.current) {
-      suppressOnChange.current = true
-      view.dispatch({
-        changes: { from: 0, to: currentDoc.length, insert: contentRef.current }
-      })
-      suppressOnChange.current = false
-    }
-  }, [version])
-
-  // Push search state into the editor, scroll active match into view
-  useEffect(() => {
-    const view = viewRef.current
-    const field = searchFieldRef.current
-    if (!view || !field) return
-    view.dispatch({ effects: setSearchEffect.of({ query: searchQuery, activeIndex: searchActiveIndex, matchCase: searchMatchCase, regex: searchRegex }) })
-    const s = view.state.field(field)
-    if (s.matches.length === 0) return
-    const activeMod = ((searchActiveIndex % s.matches.length) + s.matches.length) % s.matches.length
-    const target = s.matches[activeMod]
-    if (target) {
-      view.dispatch({ effects: EditorView.scrollIntoView(target.from, { y: 'center' }) })
-    }
-  }, [searchQuery, searchActiveIndex, searchMatchCase, searchRegex])
-
-  useImperativeHandle(ref, () => ({
-    focusLine: (line: number) => {
+    // Reconfigure theme at runtime
+    useEffect(() => {
       const view = viewRef.current
       if (!view) return
-      const total = view.state.doc.lines
-      const target = Math.max(1, Math.min(total, line))
-      const from = view.state.doc.line(target).from
-      view.dispatch({
-        selection: { anchor: from },
-        effects: EditorView.scrollIntoView(from, { y: 'center' }),
-      })
-      view.focus()
-    },
-  }), [])
+      view.dispatch({ effects: [themeComp.current.reconfigure(themeExt)] })
+    }, [themeExt])
 
-  return (
-    <div ref={containerRef} className="h-full w-full overflow-hidden" data-placeholder={placeholder} />
-  )
-})
+    // Reconfigure minimap at runtime
+    useEffect(() => {
+      const view = viewRef.current
+      if (!view) return
+      view.dispatch({
+        effects: [minimapComp.current.reconfigure(minimap ? buildMinimapExt() : [])]
+      })
+    }, [minimap])
+
+    // Replace editor content when version bumps
+    useEffect(() => {
+      if (version === undefined || !viewRef.current) return
+      const view = viewRef.current
+      const currentDoc = view.state.doc.toString()
+      if (currentDoc !== contentRef.current) {
+        suppressOnChange.current = true
+        view.dispatch({
+          changes: { from: 0, to: currentDoc.length, insert: contentRef.current }
+        })
+        suppressOnChange.current = false
+      }
+    }, [version])
+
+    // Push search state into the editor, scroll active match into view
+    useEffect(() => {
+      const view = viewRef.current
+      const field = searchFieldRef.current
+      if (!view || !field) return
+      view.dispatch({
+        effects: setSearchEffect.of({
+          query: searchQuery,
+          activeIndex: searchActiveIndex,
+          matchCase: searchMatchCase,
+          regex: searchRegex
+        })
+      })
+      const s = view.state.field(field)
+      if (s.matches.length === 0) return
+      const activeMod =
+        ((searchActiveIndex % s.matches.length) + s.matches.length) % s.matches.length
+      const target = s.matches[activeMod]
+      if (target) {
+        view.dispatch({ effects: EditorView.scrollIntoView(target.from, { y: 'center' }) })
+      }
+    }, [searchQuery, searchActiveIndex, searchMatchCase, searchRegex])
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        focusLine: (line: number) => {
+          const view = viewRef.current
+          if (!view) return
+          const total = view.state.doc.lines
+          const target = Math.max(1, Math.min(total, line))
+          const from = view.state.doc.line(target).from
+          view.dispatch({
+            selection: { anchor: from },
+            effects: EditorView.scrollIntoView(from, { y: 'center' })
+          })
+          view.focus()
+        }
+      }),
+      []
+    )
+
+    return (
+      <div
+        ref={containerRef}
+        className="h-full w-full overflow-hidden"
+        data-placeholder={placeholder}
+      />
+    )
+  }
+)

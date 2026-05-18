@@ -37,7 +37,7 @@ function expect<T>(actual: T) {
     },
     toBeTruthy() {
       if (!actual) throw new Error(`Expected truthy, got ${JSON.stringify(actual)}`)
-    },
+    }
   }
 }
 
@@ -55,7 +55,7 @@ function makeFakeChild(): FakeChild {
     write: (s: string) => {
       stdinRef.value += s
       return true
-    },
+    }
   }
   const fake = Object.assign(emitter, {
     stdout,
@@ -65,7 +65,7 @@ function makeFakeChild(): FakeChild {
     kill: (_sig?: string) => true,
     _stdinRef: stdinRef,
     _stdout: stdout,
-    _stderr: stderr,
+    _stderr: stderr
   })
   return fake as unknown as FakeChild
 }
@@ -99,11 +99,11 @@ await test('createChat: unknown mode → throws ChatTransportError', async () =>
   try {
     await createChat({
       tabId: 't1',
-    taskId: 'task-test',
+      taskId: 'task-test',
       mode: 'nonexistent-mode',
       cwd: '/tmp',
       conversationId: null,
-      providerFlags: [],
+      providerFlags: []
     })
   } catch (e) {
     err = e as Error
@@ -118,17 +118,17 @@ await test('createChat: missing binary → throws ChatTransportError', async () 
     whichBinary: async () => null,
     spawn: () => makeFakeChild() as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   let err: Error | null = null
   try {
     await createChat({
       tabId: 't2',
-    taskId: 'task-test',
+      taskId: 'task-test',
       mode: 'claude-code',
       cwd: '/tmp',
       conversationId: null,
-      providerFlags: [],
+      providerFlags: []
     })
   } catch (e) {
     err = e as Error
@@ -146,7 +146,7 @@ await test('createChat: pipes fixture NDJSON → emits typed events + ring buffe
     broadcastEvent: (tabId, event, seq) => {
       captured.push({ tabId, kind: event.kind, seq })
     },
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-x',
@@ -154,7 +154,7 @@ await test('createChat: pipes fixture NDJSON → emits typed events + ring buffe
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   const raw = readFileSync(resolve(fixtureDir(), 'bash.ndjson'), 'utf8')
   fake._stdout.write(raw)
@@ -178,7 +178,7 @@ await test('getEventBufferSince: returns only events with seq > afterSeq', async
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-y',
@@ -186,7 +186,7 @@ await test('getEventBufferSince: returns only events with seq > afterSeq', async
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   fake._stdout.write(readFileSync(resolve(fixtureDir(), 'bash.ndjson'), 'utf8'))
   await new Promise((r) => setTimeout(r, 50))
@@ -203,7 +203,7 @@ await test('persist callback fires on turn-init', async () => {
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   const persisted: string[] = []
   await createChat({
@@ -213,7 +213,7 @@ await test('persist callback fires on turn-init', async () => {
     cwd: '/tmp',
     conversationId: null,
     providerFlags: [],
-    onPersistSessionId: (id) => persisted.push(id),
+    onPersistSessionId: (id) => persisted.push(id)
   })
   fake._stdout.write(readFileSync(resolve(fixtureDir(), 'bash.ndjson'), 'utf8'))
   await new Promise((r) => setTimeout(r, 50))
@@ -228,7 +228,7 @@ await test('sendUserMessage: writes NDJSON line to stdin', async () => {
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-msg',
@@ -236,7 +236,7 @@ await test('sendUserMessage: writes NDJSON line to stdin', async () => {
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   const ok = mgr.sendUserMessage('tab-msg', 'hello')
   expect(ok).toBe(true)
@@ -253,7 +253,7 @@ await test('sendToolResult: writes NDJSON tool_result envelope keyed by tool_use
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-tr',
@@ -261,11 +261,11 @@ await test('sendToolResult: writes NDJSON tool_result envelope keyed by tool_use
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   const ok = mgr.sendToolResult('tab-tr', {
     toolUseId: 'tu_99',
-    content: '{"answers":{"Pick":"A"}}',
+    content: '{"answers":{"Pick":"A"}}'
   })
   expect(ok).toBe(true)
   const line = fake._stdinRef.value.trim()
@@ -291,7 +291,7 @@ await test('sendControlRequest: writes envelope + resolves on matching control_r
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-ctrl',
@@ -299,12 +299,12 @@ await test('sendControlRequest: writes envelope + resolves on matching control_r
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
 
   const promise = mgr.sendControlRequest('tab-ctrl', {
     subtype: 'set_permission_mode',
-    mode: 'acceptEdits',
+    mode: 'acceptEdits'
   })
 
   // Stdin must contain the envelope. Pull the line, scrape its request_id,
@@ -319,7 +319,7 @@ await test('sendControlRequest: writes envelope + resolves on matching control_r
   fake._stdout.write(
     JSON.stringify({
       type: 'control_response',
-      response: { subtype: 'success', request_id: requestId },
+      response: { subtype: 'success', request_id: requestId }
     }) + '\n'
   )
 
@@ -334,7 +334,7 @@ await test('sendControlRequest: rejects on error subtype', async () => {
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-ctrl-err',
@@ -342,15 +342,18 @@ await test('sendControlRequest: rejects on error subtype', async () => {
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
 
-  const promise = mgr.sendControlRequest('tab-ctrl-err', { subtype: 'set_permission_mode', mode: 'plan' })
+  const promise = mgr.sendControlRequest('tab-ctrl-err', {
+    subtype: 'set_permission_mode',
+    mode: 'plan'
+  })
   const parsed = JSON.parse(fake._stdinRef.value.trim())
   fake._stdout.write(
     JSON.stringify({
       type: 'control_response',
-      response: { subtype: 'error', request_id: parsed.request_id, error: 'rejected by SDK' },
+      response: { subtype: 'error', request_id: parsed.request_id, error: 'rejected by SDK' }
     }) + '\n'
   )
 
@@ -370,7 +373,7 @@ await test('respondToPermissionRequest: writes control_response success on stdin
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-perm',
@@ -378,12 +381,12 @@ await test('respondToPermissionRequest: writes control_response success on stdin
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
 
   const ok = mgr.respondToPermissionRequest('tab-perm', {
     requestId: 'cu_42',
-    decision: { behavior: 'allow', updatedInput: { answers: { Q: 'A' } } },
+    decision: { behavior: 'allow', updatedInput: { answers: { Q: 'A' } } }
   })
   expect(ok).toBe(true)
   const line = fake._stdinRef.value.trim()
@@ -398,7 +401,7 @@ await test('respondToPermissionRequest: false for unknown tab', async () => {
   await setup()
   const ok = mgr.respondToPermissionRequest('nonexistent-tab', {
     requestId: 'x',
-    decision: { behavior: 'deny', message: 'no' },
+    decision: { behavior: 'deny', message: 'no' }
   })
   expect(ok).toBe(false)
 })
@@ -410,7 +413,7 @@ await test('sendControlRequest: rejects when adapter has no control channel', as
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   // Register a stub adapter with no serializeControlRequest. Re-using the
   // claude adapter id would clash; use a fresh id and register via the public
@@ -441,7 +444,7 @@ await test('invalid --resume: onInvalidResume fires + auto-retry with fresh sess
       return f as unknown as ChildProcess
     },
     broadcastEvent: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-resume',
@@ -451,7 +454,7 @@ await test('invalid --resume: onInvalidResume fires + auto-retry with fresh sess
     conversationId: 'stale-session-id',
     providerFlags: [],
     onPersistSessionId: (id) => persisted.push(id),
-    onInvalidResume: () => invalidResumeCalled++,
+    onInvalidResume: () => invalidResumeCalled++
   })
   expect(spawnCount).toBe(1)
   expect(lastArgs[0].includes('--resume')).toBe(true)
@@ -468,7 +471,7 @@ await test('invalid --resume: onInvalidResume fires + auto-retry with fresh sess
       duration_api_ms: 0,
       num_turns: 0,
       total_cost_usd: 0,
-      result: 'No conversation found with session ID: stale-session-id',
+      result: 'No conversation found with session ID: stale-session-id'
     }) + '\n'
   )
   // Let readline flush + setImmediate fire.
@@ -501,7 +504,7 @@ await test('invalid --resume: failed spawn events never broadcast or persist', a
     broadcastEvent: (tabId, event) => broadcastEvents.push({ tabId, kind: event.kind }),
     broadcastExit: () => {},
     broadcastStateChange: () => {},
-    persistEvent: (tabId, _seq, event) => persistedEvents.push({ tabId, kind: event.kind }),
+    persistEvent: (tabId, _seq, event) => persistedEvents.push({ tabId, kind: event.kind })
   })
   await createChat({
     tabId: 'tab-stage',
@@ -509,7 +512,7 @@ await test('invalid --resume: failed spawn events never broadcast or persist', a
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: 'stale-uuid',
-    providerFlags: [],
+    providerFlags: []
   })
 
   const first = fakes[0]
@@ -525,7 +528,7 @@ await test('invalid --resume: failed spawn events never broadcast or persist', a
       duration_api_ms: 0,
       num_turns: 0,
       total_cost_usd: 0,
-      result: 'No conversation found with session ID: stale-uuid',
+      result: 'No conversation found with session ID: stale-uuid'
     }) + '\n'
   )
   await new Promise((r) => setTimeout(r, 150))
@@ -554,7 +557,7 @@ await test('valid --resume: first healthy event flushes staged events in order',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: (_tab, event, seq) => broadcastEvents.push({ kind: event.kind, seq }),
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
   await createChat({
     tabId: 'tab-resume-ok',
@@ -562,7 +565,7 @@ await test('valid --resume: first healthy event flushes staged events in order',
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: 'good-uuid',
-    providerFlags: [],
+    providerFlags: []
   })
 
   // Synthetic spawn event → would normally broadcast immediately, but we're in
@@ -581,7 +584,7 @@ await test('valid --resume: first healthy event flushes staged events in order',
       session_id: 'good-uuid',
       model: 'sonnet',
       cwd: '/tmp',
-      tools: [],
+      tools: []
     }) + '\n'
   )
   await new Promise((r) => setTimeout(r, 30))
@@ -591,7 +594,7 @@ await test('valid --resume: first healthy event flushes staged events in order',
   fake._stdout.write(
     JSON.stringify({
       type: 'assistant',
-      message: { content: [{ type: 'text', text: 'hello back' }] },
+      message: { content: [{ type: 'text', text: 'hello back' }] }
     }) + '\n'
   )
   await new Promise((r) => setTimeout(r, 30))
@@ -620,7 +623,7 @@ await test('exit event: fires process-exit + chat:exit broadcast', async () => {
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: (_tab, event) => eventKinds.push(event.kind),
-    broadcastExit: (_tab, _sid, code, signal) => exits.push({ code, signal }),
+    broadcastExit: (_tab, _sid, code, signal) => exits.push({ code, signal })
   })
   await createChat({
     tabId: 'tab-exit',
@@ -628,7 +631,7 @@ await test('exit event: fires process-exit + chat:exit broadcast', async () => {
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   ;(fake as unknown as EventEmitter).emit('exit', 0, null)
   await new Promise((r) => setTimeout(r, 10))
@@ -645,7 +648,7 @@ await test('exit event: chat:exit broadcast carries dying session sessionId', as
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
-    broadcastExit: (_tab, sessionId) => exits.push({ sessionId }),
+    broadcastExit: (_tab, sessionId) => exits.push({ sessionId })
   })
   const info = await createChat({
     tabId: 'tab-exit-sid',
@@ -653,7 +656,7 @@ await test('exit event: chat:exit broadcast carries dying session sessionId', as
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: 'sid-known',
-    providerFlags: [],
+    providerFlags: []
   })
   ;(fake as unknown as EventEmitter).emit('exit', 0, null)
   await new Promise((r) => setTimeout(r, 10))
@@ -677,7 +680,7 @@ await test('reset race: old session exit fires after removeSession — broadcast
     },
     broadcastEvent: (_tab, event) => events.push(event.kind),
     broadcastExit: (_tab, _sid, code) => exits.push({ code }),
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
 
   // 1. Spawn session A.
@@ -687,7 +690,7 @@ await test('reset race: old session exit fires after removeSession — broadcast
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   expect(spawnCount).toBe(1)
 
@@ -700,7 +703,7 @@ await test('reset race: old session exit fires after removeSession — broadcast
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   expect(spawnCount).toBe(2)
 
@@ -727,7 +730,7 @@ await test('reset race: live session exit (not stale) still broadcasts', async (
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: (_tab, event) => events.push(event.kind),
     broadcastExit: (_tab, _sid, code) => exits.push({ code }),
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
   await createChat({
     tabId: 'tab-live',
@@ -735,7 +738,7 @@ await test('reset race: live session exit (not stale) still broadcasts', async (
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   // Session still in map (no reset). Exit fires.
   ;(fake as unknown as EventEmitter).emit('exit', 0, null)
@@ -763,7 +766,7 @@ await test('createChat: same tabId with different (taskId,cwd) → tears down zo
     },
     broadcastEvent: (tabId, event) => events.push({ tabId, kind: event.kind }),
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
   // First create: taskA, cwd /a
   await createChat({
@@ -772,7 +775,7 @@ await test('createChat: same tabId with different (taskId,cwd) → tears down zo
     mode: 'claude-code',
     cwd: '/a',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   expect(spawnCount).toBe(1)
 
@@ -783,7 +786,7 @@ await test('createChat: same tabId with different (taskId,cwd) → tears down zo
     mode: 'claude-code',
     cwd: '/b',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   expect(spawnCount).toBe(2)
   expect(oldKilled).toBe(true)
@@ -806,7 +809,7 @@ await test('createChat: same tabId AND same identity → returns existing sessio
     },
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
   await createChat({
     tabId: 'idem-tab',
@@ -814,7 +817,7 @@ await test('createChat: same tabId AND same identity → returns existing sessio
     mode: 'claude-code',
     cwd: '/a',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   await createChat({
     tabId: 'idem-tab',
@@ -822,7 +825,7 @@ await test('createChat: same tabId AND same identity → returns existing sessio
     mode: 'claude-code',
     cwd: '/a',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   expect(spawnCount).toBe(1)
 })
@@ -838,7 +841,7 @@ await test('onStateChange: fires alongside broadcastStateChange so global listen
     broadcastEvent: () => {},
     broadcastExit: () => {},
     broadcastStateChange: (sessionId, next, old) => broadcasts.push({ sessionId, next, old }),
-    onStateChange: (sessionId, next, old) => globalNotices.push({ sessionId, next, old }),
+    onStateChange: (sessionId, next, old) => globalNotices.push({ sessionId, next, old })
   })
   await createChat({
     tabId: 'tab-state',
@@ -846,7 +849,7 @@ await test('onStateChange: fires alongside broadcastStateChange so global listen
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   fake._stdout.write(readFileSync(resolve(fixtureDir(), 'bash.ndjson'), 'utf8'))
   await new Promise((r) => setTimeout(r, 50))
@@ -869,7 +872,7 @@ await test('createChat: initialBuffer with unfinished turn → emits synthetic i
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: (tabId, event, seq) => events.push({ tabId, kind: event.kind, seq }),
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
   // Seed: turn-init + user-message, NO result. Mid-turn crash scenario.
   const seeded: mgr.BufferedEvent[] = [
@@ -880,10 +883,10 @@ await test('createChat: initialBuffer with unfinished turn → emits synthetic i
         sessionId: 'old',
         model: 'sonnet',
         cwd: '/tmp',
-        tools: [],
-      },
+        tools: []
+      }
     },
-    { seq: 1, event: { kind: 'user-message', text: 'hello' } },
+    { seq: 1, event: { kind: 'user-message', text: 'hello' } }
   ]
   await createChat({
     tabId: 'tab-restore-mid',
@@ -893,7 +896,7 @@ await test('createChat: initialBuffer with unfinished turn → emits synthetic i
     conversationId: 'old-session',
     providerFlags: [],
     initialBuffer: seeded,
-    initialNextSeq: 2,
+    initialNextSeq: 2
   })
   // Synthetic interrupted should appear at seq 2, before any spawn event.
   const interrupted = events.find((e) => e.kind === 'interrupted')
@@ -911,7 +914,7 @@ await test('createChat: initialBuffer with completed turn → no synthetic inter
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: (_tabId, event) => events.push({ kind: event.kind }),
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
   const seeded: mgr.BufferedEvent[] = [
     {
@@ -921,8 +924,8 @@ await test('createChat: initialBuffer with completed turn → no synthetic inter
         sessionId: 'old',
         model: 'sonnet',
         cwd: '/tmp',
-        tools: [],
-      },
+        tools: []
+      }
     },
     { seq: 1, event: { kind: 'user-message', text: 'hi' } },
     {
@@ -943,11 +946,11 @@ await test('createChat: initialBuffer with completed turn → no synthetic inter
           inputTokens: 0,
           outputTokens: 0,
           cacheReadInputTokens: 0,
-          cacheCreationInputTokens: 0,
+          cacheCreationInputTokens: 0
         },
-        permissionDenials: [],
-      },
-    },
+        permissionDenials: []
+      }
+    }
   ]
   await createChat({
     tabId: 'tab-restore-clean',
@@ -957,7 +960,7 @@ await test('createChat: initialBuffer with completed turn → no synthetic inter
     conversationId: 'old-session',
     providerFlags: [],
     initialBuffer: seeded,
-    initialNextSeq: 3,
+    initialNextSeq: 3
   })
   expect(events.some((e) => e.kind === 'interrupted')).toBe(false)
 })
@@ -970,7 +973,7 @@ await test('permission-request ExitPlanMode → auto-deny on stdin, no broadcast
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: (_t, e) => events.push(e),
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-exitplan',
@@ -978,7 +981,7 @@ await test('permission-request ExitPlanMode → auto-deny on stdin, no broadcast
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   // Reset stdin capture so we ignore the spawn-time control_request init.
   fake._stdinRef.value = ''
@@ -990,8 +993,8 @@ await test('permission-request ExitPlanMode → auto-deny on stdin, no broadcast
         subtype: 'can_use_tool',
         tool_name: 'ExitPlanMode',
         tool_use_id: 'tu_exit_1',
-        input: { plan: 'do stuff' },
-      },
+        input: { plan: 'do stuff' }
+      }
     }) + '\n'
   )
   await new Promise((r) => setImmediate(r))
@@ -1014,7 +1017,7 @@ await test('permission-request AskUserQuestion → broadcast, no auto-deny', asy
     whichBinary: async () => '/fake/claude',
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: (_t, e) => events.push(e),
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-ask',
@@ -1022,7 +1025,7 @@ await test('permission-request AskUserQuestion → broadcast, no auto-deny', asy
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   fake._stdinRef.value = ''
   fake._stdout.write(
@@ -1033,8 +1036,8 @@ await test('permission-request AskUserQuestion → broadcast, no auto-deny', asy
         subtype: 'can_use_tool',
         tool_name: 'AskUserQuestion',
         tool_use_id: 'tu_ask_1',
-        input: { questions: [] },
-      },
+        input: { questions: [] }
+      }
     }) + '\n'
   )
   await new Promise((r) => setImmediate(r))
@@ -1052,7 +1055,7 @@ await test('permission-request → flips terminal state to idle + sets awaitingU
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
     broadcastStateChange: (_s, next, old) => stateChanges.push({ next, old }),
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-ask-state',
@@ -1060,11 +1063,18 @@ await test('permission-request → flips terminal state to idle + sets awaitingU
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   // turn-init lifts state → running
   fake._stdout.write(
-    JSON.stringify({ type: 'system', subtype: 'init', session_id: 'sess-1', model: 'claude', cwd: '/tmp', tools: [] }) + '\n'
+    JSON.stringify({
+      type: 'system',
+      subtype: 'init',
+      session_id: 'sess-1',
+      model: 'claude',
+      cwd: '/tmp',
+      tools: []
+    }) + '\n'
   )
   await new Promise((r) => setImmediate(r))
   expect(mgr.getSessionTerminalState('tab-ask-state')).toBe('running')
@@ -1078,8 +1088,8 @@ await test('permission-request → flips terminal state to idle + sets awaitingU
         subtype: 'can_use_tool',
         tool_name: 'AskUserQuestion',
         tool_use_id: 'tu_state_1',
-        input: { questions: [] },
-      },
+        input: { questions: [] }
+      }
     }) + '\n'
   )
   await new Promise((r) => setImmediate(r))
@@ -1091,7 +1101,7 @@ await test('permission-request → flips terminal state to idle + sets awaitingU
   fake._stdout.write(
     JSON.stringify({
       type: 'assistant',
-      message: { id: 'm1', content: [{ type: 'text', text: 'thanks' }] },
+      message: { id: 'm1', content: [{ type: 'text', text: 'thanks' }] }
     }) + '\n'
   )
   await new Promise((r) => setImmediate(r))
@@ -1106,7 +1116,7 @@ await test('awaitingUserInput stays true across stderr / non-progress events', a
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
     broadcastStateChange: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-ask-noclear',
@@ -1114,7 +1124,7 @@ await test('awaitingUserInput stays true across stderr / non-progress events', a
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   fake._stdout.write(
     JSON.stringify({
@@ -1124,8 +1134,8 @@ await test('awaitingUserInput stays true across stderr / non-progress events', a
         subtype: 'can_use_tool',
         tool_name: 'AskUserQuestion',
         tool_use_id: 'tu_nc_1',
-        input: {},
-      },
+        input: {}
+      }
     }) + '\n'
   )
   await new Promise((r) => setImmediate(r))
@@ -1146,7 +1156,7 @@ await test('drainChatQueue skips when awaitingUserInput is true (mid AskUserQues
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
     broadcastStateChange: () => {},
-    broadcastExit: () => {},
+    broadcastExit: () => {}
   })
   await createChat({
     tabId: 'tab-ask-drain',
@@ -1154,7 +1164,7 @@ await test('drainChatQueue skips when awaitingUserInput is true (mid AskUserQues
     mode: 'claude-code',
     cwd: '/tmp',
     conversationId: null,
-    providerFlags: [],
+    providerFlags: []
   })
   fake._stdout.write(
     JSON.stringify({
@@ -1164,8 +1174,8 @@ await test('drainChatQueue skips when awaitingUserInput is true (mid AskUserQues
         subtype: 'can_use_tool',
         tool_name: 'AskUserQuestion',
         tool_use_id: 'tu_drain_1',
-        input: {},
-      },
+        input: {}
+      }
     }) + '\n'
   )
   await new Promise((r) => setImmediate(r))
@@ -1187,7 +1197,7 @@ await test('spawnedSetter: fires (true) on spawn-success with tabId', async () =
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
   try {
     await createChat({
@@ -1196,7 +1206,7 @@ await test('spawnedSetter: fires (true) on spawn-success with tabId', async () =
       mode: 'claude-code',
       cwd: '/tmp',
       conversationId: null,
-      providerFlags: [],
+      providerFlags: []
     })
     expect(recorder.length).toBe(1)
     expect(recorder[0].tabId).toBe('tab-warm-1')
@@ -1216,7 +1226,7 @@ await test('spawnedSetter: fires (false) on natural subprocess exit', async () =
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
   try {
     await createChat({
@@ -1225,7 +1235,7 @@ await test('spawnedSetter: fires (false) on natural subprocess exit', async () =
       mode: 'claude-code',
       cwd: '/tmp',
       conversationId: null,
-      providerFlags: [],
+      providerFlags: []
     })
     // Subprocess exits cleanly — exit handler should clear was_spawned.
     fake.emit('exit', 0, null)
@@ -1248,7 +1258,7 @@ await test('spawnedSetter: shutdown gate preserves was_spawned on exit', async (
     spawn: () => fake as unknown as ChildProcess,
     broadcastEvent: () => {},
     broadcastExit: () => {},
-    broadcastStateChange: () => {},
+    broadcastStateChange: () => {}
   })
   try {
     await createChat({
@@ -1257,7 +1267,7 @@ await test('spawnedSetter: shutdown gate preserves was_spawned on exit', async (
       mode: 'claude-code',
       cwd: '/tmp',
       conversationId: null,
-      providerFlags: [],
+      providerFlags: []
     })
     // Simulate app.on('will-quit') → beginTerminalShutdown(): gate flips first,
     // THEN killAll fires subprocess exits. Without the gate, this exit would

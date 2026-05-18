@@ -16,9 +16,14 @@ import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-  PriorityIcon,
+  PriorityIcon
 } from '@slayzone/ui'
-import { useTabStore, type TreeGroupBy, type TreeOrderBy, type TreeOrderDir } from '@slayzone/settings'
+import {
+  useTabStore,
+  type TreeGroupBy,
+  type TreeOrderBy,
+  type TreeOrderDir
+} from '@slayzone/settings'
 import { PRIORITY_LABELS } from '@slayzone/tasks'
 
 export function TreeDisplaySettings() {
@@ -75,7 +80,7 @@ export function TreeDisplaySettings() {
     () =>
       ([1, 2, 3, 4, 5] as const).map((value) => ({
         value,
-        label: PRIORITY_LABELS[value],
+        label: PRIORITY_LABELS[value]
       })),
     []
   )
@@ -117,7 +122,7 @@ export function TreeDisplaySettings() {
               options={[
                 { value: 'none', label: 'None' },
                 { value: 'status', label: 'Status' },
-                { value: 'priority', label: 'Priority' },
+                { value: 'priority', label: 'Priority' }
               ]}
             />
             <SelectRow
@@ -132,7 +137,7 @@ export function TreeDisplaySettings() {
                 { value: 'due_date', label: 'Due date' },
                 { value: 'title', label: 'Title' },
                 { value: 'created', label: 'Created' },
-                { value: 'last_interaction', label: 'Last interaction' },
+                { value: 'last_interaction', label: 'Last interaction' }
               ]}
             />
             <SelectRow
@@ -143,7 +148,7 @@ export function TreeDisplaySettings() {
               onChange={(v) => setTreeOrderDir(v as TreeOrderDir)}
               options={[
                 { value: 'asc', label: 'Ascending' },
-                { value: 'desc', label: 'Descending' },
+                { value: 'desc', label: 'Descending' }
               ]}
             />
             <Row
@@ -281,7 +286,6 @@ export function TreeDisplaySettings() {
             selectedPriorities={treePriorityFilter}
             onTogglePriority={togglePriority}
           />
-
         </div>
       </PopoverContent>
     </Popover>
@@ -296,7 +300,7 @@ function FiltersSection({
   onToggle,
   priorityOptions,
   selectedPriorities,
-  onTogglePriority,
+  onTogglePriority
 }: {
   statusOptions: StatusOpt[]
   selected: string[]
@@ -367,7 +371,10 @@ function FiltersSection({
                   : 'border-transparent bg-input/30 text-muted-foreground/70 hover:text-foreground hover:border-border size-7'
               )}
             >
-              <PriorityIcon priority={opt.value} className={cn('size-3.5 shrink-0', !checked && 'opacity-50')} />
+              <PriorityIcon
+                priority={opt.value}
+                className={cn('size-3.5 shrink-0', !checked && 'opacity-50')}
+              />
               {checked && <span>{opt.label}</span>}
             </button>
           )
@@ -398,7 +405,7 @@ function Row({
   hint,
   checked,
   onChange,
-  disabled,
+  disabled
 }: {
   id: string
   label: string
@@ -429,7 +436,7 @@ function SelectRow({
   hint,
   value,
   onChange,
-  options,
+  options
 }: {
   id: string
   label: string

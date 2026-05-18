@@ -2,12 +2,28 @@
  * CLI panels command tests
  * Run with: ELECTRON_RUN_AS_NODE=1 electron --import tsx/esm packages/apps/cli/test/panels.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../shared/test-utils/ipc-harness.js'
 import { createSlayDbAdapter, captureAllAsync } from './test-harness.js'
 import type { PanelConfig, WebPanelDefinition } from '../../../domains/task/src/shared/types.js'
-import { DEFAULT_PANEL_CONFIG, PREDEFINED_WEB_PANELS, isPanelEnabled } from '../../../domains/task/src/shared/types.js'
-import { mergePredefinedWebPanels, validatePanelShortcut } from '../../../domains/task/src/shared/panel-config.js'
-import { normalizeDesktopProtocol, inferProtocolFromUrl, inferHostScopeFromUrl } from '../../../domains/task/src/shared/handoff.js'
+import {
+  DEFAULT_PANEL_CONFIG,
+  PREDEFINED_WEB_PANELS,
+  isPanelEnabled
+} from '../../../domains/task/src/shared/types.js'
+import {
+  mergePredefinedWebPanels,
+  validatePanelShortcut
+} from '../../../domains/task/src/shared/panel-config.js'
+import {
+  normalizeDesktopProtocol,
+  inferProtocolFromUrl,
+  inferHostScopeFromUrl
+} from '../../../domains/task/src/shared/handoff.js'
 
 const h = await createTestHarness()
 const db = createSlayDbAdapter(h.db)
@@ -15,19 +31,25 @@ const db = createSlayDbAdapter(h.db)
 // --- helpers ---
 
 function loadPanelConfig(): PanelConfig {
-  const row = db.query<{ value: string }>(`SELECT value FROM settings WHERE key = 'panel_config' LIMIT 1`)
+  const row = db.query<{ value: string }>(
+    `SELECT value FROM settings WHERE key = 'panel_config' LIMIT 1`
+  )
   if (!row[0]?.value) return { ...DEFAULT_PANEL_CONFIG }
   return mergePredefinedWebPanels(JSON.parse(row[0].value) as PanelConfig)
 }
 
 function savePanelConfig(config: PanelConfig) {
-  db.run(
-    `INSERT OR REPLACE INTO settings (key, value) VALUES (:key, :value)`,
-    { ':key': 'panel_config', ':value': JSON.stringify(config) }
-  )
+  db.run(`INSERT OR REPLACE INTO settings (key, value) VALUES (:key, :value)`, {
+    ':key': 'panel_config',
+    ':value': JSON.stringify(config)
+  })
 }
 
-function createPanel(name: string, rawUrl: string, opts: { shortcut?: string; blockHandoff?: boolean; protocol?: string } = {}): WebPanelDefinition {
+function createPanel(
+  name: string,
+  rawUrl: string,
+  opts: { shortcut?: string; blockHandoff?: boolean; protocol?: string } = {}
+): WebPanelDefinition {
   const config = loadPanelConfig()
 
   let url = rawUrl.trim()
@@ -39,8 +61,10 @@ function createPanel(name: string, rawUrl: string, opts: { shortcut?: string; bl
     baseUrl: url,
     shortcut: opts.shortcut?.trim().toLowerCase() || undefined,
     blockDesktopHandoff: opts.blockHandoff || undefined,
-    handoffProtocol: opts.blockHandoff ? (normalizeDesktopProtocol(opts.protocol ?? null) ?? inferProtocolFromUrl(url) ?? undefined) : undefined,
-    handoffHostScope: opts.blockHandoff ? (inferHostScopeFromUrl(url) ?? undefined) : undefined,
+    handoffProtocol: opts.blockHandoff
+      ? (normalizeDesktopProtocol(opts.protocol ?? null) ?? inferProtocolFromUrl(url) ?? undefined)
+      : undefined,
+    handoffHostScope: opts.blockHandoff ? (inferHostScopeFromUrl(url) ?? undefined) : undefined
   }
 
   savePanelConfig({ ...config, webPanels: [...config.webPanels, newPanel] })
@@ -70,13 +94,17 @@ describe('validatePanelShortcut', () => {
   })
 
   test('rejects duplicate shortcut', () => {
-    const panels: WebPanelDefinition[] = [{ id: 'web:test', name: 'Test', baseUrl: 'https://test.com', shortcut: 'a' }]
+    const panels: WebPanelDefinition[] = [
+      { id: 'web:test', name: 'Test', baseUrl: 'https://test.com', shortcut: 'a' }
+    ]
     const err = validatePanelShortcut('a', panels)
     expect(err !== null && err.includes('already used by Test')).toBeTruthy()
   })
 
   test('allows duplicate when excludeId matches', () => {
-    const panels: WebPanelDefinition[] = [{ id: 'web:test', name: 'Test', baseUrl: 'https://test.com', shortcut: 'a' }]
+    const panels: WebPanelDefinition[] = [
+      { id: 'web:test', name: 'Test', baseUrl: 'https://test.com', shortcut: 'a' }
+    ]
     expect(validatePanelShortcut('a', panels, 'web:test')).toBe(null)
   })
 
@@ -91,7 +119,7 @@ describe('panels create', () => {
   test('creates panel with name and URL', () => {
     const panel = createPanel('Linear', 'https://linear.app')
     const config = loadPanelConfig()
-    const found = config.webPanels.find(p => p.id === panel.id)
+    const found = config.webPanels.find((p) => p.id === panel.id)
     expect(found !== undefined).toBeTruthy()
     expect(found!.name).toBe('Linear')
     expect(found!.baseUrl).toBe('https://linear.app')
@@ -100,21 +128,21 @@ describe('panels create', () => {
   test('normalizes URL without protocol', () => {
     const panel = createPanel('Example', 'example.com')
     const config = loadPanelConfig()
-    const found = config.webPanels.find(p => p.id === panel.id)
+    const found = config.webPanels.find((p) => p.id === panel.id)
     expect(found!.baseUrl).toBe('https://example.com')
   })
 
   test('preserves http:// URL', () => {
     const panel = createPanel('Local', 'http://localhost:3000')
     const config = loadPanelConfig()
-    const found = config.webPanels.find(p => p.id === panel.id)
+    const found = config.webPanels.find((p) => p.id === panel.id)
     expect(found!.baseUrl).toBe('http://localhost:3000')
   })
 
   test('stores shortcut as lowercase', () => {
     const panel = createPanel('Shortcut Test', 'https://test.com', { shortcut: 'Z' })
     const config = loadPanelConfig()
-    const found = config.webPanels.find(p => p.id === panel.id)
+    const found = config.webPanels.find((p) => p.id === panel.id)
     expect(found!.shortcut).toBe('z')
   })
 
@@ -127,16 +155,19 @@ describe('panels create', () => {
   test('creates with block-handoff', () => {
     const panel = createPanel('Figma Clone', 'https://figma-clone.com', { blockHandoff: true })
     const config = loadPanelConfig()
-    const found = config.webPanels.find(p => p.id === panel.id)
+    const found = config.webPanels.find((p) => p.id === panel.id)
     expect(found!.blockDesktopHandoff).toBe(true)
     expect(found!.handoffProtocol).toBe('figma-clone')
     expect(found!.handoffHostScope).toBe('figma-clone.com')
   })
 
   test('creates with explicit protocol', () => {
-    const panel = createPanel('Custom Proto', 'https://app.custom.io', { blockHandoff: true, protocol: 'myproto' })
+    const panel = createPanel('Custom Proto', 'https://app.custom.io', {
+      blockHandoff: true,
+      protocol: 'myproto'
+    })
     const config = loadPanelConfig()
-    const found = config.webPanels.find(p => p.id === panel.id)
+    const found = config.webPanels.find((p) => p.id === panel.id)
     expect(found!.handoffProtocol).toBe('myproto')
   })
 
@@ -158,7 +189,7 @@ describe('panels list', () => {
 
   test('includes predefined panels', () => {
     const config = loadPanelConfig()
-    const ids = config.webPanels.map(p => p.id)
+    const ids = config.webPanels.map((p) => p.id)
     expect(ids).toContain('web:figma')
     expect(ids).toContain('web:notion')
   })
@@ -167,19 +198,23 @@ describe('panels list', () => {
 // --- helpers for delete/enable/disable ---
 
 function deletePanel(config: PanelConfig, idOrName: string): PanelConfig | null {
-  const wp = config.webPanels.find(p => p.id === idOrName || p.name.toLowerCase() === idOrName.toLowerCase())
+  const wp = config.webPanels.find(
+    (p) => p.id === idOrName || p.name.toLowerCase() === idOrName.toLowerCase()
+  )
   if (!wp) return null
-  const next: PanelConfig = { ...config, webPanels: config.webPanels.filter(p => p.id !== wp.id) }
+  const next: PanelConfig = { ...config, webPanels: config.webPanels.filter((p) => p.id !== wp.id) }
   if (wp.predefined) next.deletedPredefined = [...(config.deletedPredefined ?? []), wp.id]
   return next
 }
 
 function togglePanel(config: PanelConfig, idOrName: string, enabled: boolean): PanelConfig | null {
-  const wp = config.webPanels.find(p => p.id === idOrName || p.name.toLowerCase() === idOrName.toLowerCase())
+  const wp = config.webPanels.find(
+    (p) => p.id === idOrName || p.name.toLowerCase() === idOrName.toLowerCase()
+  )
   if (!wp) return null
   return {
     ...config,
-    viewEnabled: { ...config.viewEnabled, task: { ...config.viewEnabled?.task, [wp.id]: enabled } },
+    viewEnabled: { ...config.viewEnabled, task: { ...config.viewEnabled?.task, [wp.id]: enabled } }
   }
 }
 
@@ -189,12 +224,12 @@ describe('panels delete', () => {
   test('deletes custom panel by id', () => {
     const panel = createPanel('DeleteMe', 'https://delete.test')
     const config = loadPanelConfig()
-    expect(config.webPanels.some(p => p.id === panel.id)).toBeTruthy()
+    expect(config.webPanels.some((p) => p.id === panel.id)).toBeTruthy()
 
     const next = deletePanel(config, panel.id)!
     savePanelConfig(next)
     const after = loadPanelConfig()
-    expect(after.webPanels.some(p => p.id === panel.id)).toBe(false)
+    expect(after.webPanels.some((p) => p.id === panel.id)).toBe(false)
   })
 
   test('deletes custom panel by name (case-insensitive)', () => {
@@ -204,19 +239,19 @@ describe('panels delete', () => {
     const next = deletePanel(config, 'casetest')!
     savePanelConfig(next)
     const after = loadPanelConfig()
-    expect(after.webPanels.some(p => p.id === panel.id)).toBe(false)
+    expect(after.webPanels.some((p) => p.id === panel.id)).toBe(false)
   })
 
   test('deletes predefined panel and adds to deletedPredefined', () => {
     const config = loadPanelConfig()
-    expect(config.webPanels.some(p => p.id === 'web:excalidraw')).toBeTruthy()
+    expect(config.webPanels.some((p) => p.id === 'web:excalidraw')).toBeTruthy()
 
     const next = deletePanel(config, 'web:excalidraw')!
     savePanelConfig(next)
     const after = loadPanelConfig()
     expect(after.deletedPredefined).toContain('web:excalidraw')
     // mergePredefinedWebPanels should NOT re-add it
-    expect(after.webPanels.some(p => p.id === 'web:excalidraw')).toBe(false)
+    expect(after.webPanels.some((p) => p.id === 'web:excalidraw')).toBe(false)
   })
 
   test('returns null for unknown panel', () => {

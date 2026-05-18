@@ -21,7 +21,10 @@ import '@xterm/xterm/css/xterm.css'
 // lazygit, fzf, tables) as real content, so copies include them. Pasting
 // that into a narrower terminal wraps → phantom line breaks.
 const trimSelectionTrailingSpaces = (s: string): string =>
-  s.split('\n').map(l => l.replace(/[ \t]+$/, '')).join('\n')
+  s
+    .split('\n')
+    .map((l) => l.replace(/[ \t]+$/, ''))
+    .join('\n')
 
 // Override xterm underline styles - Claude Code outputs these and they persist incorrectly
 // This is a definitive fix that works regardless of ANSI code filtering
@@ -34,7 +37,14 @@ underlineOverride.textContent = `
 `
 document.head.appendChild(underlineOverride)
 
-import { getTerminal, setTerminal, disposeTerminal, updateAllThemes, registerActiveAddon, unregisterActiveAddon } from './terminal-cache'
+import {
+  getTerminal,
+  setTerminal,
+  disposeTerminal,
+  updateAllThemes,
+  registerActiveAddon,
+  unregisterActiveAddon
+} from './terminal-cache'
 import { usePty } from './PtyContext'
 import { useTheme, useAppearance } from '@slayzone/settings/client'
 import { getThemeTerminalColors } from '@slayzone/ui'
@@ -135,26 +145,29 @@ export interface TerminalHandle {
   clearBuffer: () => Promise<void>
 }
 
-export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal({
-  sessionId,
-  cwd,
-  mode = 'claude-code',
-  conversationId,
-  existingConversationId,
-  supportsSessionId = true,
-  initialPrompt,
-  providerFlags,
-  executionContext,
-  isActive = true,
-  onAttached,
-  onConversationCreated,
-  onSessionInvalid,
-  onReady,
-  onFirstInput,
-  onRetry,
-  onOpenUrl,
-  onOpenFile
-}, ref) {
+export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Terminal(
+  {
+    sessionId,
+    cwd,
+    mode = 'claude-code',
+    conversationId,
+    existingConversationId,
+    supportsSessionId = true,
+    initialPrompt,
+    providerFlags,
+    executionContext,
+    isActive = true,
+    onAttached,
+    onConversationCreated,
+    onSessionInvalid,
+    onReady,
+    onFirstInput,
+    onRetry,
+    onOpenUrl,
+    onOpenFile
+  },
+  ref
+) {
   const containerRef = useRef<HTMLDivElement>(null)
   const terminalRef = useRef<XTerm | null>(null)
 
@@ -174,7 +187,9 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
   const [initError, setInitError] = useState<string | null>(null)
   const [deadExitCode, setDeadExitCode] = useState<number | null>(null)
   const [deadCrashOutput, setDeadCrashOutput] = useState<string | null>(null)
-  const [doctorResults, setDoctorResults] = useState<import('@slayzone/terminal/shared').ValidationResult[] | null>(null)
+  const [doctorResults, setDoctorResults] = useState<
+    import('@slayzone/terminal/shared').ValidationResult[] | null
+  >(null)
   const [doctorLoading, setDoctorLoading] = useState(false)
 
   // Refs for callbacks to prevent initTerminal dependency churn.
@@ -214,7 +229,16 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
   const executionContextRef = useRef(executionContext)
   executionContextRef.current = executionContext
 
-  const { subscribe, subscribeExit, subscribeSessionInvalid, subscribeState, getState, getCrashOutput, resetTaskState, cleanupTask } = usePty()
+  const {
+    subscribe,
+    subscribeExit,
+    subscribeSessionInvalid,
+    subscribeState,
+    getState,
+    getCrashOutput,
+    resetTaskState,
+    cleanupTask
+  } = usePty()
   const { terminalThemeId, contentVariant } = useTheme()
   const { terminalFontSize, terminalFontFamily, terminalScrollback } = useAppearance()
 
@@ -238,212 +262,270 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
     getSelection: () => trimSelectionTrailingSpaces(terminalRef.current?.getSelection() ?? ''),
     selectAll: () => terminalRef.current?.selectAll(),
     scrollToBottom: () => terminalRef.current?.scrollToBottom(),
-    openSearch: () => { setSearchOpen(true); setSearchFocusToken(t => t + 1) },
+    openSearch: () => {
+      setSearchOpen(true)
+      setSearchFocusToken((t) => t + 1)
+    },
     clearBuffer: clearBufferWithoutRestart
   }))
 
-  const handleTerminalKeyEvent = useCallback((e: KeyboardEvent): boolean => {
-    if (e.ctrlKey && e.key === 'Tab') return false
-    // Shift+Enter in AI modes: send kitty protocol sequence so CLI apps
-    // can insert a newline instead of submitting.
-    if (mode === 'claude-code' && e.shiftKey && e.key === 'Enter') {
-      e.preventDefault()
-      e.stopPropagation()
-      if (e.type === 'keydown') {
-        window.api.pty.write(sessionId, KITTY_SHIFT_ENTER)
-      }
-      return false
-    }
-    if (e.type === 'keydown' && !useShortcutStore.getState().isRecording) {
-      if (matchesShortcut(e, useShortcutStore.getState().getKeys('terminal-search'))) {
-        setSearchOpen(true)
-        setSearchFocusToken(t => t + 1)
-        track('terminal_search_used')
+  const handleTerminalKeyEvent = useCallback(
+    (e: KeyboardEvent): boolean => {
+      if (e.ctrlKey && e.key === 'Tab') return false
+      // Shift+Enter in AI modes: send kitty protocol sequence so CLI apps
+      // can insert a newline instead of submitting.
+      if (mode === 'claude-code' && e.shiftKey && e.key === 'Enter') {
+        e.preventDefault()
+        e.stopPropagation()
+        if (e.type === 'keydown') {
+          window.api.pty.write(sessionId, KITTY_SHIFT_ENTER)
+        }
         return false
       }
-      if (matchesShortcut(e, useShortcutStore.getState().getKeys('terminal-clear'))) {
-        void clearBufferWithoutRestart()
+      if (e.type === 'keydown' && !useShortcutStore.getState().isRecording) {
+        if (matchesShortcut(e, useShortcutStore.getState().getKeys('terminal-search'))) {
+          setSearchOpen(true)
+          setSearchFocusToken((t) => t + 1)
+          track('terminal_search_used')
+          return false
+        }
+        if (matchesShortcut(e, useShortcutStore.getState().getKeys('terminal-clear'))) {
+          void clearBufferWithoutRestart()
+          return false
+        }
+      }
+      // Ctrl+Shift+C/V handled via DOM keydown listener (useEffect below)
+      // to work reliably regardless of xterm.js internal event handling.
+      if (
+        e.ctrlKey &&
+        e.shiftKey &&
+        (e.code === 'KeyC' || e.code === 'KeyV') &&
+        e.type === 'keydown'
+      ) {
         return false
       }
-    }
-    // Ctrl+Shift+C/V handled via DOM keydown listener (useEffect below)
-    // to work reliably regardless of xterm.js internal event handling.
-    if (e.ctrlKey && e.shiftKey && (e.code === 'KeyC' || e.code === 'KeyV') && e.type === 'keydown') {
-      return false
-    }
-    // macOS: Option+Arrow word navigation.
-    // xterm.js sends \x1b[1;3D (CSI modifier form) but macOS shells
-    // bind \x1bb/\x1bf (Meta-b/f) for word nav. Match iTerm2 behavior.
-    if (navigator.platform.startsWith('Mac') && e.altKey && !e.metaKey && !e.ctrlKey && e.type === 'keydown') {
-      if (e.key === 'ArrowLeft') {
-        window.api.pty.write(sessionId, '\x1bb')
+      // macOS: Option+Arrow word navigation.
+      // xterm.js sends \x1b[1;3D (CSI modifier form) but macOS shells
+      // bind \x1bb/\x1bf (Meta-b/f) for word nav. Match iTerm2 behavior.
+      if (
+        navigator.platform.startsWith('Mac') &&
+        e.altKey &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        e.type === 'keydown'
+      ) {
+        if (e.key === 'ArrowLeft') {
+          window.api.pty.write(sessionId, '\x1bb')
+          return false
+        }
+        if (e.key === 'ArrowRight') {
+          window.api.pty.write(sessionId, '\x1bf')
+          return false
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'ArrowUp' && e.type === 'keydown') {
+        terminalRef.current?.scrollToTop()
         return false
       }
-      if (e.key === 'ArrowRight') {
-        window.api.pty.write(sessionId, '\x1bf')
+      if ((e.metaKey || e.ctrlKey) && e.key === 'ArrowDown' && e.type === 'keydown') {
+        terminalRef.current?.scrollToBottom()
         return false
       }
-    }
-    if ((e.metaKey || e.ctrlKey) && e.key === 'ArrowUp' && e.type === 'keydown') {
-      terminalRef.current?.scrollToTop()
-      return false
-    }
-    if ((e.metaKey || e.ctrlKey) && e.key === 'ArrowDown' && e.type === 'keydown') {
-      terminalRef.current?.scrollToBottom()
-      return false
-    }
-    return true
-  }, [mode, sessionId, clearBufferWithoutRestart])
+      return true
+    },
+    [mode, sessionId, clearBufferWithoutRestart]
+  )
 
-  const initTerminal = useCallback(async (signal: AbortSignal) => {
-    if (!containerRef.current || initializedRef.current) return
-    setIsInitializing(true)
-    setInitError(null)
-    let didInit = false
+  const initTerminal = useCallback(
+    async (signal: AbortSignal) => {
+      if (!containerRef.current || initializedRef.current) return
+      setIsInitializing(true)
+      setInitError(null)
+      let didInit = false
 
-    try {
-      // Wait for container to have dimensions BEFORE initializing terminal
       try {
-        await waitForDimensions(containerRef.current, signal)
-      } catch (e) {
-        if (e instanceof DOMException && e.name === 'AbortError') return
-        throw e
-      }
+        // Wait for container to have dimensions BEFORE initializing terminal
+        try {
+          await waitForDimensions(containerRef.current, signal)
+        } catch (e) {
+          if (e instanceof DOMException && e.name === 'AbortError') return
+          throw e
+        }
 
-      const rect = containerRef.current.getBoundingClientRect()
+        const rect = containerRef.current.getBoundingClientRect()
 
-      // Re-check after await (component state might have changed)
-      if (!containerRef.current || initializedRef.current || signal.aborted) return
+        // Re-check after await (component state might have changed)
+        if (!containerRef.current || initializedRef.current || signal.aborted) return
 
-      // Don't initialize if container still has 0 dimensions (not visible).
-      // Keep isInitializing=true so spinner stays visible. The ResizeObserver
-      // in the resize effect (below, ~line 733) retries initTerminal when the
-      // container becomes visible and gets non-zero dimensions.
-      if (rect.width === 0 || rect.height === 0) {
-        return
-      }
-
-      didInit = true
-      initializedRef.current = true
-
-      // Check if we have a cached terminal for this task
-      const cached = getTerminal(sessionId)
-      if (cached) {
-        // If mode changed, dispose cached terminal and kill old PTY to start fresh
-        if (cached.mode !== mode) {
-          // Reset state FIRST to ignore any in-flight data
-          resetTaskState(sessionId)
-          disposeTerminal(sessionId)
-          // Kill old PTY (any data it sends will be ignored)
-          await window.api.pty.kill(sessionId)
-        } else {
-          // Reattach existing terminal (container already has dimensions)
-          containerRef.current.appendChild(cached.element)
-          onAttachedRef.current?.({ sessionId, focus: () => cached.terminal.focus() })
-          cached.terminal.options.theme = resolvedTerminalTheme
-          cached.terminal.options.minimumContrastRatio = resolvedTerminalVariant === 'light' ? 4.5 : 1
-          terminalRef.current = cached.terminal
-          fitAddonRef.current = cached.fitAddon
-          serializeAddonRef.current = cached.serializeAddon
-          searchAddonRef.current = cached.searchAddon
-          registerActiveAddon(sessionId, cached.serializeAddon)
-          if (cached.lastRenderedSeq !== undefined) {
-            lastRenderedSeqRef.current = cached.lastRenderedSeq
-          }
-
-          // Re-attach key handler (old closure captured stale setSearchOpen)
-          cached.terminal.attachCustomKeyEventHandler(handleTerminalKeyEvent)
-
-          // Simple fit - container is guaranteed to have dimensions
-          const prevCols = cached.terminal.cols
-          const prevRows = cached.terminal.rows
-          cached.fitAddon.fit()
-          // Only resize PTY if dimensions actually changed (avoids spurious SIGWINCH)
-          if (cached.terminal.cols !== prevCols || cached.terminal.rows !== prevRows) {
-            window.api.pty.resize(sessionId, cached.terminal.cols, cached.terminal.rows)
-          }
-          cached.terminal.write('\x1b[0m') // Reset ANSI state on reattach
-
-          // Sync state from backend (fixes stuck loading spinner on reattach)
-          const actualState = await window.api.pty.getState(sessionId)
-          if (signal.aborted) return // Don't setState if unmounted
-          if (actualState) setPtyState(actualState)
-
-          // Replay any data that arrived while terminal was detached.
-          // During abort/reinit cycles, terminalRef is null so the subscribe
-          // callback's write() is a no-op — this fills that gap.
-          // Use lastRenderedSeqRef (tracks xterm writes) not getLastSeq
-          // (tracks PtyContext receives — advances even when terminalRef is null).
-          const missed = await window.api.pty.getBufferSince(sessionId, lastRenderedSeqRef.current)
-          if (signal.aborted) return
-          if (missed && missed.chunks.length > 0) {
-            cached.terminal.write('\x1b[0m')
-            for (const chunk of missed.chunks) {
-              cached.terminal.write(chunk.data)
-            }
-            cached.terminal.write('\x1b[0m')
-            lastRenderedSeqRef.current = missed.currentSeq
-          }
-
-          // Expose API for programmatic input and focus
-          onReadyRef.current?.({
-            sendInput: async (text) => {
-              cached.terminal.input(text)
-            },
-            write: (data) => window.api.pty.write(sessionId, data),
-            focus: () => cached.terminal.focus(),
-            clearBuffer: clearBufferWithoutRestart
-          })
+        // Don't initialize if container still has 0 dimensions (not visible).
+        // Keep isInitializing=true so spinner stays visible. The ResizeObserver
+        // in the resize effect (below, ~line 733) retries initTerminal when the
+        // container becomes visible and gets non-zero dimensions.
+        if (rect.width === 0 || rect.height === 0) {
           return
         }
-      }
 
-      // Link tooltip — shown on hover for all link types (URLs, files, OSC 8).
-      // Uses xterm-hover class so mouse events don't fall through to other links.
-      // Positioned at initial hover point (doesn't follow cursor).
-      let tooltipEl: HTMLDivElement | null = null
-      const getTooltip = () => {
-        if (!tooltipEl) {
-          tooltipEl = document.createElement('div')
-          tooltipEl.className = 'xterm-hover'
-          tooltipEl.style.cssText = 'display:none;position:fixed;z-index:50;padding:2px 6px;border-radius:3px;font-size:11px;line-height:1.3;max-width:600px;white-space:normal;word-break:break-all;pointer-events:none;opacity:0.85;background:#1e1e1e;color:#aaa;border:1px solid #333'
+        didInit = true
+        initializedRef.current = true
+
+        // Check if we have a cached terminal for this task
+        const cached = getTerminal(sessionId)
+        if (cached) {
+          // If mode changed, dispose cached terminal and kill old PTY to start fresh
+          if (cached.mode !== mode) {
+            // Reset state FIRST to ignore any in-flight data
+            resetTaskState(sessionId)
+            disposeTerminal(sessionId)
+            // Kill old PTY (any data it sends will be ignored)
+            await window.api.pty.kill(sessionId)
+          } else {
+            // Reattach existing terminal (container already has dimensions)
+            containerRef.current.appendChild(cached.element)
+            onAttachedRef.current?.({ sessionId, focus: () => cached.terminal.focus() })
+            cached.terminal.options.theme = resolvedTerminalTheme
+            cached.terminal.options.minimumContrastRatio =
+              resolvedTerminalVariant === 'light' ? 4.5 : 1
+            terminalRef.current = cached.terminal
+            fitAddonRef.current = cached.fitAddon
+            serializeAddonRef.current = cached.serializeAddon
+            searchAddonRef.current = cached.searchAddon
+            registerActiveAddon(sessionId, cached.serializeAddon)
+            if (cached.lastRenderedSeq !== undefined) {
+              lastRenderedSeqRef.current = cached.lastRenderedSeq
+            }
+
+            // Re-attach key handler (old closure captured stale setSearchOpen)
+            cached.terminal.attachCustomKeyEventHandler(handleTerminalKeyEvent)
+
+            // Simple fit - container is guaranteed to have dimensions
+            const prevCols = cached.terminal.cols
+            const prevRows = cached.terminal.rows
+            cached.fitAddon.fit()
+            // Only resize PTY if dimensions actually changed (avoids spurious SIGWINCH)
+            if (cached.terminal.cols !== prevCols || cached.terminal.rows !== prevRows) {
+              window.api.pty.resize(sessionId, cached.terminal.cols, cached.terminal.rows)
+            }
+            cached.terminal.write('\x1b[0m') // Reset ANSI state on reattach
+
+            // Sync state from backend (fixes stuck loading spinner on reattach)
+            const actualState = await window.api.pty.getState(sessionId)
+            if (signal.aborted) return // Don't setState if unmounted
+            if (actualState) setPtyState(actualState)
+
+            // Replay any data that arrived while terminal was detached.
+            // During abort/reinit cycles, terminalRef is null so the subscribe
+            // callback's write() is a no-op — this fills that gap.
+            // Use lastRenderedSeqRef (tracks xterm writes) not getLastSeq
+            // (tracks PtyContext receives — advances even when terminalRef is null).
+            const missed = await window.api.pty.getBufferSince(
+              sessionId,
+              lastRenderedSeqRef.current
+            )
+            if (signal.aborted) return
+            if (missed && missed.chunks.length > 0) {
+              cached.terminal.write('\x1b[0m')
+              for (const chunk of missed.chunks) {
+                cached.terminal.write(chunk.data)
+              }
+              cached.terminal.write('\x1b[0m')
+              lastRenderedSeqRef.current = missed.currentSeq
+            }
+
+            // Expose API for programmatic input and focus
+            onReadyRef.current?.({
+              sendInput: async (text) => {
+                cached.terminal.input(text)
+              },
+              write: (data) => window.api.pty.write(sessionId, data),
+              focus: () => cached.terminal.focus(),
+              clearBuffer: clearBufferWithoutRestart
+            })
+            return
+          }
         }
-        return tooltipEl
-      }
-      let tooltipShown = false
-      const showTooltip = (event: MouseEvent, text: string, hint: string) => {
-        if (tooltipShown) return // Don't reposition on subsequent mousemove events
-        tooltipShown = true
-        const el = getTooltip()
-        if (!el.parentNode && terminalRef.current?.element) {
-          terminalRef.current.element.appendChild(el)
+
+        // Link tooltip — shown on hover for all link types (URLs, files, OSC 8).
+        // Uses xterm-hover class so mouse events don't fall through to other links.
+        // Positioned at initial hover point (doesn't follow cursor).
+        let tooltipEl: HTMLDivElement | null = null
+        const getTooltip = () => {
+          if (!tooltipEl) {
+            tooltipEl = document.createElement('div')
+            tooltipEl.className = 'xterm-hover'
+            tooltipEl.style.cssText =
+              'display:none;position:fixed;z-index:50;padding:2px 6px;border-radius:3px;font-size:11px;line-height:1.3;max-width:600px;white-space:normal;word-break:break-all;pointer-events:none;opacity:0.85;background:#1e1e1e;color:#aaa;border:1px solid #333'
+          }
+          return tooltipEl
         }
-        el.textContent = `${text}  ${hint}`
-        el.style.display = 'block'
-        el.style.left = `${event.clientX}px`
-        el.style.top = `${event.clientY - el.offsetHeight - 2}px`
-      }
-      const hideTooltip = () => { tooltipShown = false; if (tooltipEl) tooltipEl.style.display = 'none' }
+        let tooltipShown = false
+        const showTooltip = (event: MouseEvent, text: string, hint: string) => {
+          if (tooltipShown) return // Don't reposition on subsequent mousemove events
+          tooltipShown = true
+          const el = getTooltip()
+          if (!el.parentNode && terminalRef.current?.element) {
+            terminalRef.current.element.appendChild(el)
+          }
+          el.textContent = `${text}  ${hint}`
+          el.style.display = 'block'
+          el.style.left = `${event.clientX}px`
+          el.style.top = `${event.clientY - el.offsetHeight - 2}px`
+        }
+        const hideTooltip = () => {
+          tooltipShown = false
+          if (tooltipEl) tooltipEl.style.display = 'none'
+        }
 
-      const urlHint = '— ⌘+Click open · ⌘⇧+Click external'
-      const fileHint = '— ⌘+Click open'
+        const urlHint = '— ⌘+Click open · ⌘⇧+Click external'
+        const fileHint = '— ⌘+Click open'
 
-      // Create new terminal
-      const terminal = new XTerm({
-        allowProposedApi: true,
-        macOptionIsMeta: true,
-        cursorBlink: false,
-        fontSize: terminalFontSize,
-        fontFamily: terminalFontFamily,
-        scrollback: terminalScrollback,
-        scrollOnEraseInDisplay: true,
-        theme: resolvedTerminalTheme,
-        minimumContrastRatio: resolvedTerminalVariant === 'light' ? 4.5 : 1,
-        // OSC 8 hyperlinks — explicit links from CLI tools (gh, cargo, ls --hyperlink).
-        // Same Cmd+Click routing as WebLinkProvider. Without this, xterm shows
-        // a confirm() dialog + window.open().
-        linkHandler: {
-          activate: (event: MouseEvent, uri: string) => {
+        // Create new terminal
+        const terminal = new XTerm({
+          allowProposedApi: true,
+          macOptionIsMeta: true,
+          cursorBlink: false,
+          fontSize: terminalFontSize,
+          fontFamily: terminalFontFamily,
+          scrollback: terminalScrollback,
+          scrollOnEraseInDisplay: true,
+          theme: resolvedTerminalTheme,
+          minimumContrastRatio: resolvedTerminalVariant === 'light' ? 4.5 : 1,
+          // OSC 8 hyperlinks — explicit links from CLI tools (gh, cargo, ls --hyperlink).
+          // Same Cmd+Click routing as WebLinkProvider. Without this, xterm shows
+          // a confirm() dialog + window.open().
+          linkHandler: {
+            activate: (event: MouseEvent, uri: string) => {
+              if (event.metaKey && event.shiftKey) {
+                void window.api.shell.openExternal(uri)
+              } else if (event.metaKey && onOpenUrlRef.current) {
+                onOpenUrlRef.current(uri)
+              } else if (event.metaKey) {
+                void window.api.shell.openExternal(uri)
+              }
+            },
+            hover: (e: MouseEvent, text: string) => showTooltip(e, text, urlHint),
+            leave: () => hideTooltip()
+          }
+        })
+
+        const fitAddon = new FitAddon()
+        const serializeAddon = new SerializeAddon()
+        const searchAddon = new SearchAddon()
+
+        terminal.loadAddon(fitAddon)
+        terminal.loadAddon(serializeAddon)
+        terminal.loadAddon(searchAddon)
+
+        // xterm defaults to Unicode v6 widths — modern glyphs in TUIs (Claude Code
+        // box-draw, emoji, combining marks) desync cursor → overlapping redraws.
+        terminal.loadAddon(new UnicodeGraphemesAddon())
+        terminal.unicode.activeVersion = '15-graphemes'
+
+        // Clickable URLs — pointer cursor on hover, no underline decoration.
+        // Underline disabled to avoid persistent-underline bugs with WebGL LinkRenderLayer.
+        // Cmd+Click → browser panel, Cmd+Shift+Click → external browser
+        const linkProvider = new WebLinkProvider(
+          terminal,
+          (event, uri) => {
             if (event.metaKey && event.shiftKey) {
               void window.api.shell.openExternal(uri)
             } else if (event.metaKey && onOpenUrlRef.current) {
@@ -452,232 +534,230 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
               void window.api.shell.openExternal(uri)
             }
           },
-          hover: (e: MouseEvent, text: string) => showTooltip(e, text, urlHint),
-          leave: () => hideTooltip(),
-        }
-      })
+          (e, text) => showTooltip(e, text, urlHint),
+          hideTooltip
+        )
+        terminal.registerLinkProvider(linkProvider)
 
-      const fitAddon = new FitAddon()
-      const serializeAddon = new SerializeAddon()
-      const searchAddon = new SearchAddon()
+        // Clickable file paths — Cmd+Click → editor (in-project) or Finder (external).
+        // Shift+Click is consumed by xterm for text selection, so no Shift variant.
+        terminal.registerLinkProvider(
+          new FileLinkProvider(
+            terminal,
+            (event, filePath, line, col) => {
+              if (!event.metaKey) return
+              // Resolve relative paths against terminal cwd
+              const resolved = filePath.startsWith('/') ? filePath : `${cwd}/${filePath}`
+              const isInProject = resolved.startsWith(cwd + '/') || resolved === cwd
+              if (!isInProject) {
+                void window.api.git.revealInFinder(resolved)
+              } else if (onOpenFileRef.current) {
+                // Pass relative path to editor panel
+                const relative = resolved.startsWith(cwd + '/')
+                  ? resolved.slice(cwd.length + 1)
+                  : filePath
+                // Terminal file links use 1-based col; normalize to 0-based
+                onOpenFileRef.current(
+                  relative,
+                  line != null
+                    ? { position: { line, col: col != null ? col - 1 : undefined } }
+                    : undefined
+                )
+              } else {
+                void window.api.git.revealInFinder(resolved)
+              }
+            },
+            (e, text) => showTooltip(e, text, fileHint),
+            hideTooltip
+          )
+        )
 
-      terminal.loadAddon(fitAddon)
-      terminal.loadAddon(serializeAddon)
-      terminal.loadAddon(searchAddon)
-
-      // xterm defaults to Unicode v6 widths — modern glyphs in TUIs (Claude Code
-      // box-draw, emoji, combining marks) desync cursor → overlapping redraws.
-      terminal.loadAddon(new UnicodeGraphemesAddon())
-      terminal.unicode.activeVersion = '15-graphemes'
-
-      // Clickable URLs — pointer cursor on hover, no underline decoration.
-      // Underline disabled to avoid persistent-underline bugs with WebGL LinkRenderLayer.
-      // Cmd+Click → browser panel, Cmd+Shift+Click → external browser
-      const linkProvider = new WebLinkProvider(terminal, (event, uri) => {
-        if (event.metaKey && event.shiftKey) {
-          void window.api.shell.openExternal(uri)
-        } else if (event.metaKey && onOpenUrlRef.current) {
-          onOpenUrlRef.current(uri)
-        } else if (event.metaKey) {
-          void window.api.shell.openExternal(uri)
-        }
-      }, (e, text) => showTooltip(e, text, urlHint), hideTooltip)
-      terminal.registerLinkProvider(linkProvider)
-
-      // Clickable file paths — Cmd+Click → editor (in-project) or Finder (external).
-      // Shift+Click is consumed by xterm for text selection, so no Shift variant.
-      terminal.registerLinkProvider(new FileLinkProvider(terminal, (event, filePath, line, col) => {
-        if (!event.metaKey) return
-        // Resolve relative paths against terminal cwd
-        const resolved = filePath.startsWith('/') ? filePath : `${cwd}/${filePath}`
-        const isInProject = resolved.startsWith(cwd + '/') || resolved === cwd
-        if (!isInProject) {
-          void window.api.git.revealInFinder(resolved)
-        } else if (onOpenFileRef.current) {
-          // Pass relative path to editor panel
-          const relative = resolved.startsWith(cwd + '/') ? resolved.slice(cwd.length + 1) : filePath
-          // Terminal file links use 1-based col; normalize to 0-based
-          onOpenFileRef.current(relative, line != null ? { position: { line, col: col != null ? col - 1 : undefined } } : undefined)
-        } else {
-          void window.api.git.revealInFinder(resolved)
-        }
-      }, (e, text) => showTooltip(e, text, fileHint), hideTooltip))
-
-      // Test helper — allows e2e tests to trigger link activation without mouse coordinates
-      const w = window as unknown as Record<string, unknown>
-      w.__slayzone_terminalLinks = {
-        ...w.__slayzone_terminalLinks as object,
-        [sessionId]: linkProvider,
-      }
-
-      // WebGL renderer — 5-10x faster than Canvas 2D.
-      // Safe because filterBufferData() strips SGR 4 (underline) codes server-side
-      // before data reaches the renderer. CSS override kept as safety net.
-      try {
-        const webglAddon = new WebglAddon()
-        webglAddon.onContextLoss(() => {
-          console.warn('[terminal] WebGL context lost, falling back to DOM renderer')
-          webglAddon.dispose()
-        })
-        terminal.loadAddon(webglAddon)
-      } catch {
-        // WebGL not available, continue with canvas renderer
-      }
-
-      terminalRef.current = terminal
-      fitAddonRef.current = fitAddon
-      serializeAddonRef.current = serializeAddon
-      searchAddonRef.current = searchAddon
-      registerActiveAddon(sessionId, serializeAddon)
-
-      terminal.open(containerRef.current)
-      onAttachedRef.current?.({ sessionId, focus: () => terminal.focus() })
-      terminal.clear() // Ensure terminal starts completely fresh
-      // Simple fit - container is guaranteed to have dimensions from waitForDimensions
-      fitAddon.fit()
-
-      // Let Ctrl+Tab and Ctrl+Shift+Tab bubble up for tab switching
-      // Intercept Cmd+F / Ctrl+F for terminal search
-      terminal.attachCustomKeyEventHandler(handleTerminalKeyEvent)
-
-      // Check if PTY already exists (e.g., from idle hibernation)
-      const exists = await window.api.pty.exists(sessionId)
-      if (signal.aborted) return // Don't continue if unmounted
-      let createCols = terminal.cols
-      let createRows = terminal.rows
-      if (exists) {
-        // Sync state from main process (fixes stuck loading spinner)
-        const actualState = await window.api.pty.getState(sessionId)
-        if (signal.aborted) return // Don't setState if unmounted
-        if (actualState) setPtyState(actualState)
-
-        // Restore from backend ring buffer (single source of truth).
-        // Use getBufferSince with -1 to get all chunks.
-        const result = await window.api.pty.getBufferSince(sessionId, -1)
-        if (signal.aborted) return
-        if (result) {
-          for (const chunk of result.chunks) {
-            terminal.write(chunk.data)
-          }
-          lastRenderedSeqRef.current = result.currentSeq
-        }
-      } else {
-
-        // Generate conversation ID for AI modes whose initialCommand uses {id}.
-        // Providers without {id} (e.g. codex, gemini) generate their own session
-        // IDs internally — storing a client UUID would be bogus.
-        let newConversationId = conversationIdRef.current
-        if (mode !== 'terminal' && supportsSessionId && !newConversationId && !existingConversationIdRef.current) {
-          newConversationId = crypto.randomUUID()
-          onConversationCreatedRef.current?.(newConversationId)
+        // Test helper — allows e2e tests to trigger link activation without mouse coordinates
+        const w = window as unknown as Record<string, unknown>
+        w.__slayzone_terminalLinks = {
+          ...(w.__slayzone_terminalLinks as object),
+          [sessionId]: linkProvider
         }
 
-        // Create PTY — plain terminal mode doesn't use conversation IDs
-        // Note: Don't pass initialPrompt - we'll inject it after terminal is ready
-        const isAiMode = mode !== 'terminal'
-        const effectiveConversationId = isAiMode ? newConversationId : undefined
-        const effectiveExistingConversationId = isAiMode ? existingConversationIdRef.current : undefined
-        // Capture dims before async gap so PTY starts at correct size
-        createCols = terminal.cols
-        createRows = terminal.rows
-        const result = await window.api.pty.create({
-          sessionId, cwd,
-          conversationId: effectiveConversationId,
-          existingConversationId: effectiveExistingConversationId,
-          mode, providerFlags: providerFlagsRef.current, executionContext: executionContextRef.current,
-          cols: createCols,
-          rows: createRows,
-        })
-        if (!result.success) {
-          const message = result.error || 'Failed to create terminal process'
-          terminal.writeln(`\x1b[31mError: ${message}\x1b[0m`)
-          setInitError(message)
-          setPtyState('error')
-          return
+        // WebGL renderer — 5-10x faster than Canvas 2D.
+        // Safe because filterBufferData() strips SGR 4 (underline) codes server-side
+        // before data reaches the renderer. CSS override kept as safety net.
+        try {
+          const webglAddon = new WebglAddon()
+          webglAddon.onContextLoss(() => {
+            console.warn('[terminal] WebGL context lost, falling back to DOM renderer')
+            webglAddon.dispose()
+          })
+          terminal.loadAddon(webglAddon)
+        } catch {
+          // WebGL not available, continue with canvas renderer
         }
-      }
 
-      // Handle terminal input - pass through to PTY.
-      // Filter out OSC sequences (\x1b]...\x07 or \x1b]...\x1b\\) that xterm.js
-      // generates as responses to color queries. These would inject stale escape
-      // bytes into the process stdin, breaking interactive prompts (e.g. gh CLI).
-      // User keystrokes and paste data never contain OSC sequences.
-      terminal.onData((data) => {
-        if (!hasCalledFirstInputRef.current) {
-          hasCalledFirstInputRef.current = true
-          onFirstInputRef.current?.()
-        }
-        const filtered = data.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
-        if (filtered) window.api.pty.write(sessionId, filtered)
-      })
+        terminalRef.current = terminal
+        fitAddonRef.current = fitAddon
+        serializeAddonRef.current = serializeAddon
+        searchAddonRef.current = searchAddon
+        registerActiveAddon(sessionId, serializeAddon)
 
-      // Handle resize
-      terminal.onResize(({ cols, rows }) => {
-        if (resizeDebounceRef.current) clearTimeout(resizeDebounceRef.current)
-        resizeDebounceRef.current = setTimeout(() => {
-          resizeDebounceRef.current = null
-          // Save viewport to scrollback before Codex clears on SIGWINCH,
-          // but only if there's substantial content (not just the prompt).
-          // Codex idle prompt = ~5 lines; chat history = many more.
-          if (mode === 'codex') {
-            const buf = terminal.buffer.active
-            let nonEmpty = 0
-            for (let i = 0; i < terminal.rows; i++) {
-              const line = buf.getLine(buf.viewportY + i)
-              if (line && line.translateToString(true).trim()) nonEmpty++
+        terminal.open(containerRef.current)
+        onAttachedRef.current?.({ sessionId, focus: () => terminal.focus() })
+        terminal.clear() // Ensure terminal starts completely fresh
+        // Simple fit - container is guaranteed to have dimensions from waitForDimensions
+        fitAddon.fit()
+
+        // Let Ctrl+Tab and Ctrl+Shift+Tab bubble up for tab switching
+        // Intercept Cmd+F / Ctrl+F for terminal search
+        terminal.attachCustomKeyEventHandler(handleTerminalKeyEvent)
+
+        // Check if PTY already exists (e.g., from idle hibernation)
+        const exists = await window.api.pty.exists(sessionId)
+        if (signal.aborted) return // Don't continue if unmounted
+        let createCols = terminal.cols
+        let createRows = terminal.rows
+        if (exists) {
+          // Sync state from main process (fixes stuck loading spinner)
+          const actualState = await window.api.pty.getState(sessionId)
+          if (signal.aborted) return // Don't setState if unmounted
+          if (actualState) setPtyState(actualState)
+
+          // Restore from backend ring buffer (single source of truth).
+          // Use getBufferSince with -1 to get all chunks.
+          const result = await window.api.pty.getBufferSince(sessionId, -1)
+          if (signal.aborted) return
+          if (result) {
+            for (const chunk of result.chunks) {
+              terminal.write(chunk.data)
             }
-            if (nonEmpty > 10) terminal.write('\x1b[2J')
+            lastRenderedSeqRef.current = result.currentSeq
           }
+        } else {
+          // Generate conversation ID for AI modes whose initialCommand uses {id}.
+          // Providers without {id} (e.g. codex, gemini) generate their own session
+          // IDs internally — storing a client UUID would be bogus.
+          let newConversationId = conversationIdRef.current
+          if (
+            mode !== 'terminal' &&
+            supportsSessionId &&
+            !newConversationId &&
+            !existingConversationIdRef.current
+          ) {
+            newConversationId = crypto.randomUUID()
+            onConversationCreatedRef.current?.(newConversationId)
+          }
+
+          // Create PTY — plain terminal mode doesn't use conversation IDs
+          // Note: Don't pass initialPrompt - we'll inject it after terminal is ready
+          const isAiMode = mode !== 'terminal'
+          const effectiveConversationId = isAiMode ? newConversationId : undefined
+          const effectiveExistingConversationId = isAiMode
+            ? existingConversationIdRef.current
+            : undefined
+          // Capture dims before async gap so PTY starts at correct size
+          createCols = terminal.cols
+          createRows = terminal.rows
+          const result = await window.api.pty.create({
+            sessionId,
+            cwd,
+            conversationId: effectiveConversationId,
+            existingConversationId: effectiveExistingConversationId,
+            mode,
+            providerFlags: providerFlagsRef.current,
+            executionContext: executionContextRef.current,
+            cols: createCols,
+            rows: createRows
+          })
+          if (!result.success) {
+            const message = result.error || 'Failed to create terminal process'
+            terminal.writeln(`\x1b[31mError: ${message}\x1b[0m`)
+            setInitError(message)
+            setPtyState('error')
+            return
+          }
+        }
+
+        // Handle terminal input - pass through to PTY.
+        // Filter out OSC sequences (\x1b]...\x07 or \x1b]...\x1b\\) that xterm.js
+        // generates as responses to color queries. These would inject stale escape
+        // bytes into the process stdin, breaking interactive prompts (e.g. gh CLI).
+        // User keystrokes and paste data never contain OSC sequences.
+        terminal.onData((data) => {
+          if (!hasCalledFirstInputRef.current) {
+            hasCalledFirstInputRef.current = true
+            onFirstInputRef.current?.()
+          }
+          const filtered = data.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, '')
+          if (filtered) window.api.pty.write(sessionId, filtered)
+        })
+
+        // Handle resize
+        terminal.onResize(({ cols, rows }) => {
+          if (resizeDebounceRef.current) clearTimeout(resizeDebounceRef.current)
+          resizeDebounceRef.current = setTimeout(() => {
+            resizeDebounceRef.current = null
+            // Save viewport to scrollback before Codex clears on SIGWINCH,
+            // but only if there's substantial content (not just the prompt).
+            // Codex idle prompt = ~5 lines; chat history = many more.
+            if (mode === 'codex') {
+              const buf = terminal.buffer.active
+              let nonEmpty = 0
+              for (let i = 0; i < terminal.rows; i++) {
+                const line = buf.getLine(buf.viewportY + i)
+                if (line && line.translateToString(true).trim()) nonEmpty++
+              }
+              if (nonEmpty > 10) terminal.write('\x1b[2J')
+            }
+            window.api.pty.resize(sessionId, cols, rows)
+          }, 150)
+        })
+
+        // Sync PTY dimensions. For new PTYs (created with correct dims above),
+        // only resize if the container changed during the async gap. For existing
+        // PTYs (hibernation resume), always sync since we don't know their state.
+        const { cols, rows } = terminal
+        if (!exists && cols === createCols && rows === createRows) {
+          // PTY was just created with these exact dims — skip redundant SIGWINCH
+        } else {
           window.api.pty.resize(sessionId, cols, rows)
-        }, 150)
-      })
+        }
 
-      // Sync PTY dimensions. For new PTYs (created with correct dims above),
-      // only resize if the container changed during the async gap. For existing
-      // PTYs (hibernation resume), always sync since we don't know their state.
-      const { cols, rows } = terminal
-      if (!exists && cols === createCols && rows === createRows) {
-        // PTY was just created with these exact dims — skip redundant SIGWINCH
-      } else {
-        window.api.pty.resize(sessionId, cols, rows)
-      }
+        // Inject text into terminal in a single write (avoids char-by-char IPC race)
+        const injectText = async (text: string): Promise<void> => {
+          terminal.input(text)
+        }
 
-      // Inject text into terminal in a single write (avoids char-by-char IPC race)
-      const injectText = async (text: string): Promise<void> => {
-        terminal.input(text)
+        // Expose API for programmatic input and focus
+        onReadyRef.current?.({
+          sendInput: injectText,
+          write: (data) => window.api.pty.write(sessionId, data),
+          focus: () => terminal.focus(),
+          clearBuffer: clearBufferWithoutRestart
+        })
+        // Inject initial prompt if provided (after a delay for terminal to be ready)
+        if (initialPromptRef.current) {
+          setTimeout(async () => {
+            if (signal.aborted) return // Don't inject if unmounted
+            try {
+              // For plan mode, prefix with /plan
+              const textToInject = initialPromptRef.current!
+              await injectText(textToInject)
+            } catch {
+              // Terminal may have been disposed, ignore
+            }
+          }, 500)
+        }
+      } catch (error) {
+        if (signal.aborted) return
+        const message = error instanceof Error ? error.message : 'Failed to initialize terminal'
+        setInitError(message)
+        setPtyState('error')
+      } finally {
+        if (didInit) {
+          setIsInitializing(false)
+        }
       }
-
-      // Expose API for programmatic input and focus
-      onReadyRef.current?.({
-        sendInput: injectText,
-        write: (data) => window.api.pty.write(sessionId, data),
-        focus: () => terminal.focus(),
-        clearBuffer: clearBufferWithoutRestart
-      })
-      // Inject initial prompt if provided (after a delay for terminal to be ready)
-      if (initialPromptRef.current) {
-        setTimeout(async () => {
-          if (signal.aborted) return // Don't inject if unmounted
-          try {
-            // For plan mode, prefix with /plan
-            const textToInject = initialPromptRef.current!
-            await injectText(textToInject)
-          } catch {
-            // Terminal may have been disposed, ignore
-          }
-        }, 500)
-      }
-    } catch (error) {
-      if (signal.aborted) return
-      const message = error instanceof Error ? error.message : 'Failed to initialize terminal'
-      setInitError(message)
-      setPtyState('error')
-    } finally {
-      if (didInit) {
-        setIsInitializing(false)
-      }
-    }
-  }, [sessionId, cwd, mode, resetTaskState, handleTerminalKeyEvent, clearBufferWithoutRestart])
+    },
+    [sessionId, cwd, mode, resetTaskState, handleTerminalKeyEvent, clearBufferWithoutRestart]
+  )
 
   // Initialize terminal
   useEffect(() => {
@@ -702,7 +782,12 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
       }
 
       // Detach terminal from DOM and cache it (don't dispose)
-      if (terminalRef.current && fitAddonRef.current && serializeAddonRef.current && searchAddonRef.current) {
+      if (
+        terminalRef.current &&
+        fitAddonRef.current &&
+        serializeAddonRef.current &&
+        searchAddonRef.current
+      ) {
         const element = terminalRef.current.element
         if (element && element.parentNode) {
           element.parentNode.removeChild(element)
@@ -794,7 +879,6 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
     }
   }, [sessionId, subscribe, subscribeExit, subscribeSessionInvalid, getCrashOutput, cleanupTask])
 
-
   // Replay missed PTY data when task becomes active
   useEffect(() => {
     if (!isActive || !terminalRef.current) return
@@ -812,20 +896,21 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
         }
         // Wait for xterm to finish processing all queued writes
         if (terminalRef.current) {
-          await new Promise<void>(resolve => terminalRef.current!.write('', resolve))
+          await new Promise<void>((resolve) => terminalRef.current!.write('', resolve))
         }
       } finally {
         if (!cancelled) setIsReplaying(false)
       }
     }
     replay()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [isActive, sessionId])
-
 
   // Subscribe to PTY state changes for loading indicator
   useEffect(() => {
-    setPtyState(prev => {
+    setPtyState((prev) => {
       // Don't regress from a terminal state (dead/error) back to starting
       if (prev !== 'starting') return prev
       return getState(sessionId)
@@ -855,7 +940,9 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
         return
       }
       if (!exists || !actual || actual === 'starting') {
-        console.warn(`[terminal] watchdog: ${sessionId} stuck in 'starting' for 20s, transitioning to dead`)
+        console.warn(
+          `[terminal] watchdog: ${sessionId} stuck in 'starting' for 20s, transitioning to dead`
+        )
         setPtyState('dead')
         setDeadExitCode(-1)
       }
@@ -877,15 +964,28 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
     // palette queries return what is actually rendered.
     const t = resolvedTerminalTheme
     const ansi = [
-      t.black, t.red, t.green, t.yellow, t.blue, t.magenta, t.cyan, t.white,
-      t.brightBlack, t.brightRed, t.brightGreen, t.brightYellow,
-      t.brightBlue, t.brightMagenta, t.brightCyan, t.brightWhite,
+      t.black,
+      t.red,
+      t.green,
+      t.yellow,
+      t.blue,
+      t.magenta,
+      t.cyan,
+      t.white,
+      t.brightBlack,
+      t.brightRed,
+      t.brightGreen,
+      t.brightYellow,
+      t.brightBlue,
+      t.brightMagenta,
+      t.brightCyan,
+      t.brightWhite
     ].filter((c): c is string => typeof c === 'string')
     void window.api.pty.setTheme({
       foreground: t.foreground ?? '#ffffff',
       background: t.background ?? '#000000',
       cursor: t.cursor ?? '#ffffff',
-      ansi: ansi.length === 16 ? ansi : undefined,
+      ansi: ansi.length === 16 ? ansi : undefined
     })
   }, [terminalThemeId, contentVariant])
 
@@ -1149,7 +1249,11 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
 
   const handleSearchClose = useCallback(() => {
     setSearchOpen(false)
-    try { searchAddonRef.current?.clearDecorations() } catch { /* */ }
+    try {
+      searchAddonRef.current?.clearDecorations()
+    } catch {
+      /* */
+    }
     terminalRef.current?.focus()
   }, [])
 
@@ -1173,7 +1277,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
     }
   }, [mode])
 
-  const showDeadOverlay = ptyState === 'dead' && !isInitializing && deadExitCode !== null && mode !== 'terminal'
+  const showDeadOverlay =
+    ptyState === 'dead' && !isInitializing && deadExitCode !== null && mode !== 'terminal'
 
   return (
     <div className="relative h-full w-full">
@@ -1194,13 +1299,18 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
       >
         <div ref={containerRef} className="h-full w-full overflow-hidden" />
         {isLoading && (
-          <div className="absolute inset-0 z-10" style={{ backgroundColor: resolvedTerminalTheme.background ?? '#0a0a0a' }}>
+          <div
+            className="absolute inset-0 z-10"
+            style={{ backgroundColor: resolvedTerminalTheme.background ?? '#0a0a0a' }}
+          >
             <PulseGrid />
           </div>
         )}
         {initError && (
           <div className="absolute inset-0 flex items-center justify-center bg-background dark:bg-surface-0 z-10 p-4">
-            <div className="text-red-400 text-sm text-center">Failed to start terminal: {initError}</div>
+            <div className="text-red-400 text-sm text-center">
+              Failed to start terminal: {initError}
+            </div>
           </div>
         )}
         {showDeadOverlay && (
@@ -1225,10 +1335,14 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
                 disabled={doctorLoading}
                 className="px-3 py-1.5 text-sm rounded-md bg-surface-2 dark:bg-surface-2 hover:bg-accent dark:hover:bg-accent text-foreground dark:text-foreground transition-colors disabled:opacity-50 flex items-center gap-1.5"
               >
-                {doctorLoading
-                  ? <><Loader2 className="size-3.5 animate-spin" />Checking…</>
-                  : 'Doctor'
-                }
+                {doctorLoading ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    Checking…
+                  </>
+                ) : (
+                  'Doctor'
+                )}
               </button>
             </div>
             {doctorResults && (
@@ -1239,13 +1353,16 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
                     className={`rounded-lg border p-3 space-y-1.5 ${r.ok ? 'border-green-500/20 bg-green-50/40 dark:bg-green-950/20' : 'border-red-500/20 bg-red-50/40 dark:bg-red-950/20'}`}
                   >
                     <div className="flex items-start gap-2">
-                      {r.ok
-                        ? <CheckCircle2 className="size-3.5 text-green-600 dark:text-green-400 shrink-0 mt-px" />
-                        : <XCircle className="size-3.5 text-red-500 dark:text-red-400 shrink-0 mt-px" />
-                      }
+                      {r.ok ? (
+                        <CheckCircle2 className="size-3.5 text-green-600 dark:text-green-400 shrink-0 mt-px" />
+                      ) : (
+                        <XCircle className="size-3.5 text-red-500 dark:text-red-400 shrink-0 mt-px" />
+                      )}
                       <div className="min-w-0 space-y-0.5">
                         <p className="text-xs font-medium leading-none">{r.check}</p>
-                        <p className="text-xs text-muted-foreground dark:text-muted-foreground">{r.detail}</p>
+                        <p className="text-xs text-muted-foreground dark:text-muted-foreground">
+                          {r.detail}
+                        </p>
                       </div>
                     </div>
                     {!r.ok && r.fix && (

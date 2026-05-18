@@ -34,24 +34,27 @@ export function RemoteSection({ upstreamAB, targetPath, branch, onSyncDone }: Re
   const [pushMenuOpen, setPushMenuOpen] = useState(false)
   const [forcePushConfirmOpen, setForcePushConfirmOpen] = useState(false)
 
-  const handlePush = useCallback(async (force?: boolean) => {
-    setPushing(true)
-    setPushMenuOpen(false)
-    setForcePushConfirmOpen(false)
-    try {
-      const result = await window.api.git.push(targetPath, branch ?? undefined, force)
-      if (!result.success) {
-        toast(result.error ?? 'Push failed')
-      } else {
-        toast(force ? 'Force pushed' : 'Pushed')
-        onSyncDone()
+  const handlePush = useCallback(
+    async (force?: boolean) => {
+      setPushing(true)
+      setPushMenuOpen(false)
+      setForcePushConfirmOpen(false)
+      try {
+        const result = await window.api.git.push(targetPath, branch ?? undefined, force)
+        if (!result.success) {
+          toast(result.error ?? 'Push failed')
+        } else {
+          toast(force ? 'Force pushed' : 'Pushed')
+          onSyncDone()
+        }
+      } catch (err) {
+        toast(err instanceof Error ? err.message : 'Push failed')
+      } finally {
+        setPushing(false)
       }
-    } catch (err) {
-      toast(err instanceof Error ? err.message : 'Push failed')
-    } finally {
-      setPushing(false)
-    }
-  }, [targetPath, branch, onSyncDone])
+    },
+    [targetPath, branch, onSyncDone]
+  )
 
   const handlePull = useCallback(async () => {
     setPulling(true)
@@ -85,11 +88,19 @@ export function RemoteSection({ upstreamAB, targetPath, branch, onSyncDone }: Re
               disabled={pulling || pushing}
               className="gap-1 h-7 px-2"
             >
-              {pulling ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              {pulling ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5" />
+              )}
               Pull{behind > 0 && ` ↓${behind}`}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{behind > 0 ? `Pull ${behind} commit${behind !== 1 ? 's' : ''} from remote` : 'Pull from remote'}</TooltipContent>
+          <TooltipContent>
+            {behind > 0
+              ? `Pull ${behind} commit${behind !== 1 ? 's' : ''} from remote`
+              : 'Pull from remote'}
+          </TooltipContent>
         </Tooltip>
         <div className="flex">
           <Tooltip>
@@ -101,11 +112,19 @@ export function RemoteSection({ upstreamAB, targetPath, branch, onSyncDone }: Re
                 disabled={pushing || pulling}
                 className="gap-1 h-7 px-2 rounded-r-none border-r-0"
               >
-                {pushing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                {pushing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Upload className="h-3.5 w-3.5" />
+                )}
                 Push{ahead > 0 && ` ↑${ahead}`}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{ahead > 0 ? `Push ${ahead} commit${ahead !== 1 ? 's' : ''} to remote` : 'Push to remote'}</TooltipContent>
+            <TooltipContent>
+              {ahead > 0
+                ? `Push ${ahead} commit${ahead !== 1 ? 's' : ''} to remote`
+                : 'Push to remote'}
+            </TooltipContent>
           </Tooltip>
           <Popover open={pushMenuOpen} onOpenChange={setPushMenuOpen}>
             <PopoverTrigger asChild>
@@ -120,7 +139,10 @@ export function RemoteSection({ upstreamAB, targetPath, branch, onSyncDone }: Re
             </PopoverTrigger>
             <PopoverContent align="end" className="w-40 p-1">
               <button
-                onClick={() => { setPushMenuOpen(false); setForcePushConfirmOpen(true) }}
+                onClick={() => {
+                  setPushMenuOpen(false)
+                  setForcePushConfirmOpen(true)
+                }}
                 className="flex items-center gap-2 w-full px-2 py-1.5 text-xs hover:bg-muted rounded transition-colors text-left text-destructive"
               >
                 Force Push
@@ -135,7 +157,8 @@ export function RemoteSection({ upstreamAB, targetPath, branch, onSyncDone }: Re
           <AlertDialogHeader>
             <AlertDialogTitle>Force Push</AlertDialogTitle>
             <AlertDialogDescription>
-              This will overwrite the remote branch history using --force-with-lease. This can cause others to lose work if they've pushed to this branch.
+              This will overwrite the remote branch history using --force-with-lease. This can cause
+              others to lose work if they've pushed to this branch.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

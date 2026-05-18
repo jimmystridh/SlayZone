@@ -6,7 +6,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  cn,
+  cn
 } from '@slayzone/ui'
 import { useTabStore } from '@slayzone/settings'
 import type { ReactNode } from 'react'
@@ -37,9 +37,18 @@ interface AppSidebarProps {
   idleByProject?: Map<string, number>
   onReorderProjects: (projectIds: string[]) => void
   onTaskReorder?: (taskIds: string[]) => void
-  onTaskMove?: (taskId: string, newColumnId: string, targetIndex: number, groupBy: 'none' | 'status' | 'priority') => void
+  onTaskMove?: (
+    taskId: string,
+    newColumnId: string,
+    targetIndex: number,
+    groupBy: 'none' | 'status' | 'priority'
+  ) => void
   onTaskReparent?: (taskId: string, newParentId: string | null, newSiblingTaskIds: string[]) => void
-  onTaskBulkReparent?: (taskIds: string[], newParentId: string | null, newSiblingTaskIds: string[]) => void
+  onTaskBulkReparent?: (
+    taskIds: string[],
+    newParentId: string | null,
+    newSiblingTaskIds: string[]
+  ) => void
   onTaskFieldUpdate?: (taskId: string, updates: Partial<Task>) => void
   onTaskBulkFieldUpdate?: (taskIds: string[], updates: Partial<Task>) => void
   taskContextMenuRender?: (task: Task, child: ReactNode) => ReactNode
@@ -94,7 +103,9 @@ function UpdateStatusCard({ state }: { state: UpdateState }) {
           </span>
         </span>
         {state.version && (
-          <span className="shrink-0 rounded-full bg-green-500/15 text-green-500 px-2 py-0.5 text-[10px] font-medium tabular-nums">v{state.version}</span>
+          <span className="shrink-0 rounded-full bg-green-500/15 text-green-500 px-2 py-0.5 text-[10px] font-medium tabular-nums">
+            v{state.version}
+          </span>
         )}
         {downloading && (
           <span
@@ -138,7 +149,7 @@ export function AppSidebar({
   doneTaskIds,
   columnsByProjectId,
   compactFooter,
-  updateState,
+  updateState
 }: AppSidebarProps) {
   const sidebarView = useTabStore((s) => s.sidebarView)
   const setSidebarView = useTabStore((s) => s.setSidebarView)
@@ -188,10 +199,7 @@ export function AppSidebar({
     window.api.window.setWindowButtonVisibility(buttonsVisible)
   }, [buttonsVisible])
   const isResizable = !zenMode && !!view.resizable
-  const effectiveWidth =
-    isResizable
-      ? sidebarWidth ?? view.defaultWidth ?? 288
-      : null
+  const effectiveWidth = isResizable ? (sidebarWidth ?? view.defaultWidth ?? 288) : null
 
   const sidebarBody = (
     <Sidebar
@@ -230,7 +238,7 @@ export function AppSidebar({
               terminalStates,
               taskProgress,
               doneTaskIds,
-              columnsByProjectId,
+              columnsByProjectId
             })}
           </SidebarGroupContent>
         </SidebarGroup>
@@ -307,9 +315,7 @@ export function AppSidebar({
         <div
           className={cn(
             'fixed inset-y-0 left-0 z-40 transition-transform duration-200 ease-out pr-10',
-            hoverRevealed
-              ? 'translate-x-0'
-              : '-translate-x-full pointer-events-none'
+            hoverRevealed ? 'translate-x-0' : '-translate-x-full pointer-events-none'
           )}
           onMouseEnter={() => {
             cancelClose()

@@ -19,15 +19,13 @@ export function ProviderChips({ projectId, layout = 'panel', onChange }: Provide
         window.api.aiConfig.listProviders(),
         window.api.aiConfig.getProjectProviders(projectId)
       ])
-      setAllProviders(providers.filter(p => p.status === 'active'))
+      setAllProviders(providers.filter((p) => p.status === 'active'))
       setEnabled(projectProviders)
     })()
   }, [projectId])
 
   const toggle = async (kind: CliProvider) => {
-    const next = enabled.includes(kind)
-      ? enabled.filter(p => p !== kind)
-      : [...enabled, kind]
+    const next = enabled.includes(kind) ? enabled.filter((p) => p !== kind) : [...enabled, kind]
     setEnabled(next)
     await window.api.aiConfig.setProjectProviders(projectId, next)
     onChange?.()
@@ -38,7 +36,7 @@ export function ProviderChips({ projectId, layout = 'panel', onChange }: Provide
   if (layout === 'inline') {
     return (
       <div className="flex items-center gap-1.5">
-        {allProviders.map(provider => {
+        {allProviders.map((provider) => {
           const active = enabled.includes(provider.kind as CliProvider)
           return (
             <button
@@ -61,7 +59,7 @@ export function ProviderChips({ projectId, layout = 'panel', onChange }: Provide
 
   return (
     <div className="space-y-2">
-      {allProviders.map(provider => {
+      {allProviders.map((provider) => {
         const active = enabled.includes(provider.kind as CliProvider)
         return (
           <div
@@ -71,10 +69,7 @@ export function ProviderChips({ projectId, layout = 'panel', onChange }: Provide
             <p className="text-sm font-medium">
               {PROVIDER_LABELS[provider.kind as CliProvider] ?? provider.name}
             </p>
-            <Switch
-              checked={active}
-              onCheckedChange={() => toggle(provider.kind as CliProvider)}
-            />
+            <Switch checked={active} onCheckedChange={() => toggle(provider.kind as CliProvider)} />
           </div>
         )
       })}

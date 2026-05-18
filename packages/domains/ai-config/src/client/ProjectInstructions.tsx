@@ -1,7 +1,27 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type MouseEvent as ReactMouseEvent
+} from 'react'
 import { createPortal } from 'react-dom'
 import { File, FileText, Link2, RefreshCw, Unlink } from 'lucide-react'
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, Textarea, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, cn } from '@slayzone/ui'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  Textarea,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+  cn
+} from '@slayzone/ui'
 import { useWatchedFile } from '@slayzone/file-editor/client/useWatchedFile'
 import type { AiConfigItem, CliProvider, SyncHealth, SyncReason } from '../shared'
 import { PROVIDER_PATHS, PROVIDER_LABELS } from '../shared/provider-registry'
@@ -21,7 +41,17 @@ interface InstructionFile {
 }
 
 function dedupeProviderFiles(
-  providerHealth: Partial<Record<CliProvider, { health: SyncHealth; reason: SyncReason | null; contentHash?: string | null; lineCount?: number | null }>>
+  providerHealth: Partial<
+    Record<
+      CliProvider,
+      {
+        health: SyncHealth
+        reason: SyncReason | null
+        contentHash?: string | null
+        lineCount?: number | null
+      }
+    >
+  >
 ): InstructionFile[] {
   const byPath = new Map<string, InstructionFile>()
   for (const [provider, info] of Object.entries(providerHealth)) {
@@ -31,22 +61,39 @@ function dedupeProviderFiles(
     const existing = byPath.get(rootPath)
     if (existing) {
       existing.providers.push(p)
-      if (info.health === 'stale' || (info.health === 'not_synced' && existing.health === 'synced')) {
+      if (
+        info.health === 'stale' ||
+        (info.health === 'not_synced' && existing.health === 'synced')
+      ) {
         existing.health = info.health
       }
     } else {
-      byPath.set(rootPath, { path: rootPath, providers: [p], health: info.health, contentHash: info.contentHash ?? null, lineCount: info.lineCount ?? null })
+      byPath.set(rootPath, {
+        path: rootPath,
+        providers: [p],
+        health: info.health,
+        contentHash: info.contentHash ?? null,
+        lineCount: info.lineCount ?? null
+      })
     }
   }
   return Array.from(byPath.values())
 }
 
-
-export function ProjectInstructions({
-  projectId,
-  projectPath,
-}: ProjectInstructionsProps) {
-  const [providerHealth, setProviderHealth] = useState<Partial<Record<CliProvider, { health: SyncHealth; reason: SyncReason | null; contentHash?: string | null; lineCount?: number | null }>>>({})
+export function ProjectInstructions({ projectId, projectPath }: ProjectInstructionsProps) {
+  const [providerHealth, setProviderHealth] = useState<
+    Partial<
+      Record<
+        CliProvider,
+        {
+          health: SyncHealth
+          reason: SyncReason | null
+          contentHash?: string | null
+          lineCount?: number | null
+        }
+      >
+    >
+  >({})
   const [linkedVariant, setLinkedVariant] = useState<AiConfigItem | null>(null)
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -58,7 +105,7 @@ export function ProjectInstructions({
   const selectedFile = files.find((f) => f.path === selectedPath)
   const selectedProvider = selectedFile?.providers[0] ?? null
 
-  const HASH_COLORS = ['#f97316','#8b5cf6','#06b6d4','#ec4899','#84cc16','#eab308','#14b8a6']
+  const HASH_COLORS = ['#f97316', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16', '#eab308', '#14b8a6']
 
   const { hashColorMap, hashMembers } = useMemo(() => {
     const groups = new Map<string, InstructionFile[]>()
@@ -92,7 +139,7 @@ export function ProjectInstructions({
     try {
       const [result, variant] = await Promise.all([
         window.api.aiConfig.getRootInstructions(projectId!, projectPath!),
-        window.api.aiConfig.getProjectInstructionVariant(projectId!),
+        window.api.aiConfig.getProjectInstructionVariant(projectId!)
       ])
       setProviderHealth(result.providerHealth ?? {})
       setLinkedVariant(variant ?? null)
@@ -101,7 +148,9 @@ export function ProjectInstructions({
     }
   }, [isProject, projectId, projectPath])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    void load()
+  }, [load])
 
   // Editable file: read/save/watch via shared primitive. relPath null in linked-variant mode
   // (Textarea is readOnly there).
@@ -113,11 +162,19 @@ export function ProjectInstructions({
       const r = await window.api.aiConfig.readProviderInstructions(projectPath, selectedProvider)
       return r.content
     }, [projectPath, selectedProvider]),
-    save: useCallback(async (content: string) => {
-      if (!projectId || !projectPath || !selectedProvider) return
-      const result = await window.api.aiConfig.pushProviderInstructions(projectId, projectPath, selectedProvider, content)
-      setProviderHealth(result.providerHealth ?? {})
-    }, [projectId, projectPath, selectedProvider]),
+    save: useCallback(
+      async (content: string) => {
+        if (!projectId || !projectPath || !selectedProvider) return
+        const result = await window.api.aiConfig.pushProviderInstructions(
+          projectId,
+          projectPath,
+          selectedProvider,
+          content
+        )
+        setProviderHealth(result.providerHealth ?? {})
+      },
+      [projectId, projectPath, selectedProvider]
+    )
   })
 
   const openPicker = useCallback(async () => {
@@ -126,12 +183,19 @@ export function ProjectInstructions({
     setPickerOpen(true)
   }, [])
 
-  const handleLink = useCallback(async (variantId: string) => {
-    if (!projectId) return
-    await window.api.aiConfig.setProjectInstructionVariant(projectId, variantId, projectPath ?? undefined)
-    setPickerOpen(false)
-    void load()
-  }, [projectId, projectPath, load])
+  const handleLink = useCallback(
+    async (variantId: string) => {
+      if (!projectId) return
+      await window.api.aiConfig.setProjectInstructionVariant(
+        projectId,
+        variantId,
+        projectPath ?? undefined
+      )
+      setPickerOpen(false)
+      void load()
+    },
+    [projectId, projectPath, load]
+  )
 
   const handleUnlink = useCallback(async () => {
     if (!projectId) return
@@ -209,7 +273,10 @@ export function ProjectInstructions({
         </div>
       ) : (
         /* Mode A: Custom — split-pane with file list + editable editor */
-        <div ref={containerRef} className="flex h-full w-full overflow-hidden rounded-lg border bg-surface-3">
+        <div
+          ref={containerRef}
+          className="flex h-full w-full overflow-hidden rounded-lg border bg-surface-3"
+        >
           {/* Left: file list */}
           <div className="flex flex-col overflow-y-auto p-3" style={{ width: splitWidth }}>
             <div className="flex-1 space-y-1">
@@ -243,29 +310,42 @@ export function ProjectInstructions({
                             </TooltipContent>
                           </Tooltip>
                         )}
-                        {file.contentHash && hashColorMap.has(file.contentHash) && (() => {
-                          const members = hashMembers.get(file.contentHash)!
-                          const isUnique = members.length === 1
-                          return (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: hashColorMap.get(file.contentHash) }} />
-                              </TooltipTrigger>
-                              <TooltipContent side="right" className="text-xs">
-                                {isUnique ? (
-                                  <p>Unique content</p>
-                                ) : (
-                                  <>
-                                    <p className="font-medium mb-0.5">Identical content</p>
-                                    {members.map((m) => (
-                                      <p key={m.path} className={cn('font-mono', m.path === file.path && 'font-bold')}>{m.path}</p>
-                                    ))}
-                                  </>
-                                )}
-                              </TooltipContent>
-                            </Tooltip>
-                          )
-                        })()}
+                        {file.contentHash &&
+                          hashColorMap.has(file.contentHash) &&
+                          (() => {
+                            const members = hashMembers.get(file.contentHash)!
+                            const isUnique = members.length === 1
+                            return (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span
+                                    className="size-2 shrink-0 rounded-full"
+                                    style={{ backgroundColor: hashColorMap.get(file.contentHash) }}
+                                  />
+                                </TooltipTrigger>
+                                <TooltipContent side="right" className="text-xs">
+                                  {isUnique ? (
+                                    <p>Unique content</p>
+                                  ) : (
+                                    <>
+                                      <p className="font-medium mb-0.5">Identical content</p>
+                                      {members.map((m) => (
+                                        <p
+                                          key={m.path}
+                                          className={cn(
+                                            'font-mono',
+                                            m.path === file.path && 'font-bold'
+                                          )}
+                                        >
+                                          {m.path}
+                                        </p>
+                                      ))}
+                                    </>
+                                  )}
+                                </TooltipContent>
+                              </Tooltip>
+                            )
+                          })()}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-1 pl-6">
@@ -279,13 +359,19 @@ export function ProjectInstructions({
                 )
               })}
               {files.length === 0 && (
-                <p className="px-2 py-4 text-center text-xs text-muted-foreground">No provider files</p>
+                <p className="px-2 py-4 text-center text-xs text-muted-foreground">
+                  No provider files
+                </p>
               )}
             </div>
           </div>
 
           {/* Drag handle */}
-          <div className="relative flex w-3 shrink-0 cursor-col-resize items-center justify-center" onMouseDown={onDragStart} onDoubleClick={() => setSplitWidth(350)}>
+          <div
+            className="relative flex w-3 shrink-0 cursor-col-resize items-center justify-center"
+            onMouseDown={onDragStart}
+            onDoubleClick={() => setSplitWidth(350)}
+          >
             <div className="h-full w-px bg-border" />
           </div>
 
@@ -313,7 +399,9 @@ export function ProjectInstructions({
                   className="min-h-0 max-h-none flex-1 resize-none rounded-none border-0 shadow-none focus-visible:ring-0 bg-transparent dark:bg-transparent [padding-top:1rem] [padding-bottom:1rem] [field-sizing:fixed] font-mono text-sm"
                   placeholder="Write instructions..."
                   value={watched.content}
-                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) => watched.setContent(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                    watched.setContent(e.target.value)
+                  }
                   onBlur={watched.onBlur}
                 />
               </>
@@ -330,28 +418,34 @@ export function ProjectInstructions({
         <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
           <DialogHeader className="px-5 pt-5 pb-3">
             <DialogTitle className="text-base">Use Library Variant</DialogTitle>
-            <p className="text-xs text-muted-foreground">Select a variant to sync across all provider instruction files</p>
+            <p className="text-xs text-muted-foreground">
+              Select a variant to sync across all provider instruction files
+            </p>
           </DialogHeader>
           <div className="border-t max-h-72 overflow-y-auto">
-            {[...variants].sort((a, b) => a.slug.localeCompare(b.slug)).map((v) => (
-              <button
-                key={v.id}
-                onClick={() => handleLink(v.id)}
-                className="flex w-full items-start gap-3 border-b border-border/40 last:border-0 px-5 py-3 text-left transition-colors hover:bg-muted/40"
-              >
-                <FileText className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{v.slug}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                    {v.content.slice(0, 120) || '(empty)'}
-                  </p>
-                </div>
-              </button>
-            ))}
+            {[...variants]
+              .sort((a, b) => a.slug.localeCompare(b.slug))
+              .map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => handleLink(v.id)}
+                  className="flex w-full items-start gap-3 border-b border-border/40 last:border-0 px-5 py-3 text-left transition-colors hover:bg-muted/40"
+                >
+                  <FileText className="size-4 shrink-0 mt-0.5 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{v.slug}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                      {v.content.slice(0, 120) || '(empty)'}
+                    </p>
+                  </div>
+                </button>
+              ))}
             {variants.length === 0 && (
               <div className="px-5 py-8 text-center">
                 <p className="text-sm text-muted-foreground">No variants available</p>
-                <p className="mt-1 text-xs text-muted-foreground/60">Create one in the Library section first</p>
+                <p className="mt-1 text-xs text-muted-foreground/60">
+                  Create one in the Library section first
+                </p>
               </div>
             )}
           </div>

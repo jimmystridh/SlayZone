@@ -23,17 +23,32 @@ export function stripMarkdown(md: string): string {
 function htmlToMarkdown(html: string): string {
   if (!html) return ''
   let s = html
-  s = s.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (_m, code) => `\`\`\`\n${unescapeHtml(code)}\n\`\`\``)
-  s = s.replace(/<h([123])[^>]*>(.*?)<\/h\1>/g, (_m, level, content) => `${'#'.repeat(Number(level))} ${stripTags(content)}`)
+  s = s.replace(
+    /<pre><code>([\s\S]*?)<\/code><\/pre>/g,
+    (_m, code) => `\`\`\`\n${unescapeHtml(code)}\n\`\`\``
+  )
+  s = s.replace(
+    /<h([123])[^>]*>(.*?)<\/h\1>/g,
+    (_m, level, content) => `${'#'.repeat(Number(level))} ${stripTags(content)}`
+  )
   // Blockquotes
   s = s.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/g, (_m, content) => {
     const inner = content.replace(/<p>(.*?)<\/p>/g, '$1').trim()
-    return inner.split('\n').map((line: string) => `> ${line}`).join('\n')
+    return inner
+      .split('\n')
+      .map((line: string) => `> ${line}`)
+      .join('\n')
   })
   // Horizontal rules
   s = s.replace(/<hr\s*\/?>/g, '\n---\n')
-  s = s.replace(/<li data-type="taskItem" data-checked="true"[^>]*><p>(.*?)<\/p><\/li>/g, '- [x] $1')
-  s = s.replace(/<li data-type="taskItem" data-checked="false"[^>]*><p>(.*?)<\/p><\/li>/g, '- [ ] $1')
+  s = s.replace(
+    /<li data-type="taskItem" data-checked="true"[^>]*><p>(.*?)<\/p><\/li>/g,
+    '- [x] $1'
+  )
+  s = s.replace(
+    /<li data-type="taskItem" data-checked="false"[^>]*><p>(.*?)<\/p><\/li>/g,
+    '- [ ] $1'
+  )
   s = s.replace(/<li><p>(.*?)<\/p><\/li>/g, '- $1')
   s = s.replace(/<\/?(?:ul|ol)[^>]*>/g, '')
   s = s.replace(/<strong>(.*?)<\/strong>/g, '**$1**')
@@ -51,5 +66,9 @@ function stripTags(s: string): string {
 }
 
 function unescapeHtml(s: string): string {
-  return s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
 }

@@ -1,4 +1,12 @@
-import { test, expect, seed, goHome, clickProject, projectBlob, resetApp} from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  goHome,
+  clickProject,
+  projectBlob,
+  resetApp
+} from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { pressShortcut } from '../fixtures/shortcuts'
 
@@ -13,12 +21,20 @@ test.describe('Multi-project & persistence', () => {
     const hasBeta = projects.some((p: { name: string }) => p.name === 'Beta Project')
 
     if (!hasAlpha) {
-      const alpha = await s.createProject({ name: 'Alpha Project', color: '#ef4444', path: TEST_PROJECT_PATH })
+      const alpha = await s.createProject({
+        name: 'Alpha Project',
+        color: '#ef4444',
+        path: TEST_PROJECT_PATH
+      })
       await s.createTask({ projectId: alpha.id, title: 'Alpha task one', status: 'todo' })
       await s.createTask({ projectId: alpha.id, title: 'Alpha task two', status: 'in_progress' })
     }
     if (!hasBeta) {
-      const beta = await s.createProject({ name: 'Beta Project', color: '#3b82f6', path: TEST_PROJECT_PATH })
+      const beta = await s.createProject({
+        name: 'Beta Project',
+        color: '#3b82f6',
+        path: TEST_PROJECT_PATH
+      })
       await s.createTask({ projectId: beta.id, title: 'Beta task one', status: 'todo' })
       await s.createTask({ projectId: beta.id, title: 'Beta task two', status: 'done' })
     }
@@ -44,12 +60,16 @@ test.describe('Multi-project & persistence', () => {
   test('search finds tasks across projects', async ({ mainWindow }) => {
     await pressShortcut(mainWindow, 'search')
 
-    const searchInput = mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
+    const searchInput = mainWindow.getByPlaceholder(
+      'Search files, folders, commands, projects, and tasks...'
+    )
     await expect(searchInput).toBeVisible({ timeout: 5_000 })
     await searchInput.fill('Beta task')
 
     // Unified palette returns mixed results — match the cmdk item.
-    await expect(mainWindow.locator('[cmdk-item]').filter({ hasText: 'Beta task one' })).toBeVisible({ timeout: 3_000 })
+    await expect(
+      mainWindow.locator('[cmdk-item]').filter({ hasText: 'Beta task one' })
+    ).toBeVisible({ timeout: 3_000 })
 
     await mainWindow.keyboard.press('Escape')
   })
@@ -57,7 +77,9 @@ test.describe('Multi-project & persistence', () => {
   test('search with no matching results', async ({ mainWindow }) => {
     await pressShortcut(mainWindow, 'search')
 
-    const searchInput = mainWindow.getByPlaceholder('Search files, folders, commands, projects, and tasks...')
+    const searchInput = mainWindow.getByPlaceholder(
+      'Search files, folders, commands, projects, and tasks...'
+    )
     await expect(searchInput).toBeVisible({ timeout: 5_000 })
     await searchInput.fill('xyznonexistent999')
 
@@ -72,7 +94,9 @@ test.describe('Multi-project & persistence', () => {
 
     // Alpha has tasks in todo and in_progress, but other columns should still have headers
     // Check that Inbox header exists (it should be rendered even if empty)
-    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeAttached({ timeout: 5_000 })
+    await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeAttached({
+      timeout: 5_000
+    })
   })
 
   test('theme setting persists after refresh', async ({ mainWindow }) => {

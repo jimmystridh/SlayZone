@@ -1,11 +1,45 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
-import { ArrowDownCircle, ArrowUpCircle, Library, Link2Off, Lock, RefreshCw, Store, Trash2 } from 'lucide-react'
-import { Button, cn, DiffView, Input, Label, Textarea, Tooltip, TooltipContent, TooltipTrigger } from '@slayzone/ui'
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Library,
+  Link2Off,
+  Lock,
+  RefreshCw,
+  Store,
+  Trash2
+} from 'lucide-react'
+import {
+  Button,
+  cn,
+  DiffView,
+  Input,
+  Label,
+  Textarea,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@slayzone/ui'
 import { repairSkillFrontmatter } from '../shared'
-import type { AiConfigItem, CliProvider, ProjectSkillStatus, SkillUpdateInfo, SkillValidationState, UpdateAiConfigItemInput } from '../shared'
+import type {
+  AiConfigItem,
+  CliProvider,
+  ProjectSkillStatus,
+  SkillUpdateInfo,
+  SkillValidationState,
+  UpdateAiConfigItemInput
+} from '../shared'
 import { PROVIDER_LABELS } from '../shared/provider-registry'
-import { getMarketplaceProvenance, getSkillFrontmatterActionLabel, getSkillValidation } from './skill-validation'
-import { aggregateProviderSyncHealth, groupProvidersByPath, type ProviderGroup } from './sync-view-model'
+import {
+  getMarketplaceProvenance,
+  getSkillFrontmatterActionLabel,
+  getSkillValidation
+} from './skill-validation'
+import {
+  aggregateProviderSyncHealth,
+  groupProvidersByPath,
+  type ProviderGroup
+} from './sync-view-model'
 import { useContextManagerStore } from './useContextManagerStore'
 
 interface ContextItemEditorProps {
@@ -24,9 +58,31 @@ interface ContextItemEditorProps {
   onPullProviderFromDisk?: (provider: CliProvider) => Promise<void>
 }
 
-const PROVIDER_ROW_ORDER: CliProvider[] = ['claude', 'codex', 'cursor', 'gemini', 'opencode', 'qwen', 'copilot']
+const PROVIDER_ROW_ORDER: CliProvider[] = [
+  'claude',
+  'codex',
+  'cursor',
+  'gemini',
+  'opencode',
+  'qwen',
+  'copilot'
+]
 
-export function ContextItemEditor({ item, validationState, onUpdate, onDelete, onClose, readOnly, updateInfo, onMarketplaceUpdate, onUnlink, syncStatus, onSyncToDisk, onSyncProviderToDisk, onPullProviderFromDisk }: ContextItemEditorProps) {
+export function ContextItemEditor({
+  item,
+  validationState,
+  onUpdate,
+  onDelete,
+  onClose,
+  readOnly,
+  updateInfo,
+  onMarketplaceUpdate,
+  onUnlink,
+  syncStatus,
+  onSyncToDisk,
+  onSyncProviderToDisk,
+  onPullProviderFromDisk
+}: ContextItemEditorProps) {
   const provenance = getMarketplaceProvenance(item)
   const isMarketplaceBound = !!provenance
   const isLibraryLinked = !isMarketplaceBound && !!readOnly && item.scope === 'library'
@@ -44,7 +100,11 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
 
   const { aggregatedHealth, providerGroups, staleProviders } = useMemo(() => {
     if (!syncStatus) {
-      return { aggregatedHealth: null, providerGroups: [] as ProviderGroup[], staleProviders: [] as CliProvider[] }
+      return {
+        aggregatedHealth: null,
+        providerGroups: [] as ProviderGroup[],
+        staleProviders: [] as CliProvider[]
+      }
     }
     const health = aggregateProviderSyncHealth(syncStatus.providers)
     const groups = groupProvidersByPath(syncStatus.providers, PROVIDER_ROW_ORDER)
@@ -70,9 +130,14 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
     setActiveDiffProvider(staleProviders[0] ?? null)
   }, [item.id, staleProviders])
 
-  const activeDiffDisk = activeDiffProvider ? (syncStatus?.providers[activeDiffProvider]?.diskContent ?? null) : null
+  const activeDiffDisk = activeDiffProvider
+    ? (syncStatus?.providers[activeDiffProvider]?.diskContent ?? null)
+    : null
   const activeDiffGroupLabel = activeDiffProvider
-    ? (providerGroups.find((g) => g.providers.includes(activeDiffProvider))?.providers.map((p) => PROVIDER_LABELS[p]).join(' / ') ?? PROVIDER_LABELS[activeDiffProvider])
+    ? (providerGroups
+        .find((g) => g.providers.includes(activeDiffProvider))
+        ?.providers.map((p) => PROVIDER_LABELS[p])
+        .join(' / ') ?? PROVIDER_LABELS[activeDiffProvider])
     : null
 
   const handleSyncAllToDisk = async () => {
@@ -115,11 +180,13 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
   }
 
   const anySyncBusy = syncingAll || syncingProvider !== null || pullingProvider !== null
-  const effectiveValidation = validationState ?? getSkillValidation({
-    type: item.type,
-    slug: item.slug,
-    content
-  })
+  const effectiveValidation =
+    validationState ??
+    getSkillValidation({
+      type: item.type,
+      slug: item.slug,
+      content
+    })
 
   useEffect(() => {
     setSlug(item.slug)
@@ -139,9 +206,17 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
   }
 
   const isJson = slug.endsWith('.json')
-  const jsonError = isJson && content.trim()
-    ? (() => { try { JSON.parse(content); return null } catch (e) { return (e as Error).message } })()
-    : null
+  const jsonError =
+    isJson && content.trim()
+      ? (() => {
+          try {
+            JSON.parse(content)
+            return null
+          } catch (e) {
+            return (e as Error).message
+          }
+        })()
+      : null
 
   const fixFrontmatterLabel = getSkillFrontmatterActionLabel(effectiveValidation)
 
@@ -181,9 +256,12 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
             {providerGroups.map((group) => {
               const stale = group.syncHealth === 'stale'
               const representative = group.providers[0]
-              const active = activeDiffProvider !== null && group.providers.includes(activeDiffProvider)
-              const thisSyncing = syncingProvider !== null && group.providers.includes(syncingProvider)
-              const thisPulling = pullingProvider !== null && group.providers.includes(pullingProvider)
+              const active =
+                activeDiffProvider !== null && group.providers.includes(activeDiffProvider)
+              const thisSyncing =
+                syncingProvider !== null && group.providers.includes(syncingProvider)
+              const thisPulling =
+                pullingProvider !== null && group.providers.includes(pullingProvider)
               const label = group.providers.map((p) => PROVIDER_LABELS[p]).join(' / ')
               const testSuffix = group.providers.join('-')
               return (
@@ -196,7 +274,11 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
                     <span
                       className={cn(
                         'size-1.5 rounded-full',
-                        stale ? 'bg-amber-500' : group.syncHealth === 'synced' ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+                        stale
+                          ? 'bg-amber-500'
+                          : group.syncHealth === 'synced'
+                            ? 'bg-emerald-500'
+                            : 'bg-muted-foreground/40'
                       )}
                     />
                     <span className="font-medium">{label}</span>
@@ -229,7 +311,8 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            Overwrite skill content in the Database with the contents of {label}'s File.
+                            Overwrite skill content in the Database with the contents of {label}'s
+                            File.
                           </TooltipContent>
                         </Tooltip>
                       )}
@@ -249,7 +332,8 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            Overwrite {label}'s File with the current skill content from the Database.
+                            Overwrite {label}'s File with the current skill content from the
+                            Database.
                           </TooltipContent>
                         </Tooltip>
                       )}
@@ -291,7 +375,25 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
               Marketplace
             </span>
             <span>
-              From <button onClick={() => navigateToMarketplaceEntry(provenance.registryId, provenance.entryId)} className="font-medium text-foreground hover:underline">{item.slug}</button> in the <button onClick={() => navigateToMarketplaceEntry(provenance.registryId, provenance.entryId)} className="font-medium text-foreground hover:underline">{provenance.registryName ?? 'Marketplace'}</button> registry
+              From{' '}
+              <button
+                onClick={() =>
+                  navigateToMarketplaceEntry(provenance.registryId, provenance.entryId)
+                }
+                className="font-medium text-foreground hover:underline"
+              >
+                {item.slug}
+              </button>{' '}
+              in the{' '}
+              <button
+                onClick={() =>
+                  navigateToMarketplaceEntry(provenance.registryId, provenance.entryId)
+                }
+                className="font-medium text-foreground hover:underline"
+              >
+                {provenance.registryName ?? 'Marketplace'}
+              </button>{' '}
+              registry
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -353,7 +455,9 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
                   size="sm"
                   variant="outline"
                   className="h-6 px-2 text-[11px] gap-1 ml-2"
-                  onClick={() => navigateToMarketplaceEntry(provenance.registryId, provenance.entryId)}
+                  onClick={() =>
+                    navigateToMarketplaceEntry(provenance.registryId, provenance.entryId)
+                  }
                   data-testid="context-item-editor-go-to-source"
                 >
                   <Store className="size-3" />
@@ -374,7 +478,20 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
               Library
             </span>
             <span>
-              From <button onClick={() => navigateToLibrarySkill(item.id)} className="font-medium text-foreground hover:underline">{item.slug}</button> in the <button onClick={() => navigateToLibrarySkill(item.id)} className="font-medium text-foreground hover:underline">library</button>
+              From{' '}
+              <button
+                onClick={() => navigateToLibrarySkill(item.id)}
+                className="font-medium text-foreground hover:underline"
+              >
+                {item.slug}
+              </button>{' '}
+              in the{' '}
+              <button
+                onClick={() => navigateToLibrarySkill(item.id)}
+                className="font-medium text-foreground hover:underline"
+              >
+                library
+              </button>
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -462,7 +579,8 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
             data-testid="context-item-editor-content"
             className={cn(
               'flex-1 min-h-48 max-h-none field-sizing-fixed font-mono text-sm resize-none',
-              effectiveReadOnly && 'opacity-50 cursor-not-allowed focus-visible:ring-0 focus-visible:border-input'
+              effectiveReadOnly &&
+                'opacity-50 cursor-not-allowed focus-visible:ring-0 focus-visible:border-input'
             )}
             placeholder="Write your content here..."
             value={content}
@@ -481,15 +599,15 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
         )}
       </div>
 
-      {error && (
-        <p className="text-xs text-destructive">{error}</p>
-      )}
+      {error && <p className="text-xs text-destructive">{error}</p>}
 
       {effectiveValidation && effectiveValidation.status !== 'valid' && (
         <div className="rounded border border-destructive/20 bg-destructive/5 px-2.5 py-2">
           <div className="flex items-start justify-between gap-3">
             <p className="text-xs font-medium text-destructive">
-              {effectiveValidation.status === 'invalid' ? 'Frontmatter is invalid' : 'Frontmatter warning'}
+              {effectiveValidation.status === 'invalid'
+                ? 'Frontmatter is invalid'
+                : 'Frontmatter warning'}
             </p>
             {fixFrontmatterLabel && (
               <Button
@@ -533,7 +651,9 @@ export function ContextItemEditor({ item, validationState, onUpdate, onDelete, o
               ? 'Read-only (marketplace skill)'
               : readOnly
                 ? 'Read-only (library skill)'
-                : saving ? 'Saving...' : 'Autosave on blur'}
+                : saving
+                  ? 'Saving...'
+                  : 'Autosave on blur'}
           </span>
           {!effectiveReadOnly && (
             <Button size="sm" variant="ghost" className="text-destructive" onClick={onDelete}>

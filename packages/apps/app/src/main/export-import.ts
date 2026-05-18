@@ -73,7 +73,9 @@ function exportAll(db: Database): SlayExportBundle {
       task_dependencies: db.prepare('SELECT * FROM task_dependencies').all() as Row[],
       terminal_tabs: db.prepare('SELECT * FROM terminal_tabs').all() as Row[],
       ai_config_items: db.prepare('SELECT * FROM ai_config_items').all() as Row[],
-      ai_config_project_selections: db.prepare('SELECT * FROM ai_config_project_selections').all() as Row[],
+      ai_config_project_selections: db
+        .prepare('SELECT * FROM ai_config_project_selections')
+        .all() as Row[],
       ai_config_sources: db.prepare('SELECT * FROM ai_config_sources').all() as Row[],
       settings: db.prepare('SELECT * FROM settings').all() as Row[]
     }
@@ -81,7 +83,9 @@ function exportAll(db: Database): SlayExportBundle {
 }
 
 function exportProject(db: Database, projectId: string): SlayExportBundle {
-  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId) as Row | undefined
+  const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(projectId) as
+    | Row
+    | undefined
   if (!project) throw new Error(`Project ${projectId} not found`)
 
   const tasks = db.prepare('SELECT * FROM tasks WHERE project_id = ?').all(projectId) as Row[]
@@ -114,7 +118,9 @@ function exportProject(db: Database, projectId: string): SlayExportBundle {
     const tagIds = [...new Set(taskTags.map((tt) => tt.tag_id as string))]
     if (tagIds.length > 0) {
       const tagPlaceholders = tagIds.map(() => '?').join(', ')
-      tags = db.prepare(`SELECT * FROM tags WHERE id IN (${tagPlaceholders})`).all(...tagIds) as Row[]
+      tags = db
+        .prepare(`SELECT * FROM tags WHERE id IN (${tagPlaceholders})`)
+        .all(...tagIds) as Row[]
     }
   }
 
@@ -258,9 +264,9 @@ function importBundle(db: Database, bundle: SlayExportBundle): ImportResult {
 
   // Tags: reuse existing by name, new UUID otherwise
   for (const tag of data.tags) {
-    const existing = db
-      .prepare('SELECT id FROM tags WHERE name = ?')
-      .get(tag.name as string) as { id: string } | undefined
+    const existing = db.prepare('SELECT id FROM tags WHERE name = ?').get(tag.name as string) as
+      | { id: string }
+      | undefined
     remap.set(tag.id as string, existing ? existing.id : crypto.randomUUID())
   }
 
@@ -314,8 +320,7 @@ function importBundle(db: Database, bundle: SlayExportBundle): ImportResult {
       if (!exists) insertRow(db, 'tags', tag, remap, fkInfo('tags'))
     }
 
-    for (const tt of data.task_tags)
-      insertRow(db, 'task_tags', tt, remap, fkInfo('task_tags'))
+    for (const tt of data.task_tags) insertRow(db, 'task_tags', tt, remap, fkInfo('task_tags'))
 
     for (const dep of data.task_dependencies)
       insertRow(db, 'task_dependencies', dep, remap, fkInfo('task_dependencies'))
@@ -327,7 +332,13 @@ function importBundle(db: Database, bundle: SlayExportBundle): ImportResult {
       insertRow(db, 'ai_config_items', item, remap, fkInfo('ai_config_items'))
 
     for (const sel of data.ai_config_project_selections)
-      insertRow(db, 'ai_config_project_selections', sel, remap, fkInfo('ai_config_project_selections'))
+      insertRow(
+        db,
+        'ai_config_project_selections',
+        sel,
+        remap,
+        fkInfo('ai_config_project_selections')
+      )
 
     // Settings (all-export only, don't overwrite existing)
     for (const s of data.settings) {
@@ -337,7 +348,9 @@ function importBundle(db: Database, bundle: SlayExportBundle): ImportResult {
 
     // AI config sources (all-export only, don't overwrite existing)
     for (const src of data.ai_config_sources) {
-      const exists = db.prepare('SELECT id FROM ai_config_sources WHERE id = ?').get(src.id as string)
+      const exists = db
+        .prepare('SELECT id FROM ai_config_sources WHERE id = ?')
+        .get(src.id as string)
       if (!exists) {
         remap.set(src.id as string, crypto.randomUUID())
         insertRow(db, 'ai_config_sources', src, remap, fkInfo('ai_config_sources'))
@@ -453,7 +466,9 @@ async function handleImport(db: Database): Promise<ImportResult> {
 
 export function registerExportImportHandlers(ipcMain: IpcMain, db: Database, isTest = false): void {
   ipcMain.handle('export-import:export-all', () => handleExportAll(db))
-  ipcMain.handle('export-import:export-project', (_, projectId: string) => handleExportProject(db, projectId))
+  ipcMain.handle('export-import:export-project', (_, projectId: string) =>
+    handleExportProject(db, projectId)
+  )
   ipcMain.handle('export-import:import', () => handleImport(db))
 
   // Test-only handlers that bypass native file dialogs
@@ -468,15 +483,18 @@ export function registerExportImportHandlers(ipcMain: IpcMain, db: Database, isT
       }
     })
 
-    ipcMain.handle('export-import:test:export-project-to-path', (_, projectId: string, filePath: string) => {
-      try {
-        const bundle = exportProject(db, projectId)
-        fs.writeFileSync(filePath, JSON.stringify(bundle, null, 2), 'utf8')
-        return { success: true, path: filePath }
-      } catch (e) {
-        return { success: false, error: String(e) }
+    ipcMain.handle(
+      'export-import:test:export-project-to-path',
+      (_, projectId: string, filePath: string) => {
+        try {
+          const bundle = exportProject(db, projectId)
+          fs.writeFileSync(filePath, JSON.stringify(bundle, null, 2), 'utf8')
+          return { success: true, path: filePath }
+        } catch (e) {
+          return { success: false, error: String(e) }
+        }
       }
-    })
+    )
 
     ipcMain.handle('export-import:test:import-from-path', (_, filePath: string) => {
       try {

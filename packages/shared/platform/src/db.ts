@@ -4,5 +4,5 @@ export const DB_PRAGMAS = [
   'foreign_keys = ON',
   'synchronous = NORMAL',
   'cache_size = -8000',
-  'busy_timeout = 5000',
+  'busy_timeout = 5000'
 ] as const

@@ -5,10 +5,7 @@ import { useTabStore } from '@slayzone/settings'
 
 const identity = (i: number) => i
 
-export function useVisibleTabs(
-  tabs: Tab[],
-  tasksMap: Map<string, Task>
-) {
+export function useVisibleTabs(tabs: Tab[], tasksMap: Map<string, Task>) {
   const selectedProjectId = useTabStore((s) => s.selectedProjectId)
   const projectScopedTabs = useTabStore((s) => s.projectScopedTabs)
   const activeTabIndex = useTabStore((s) => s.activeTabIndex)
@@ -43,7 +40,7 @@ export function useVisibleTabs(
     return {
       visibleTabs: filtered,
       toFullIndex: (visibleIdx: number) => visibleIndexes[visibleIdx] ?? 0,
-      toVisibleIndex: (fullIdx: number) => fullToVisible.get(fullIdx) ?? -1,
+      toVisibleIndex: (fullIdx: number) => fullToVisible.get(fullIdx) ?? -1
     }
   }, [tabs, selectedProjectId, projectScopedTabs, tasksMap])
 

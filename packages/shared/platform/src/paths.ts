@@ -54,7 +54,7 @@ export function getServerHost(): string {
     warnedHost = host
     console.warn(
       `[slayzone] SLAYZONE_HOST=${host} binds the local server to a non-loopback address. ` +
-        `Anyone on the network can reach it. Use 127.0.0.1 unless you have a reason.`,
+        `Anyone on the network can reach it. Use 127.0.0.1 unless you have a reason.`
     )
   }
   return host

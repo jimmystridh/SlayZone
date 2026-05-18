@@ -34,10 +34,14 @@ export function useFileEditor(
   const treeRefreshTimer = useRef<NodeJS.Timeout | null>(null)
   // Track version per file for CodeMirror external content reload
   const [fileVersions, setFileVersions] = useState<Map<string, number>>(new Map())
-  const [goToPosition, setGoToPosition] = useState<{ filePath: string; line: number; col: number } | null>(null)
+  const [goToPosition, setGoToPosition] = useState<{
+    filePath: string
+    line: number
+    col: number
+  } | null>(null)
 
   // --- Restore persisted state on mount ---
-  const [isRestoring, setIsRestoring] = useState(!!(initialEditorState?.files?.length))
+  const [isRestoring, setIsRestoring] = useState(!!initialEditorState?.files?.length)
   const hasRestored = useRef(false)
   useEffect(() => {
     if (hasRestored.current || !initialEditorState?.files?.length) return
@@ -48,7 +52,10 @@ export function useFileEditor(
           if (isImageFile(filePath)) {
             setOpenFiles((prev) => {
               if (prev.some((f) => f.path === filePath)) return prev
-              return [...prev, { path: filePath, content: null, originalContent: null, binary: true }]
+              return [
+                ...prev,
+                { path: filePath, content: null, originalContent: null, binary: true }
+              ]
             })
             continue
           }
@@ -56,12 +63,24 @@ export function useFileEditor(
           if (result.tooLarge) {
             setOpenFiles((prev) => {
               if (prev.some((f) => f.path === filePath)) return prev
-              return [...prev, { path: filePath, content: null, originalContent: null, tooLarge: true, sizeBytes: result.sizeBytes }]
+              return [
+                ...prev,
+                {
+                  path: filePath,
+                  content: null,
+                  originalContent: null,
+                  tooLarge: true,
+                  sizeBytes: result.sizeBytes
+                }
+              ]
             })
           } else {
             setOpenFiles((prev) => {
               if (prev.some((f) => f.path === filePath)) return prev
-              return [...prev, { path: filePath, content: result.content, originalContent: result.content }]
+              return [
+                ...prev,
+                { path: filePath, content: result.content, originalContent: result.content }
+              ]
             })
           }
         } catch {
@@ -78,39 +97,50 @@ export function useFileEditor(
   // --- File watcher ---
   useEffect(() => {
     window.api.fs.watch(projectPath)
-    return () => { window.api.fs.unwatch(projectPath) }
+    return () => {
+      window.api.fs.unwatch(projectPath)
+    }
   }, [projectPath])
 
-  const reloadFile = useCallback(async (filePath: string) => {
-    try {
-      // Binary files: just bump version for cache busting, no content to reload
-      if (isImageFile(filePath)) {
+  const reloadFile = useCallback(
+    async (filePath: string) => {
+      try {
+        // Binary files: just bump version for cache busting, no content to reload
+        if (isImageFile(filePath)) {
+          setFileVersions((prev) => {
+            const next = new Map(prev)
+            next.set(filePath, (next.get(filePath) ?? 0) + 1)
+            return next
+          })
+          return
+        }
+
+        const result = await window.api.fs.readFile(projectPath, filePath)
+        if (result.tooLarge || result.content == null) return
+        setOpenFiles((prev) =>
+          prev.map((f) =>
+            f.path === filePath
+              ? {
+                  ...f,
+                  content: result.content,
+                  originalContent: result.content,
+                  diskChanged: false,
+                  deleted: false
+                }
+              : f
+          )
+        )
         setFileVersions((prev) => {
           const next = new Map(prev)
           next.set(filePath, (next.get(filePath) ?? 0) + 1)
           return next
         })
-        return
+      } catch {
+        // File may have been deleted
       }
-
-      const result = await window.api.fs.readFile(projectPath, filePath)
-      if (result.tooLarge || result.content == null) return
-      setOpenFiles((prev) =>
-        prev.map((f) =>
-          f.path === filePath
-            ? { ...f, content: result.content, originalContent: result.content, diskChanged: false, deleted: false }
-            : f
-        )
-      )
-      setFileVersions((prev) => {
-        const next = new Map(prev)
-        next.set(filePath, (next.get(filePath) ?? 0) + 1)
-        return next
-      })
-    } catch {
-      // File may have been deleted
-    }
-  }, [projectPath])
+    },
+    [projectPath]
+  )
 
   const projectPathRef = useRef(projectPath)
   projectPathRef.current = projectPath
@@ -134,7 +164,10 @@ export function useFileEditor(
       const nextFiles: OpenFile[] = []
       const closedPaths = new Set<string>()
       for (const f of current) {
-        if (!isMatch(f.path)) { nextFiles.push(f); continue }
+        if (!isMatch(f.path)) {
+          nextFiles.push(f)
+          continue
+        }
         const dirty = f.content !== f.originalContent
         if (dirty) {
           nextFiles.push({ ...f, deleted: true, diskChanged: true })
@@ -153,7 +186,10 @@ export function useFileEditor(
           let changed = false
           const next = new Map<string, number>()
           for (const [k, v] of prev) {
-            if (closedPaths.has(k)) { changed = true; continue }
+            if (closedPaths.has(k)) {
+              changed = true
+              continue
+            }
             next.set(k, v)
           }
           return changed ? next : prev
@@ -207,103 +243,133 @@ export function useFileEditor(
   }, [reloadFile])
 
   // --- Open / close / save ---
-  const openFile = useCallback(async (filePath: string, options?: OpenFileOptions) => {
-    const from = options?.from ?? 'sidebar'
-    if (options?.position) {
-      setGoToPosition({ filePath, line: options.position.line, col: options.position.col ?? 0 })
-    }
-    // Already open — just focus
-    const existing = openFiles.find((f) => f.path === filePath)
-    if (existing) {
-      setActiveFilePath(filePath)
-      return
-    }
-
-    if (pendingOpen.current === filePath) return
-    pendingOpen.current = filePath
-
-    try {
-      // Binary files (images etc.) — rendered via slz-file:// protocol, no content needed
-      if (isImageFile(filePath)) {
-        setOpenFiles((prev) => {
-          if (prev.some((f) => f.path === filePath)) return prev
-          return [...prev, { path: filePath, content: null, originalContent: null, binary: true }]
-        })
+  const openFile = useCallback(
+    async (filePath: string, options?: OpenFileOptions) => {
+      const from = options?.from ?? 'sidebar'
+      if (options?.position) {
+        setGoToPosition({ filePath, line: options.position.line, col: options.position.col ?? 0 })
+      }
+      // Already open — just focus
+      const existing = openFiles.find((f) => f.path === filePath)
+      if (existing) {
         setActiveFilePath(filePath)
-        track('editor_file_opened', { from })
         return
       }
 
-      const result = await window.api.fs.readFile(projectPath, filePath)
-      if (result.tooLarge) {
+      if (pendingOpen.current === filePath) return
+      pendingOpen.current = filePath
+
+      try {
+        // Binary files (images etc.) — rendered via slz-file:// protocol, no content needed
+        if (isImageFile(filePath)) {
+          setOpenFiles((prev) => {
+            if (prev.some((f) => f.path === filePath)) return prev
+            return [...prev, { path: filePath, content: null, originalContent: null, binary: true }]
+          })
+          setActiveFilePath(filePath)
+          track('editor_file_opened', { from })
+          return
+        }
+
+        const result = await window.api.fs.readFile(projectPath, filePath)
+        if (result.tooLarge) {
+          setOpenFiles((prev) => {
+            if (prev.some((f) => f.path === filePath)) return prev
+            return [
+              ...prev,
+              {
+                path: filePath,
+                content: null,
+                originalContent: null,
+                tooLarge: true,
+                sizeBytes: result.sizeBytes
+              }
+            ]
+          })
+          setActiveFilePath(filePath)
+          track('editor_file_opened', { from })
+          return
+        }
         setOpenFiles((prev) => {
           if (prev.some((f) => f.path === filePath)) return prev
-          return [...prev, { path: filePath, content: null, originalContent: null, tooLarge: true, sizeBytes: result.sizeBytes }]
+          return [
+            ...prev,
+            { path: filePath, content: result.content, originalContent: result.content }
+          ]
         })
         setActiveFilePath(filePath)
         track('editor_file_opened', { from })
-        return
+      } finally {
+        pendingOpen.current = null
       }
-      setOpenFiles((prev) => {
-        if (prev.some((f) => f.path === filePath)) return prev
-        return [...prev, { path: filePath, content: result.content, originalContent: result.content }]
-      })
-      setActiveFilePath(filePath)
-      track('editor_file_opened', { from })
-    } finally {
-      pendingOpen.current = null
-    }
-  }, [projectPath, openFiles])
+    },
+    [projectPath, openFiles]
+  )
 
-  const openFileForced = useCallback(async (filePath: string) => {
-    try {
-      const result = await window.api.fs.readFile(projectPath, filePath, true)
-      if (result.content == null) return
+  const openFileForced = useCallback(
+    async (filePath: string) => {
+      try {
+        const result = await window.api.fs.readFile(projectPath, filePath, true)
+        if (result.content == null) return
+        setOpenFiles((prev) =>
+          prev.map((f) =>
+            f.path === filePath
+              ? {
+                  ...f,
+                  content: result.content,
+                  originalContent: result.content,
+                  tooLarge: false,
+                  sizeBytes: undefined
+                }
+              : f
+          )
+        )
+      } catch {
+        // File read failed
+      }
+    },
+    [projectPath]
+  )
+
+  const updateContent = useCallback((filePath: string, content: string) => {
+    setOpenFiles((prev) => prev.map((f) => (f.path === filePath ? { ...f, content } : f)))
+  }, [])
+
+  const saveFile = useCallback(
+    async (filePath: string) => {
+      const file = openFiles.find((f) => f.path === filePath)
+      if (!file || file.content == null || file.content === file.originalContent) return
+      await window.api.fs.writeFile(projectPath, filePath, file.content)
       setOpenFiles((prev) =>
         prev.map((f) =>
           f.path === filePath
-            ? { ...f, content: result.content, originalContent: result.content, tooLarge: false, sizeBytes: undefined }
+            ? { ...f, originalContent: f.content, diskChanged: false, deleted: false }
             : f
         )
       )
-    } catch {
-      // File read failed
-    }
-  }, [projectPath])
+    },
+    [projectPath, openFiles]
+  )
 
-  const updateContent = useCallback((filePath: string, content: string) => {
-    setOpenFiles((prev) =>
-      prev.map((f) => (f.path === filePath ? { ...f, content } : f))
-    )
-  }, [])
-
-  const saveFile = useCallback(async (filePath: string) => {
-    const file = openFiles.find((f) => f.path === filePath)
-    if (!file || file.content == null || file.content === file.originalContent) return
-    await window.api.fs.writeFile(projectPath, filePath, file.content)
-    setOpenFiles((prev) =>
-      prev.map((f) =>
-        f.path === filePath ? { ...f, originalContent: f.content, diskChanged: false, deleted: false } : f
-      )
-    )
-  }, [projectPath, openFiles])
-
-  const closeFile = useCallback((filePath: string) => {
-    setOpenFiles((prev) => {
-      const next = prev.filter((f) => f.path !== filePath)
-      return next
-    })
-    setActiveFilePath((current) => {
-      if (current !== filePath) return current
-      const remaining = openFiles.filter((f) => f.path !== filePath)
-      return remaining.length > 0 ? remaining[remaining.length - 1].path : null
-    })
-    setFileVersions((prev) => {
-      const next = new Map(prev)
-      next.delete(filePath)
-      return next
-    })
-  }, [openFiles])
+  const closeFile = useCallback(
+    (filePath: string) => {
+      setOpenFiles((prev) => {
+        const next = prev.filter((f) => f.path !== filePath)
+        return next
+      })
+      setActiveFilePath((current) => {
+        if (current !== filePath) return current
+        const remaining = openFiles.filter((f) => f.path !== filePath)
+        return remaining.length > 0 ? remaining[remaining.length - 1].path : null
+      })
+      setFileVersions((prev) => {
+        const next = new Map(prev)
+        next.delete(filePath)
+        return next
+      })
+    },
+    [openFiles]
+  )
 
   // Bulk close. `keepDirty` preserves dirty files in place so user can't lose work.
   const closeFilesByPredicate = useCallback(

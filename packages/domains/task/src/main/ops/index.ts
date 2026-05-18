@@ -14,9 +14,15 @@ export {
   getEnabledModeDefaults,
   getModeDefaultFlags,
   maybeAutoCreateWorktree,
-  safeJsonParse,
+  safeJsonParse
 } from './shared.js'
-export type { OpDeps, TaskRuntimeAdapters, DiagnosticEventPayload, DiagnosticLevel, TerminalModeFlagsRow } from './shared.js'
+export type {
+  OpDeps,
+  TaskRuntimeAdapters,
+  DiagnosticEventPayload,
+  DiagnosticLevel,
+  TerminalModeFlagsRow
+} from './shared.js'
 
 export { getAllTasksOp } from './get-all.js'
 export { getByProjectOp } from './get-by-project.js'

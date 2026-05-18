@@ -27,7 +27,7 @@ describe('seedInitialVersions', () => {
     writeFile('task-1', 'a2', 'second')
 
     const r = seedInitialVersions(env.db, env.txn, env.blobStore, {
-      resolveFilePath: (row) => path.join(env.dataDir, 'artifacts', row.task_id, `${row.id}.md`),
+      resolveFilePath: (row) => path.join(env.dataDir, 'artifacts', row.task_id, `${row.id}.md`)
     })
 
     expect(r.seeded).toBe(2)
@@ -38,7 +38,9 @@ describe('seedInitialVersions', () => {
     // explicitly (not via the latest fallback).
     const a1Current = getCurrentVersion(env.db, 'a1')
     expect(a1Current?.version_num).toBe(1)
-    const row = env.db.prepare('SELECT current_version_id FROM task_artifacts WHERE id = ?').get('a1') as { current_version_id: string | null }
+    const row = env.db
+      .prepare('SELECT current_version_id FROM task_artifacts WHERE id = ?')
+      .get('a1') as { current_version_id: string | null }
     expect(row.current_version_id).toBe(a1Current?.id)
   })
 
@@ -47,7 +49,7 @@ describe('seedInitialVersions', () => {
     // No file written
 
     const r = seedInitialVersions(env.db, env.txn, env.blobStore, {
-      resolveFilePath: (row) => path.join(env.dataDir, 'artifacts', row.task_id, `${row.id}.md`),
+      resolveFilePath: (row) => path.join(env.dataDir, 'artifacts', row.task_id, `${row.id}.md`)
     })
 
     expect(r.seeded).toBe(0)
@@ -59,10 +61,10 @@ describe('seedInitialVersions', () => {
     writeFile('task-1', 'a1', 'content')
 
     const r1 = seedInitialVersions(env.db, env.txn, env.blobStore, {
-      resolveFilePath: (row) => path.join(env.dataDir, 'artifacts', row.task_id, `${row.id}.md`),
+      resolveFilePath: (row) => path.join(env.dataDir, 'artifacts', row.task_id, `${row.id}.md`)
     })
     const r2 = seedInitialVersions(env.db, env.txn, env.blobStore, {
-      resolveFilePath: (row) => path.join(env.dataDir, 'artifacts', row.task_id, `${row.id}.md`),
+      resolveFilePath: (row) => path.join(env.dataDir, 'artifacts', row.task_id, `${row.id}.md`)
     })
 
     expect(r1.seeded).toBe(1)
@@ -79,7 +81,7 @@ describe('seedInitialVersions', () => {
     const events: { total: number; done: number }[] = []
     seedInitialVersions(env.db, env.txn, env.blobStore, {
       resolveFilePath: (row) => path.join(env.dataDir, 'artifacts', row.task_id, `${row.id}.md`),
-      onProgress: (p) => events.push({ total: p.total, done: p.done }),
+      onProgress: (p) => events.push({ total: p.total, done: p.done })
     })
 
     expect(events.length).toBeGreaterThanOrEqual(2)

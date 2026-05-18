@@ -7,7 +7,7 @@ interface ThemeContextValue {
   // Core
   theme: Theme
   preference: ThemePreference
-  themeId: string           // resolved chrome theme (accounts for split)
+  themeId: string // resolved chrome theme (accounts for split)
   setPreference: (pref: ThemePreference) => Promise<void>
   setThemeId: (id: string) => void
 
@@ -43,7 +43,7 @@ const LEGACY_ID_MAP: Record<string, string> = {
   'solarized-dark': 'solarized',
   'solarized-light': 'solarized',
   'tokyo-night-light': 'tokyo-night',
-  'rose-pine-dawn': 'rose-pine',
+  'rose-pine-dawn': 'rose-pine'
 }
 
 function migrateThemeId(id: string): string {
@@ -69,9 +69,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [editorOverrideThemeId, setEditorOverrideThemeIdState] = useState('')
 
   // Resolved
-  const themeId = splitThemes
-    ? (theme === 'dark' ? themeIdDark : themeIdLight)
-    : singleThemeId
+  const themeId = splitThemes ? (theme === 'dark' ? themeIdDark : themeIdLight) : singleThemeId
   const terminalThemeId = terminalOverrideThemeId || themeId
   const editorThemeId = editorOverrideThemeId || themeId
   const contentVariant = theme
@@ -82,9 +80,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     const initialize = async () => {
       const [
-        effective, source,
-        savedThemeId, savedSplit, savedDark, savedLight,
-        savedTermOvrId, savedEditorOvrId,
+        effective,
+        source,
+        savedThemeId,
+        savedSplit,
+        savedDark,
+        savedLight,
+        savedTermOvrId,
+        savedEditorOvrId
       ] = await Promise.all([
         window.api.theme.getEffective(),
         window.api.theme.getSource(),
@@ -93,15 +96,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         window.api.settings.get('app_theme_id_dark'),
         window.api.settings.get('app_theme_id_light'),
         window.api.settings.get('terminal_override_theme_id'),
-        window.api.settings.get('editor_override_theme_id'),
+        window.api.settings.get('editor_override_theme_id')
       ])
       if (disposed) return
 
       // Migrate single theme from legacy
       let resolvedId = savedThemeId
       if (!resolvedId) {
-        const legacyId = await window.api.settings.get('content_theme_dark')
-          .then(v => v ?? window.api.settings.get('terminal_theme_dark'))
+        const legacyId = await window.api.settings
+          .get('content_theme_dark')
+          .then((v) => v ?? window.api.settings.get('terminal_theme_dark'))
         resolvedId = migrateThemeId(legacyId ?? DEFAULT_THEME_ID)
         window.api.settings.set('app_theme_id', resolvedId)
       } else {
@@ -195,22 +199,43 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     window.api.settings.set('editor_override_theme_id', id)
   }
 
-  const value = useMemo<ThemeContextValue>(() => ({
-    theme, preference, themeId,
-    setPreference, setThemeId,
-    splitThemes, setSplitThemes,
-    themeIdDark, setThemeIdDark,
-    themeIdLight, setThemeIdLight,
-    terminalOverrideThemeId, setTerminalOverrideThemeId,
-    editorOverrideThemeId, setEditorOverrideThemeId,
-    terminalThemeId, editorThemeId, contentVariant,
-  }), [theme, preference, themeId, splitThemes, themeIdDark, themeIdLight, terminalOverrideThemeId, editorOverrideThemeId, terminalThemeId, editorThemeId, contentVariant])
-
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo<ThemeContextValue>(
+    () => ({
+      theme,
+      preference,
+      themeId,
+      setPreference,
+      setThemeId,
+      splitThemes,
+      setSplitThemes,
+      themeIdDark,
+      setThemeIdDark,
+      themeIdLight,
+      setThemeIdLight,
+      terminalOverrideThemeId,
+      setTerminalOverrideThemeId,
+      editorOverrideThemeId,
+      setEditorOverrideThemeId,
+      terminalThemeId,
+      editorThemeId,
+      contentVariant
+    }),
+    [
+      theme,
+      preference,
+      themeId,
+      splitThemes,
+      themeIdDark,
+      themeIdLight,
+      terminalOverrideThemeId,
+      editorOverrideThemeId,
+      terminalThemeId,
+      editorThemeId,
+      contentVariant
+    ]
   )
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
 export function useTheme() {

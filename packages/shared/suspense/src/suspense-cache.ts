@@ -75,8 +75,16 @@ export function createSuspenseCache<F extends Fetchers>(fetchers: F): SuspenseCa
       entry = { promise, settled: false }
       const e = entry
       promise.then(
-        (value) => { e.value = value; e.settled = true; notify() },
-        (error) => { e.error = error; e.settled = true; notify() }
+        (value) => {
+          e.value = value
+          e.settled = true
+          notify()
+        },
+        (error) => {
+          e.error = error
+          e.settled = true
+          notify()
+        }
       )
       // Prevent unhandled rejection warnings. The original promise still rejects —
       // use() will re-throw into the error boundary. Failed entries stay in cache
@@ -124,6 +132,6 @@ export function createSuspenseCache<F extends Fetchers>(fetchers: F): SuspenseCa
 
     evict(key, ...args) {
       cache.delete(cacheKey(key, args))
-    },
+    }
   }
 }

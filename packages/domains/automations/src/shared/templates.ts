@@ -42,5 +42,5 @@ export const TEMPLATE_VARIABLES: readonly { name: string; desc: string }[] = [
   { name: 'project.name', desc: 'Project name' },
   { name: 'project.path', desc: 'Project filesystem path' },
   { name: 'trigger.old_status', desc: 'Status before change' },
-  { name: 'trigger.new_status', desc: 'Status after change' },
+  { name: 'trigger.new_status', desc: 'Status after change' }
 ] as const

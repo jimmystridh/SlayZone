@@ -17,7 +17,7 @@ import {
   _storeStats,
   _storeEntryKeys,
   _resetStore,
-  _pathWatcherStats,
+  _pathWatcherStats
 } from './git-diff-store'
 import type { GitDiffSnapshot } from '../shared/types'
 
@@ -37,7 +37,7 @@ function makeSnapshot(patch: string): GitDiffSnapshot {
     unstagedPatch: patch,
     stagedPatch: '',
     generatedAt: new Date().toISOString(),
-    isGitRepo: true,
+    isGitRepo: true
   }
 }
 
@@ -52,7 +52,7 @@ const gitStub = {
   },
   _emitDiffChanged(path: string): void {
     for (const cb of gitStub.diffChangedListeners) cb(path)
-  },
+  }
 }
 
 beforeEach(() => {
@@ -71,7 +71,7 @@ beforeEach(() => {
 
   // Install the stub on window.api.
   ;(globalThis as unknown as { window: { api: { git: typeof gitStub } } }).window = {
-    api: { git: gitStub },
+    api: { git: gitStub }
   }
 })
 
@@ -97,7 +97,7 @@ function mount(
       fromSha: params.fromSha,
       toSha: params.toSha,
       pollIntervalMs: params.pollIntervalMs ?? 5000,
-      visible: params.visible ?? true,
+      visible: params.visible ?? true
     })
   )
 }

@@ -7,10 +7,7 @@
  * Run: pnpm --filter @slayzone/worktrees exec vitest run src/client/parse-diff.cache.test.ts
  */
 import { describe, it, expect, beforeEach } from 'vitest'
-import {
-  parseUnifiedDiff,
-  _clearParseDiffCache,
-} from './parse-diff'
+import { parseUnifiedDiff, _clearParseDiffCache } from './parse-diff'
 
 // Build a syntactically-valid unified diff whose patch-text length is
 // approximately `targetLen`. Cache key is the raw patch string, so unique

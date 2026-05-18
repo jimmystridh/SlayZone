@@ -1,13 +1,6 @@
 import { useState } from 'react'
 import { Info, X, Check, Loader2 } from 'lucide-react'
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-
-} from '@slayzone/ui'
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle } from '@slayzone/ui'
 
 interface SlayNudgeBannerProps {
   projectPath: string
@@ -18,7 +11,12 @@ interface SlayNudgeBannerProps {
 
 type RunState = 'idle' | 'running' | 'done' | 'error'
 
-export function SlayNudgeBanner({ projectPath, projectId, onDismiss, onSetupComplete }: SlayNudgeBannerProps) {
+export function SlayNudgeBanner({
+  projectPath,
+  projectId,
+  onDismiss,
+  onSetupComplete
+}: SlayNudgeBannerProps) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [setupState, setSetupState] = useState<RunState>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +43,8 @@ export function SlayNudgeBanner({ projectPath, projectId, onDismiss, onSetupComp
       <div className="shrink-0 bg-amber-50 dark:bg-amber-500/5 border-b border-amber-200 dark:border-amber-500/10 px-4 py-2 flex items-center gap-2">
         <Info className="h-3.5 w-3.5 text-amber-700 dark:text-amber-500 shrink-0" />
         <span className="text-xs text-amber-700 dark:text-amber-500">
-          Set up the <code className="px-1 rounded font-mono">slay</code> CLI so AI agents can interact with your tasks
+          Set up the <code className="px-1 rounded font-mono">slay</code> CLI so AI agents can
+          interact with your tasks
         </span>
         <button
           className="text-xs text-amber-700 dark:text-amber-500 hover:text-amber-600 dark:hover:text-amber-400 underline shrink-0"
@@ -71,13 +70,14 @@ export function SlayNudgeBanner({ projectPath, projectId, onDismiss, onSetupComp
           <div className="space-y-4 text-sm text-muted-foreground">
             <p>
               The <code className="text-foreground font-mono text-xs">slay</code> CLI lets AI agents
-              running inside SlayZone interact with your tasks &mdash; reading descriptions, updating
-              status, managing subtasks, controlling the browser panel, and coordinating with other agents.
+              running inside SlayZone interact with your tasks &mdash; reading descriptions,
+              updating status, managing subtasks, controlling the browser panel, and coordinating
+              with other agents.
             </p>
             <p>
-              Running setup appends a SlayZone environment description to your agent instruction file
-              (CLAUDE.md, AGENTS.md, etc. based on your configured providers) and installs the built-in
-              slay skills so agents know every available command.
+              Running setup appends a SlayZone environment description to your agent instruction
+              file (CLAUDE.md, AGENTS.md, etc. based on your configured providers) and installs the
+              built-in slay skills so agents know every available command.
             </p>
           </div>
 
@@ -90,14 +90,12 @@ export function SlayNudgeBanner({ projectPath, projectId, onDismiss, onSetupComp
             </div>
           </div>
 
-          {error && (
-            <p className="text-xs text-destructive pt-2">{error}</p>
-          )}
+          {error && <p className="text-xs text-destructive pt-2">{error}</p>}
 
           <div className="bg-muted/50 rounded-md px-3 py-2.5 mt-2">
             <p className="text-xs text-muted-foreground">
-              This is fully reversible &mdash; just delete the appended lines from the instruction file
-              and remove the generated skill directory to undo.
+              This is fully reversible &mdash; just delete the appended lines from the instruction
+              file and remove the generated skill directory to undo.
             </p>
           </div>
         </DialogContent>

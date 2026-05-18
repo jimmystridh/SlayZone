@@ -7,7 +7,7 @@ import type {
   ActivitySource,
   AutomationActionRun,
   ListTaskHistoryOptions,
-  ListTaskHistoryResult,
+  ListTaskHistoryResult
 } from '../shared/types'
 
 export const AUTOMATION_OUTPUT_TAIL_MAX = 4000
@@ -104,7 +104,10 @@ function clampTaskHistoryLimit(limit: number | undefined): number {
   return Math.max(1, Math.min(MAX_TASK_HISTORY_LIMIT, Math.floor(limit)))
 }
 
-export function trimOutputTail(value: string | null | undefined, maxLength = AUTOMATION_OUTPUT_TAIL_MAX): string | null {
+export function trimOutputTail(
+  value: string | null | undefined,
+  maxLength = AUTOMATION_OUTPUT_TAIL_MAX
+): string | null {
   if (!value) return null
   if (value.length <= maxLength) return value
   return value.slice(-maxLength)
@@ -144,7 +147,10 @@ export function recordActivityEvents(db: Database, inputs: RecordActivityEventIn
   return ids
 }
 
-export function startAutomationActionRun(db: Database, input: StartAutomationActionRunInput): string {
+export function startAutomationActionRun(
+  db: Database,
+  input: StartAutomationActionRunInput
+): string {
   const id = crypto.randomUUID()
   db.prepare(`
     INSERT INTO automation_action_runs (
@@ -164,18 +170,16 @@ export function startAutomationActionRun(db: Database, input: StartAutomationAct
   return id
 }
 
-export function finishAutomationActionRun(db: Database, id: string, input: FinishAutomationActionRunInput): void {
+export function finishAutomationActionRun(
+  db: Database,
+  id: string,
+  input: FinishAutomationActionRunInput
+): void {
   db.prepare(`
     UPDATE automation_action_runs
     SET status = ?, output_tail = ?, error = ?, duration_ms = ?, completed_at = datetime('now')
     WHERE id = ?
-  `).run(
-    input.status,
-    trimOutputTail(input.outputTail),
-    input.error ?? null,
-    input.durationMs,
-    id
-  )
+  `).run(input.status, trimOutputTail(input.outputTail), input.error ?? null, input.durationMs, id)
 }
 
 function mapActivityEvent(row: ActivityEventRow): ActivityEvent {
@@ -190,7 +194,7 @@ function mapActivityEvent(row: ActivityEventRow): ActivityEvent {
     source: row.source,
     summary: row.summary,
     payload: parseJsonObject(row.payload_json),
-    createdAt: row.created_at,
+    createdAt: row.created_at
   }
 }
 
@@ -202,21 +206,31 @@ export function listActivityEventsForTask(
   const limit = clampTaskHistoryLimit(options.limit)
 
   const rows = options.before
-    ? db.prepare(`
+    ? (db
+        .prepare(`
         SELECT *
         FROM activity_events
         WHERE task_id = ?
           AND (created_at < ? OR (created_at = ? AND id < ?))
         ORDER BY created_at DESC, id DESC
         LIMIT ?
-      `).all(taskId, options.before.createdAt, options.before.createdAt, options.before.id, limit + 1) as ActivityEventRow[]
-    : db.prepare(`
+      `)
+        .all(
+          taskId,
+          options.before.createdAt,
+          options.before.createdAt,
+          options.before.id,
+          limit + 1
+        ) as ActivityEventRow[])
+    : (db
+        .prepare(`
         SELECT *
         FROM activity_events
         WHERE task_id = ?
         ORDER BY created_at DESC, id DESC
         LIMIT ?
-      `).all(taskId, limit + 1) as ActivityEventRow[]
+      `)
+        .all(taskId, limit + 1) as ActivityEventRow[])
 
   const hasMore = rows.length > limit
   const pageRows = hasMore ? rows.slice(0, limit) : rows
@@ -225,19 +239,19 @@ export function listActivityEventsForTask(
 
   return {
     events,
-    nextCursor: hasMore && tail
-      ? { createdAt: tail.createdAt, id: tail.id }
-      : null,
+    nextCursor: hasMore && tail ? { createdAt: tail.createdAt, id: tail.id } : null
   }
 }
 
 export function listAutomationActionRuns(db: Database, runId: string): AutomationActionRun[] {
-  const rows = db.prepare(`
+  const rows = db
+    .prepare(`
     SELECT *
     FROM automation_action_runs
     WHERE run_id = ?
     ORDER BY action_index ASC, started_at ASC
-  `).all(runId) as AutomationActionRunRow[]
+  `)
+    .all(runId) as AutomationActionRunRow[]
 
   return rows.map((row) => ({
     id: row.id,
@@ -253,6 +267,6 @@ export function listAutomationActionRuns(db: Database, runId: string): Automatio
     error: row.error,
     startedAt: row.started_at,
     completedAt: row.completed_at,
-    durationMs: row.duration_ms,
+    durationMs: row.duration_ms
   }))
 }

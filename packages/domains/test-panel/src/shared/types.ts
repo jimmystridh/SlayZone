@@ -77,15 +77,15 @@ export const DEFAULT_PROFILES: TestProfile[] = [
     name: 'TypeScript',
     categories: [
       { name: 'Unit', pattern: '**/*.test.{ts,tsx}', color: '#3b82f6' },
-      { name: 'E2E', pattern: '**/e2e/**/*.spec.ts', color: '#8b5cf6' },
-    ],
+      { name: 'E2E', pattern: '**/e2e/**/*.spec.ts', color: '#8b5cf6' }
+    ]
   },
   {
     id: 'builtin:python',
     name: 'Python',
     categories: [
       { name: 'Unit', pattern: '**/test_*.py', color: '#22c55e' },
-      { name: 'E2E', pattern: '**/e2e/**/test_*.py', color: '#eab308' },
-    ],
-  },
+      { name: 'E2E', pattern: '**/e2e/**/test_*.py', color: '#eab308' }
+    ]
+  }
 ]

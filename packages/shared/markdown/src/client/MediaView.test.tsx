@@ -2,12 +2,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, cleanup, act } from '@testing-library/react'
 
 vi.mock('@slayzone/ui', () => ({
-  IconButton: (props: { onClick?: () => void; 'aria-label': string; children?: React.ReactNode }) => (
-    <button aria-label={props['aria-label']} onClick={props.onClick}>{props.children}</button>
+  IconButton: (props: {
+    onClick?: () => void
+    'aria-label': string
+    children?: React.ReactNode
+  }) => (
+    <button aria-label={props['aria-label']} onClick={props.onClick}>
+      {props.children}
+    </button>
   ),
   Tooltip: (props: { children?: React.ReactNode }) => <>{props.children}</>,
   TooltipTrigger: (props: { children?: React.ReactNode }) => <>{props.children}</>,
-  TooltipContent: () => null,
+  TooltipContent: () => null
 }))
 
 import { MediaView } from './MediaView'
@@ -40,7 +46,17 @@ class MockImage {
 const realGetBCR = Element.prototype.getBoundingClientRect
 function stubBCR(w: number, h: number) {
   Element.prototype.getBoundingClientRect = function () {
-    return { x: 0, y: 0, top: 0, left: 0, right: w, bottom: h, width: w, height: h, toJSON: () => ({}) } as DOMRect
+    return {
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: w,
+      bottom: h,
+      width: w,
+      height: h,
+      toJSON: () => ({})
+    } as DOMRect
   }
 }
 
@@ -58,40 +74,56 @@ afterEach(() => {
 
 describe('MediaView raster image', () => {
   it('renders a canvas element for image source', () => {
-    const { container } = render(<MediaView source={{ kind: 'image', src: 'data:image/png;base64,' }} />)
+    const { container } = render(
+      <MediaView source={{ kind: 'image', src: 'data:image/png;base64,' }} />
+    )
     expect(container.querySelector('canvas')).not.toBeNull()
   })
 
   it('renders Fit + Full buttons by default', () => {
-    const { container } = render(<MediaView source={{ kind: 'image', src: 'data:image/png;base64,' }} />)
+    const { container } = render(
+      <MediaView source={{ kind: 'image', src: 'data:image/png;base64,' }} />
+    )
     expect(container.querySelector('[aria-label="Fit to view"]')).not.toBeNull()
     expect(container.querySelector('[aria-label="Full size"]')).not.toBeNull()
   })
 
   it('hides controls when showControls=false', () => {
-    const { container } = render(<MediaView source={{ kind: 'image', src: 'data:image/png;base64,' }} showControls={false} />)
+    const { container } = render(
+      <MediaView source={{ kind: 'image', src: 'data:image/png;base64,' }} showControls={false} />
+    )
     expect(container.querySelector('[aria-label="Fit to view"]')).toBeNull()
   })
 })
 
 describe('MediaView SVG vector', () => {
   it('inlines SVG markup directly (no <img> load, no canvas)', () => {
-    const { container } = render(<MediaView source={{ kind: 'svg', svg: '<svg viewBox="0 0 100 100" data-testid="inline"/>' }} />)
+    const { container } = render(
+      <MediaView
+        source={{ kind: 'svg', svg: '<svg viewBox="0 0 100 100" data-testid="inline"/>' }}
+      />
+    )
     expect(container.querySelector('canvas')).toBeNull()
     expect(container.querySelector('[data-testid="inline"]')).not.toBeNull()
     expect(imageCount).toBe(0)
   })
 
   it('renders Fit + Full buttons for SVG source', () => {
-    const { container } = render(<MediaView source={{ kind: 'svg', svg: '<svg viewBox="0 0 100 100"/>' }} />)
+    const { container } = render(
+      <MediaView source={{ kind: 'svg', svg: '<svg viewBox="0 0 100 100"/>' }} />
+    )
     expect(container.querySelector('[aria-label="Fit to view"]')).not.toBeNull()
     expect(container.querySelector('[aria-label="Full size"]')).not.toBeNull()
   })
 
   it('updates inline SVG when svg prop changes', () => {
-    const { container, rerender } = render(<MediaView source={{ kind: 'svg', svg: '<svg data-testid="a" viewBox="0 0 10 10"/>' }} />)
+    const { container, rerender } = render(
+      <MediaView source={{ kind: 'svg', svg: '<svg data-testid="a" viewBox="0 0 10 10"/>' }} />
+    )
     expect(container.querySelector('[data-testid="a"]')).not.toBeNull()
-    rerender(<MediaView source={{ kind: 'svg', svg: '<svg data-testid="b" viewBox="0 0 20 20"/>' }} />)
+    rerender(
+      <MediaView source={{ kind: 'svg', svg: '<svg data-testid="b" viewBox="0 0 20 20"/>' }} />
+    )
     expect(container.querySelector('[data-testid="a"]')).toBeNull()
     expect(container.querySelector('[data-testid="b"]')).not.toBeNull()
   })
@@ -109,30 +141,40 @@ describe('MediaView raster Fit/Full', () => {
           const contentRef = React.useRef<HTMLDivElement | null>(null)
           const controls = React.useMemo(
             () => ({
-              setTransform: (t: { x: number; y: number; scale: number }) => { calls.push(t) },
+              setTransform: (t: { x: number; y: number; scale: number }) => {
+                calls.push(t)
+              },
               getTransform: () => ({ x: 0, y: 0, scale: 1 }),
               zoomIn: () => {},
               zoomOut: () => {},
               reset: () => {},
-              fit: () => {},
+              fit: () => {}
             }),
-            [],
+            []
           )
           return { hostRef, contentRef, controls }
-        },
+        }
       }
     })
     vi.doMock('@slayzone/ui', () => ({
-      IconButton: (props: { onClick?: () => void; 'aria-label': string; children?: React.ReactNode }) => (
-        <button aria-label={props['aria-label']} onClick={props.onClick}>{props.children}</button>
+      IconButton: (props: {
+        onClick?: () => void
+        'aria-label': string
+        children?: React.ReactNode
+      }) => (
+        <button aria-label={props['aria-label']} onClick={props.onClick}>
+          {props.children}
+        </button>
       ),
       Tooltip: (props: { children?: React.ReactNode }) => <>{props.children}</>,
       TooltipTrigger: (props: { children?: React.ReactNode }) => <>{props.children}</>,
-      TooltipContent: () => null,
+      TooltipContent: () => null
     }))
     const { MediaView: Mocked } = await import('./MediaView')
 
-    const { container, rerender } = render(<Mocked source={{ kind: 'image', src: 'data:image/png;base64,' }} />)
+    const { container, rerender } = render(
+      <Mocked source={{ kind: 'image', src: 'data:image/png;base64,' }} />
+    )
     await act(async () => {
       await new Promise<void>((r) => queueMicrotask(() => r()))
     })
@@ -143,7 +185,9 @@ describe('MediaView raster Fit/Full', () => {
     expect(calls.at(-1)).toEqual({ x: 0, y: 0, scale: 2 })
 
     const fullBtn = container.querySelector('[aria-label="Full size"]') as HTMLButtonElement
-    await act(async () => { fullBtn.click() })
+    await act(async () => {
+      fullBtn.click()
+    })
     expect(calls.at(-1)).toEqual({ x: 200, y: 150, scale: 1 })
 
     const callsAfterFull = calls.length
@@ -156,7 +200,9 @@ describe('MediaView raster Fit/Full', () => {
     expect(calls.length).toBe(callsAfterFull)
 
     const fitBtn = container.querySelector('[aria-label="Fit to view"]') as HTMLButtonElement
-    await act(async () => { fitBtn.click() })
+    await act(async () => {
+      fitBtn.click()
+    })
     expect(calls.at(-1)).toEqual({ x: 0, y: 0, scale: 2 })
 
     vi.doUnmock('./usePanZoom')

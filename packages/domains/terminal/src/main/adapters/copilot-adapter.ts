@@ -1,4 +1,11 @@
-import { defaultEncodeSubmit, type TerminalAdapter, type PromptInfo, type ActivityState, type ErrorInfo, type ValidationResult } from './types'
+import {
+  defaultEncodeSubmit,
+  type TerminalAdapter,
+  type PromptInfo,
+  type ActivityState,
+  type ErrorInfo,
+  type ValidationResult
+} from './types'
 import { whichBinary, validateShellEnv } from '../shell-env'
 
 /**
@@ -27,7 +34,11 @@ export class CopilotAdapter implements TerminalAdapter {
   detectError(data: string): ErrorInfo | null {
     const stripped = CopilotAdapter.stripAnsi(data)
 
-    if (/no saved session found with id|no conversation found with (?:session )?id|session \S+ not found/i.test(stripped)) {
+    if (
+      /no saved session found with id|no conversation found with (?:session )?id|session \S+ not found/i.test(
+        stripped
+      )
+    ) {
       return {
         code: 'SESSION_NOT_FOUND',
         message: 'Session not found',
@@ -35,7 +46,11 @@ export class CopilotAdapter implements TerminalAdapter {
       }
     }
 
-    if (/not authenticated|authentication failed|please run\s+copilot\s+login|login required|unable to authenticate/i.test(stripped)) {
+    if (
+      /not authenticated|authentication failed|please run\s+copilot\s+login|login required|unable to authenticate/i.test(
+        stripped
+      )
+    ) {
       return {
         code: 'AUTH_ERROR',
         message: 'Authentication failed',
@@ -71,7 +86,9 @@ export class CopilotAdapter implements TerminalAdapter {
       check: 'Binary found',
       ok: !!found,
       detail: found ?? 'copilot not found in PATH',
-      fix: found ? undefined : 'Install GitHub Copilot CLI from https://docs.github.com/copilot/how-tos/copilot-cli'
+      fix: found
+        ? undefined
+        : 'Install GitHub Copilot CLI from https://docs.github.com/copilot/how-tos/copilot-cli'
     })
     return results
   }

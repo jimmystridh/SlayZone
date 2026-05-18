@@ -31,11 +31,17 @@ function allWindows(): BrowserWindow[] {
 
 function broadcast(channel: string, ...args: unknown[]): void {
   for (const w of allWindows()) {
-    try { w.webContents.send(channel, ...args) } catch { /* ignore */ }
+    try {
+      w.webContents.send(channel, ...args)
+    } catch {
+      /* ignore */
+    }
   }
 }
 
-function ownershipSnapshotForTask(taskId: string): Array<{ panelId: string; ownerWindowId: number }> {
+function ownershipSnapshotForTask(
+  taskId: string
+): Array<{ panelId: string; ownerWindowId: number }> {
   const out: Array<{ panelId: string; ownerWindowId: number }> = []
   for (const [key, ownerWindowId] of ownership.entries()) {
     const [tid, panelId] = key.split('::')
@@ -84,9 +90,10 @@ function createSecondaryTaskWindow(taskId: string): BrowserWindow {
     }
   })
   const params = new URLSearchParams({ taskWindow: taskId })
-  const url = is.dev && process.env['ELECTRON_RENDERER_URL']
-    ? `${process.env['ELECTRON_RENDERER_URL']}?${params.toString()}`
-    : `file://${join(__dirname, '../renderer/index.html')}?${params.toString()}`
+  const url =
+    is.dev && process.env['ELECTRON_RENDERER_URL']
+      ? `${process.env['ELECTRON_RENDERER_URL']}?${params.toString()}`
+      : `file://${join(__dirname, '../renderer/index.html')}?${params.toString()}`
   win.loadURL(url)
   const wcId = win.webContents.id
   taskWindows.set(wcId, { window: win, taskId })
@@ -210,12 +217,22 @@ export function setupTaskWindows(): void {
     if (prevOwnerId !== undefined && prevOwnerId !== ownerWindowId) {
       // Send close-request to prev owner only
       const targets: BrowserWindow[] = []
-      if (primaryWindow && !primaryWindow.isDestroyed() && primaryWindow.webContents.id === prevOwnerId) targets.push(primaryWindow)
+      if (
+        primaryWindow &&
+        !primaryWindow.isDestroyed() &&
+        primaryWindow.webContents.id === prevOwnerId
+      )
+        targets.push(primaryWindow)
       for (const entry of taskWindows.values()) {
-        if (!entry.window.isDestroyed() && entry.window.webContents.id === prevOwnerId) targets.push(entry.window)
+        if (!entry.window.isDestroyed() && entry.window.webContents.id === prevOwnerId)
+          targets.push(entry.window)
       }
       for (const w of targets) {
-        try { w.webContents.send('panels:close-request', { taskId, panelId }) } catch { /* ignore */ }
+        try {
+          w.webContents.send('panels:close-request', { taskId, panelId })
+        } catch {
+          /* ignore */
+        }
       }
     }
     return { ok: true }
@@ -231,7 +248,11 @@ export function setupTaskWindows(): void {
     const result = getBufferSince(sessionId, -1)
     if (result) {
       for (const chunk of result.chunks) {
-        try { win.webContents.send('pty:data', sessionId, chunk.data, chunk.seq) } catch { /* ignore */ }
+        try {
+          win.webContents.send('pty:data', sessionId, chunk.data, chunk.seq)
+        } catch {
+          /* ignore */
+        }
       }
     }
     return { ok: true }

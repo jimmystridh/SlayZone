@@ -19,7 +19,7 @@ function ProgressRing({
   className,
   trackClassName = 'stroke-muted',
   rangeClassName = 'stroke-primary',
-  'aria-label': ariaLabel,
+  'aria-label': ariaLabel
 }: ProgressRingProps): React.JSX.Element {
   const clamped = Math.max(0, Math.min(100, value))
   const radius = (size - strokeWidth) / 2

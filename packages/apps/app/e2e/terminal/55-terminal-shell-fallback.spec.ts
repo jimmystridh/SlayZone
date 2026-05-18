@@ -4,7 +4,7 @@ import {
   openTaskTerminal,
   waitForPtySession,
   waitForBufferContains,
-  readFullBuffer,
+  readFullBuffer
 } from '../fixtures/terminal'
 
 test.describe('Terminal shell fallback on CLI crash', () => {
@@ -15,7 +15,11 @@ test.describe('Terminal shell fallback on CLI crash', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Shell Fallback', color: '#dc2626', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Shell Fallback',
+      color: '#dc2626',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
     // Create a custom terminal mode whose command always exits with code 1
@@ -27,11 +31,15 @@ test.describe('Terminal shell fallback on CLI crash', () => {
         initialCommand: 'false',
         resumeCommand: '',
         defaultFlags: '',
-        enabled: true,
+        enabled: true
       })
     }, customModeId)
 
-    const t = await s.createTask({ projectId: p.id, title: 'Crash recovery task', status: 'in_progress' })
+    const t = await s.createTask({
+      projectId: p.id,
+      title: 'Crash recovery task',
+      status: 'in_progress'
+    })
     taskId = t.id
 
     await mainWindow.evaluate(
@@ -43,7 +51,9 @@ test.describe('Terminal shell fallback on CLI crash', () => {
 
   test.afterAll(async ({ mainWindow }) => {
     if (customModeId) {
-      await mainWindow.evaluate((id) => window.api.terminalModes.delete(id), customModeId).catch(() => {})
+      await mainWindow
+        .evaluate((id) => window.api.terminalModes.delete(id), customModeId)
+        .catch(() => {})
     }
   })
 

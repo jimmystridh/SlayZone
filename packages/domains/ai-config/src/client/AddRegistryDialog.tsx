@@ -1,5 +1,14 @@
 import { useState } from 'react'
-import { Button, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input, Label } from '@slayzone/ui'
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label
+} from '@slayzone/ui'
 
 interface AddRegistryDialogProps {
   open: boolean
@@ -19,11 +28,7 @@ export function AddRegistryDialog({ open, onOpenChange, onAdd }: AddRegistryDial
     setLoading(true)
     setError(null)
     try {
-      await onAdd(
-        url.trim(),
-        branch.trim() || undefined,
-        skillsPath.trim() || undefined
-      )
+      await onAdd(url.trim(), branch.trim() || undefined, skillsPath.trim() || undefined)
       setUrl('')
       setBranch('')
       setSkillsPath('')
@@ -75,9 +80,7 @@ export function AddRegistryDialog({ open, onOpenChange, onAdd }: AddRegistryDial
             </div>
           </div>
 
-          {error && (
-            <p className="text-xs text-red-500">{error}</p>
-          )}
+          {error && <p className="text-xs text-red-500">{error}</p>}
         </div>
 
         <DialogFooter>

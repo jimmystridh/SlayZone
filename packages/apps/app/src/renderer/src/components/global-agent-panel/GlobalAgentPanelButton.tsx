@@ -9,7 +9,13 @@ interface GlobalAgentPanelButtonProps {
   size?: 'sm' | 'lg'
 }
 
-export function GlobalAgentPanelButton({ active, disabled, onClick, shortcutHint, size = 'sm' }: GlobalAgentPanelButtonProps) {
+export function GlobalAgentPanelButton({
+  active,
+  disabled,
+  onClick,
+  shortcutHint,
+  size = 'sm'
+}: GlobalAgentPanelButtonProps) {
   const btnSize = size === 'lg' ? 'size-10 rounded-lg' : 'h-7 w-7'
   const iconSize = size === 'lg' ? 'size-5' : 'size-4'
   return (
@@ -32,7 +38,12 @@ export function GlobalAgentPanelButton({ active, disabled, onClick, shortcutHint
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs">
-        {disabled ? 'Select a project first' : withShortcut(active ? 'Hide global agent panel' : 'Show global agent panel', shortcutHint ?? null)}
+        {disabled
+          ? 'Select a project first'
+          : withShortcut(
+              active ? 'Hide global agent panel' : 'Show global agent panel',
+              shortcutHint ?? null
+            )}
       </TooltipContent>
     </Tooltip>
   )

@@ -16,8 +16,8 @@ export function TrpcProvider({ url, children }: TrpcProviderProps): ReactNode {
     return {
       wsClient: ws,
       trpcClient: trpc.createClient({
-        links: [wsLink({ client: ws, transformer: superjson })],
-      }),
+        links: [wsLink({ client: ws, transformer: superjson })]
+      })
     }
   })
 

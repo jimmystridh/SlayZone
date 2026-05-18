@@ -3,7 +3,7 @@ import type { SkillInfo } from '@slayzone/terminal/shared'
 const sourceLabel: Record<SkillInfo['source'], string> = {
   project: 'project',
   agents: 'agents',
-  user: 'user',
+  user: 'user'
 }
 
 export function renderSkillItem(skill: SkillInfo): React.JSX.Element {

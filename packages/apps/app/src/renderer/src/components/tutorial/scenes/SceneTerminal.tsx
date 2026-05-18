@@ -26,13 +26,13 @@ const RESPONSE_LINES: ResponseLine[] = [
   { text: '  Read src/middleware/', color: 'text-blue-400' },
   { text: '', color: '' },
   { text: '  Write src/middleware/auth.ts', color: 'text-blue-400' },
-  { text: '   + import jwt from \'jsonwebtoken\'', color: 'text-green-400/70' },
+  { text: "   + import jwt from 'jsonwebtoken'", color: 'text-green-400/70' },
   { text: '   + export function authenticate(…) {', color: 'text-green-400/70' },
   { text: '   +   …', color: 'text-green-400/70' },
   { text: '', color: '' },
   { text: '  Edit src/routes/index.ts', color: 'text-blue-400' },
-  { text: '   - app.use(\'/api/user\', handler)', color: 'text-red-400/70' },
-  { text: '   + app.use(\'/api/user\', auth, handler)', color: 'text-green-400/70' },
+  { text: "   - app.use('/api/user', handler)", color: 'text-red-400/70' },
+  { text: "   + app.use('/api/user', auth, handler)", color: 'text-green-400/70' }
 ]
 
 export function SceneTerminal(): React.JSX.Element {
@@ -74,7 +74,9 @@ export function SceneTerminal(): React.JSX.Element {
   const showCursor = phase === 'banner' || phase === 'typing'
 
   return (
-    <SceneShell tabs={[{ label: 'Set up auth', active: true, dot: true }, { label: 'Build kanban' }]}>
+    <SceneShell
+      tabs={[{ label: 'Set up auth', active: true, dot: true }, { label: 'Build kanban' }]}
+    >
       <TaskHeader title="Set up authentication" panels={panelButtons('Terminal', 'Settings')} />
 
       {/* Panels area */}
@@ -91,9 +93,13 @@ export function SceneTerminal(): React.JSX.Element {
             {/* Banner */}
             <div className="mb-2">
               <div className="flex items-start gap-3">
-                <pre className="text-[12px] leading-[14px] text-[#e4845b] shrink-0 select-none">{' ▐▛███▜▌\n▝▜█████▛▘\n  ▘▘ ▝▝'}</pre>
+                <pre className="text-[12px] leading-[14px] text-[#e4845b] shrink-0 select-none">
+                  {' ▐▛███▜▌\n▝▜█████▛▘\n  ▘▘ ▝▝'}
+                </pre>
                 <div className="flex flex-col pt-[2px]">
-                  <span className="text-[16px] text-white font-bold">Claude Code <span className="text-neutral-500 font-normal">v2.1.56</span></span>
+                  <span className="text-[16px] text-white font-bold">
+                    Claude Code <span className="text-neutral-500 font-normal">v2.1.56</span>
+                  </span>
                   <span className="text-[14px] text-neutral-500">Opus 4.6 · Claude Team</span>
                   <span className="text-[14px] text-neutral-500">~/dev/projects/slayzone</span>
                 </div>
@@ -105,7 +111,9 @@ export function SceneTerminal(): React.JSX.Element {
             <div className="flex items-center gap-0">
               <span className="text-[18px] text-neutral-500 mr-2">❯</span>
               {phase === 'banner' ? (
-                <span className="text-[16px] text-neutral-600 italic">Try &quot;edit TaskDetailPage.tsx to...&quot;</span>
+                <span className="text-[16px] text-neutral-600 italic">
+                  Try &quot;edit TaskDetailPage.tsx to...&quot;
+                </span>
               ) : (
                 <>
                   <span className="text-[18px] text-white">{USER_PROMPT.slice(0, typedChars)}</span>
@@ -121,7 +129,7 @@ export function SceneTerminal(): React.JSX.Element {
             </div>
             <div className="h-[2px] bg-neutral-700 my-2" />
             {phase === 'banner' && (
-              <span className="text-[14px] text-neutral-600">  ? for shortcuts</span>
+              <span className="text-[14px] text-neutral-600"> ? for shortcuts</span>
             )}
 
             {/* Response lines */}
@@ -175,13 +183,15 @@ export function SceneTerminal(): React.JSX.Element {
               {[
                 { label: 'Project', value: 'SlayZone', dot: 'bg-green-500' },
                 { label: 'Status', value: 'In Progress' },
-                { label: 'Priority', value: 'Medium' },
+                { label: 'Priority', value: 'Medium' }
               ].map((field) => (
                 <div key={field.label}>
                   <span className="text-[14px] text-muted-foreground/50">{field.label}</span>
                   <div className="h-10 mt-1 rounded border bg-muted/30 flex items-center justify-between px-3">
                     <div className="flex items-center gap-2">
-                      {field.dot && <span className={`w-3 h-3 rounded-full ${field.dot} shrink-0`} />}
+                      {field.dot && (
+                        <span className={`w-3 h-3 rounded-full ${field.dot} shrink-0`} />
+                      )}
                       <span className="text-[14px] font-medium">{field.value}</span>
                     </div>
                     <ChevronDown className="size-4 text-muted-foreground/40" />
@@ -212,7 +222,9 @@ export function SceneTerminal(): React.JSX.Element {
               </div>
 
               <div className="pt-3">
-                <span className="text-[13px] font-semibold text-muted-foreground/40 uppercase tracking-wide">Danger Zone</span>
+                <span className="text-[13px] font-semibold text-muted-foreground/40 uppercase tracking-wide">
+                  Danger Zone
+                </span>
                 <div className="flex gap-2 mt-2">
                   <div className="flex-1 h-9 rounded border bg-muted/30 flex items-center justify-center gap-1">
                     <Archive className="size-4 text-muted-foreground/60" />

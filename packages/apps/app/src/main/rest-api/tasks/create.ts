@@ -14,7 +14,7 @@ export function registerCreateTaskRoute(app: Express, deps: RestApiDeps): void {
     try {
       const task = await createTaskOp(deps.db, parsed.data, {
         ipcMain,
-        onMutation: deps.notifyRenderer,
+        onMutation: deps.notifyRenderer
       })
       if (!task) {
         res.status(404).json({ ok: false, error: 'Task not created' })

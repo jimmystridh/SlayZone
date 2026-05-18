@@ -21,7 +21,8 @@ function test(name: string, fn: () => void): void {
 
 function eq<T>(actual: T, expected: T, label?: string): void {
   if (actual !== expected) {
-    const show = (v: unknown) => typeof v === 'string' ? JSON.stringify(v.replace(/\x1b/g, 'ESC')) : JSON.stringify(v)
+    const show = (v: unknown) =>
+      typeof v === 'string' ? JSON.stringify(v.replace(/\x1b/g, 'ESC')) : JSON.stringify(v)
     throw new Error(`${label ? label + ': ' : ''}expected ${show(expected)}, got ${show(actual)}`)
   }
 }
@@ -94,8 +95,22 @@ test('OSC 4 palette query — index 42 (out of 0-15 range) falls through to catc
 
 test('OSC 4 uses theme.ansi when provided (overrides xterm defaults)', () => {
   const ansi = [
-    '#111111', '#222222', '#333333', '#444444', '#555555', '#666666', '#777777', '#888888',
-    '#999999', '#aaaaaa', '#bbbbbb', '#cccccc', '#dddddd', '#eeeeee', '#ff0000', '#00ff00'
+    '#111111',
+    '#222222',
+    '#333333',
+    '#444444',
+    '#555555',
+    '#666666',
+    '#777777',
+    '#888888',
+    '#999999',
+    '#aaaaaa',
+    '#bbbbbb',
+    '#cccccc',
+    '#dddddd',
+    '#eeeeee',
+    '#ff0000',
+    '#00ff00'
   ]
   const themed = { ...theme, ansi }
   const r = computeSyncQueryResponse('\x1b]4;0;?\x07\x1b]4;14;?\x07', themed)

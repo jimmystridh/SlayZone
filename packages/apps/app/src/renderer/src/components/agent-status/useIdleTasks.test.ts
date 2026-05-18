@@ -114,10 +114,7 @@ const NOW = 100_000
 
 test('deduplicates multiple idle sessions for the same task', () => {
   const task = makeTask('t1', 'p1', 'Task 1')
-  const ptys: AgentSessionRow[] = [
-    makePty('s1', 't1', NOW - 5000),
-    makePty('s2', 't1', NOW - 3000)
-  ]
+  const ptys: AgentSessionRow[] = [makePty('s1', 't1', NOW - 5000), makePty('s2', 't1', NOW - 3000)]
   const result = buildIdleTasks(ptys, [task], null, NOW)
   expect(result.length).toBe(1)
   expect(result[0]?.sessionId).toBe('s2')
@@ -137,10 +134,7 @@ test('keeps the most recent session per task', () => {
 test('applies project filter', () => {
   const task1 = makeTask('t1', 'p1', 'Task 1')
   const task2 = makeTask('t2', 'p2', 'Task 2')
-  const ptys: AgentSessionRow[] = [
-    makePty('s1', 't1', NOW - 5000),
-    makePty('s2', 't2', NOW - 5000)
-  ]
+  const ptys: AgentSessionRow[] = [makePty('s1', 't1', NOW - 5000), makePty('s2', 't2', NOW - 5000)]
   const result = buildIdleTasks(ptys, [task1, task2], 'p1', NOW)
   expect(result.map((item) => item.task.id)).toEqual(['t1'])
 })
@@ -158,15 +152,21 @@ test('excludes non-idle states', () => {
 
 test('excludes plain terminal mode', () => {
   const task = makeTask('t1', 'p1', 'Task 1')
-  const ptys: AgentSessionRow[] = [
-    makePty('shell', 't1', NOW - 5000, 'idle', 'terminal')
-  ]
+  const ptys: AgentSessionRow[] = [makePty('shell', 't1', NOW - 5000, 'idle', 'terminal')]
   expect(buildIdleTasks(ptys, [task], null, NOW).length).toBe(0)
 })
 
 test('includes AI agent modes', () => {
   const task = makeTask('t1', 'p1', 'Task 1')
-  const modes = ['claude-code', 'codex', 'gemini', 'cursor-agent', 'opencode', 'qwen-code', 'copilot']
+  const modes = [
+    'claude-code',
+    'codex',
+    'gemini',
+    'cursor-agent',
+    'opencode',
+    'qwen-code',
+    'copilot'
+  ]
   for (const mode of modes) {
     const ptys: AgentSessionRow[] = [makePty('s', 't1', NOW - 5000, 'idle', mode)]
     expect(buildIdleTasks(ptys, [task], null, NOW).length).toBe(1)
@@ -195,8 +195,8 @@ test('dedupes PTY + chat rows for same task by most recent lastOutputTime', () =
   const task = makeTask('t1', 'p1', 'Task 1')
   // PTY row: format `${taskId}`. Chat row: format `${taskId}:${tabId}`.
   const rows: AgentSessionRow[] = [
-    makePty('t1', 't1', NOW - 8000),               // PTY, older
-    makePty('t1:tab-a', 't1', NOW - 4000)          // chat, newer
+    makePty('t1', 't1', NOW - 8000), // PTY, older
+    makePty('t1:tab-a', 't1', NOW - 4000) // chat, newer
   ]
   const result = buildIdleTasks(rows, [task], null, NOW)
   expect(result.length).toBe(1)
@@ -207,8 +207,8 @@ test('dedupes PTY + chat rows for same task by most recent lastOutputTime', () =
 test('keeps PTY row when older chat row exists for same task', () => {
   const task = makeTask('t1', 'p1', 'Task 1')
   const rows: AgentSessionRow[] = [
-    makePty('t1:tab-a', 't1', NOW - 8000),         // chat, older
-    makePty('t1', 't1', NOW - 4000)                // PTY, newer
+    makePty('t1:tab-a', 't1', NOW - 8000), // chat, older
+    makePty('t1', 't1', NOW - 4000) // PTY, newer
   ]
   const result = buildIdleTasks(rows, [task], null, NOW)
   expect(result.length).toBe(1)
@@ -227,12 +227,12 @@ test('PTY + chat rows for different tasks both surface', () => {
   const task1 = makeTask('t1', 'p1', 'Task 1')
   const task2 = makeTask('t2', 'p1', 'Task 2')
   const rows: AgentSessionRow[] = [
-    makePty('t1', 't1', NOW - 5000),               // PTY for t1
-    makePty('t2:tab-a', 't2', NOW - 5000)          // chat for t2
+    makePty('t1', 't1', NOW - 5000), // PTY for t1
+    makePty('t2:tab-a', 't2', NOW - 5000) // chat for t2
   ]
   const result = buildIdleTasks(rows, [task1, task2], null, NOW)
   expect(result.length).toBe(2)
-  expect(result.map(r => r.task.id).sort()).toEqual(['t1', 't2'])
+  expect(result.map((r) => r.task.id).sort()).toEqual(['t1', 't2'])
 })
 
 // --- buildActiveSessionTaskIds ---

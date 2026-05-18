@@ -40,7 +40,8 @@ export async function createTestHarness(): Promise<TestHarness> {
 
   // Dynamic import to avoid Node 24 native TS static analysis issues
   const migrationsPath = path.resolve(
-    import.meta.dirname, '../../apps/app/src/main/db/migrations.ts'
+    import.meta.dirname,
+    '../../apps/app/src/main/db/migrations.ts'
   )
   const mod = await import(migrationsPath)
   mod.runMigrations(db)
@@ -55,7 +56,9 @@ export async function createTestHarness(): Promise<TestHarness> {
     on(channel: string, handler: Handler) {
       handlers.set(channel, handler)
     },
-    emit() { /* no-op for tests */ },
+    emit() {
+      /* no-op for tests */
+    },
     handlers
   }
 
@@ -106,7 +109,11 @@ export function test(name: string, fn: () => void | Promise<void>) {
         _hasAsync = true
         _testQueue = result.then(
           () => console.log(`  \u2713 ${name}`),
-          (e) => { console.log(`  \u2717 ${name}`); console.error(`    ${e}`); process.exitCode = 1 }
+          (e) => {
+            console.log(`  \u2717 ${name}`)
+            console.error(`    ${e}`)
+            process.exitCode = 1
+          }
         )
       } else {
         console.log(`  \u2713 ${name}`)
@@ -122,7 +129,8 @@ export function test(name: string, fn: () => void | Promise<void>) {
 export function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     },
     toEqual(expected: unknown) {
       if (JSON.stringify(actual) !== JSON.stringify(expected))
@@ -141,20 +149,29 @@ export function expect(actual: unknown) {
       if (actual !== undefined) throw new Error(`Expected undefined, got ${JSON.stringify(actual)}`)
     },
     toBeGreaterThan(n: number) {
-      if (typeof actual !== 'number' || actual <= n) throw new Error(`Expected > ${n}, got ${actual}`)
+      if (typeof actual !== 'number' || actual <= n)
+        throw new Error(`Expected > ${n}, got ${actual}`)
     },
     toBeGreaterThanOrEqual(n: number) {
-      if (typeof actual !== 'number' || actual < n) throw new Error(`Expected >= ${n}, got ${actual}`)
+      if (typeof actual !== 'number' || actual < n)
+        throw new Error(`Expected >= ${n}, got ${actual}`)
     },
     toHaveLength(n: number) {
-      if (!Array.isArray(actual) || actual.length !== n) throw new Error(`Expected length ${n}, got ${Array.isArray(actual) ? actual.length : 'not array'}`)
+      if (!Array.isArray(actual) || actual.length !== n)
+        throw new Error(
+          `Expected length ${n}, got ${Array.isArray(actual) ? actual.length : 'not array'}`
+        )
     },
     toContain(item: unknown) {
-      if (!Array.isArray(actual) || !actual.includes(item)) throw new Error(`Expected array to contain ${JSON.stringify(item)}`)
+      if (!Array.isArray(actual) || !actual.includes(item))
+        throw new Error(`Expected array to contain ${JSON.stringify(item)}`)
     },
     toThrow() {
       if (typeof actual !== 'function') throw new Error('Expected a function')
-      try { (actual as () => void)(); throw new Error('Expected function to throw') } catch (e: unknown) {
+      try {
+        ;(actual as () => void)()
+        throw new Error('Expected function to throw')
+      } catch (e: unknown) {
         if (e instanceof Error && e.message === 'Expected function to throw') throw e
       }
     }

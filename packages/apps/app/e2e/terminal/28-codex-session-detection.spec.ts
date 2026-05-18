@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 import { switchTerminalMode, openTaskTerminal } from '../fixtures/terminal'
 
@@ -59,29 +59,56 @@ test.describe('Session ID banners', () => {
     }, detectedId)
 
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Banner Tests', color: '#0ea5e9', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Banner Tests',
+      color: '#0ea5e9',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
-    const codexTask = await s.createTask({ projectId: p.id, title: 'BT codex task', status: 'todo' })
-    const geminiTask = await s.createTask({ projectId: p.id, title: 'BT gemini task', status: 'todo' })
-    const cursorTask = await s.createTask({ projectId: p.id, title: 'BT cursor task', status: 'todo' })
-    const opencodeTask = await s.createTask({ projectId: p.id, title: 'BT opencode task', status: 'todo' })
-    const claudeTask = await s.createTask({ projectId: p.id, title: 'BT claude task', status: 'todo' })
+    const codexTask = await s.createTask({
+      projectId: p.id,
+      title: 'BT codex task',
+      status: 'todo'
+    })
+    const geminiTask = await s.createTask({
+      projectId: p.id,
+      title: 'BT gemini task',
+      status: 'todo'
+    })
+    const cursorTask = await s.createTask({
+      projectId: p.id,
+      title: 'BT cursor task',
+      status: 'todo'
+    })
+    const opencodeTask = await s.createTask({
+      projectId: p.id,
+      title: 'BT opencode task',
+      status: 'todo'
+    })
+    const claudeTask = await s.createTask({
+      projectId: p.id,
+      title: 'BT claude task',
+      status: 'todo'
+    })
     codexTaskId = codexTask.id
     geminiTaskId = geminiTask.id
     cursorTaskId = cursorTask.id
     opencodeTaskId = opencodeTask.id
     claudeTaskId = claudeTask.id
 
-    await mainWindow.evaluate(({ codex, gemini, cursor, opencode }) => {
-      return Promise.all([
-        window.api.db.updateTask({ id: codex, terminalMode: 'codex' }),
-        window.api.db.updateTask({ id: gemini, terminalMode: 'gemini' }),
-        window.api.db.updateTask({ id: cursor, terminalMode: 'cursor-agent' }),
-        window.api.db.updateTask({ id: opencode, terminalMode: 'opencode' }),
-        // claude task stays as default claude-code
-      ])
-    }, { codex: codexTaskId, gemini: geminiTaskId, cursor: cursorTaskId, opencode: opencodeTaskId })
+    await mainWindow.evaluate(
+      ({ codex, gemini, cursor, opencode }) => {
+        return Promise.all([
+          window.api.db.updateTask({ id: codex, terminalMode: 'codex' }),
+          window.api.db.updateTask({ id: gemini, terminalMode: 'gemini' }),
+          window.api.db.updateTask({ id: cursor, terminalMode: 'cursor-agent' }),
+          window.api.db.updateTask({ id: opencode, terminalMode: 'opencode' })
+          // claude task stays as default claude-code
+        ])
+      },
+      { codex: codexTaskId, gemini: geminiTaskId, cursor: cursorTaskId, opencode: opencodeTaskId }
+    )
 
     await s.refreshData()
     await goHome(mainWindow)
@@ -99,7 +126,8 @@ test.describe('Session ID banners', () => {
       for (const ch of ['pty:submit', 'chat:list', 'session:list', 'session:getState']) {
         ipcMain.removeHandler(ch)
       }
-      const restore = (globalThis as unknown as { __restorePtyHandlers?: () => void }).__restorePtyHandlers
+      const restore = (globalThis as unknown as { __restorePtyHandlers?: () => void })
+        .__restorePtyHandlers
       restore?.()
     })
   })
@@ -113,8 +141,13 @@ test.describe('Session ID banners', () => {
     await expect(mainWindow.getByRole('button', { name: /Run \/status/ }).last()).toBeVisible()
   })
 
-  test('codex: clicking detect button saves session id and hides banner', async ({ mainWindow }) => {
-    await mainWindow.getByRole('button', { name: /Run \/status/ }).last().click()
+  test('codex: clicking detect button saves session id and hides banner', async ({
+    mainWindow
+  }) => {
+    await mainWindow
+      .getByRole('button', { name: /Run \/status/ })
+      .last()
+      .click()
 
     await expect
       .poll(async () => {
@@ -139,7 +172,10 @@ test.describe('Session ID banners', () => {
   })
 
   test('gemini: clicking detect button saves session id', async ({ mainWindow }) => {
-    await mainWindow.getByRole('button', { name: /Run \/stats/ }).last().click()
+    await mainWindow
+      .getByRole('button', { name: /Run \/stats/ })
+      .last()
+      .click()
 
     await expect
       .poll(async () => {

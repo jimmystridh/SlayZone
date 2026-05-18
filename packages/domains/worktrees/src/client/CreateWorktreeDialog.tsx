@@ -113,7 +113,12 @@ export function CreateWorktreeDialog({
                 className="flex-1"
                 autoFocus
               />
-              <IconButton type="button" aria-label="Browse folder" variant="outline" onClick={handleBrowse}>
+              <IconButton
+                type="button"
+                aria-label="Browse folder"
+                variant="outline"
+                onClick={handleBrowse}
+              >
                 <FolderOpen className="h-4 w-4" />
               </IconButton>
             </div>
@@ -133,9 +138,7 @@ export function CreateWorktreeDialog({
               Creates new branch if specified, otherwise uses detached HEAD
             </p>
           </div>
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               Cancel

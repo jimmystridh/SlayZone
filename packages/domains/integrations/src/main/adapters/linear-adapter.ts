@@ -131,7 +131,10 @@ export const linearAdapter: ProviderAdapter = {
     return issue ? normalizeIssue(issue) : null
   },
 
-  async getIssuesBatch(credential: string, refs: IssueRef[]): Promise<Map<string, NormalizedIssue>> {
+  async getIssuesBatch(
+    credential: string,
+    refs: IssueRef[]
+  ): Promise<Map<string, NormalizedIssue>> {
     const ids = refs.map((r) => r.id)
     const issueMap = await getIssuesBatch(credential, ids)
     const result = new Map<string, NormalizedIssue>()

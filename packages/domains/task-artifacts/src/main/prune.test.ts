@@ -14,7 +14,7 @@ describe('pruneVersions', () => {
     createVersion(env.db, env.txn, env.blobStore, {
       artifactId: 'a1',
       bytes: '3',
-      name: 'milestone',
+      name: 'milestone'
     })
     createVersion(env.db, env.txn, env.blobStore, { artifactId: 'a1', bytes: '4' })
     createVersion(env.db, env.txn, env.blobStore, { artifactId: 'a1', bytes: '5' })
@@ -60,7 +60,9 @@ describe('pruneVersions', () => {
   it('keepCurrent:false allows deleting current', () => {
     setCurrentVersion(env.db, env.txn, 'a1', 2)
     pruneVersions(env.db, env.txn, env.blobStore, 'a1', {
-      keepLast: 0, keepNamed: false, keepCurrent: false,
+      keepLast: 0,
+      keepNamed: false,
+      keepCurrent: false
     })
     const remaining = listVersions(env.db, 'a1')
     expect(remaining.some((v) => v.version_num === 2)).toBe(false)
@@ -79,7 +81,9 @@ describe('gcOrphanBlobs', () => {
     createVersion(env.db, env.txn, env.blobStore, { artifactId: 'a1', bytes: 'x' })
     // Manually inject an orphan blob
     const orphan = env.blobStore.write('orphaned')
-    env.db.prepare('INSERT OR IGNORE INTO artifact_blobs (hash, size) VALUES (?, ?)').run(orphan.hash, orphan.size)
+    env.db
+      .prepare('INSERT OR IGNORE INTO artifact_blobs (hash, size) VALUES (?, ?)')
+      .run(orphan.hash, orphan.size)
     const deleted = gcOrphanBlobs(env.db, env.blobStore)
     expect(deleted).toBe(1)
     expect(env.blobStore.has(orphan.hash)).toBe(false)

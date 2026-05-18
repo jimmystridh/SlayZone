@@ -1,5 +1,14 @@
 import { useMemo } from 'react'
-import { Info, AlignLeft, AlignRight, PanelLeft, PanelRight, Rows3, Menu, type LucideIcon } from 'lucide-react'
+import {
+  Info,
+  AlignLeft,
+  AlignRight,
+  PanelLeft,
+  PanelRight,
+  Rows3,
+  Menu,
+  type LucideIcon
+} from 'lucide-react'
 import {
   Card,
   CardHeader,
@@ -15,15 +24,21 @@ import {
   TooltipTrigger,
   TooltipContent,
   buildStatusOptions,
-  cn,
+  cn
 } from '@slayzone/ui'
 import { useTabStore } from '../useTabStore'
-import type { TreeGroupBy, TreeOrderBy, TreeOrderDir, TaskHeaderPanelMode, TaskHeaderAlign } from '../useTabStore'
+import type {
+  TreeGroupBy,
+  TreeOrderBy,
+  TreeOrderDir,
+  TaskHeaderPanelMode,
+  TaskHeaderAlign
+} from '../useTabStore'
 import { SettingsTabIntro } from './SettingsTabIntro'
 
 const SIDEBAR_VIEWS: ReadonlyArray<{ value: string; label: string }> = [
   { value: 'projects', label: 'Projects' },
-  { value: 'tree', label: 'Tree' },
+  { value: 'tree', label: 'Tree' }
 ]
 
 function SettingLabel({ children, tip }: { children: React.ReactNode; tip: string }) {
@@ -42,15 +57,7 @@ function SettingLabel({ children, tip }: { children: React.ReactNode; tip: strin
   )
 }
 
-function Row({
-  label,
-  tip,
-  children,
-}: {
-  label: string
-  tip: string
-  children: React.ReactNode
-}) {
+function Row({ label, tip, children }: { label: string; tip: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[220px_minmax(0,1fr)] items-center gap-4">
       <SettingLabel tip={tip}>{label}</SettingLabel>
@@ -64,7 +71,7 @@ function ToggleRow({
   tip,
   checked,
   onChange,
-  disabled,
+  disabled
 }: {
   label: string
   tip: string
@@ -82,7 +89,7 @@ function ToggleRow({
 function ButtonToggle({
   value,
   onChange,
-  options,
+  options
 }: {
   value: string
   onChange: (v: string) => void
@@ -118,7 +125,7 @@ function SelectChoice({
   value,
   onChange,
   options,
-  width = 'w-48',
+  width = 'w-48'
 }: {
   value: string
   onChange: (v: string) => void
@@ -236,7 +243,7 @@ export function LayoutSettingsTab() {
               onChange={(v) => setTaskHeaderPanelMode(v as TaskHeaderPanelMode)}
               options={[
                 { value: 'tabs', label: 'Tabs', icon: Rows3 },
-                { value: 'menu', label: 'Menu', icon: Menu },
+                { value: 'menu', label: 'Menu', icon: Menu }
               ]}
             />
           </Row>
@@ -246,7 +253,7 @@ export function LayoutSettingsTab() {
               onChange={(v) => setTaskHeaderPanelAlign(v as TaskHeaderAlign)}
               options={[
                 { value: 'left', label: 'Left', icon: PanelLeft },
-                { value: 'right', label: 'Right', icon: PanelRight },
+                { value: 'right', label: 'Right', icon: PanelRight }
               ]}
             />
           </Row>
@@ -256,7 +263,7 @@ export function LayoutSettingsTab() {
               onChange={(v) => setTaskHeaderTitleAlign(v as TaskHeaderAlign)}
               options={[
                 { value: 'left', label: 'Left', icon: AlignLeft },
-                { value: 'right', label: 'Right', icon: AlignRight },
+                { value: 'right', label: 'Right', icon: AlignRight }
               ]}
             />
           </Row>
@@ -266,187 +273,189 @@ export function LayoutSettingsTab() {
       {/* Tree view */}
       {isTree && (
         <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Groups</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Row label="Group by" tip="How root tasks are bucketed into sections">
-            <SelectChoice
-              value={treeGroupBy}
-              onChange={(v) => setTreeGroupBy(v as TreeGroupBy)}
-              options={[
-                { value: 'none', label: 'None' },
-                { value: 'status', label: 'Status' },
-                { value: 'priority', label: 'Priority' },
-              ]}
-            />
-          </Row>
-          <Row label="Order by" tip="Row order within each group">
-            <SelectChoice
-              value={treeOrderBy}
-              onChange={(v) => setTreeOrderBy(v as TreeOrderBy)}
-              options={[
-                { value: 'manual', label: 'Manual' },
-                { value: 'priority', label: 'Priority' },
-                { value: 'due_date', label: 'Due date' },
-                { value: 'title', label: 'Title' },
-                { value: 'created', label: 'Created' },
-                { value: 'last_interaction', label: 'Last interaction' },
-              ]}
-            />
-          </Row>
-          <Row label="Order direction" tip="Ascending or descending">
-            <SelectChoice
-              value={treeOrderDir}
-              onChange={(v) => setTreeOrderDir(v as TreeOrderDir)}
-              options={[
-                { value: 'asc', label: 'Ascending' },
-                { value: 'desc', label: 'Descending' },
-              ]}
-              width="w-32"
-            />
-          </Row>
-          <ToggleRow
-            label="Show empty groups"
-            tip="Render section headers even when the group has no tasks"
-            checked={treeShowEmptyGroups}
-            onChange={setTreeShowEmptyGroups}
-          />
-          <ToggleRow
-            label="Group pinned tasks"
-            tip="Show pinned tasks in their own section at the top"
-            checked={treeGroupPinned}
-            onChange={setTreeGroupPinned}
-          />
-          <ToggleRow
-            label="Group temporary tasks"
-            tip="Show temporary tasks in their own section at the top"
-            checked={treeGroupTemporary}
-            onChange={setTreeGroupTemporary}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Tasks */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tasks</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <ToggleRow
-            label="Show only active"
-            tip="Only tasks with an active PTY or chat session"
-            checked={treeShowOnlyActive}
-            onChange={setTreeShowOnlyActive}
-          />
-          <ToggleRow
-            label="Show temporary"
-            tip="Include temporary scratch tasks"
-            checked={treeShowTemporary}
-            onChange={setTreeShowTemporary}
-          />
-          <ToggleRow
-            label="Show sub-tasks"
-            tip="Render children under matching parents"
-            checked={treeShowSubtasks}
-            onChange={setTreeShowSubtasks}
-          />
-          {treeShowSubtasks && (
-            <div className="pl-4 border-l border-border/40 space-y-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Groups</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Row label="Group by" tip="How root tasks are bucketed into sections">
+                <SelectChoice
+                  value={treeGroupBy}
+                  onChange={(v) => setTreeGroupBy(v as TreeGroupBy)}
+                  options={[
+                    { value: 'none', label: 'None' },
+                    { value: 'status', label: 'Status' },
+                    { value: 'priority', label: 'Priority' }
+                  ]}
+                />
+              </Row>
+              <Row label="Order by" tip="Row order within each group">
+                <SelectChoice
+                  value={treeOrderBy}
+                  onChange={(v) => setTreeOrderBy(v as TreeOrderBy)}
+                  options={[
+                    { value: 'manual', label: 'Manual' },
+                    { value: 'priority', label: 'Priority' },
+                    { value: 'due_date', label: 'Due date' },
+                    { value: 'title', label: 'Title' },
+                    { value: 'created', label: 'Created' },
+                    { value: 'last_interaction', label: 'Last interaction' }
+                  ]}
+                />
+              </Row>
+              <Row label="Order direction" tip="Ascending or descending">
+                <SelectChoice
+                  value={treeOrderDir}
+                  onChange={(v) => setTreeOrderDir(v as TreeOrderDir)}
+                  options={[
+                    { value: 'asc', label: 'Ascending' },
+                    { value: 'desc', label: 'Descending' }
+                  ]}
+                  width="w-32"
+                />
+              </Row>
               <ToggleRow
-                label="Show all sub-tasks"
-                tip="Include every descendant of a matching parent, even non-matches"
-                checked={treeShowAllSubtasks}
-                onChange={setTreeShowAllSubtasks}
+                label="Show empty groups"
+                tip="Render section headers even when the group has no tasks"
+                checked={treeShowEmptyGroups}
+                onChange={setTreeShowEmptyGroups}
               />
               <ToggleRow
-                label="Show all undone sub-tasks"
-                tip="Include every non-completed descendant of a matching parent"
-                checked={treeShowAllUndoneSubtasks}
-                onChange={setTreeShowAllUndoneSubtasks}
-                disabled={treeShowAllSubtasks}
+                label="Group pinned tasks"
+                tip="Show pinned tasks in their own section at the top"
+                checked={treeGroupPinned}
+                onChange={setTreeGroupPinned}
               />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              <ToggleRow
+                label="Group temporary tasks"
+                tip="Show temporary tasks in their own section at the top"
+                checked={treeGroupTemporary}
+                onChange={setTreeGroupTemporary}
+              />
+            </CardContent>
+          </Card>
 
-      {/* Task row */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Task</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <ToggleRow
-            label="Show status"
-            tip="Status icon after the title"
-            checked={treeShowStatus}
-            onChange={setTreeShowStatus}
-          />
-          <ToggleRow
-            label="Show priority"
-            tip="Priority icon after the title"
-            checked={treeShowPriority}
-            onChange={setTreeShowPriority}
-          />
-          <ToggleRow
-            label="Show worktree"
-            tip="Branch icon when task has a worktree"
-            checked={treeShowWorktree}
-            onChange={setTreeShowWorktree}
-          />
-          <ToggleRow
-            label="Cross out completed"
-            tip="Strikethrough done tasks"
-            checked={treeCrossOutDone}
-            onChange={setTreeCrossOutDone}
-          />
-        </CardContent>
-      </Card>
+          {/* Tasks */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Tasks</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <ToggleRow
+                label="Show only active"
+                tip="Only tasks with an active PTY or chat session"
+                checked={treeShowOnlyActive}
+                onChange={setTreeShowOnlyActive}
+              />
+              <ToggleRow
+                label="Show temporary"
+                tip="Include temporary scratch tasks"
+                checked={treeShowTemporary}
+                onChange={setTreeShowTemporary}
+              />
+              <ToggleRow
+                label="Show sub-tasks"
+                tip="Render children under matching parents"
+                checked={treeShowSubtasks}
+                onChange={setTreeShowSubtasks}
+              />
+              {treeShowSubtasks && (
+                <div className="pl-4 border-l border-border/40 space-y-3">
+                  <ToggleRow
+                    label="Show all sub-tasks"
+                    tip="Include every descendant of a matching parent, even non-matches"
+                    checked={treeShowAllSubtasks}
+                    onChange={setTreeShowAllSubtasks}
+                  />
+                  <ToggleRow
+                    label="Show all undone sub-tasks"
+                    tip="Include every non-completed descendant of a matching parent"
+                    checked={treeShowAllUndoneSubtasks}
+                    onChange={setTreeShowAllUndoneSubtasks}
+                    disabled={treeShowAllSubtasks}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-xs text-muted-foreground/80 leading-snug">
-            Limit by status. Pinned and open tasks always show.
-          </p>
-          <div className="flex flex-wrap gap-1">
-            {statusOptions.map((opt) => {
-              const Icon = opt.icon
-              const checked = selectedStatusSet.has(opt.value)
-              const button = (
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={checked}
-                  aria-label={opt.label}
-                  onClick={() => toggleStatus(opt.value)}
-                  className={cn(
-                    'inline-flex items-center justify-center rounded-md border transition-colors',
-                    checked
-                      ? 'border-border bg-accent/60 text-foreground hover:border-foreground/40 gap-1.5 px-2 h-7 text-xs'
-                      : 'border-transparent bg-input/30 text-muted-foreground/70 hover:text-foreground hover:border-border size-7'
-                  )}
-                >
-                  <Icon className={cn('size-3.5 shrink-0', checked ? opt.iconClass : 'opacity-50')} />
-                  {checked && <span>{opt.label}</span>}
-                </button>
-              )
-              if (checked) return <span key={opt.value}>{button}</span>
-              return (
-                <Tooltip key={opt.value} delayDuration={300}>
-                  <TooltipTrigger asChild>{button}</TooltipTrigger>
-                  <TooltipContent side="top">{opt.label}</TooltipContent>
-                </Tooltip>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
+          {/* Task row */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Task</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <ToggleRow
+                label="Show status"
+                tip="Status icon after the title"
+                checked={treeShowStatus}
+                onChange={setTreeShowStatus}
+              />
+              <ToggleRow
+                label="Show priority"
+                tip="Priority icon after the title"
+                checked={treeShowPriority}
+                onChange={setTreeShowPriority}
+              />
+              <ToggleRow
+                label="Show worktree"
+                tip="Branch icon when task has a worktree"
+                checked={treeShowWorktree}
+                onChange={setTreeShowWorktree}
+              />
+              <ToggleRow
+                label="Cross out completed"
+                tip="Strikethrough done tasks"
+                checked={treeCrossOutDone}
+                onChange={setTreeCrossOutDone}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Filters</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground/80 leading-snug">
+                Limit by status. Pinned and open tasks always show.
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {statusOptions.map((opt) => {
+                  const Icon = opt.icon
+                  const checked = selectedStatusSet.has(opt.value)
+                  const button = (
+                    <button
+                      type="button"
+                      role="checkbox"
+                      aria-checked={checked}
+                      aria-label={opt.label}
+                      onClick={() => toggleStatus(opt.value)}
+                      className={cn(
+                        'inline-flex items-center justify-center rounded-md border transition-colors',
+                        checked
+                          ? 'border-border bg-accent/60 text-foreground hover:border-foreground/40 gap-1.5 px-2 h-7 text-xs'
+                          : 'border-transparent bg-input/30 text-muted-foreground/70 hover:text-foreground hover:border-border size-7'
+                      )}
+                    >
+                      <Icon
+                        className={cn('size-3.5 shrink-0', checked ? opt.iconClass : 'opacity-50')}
+                      />
+                      {checked && <span>{opt.label}</span>}
+                    </button>
+                  )
+                  if (checked) return <span key={opt.value}>{button}</span>
+                  return (
+                    <Tooltip key={opt.value} delayDuration={300}>
+                      <TooltipTrigger asChild>{button}</TooltipTrigger>
+                      <TooltipContent side="top">{opt.label}</TooltipContent>
+                    </Tooltip>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </>
       )}
     </>

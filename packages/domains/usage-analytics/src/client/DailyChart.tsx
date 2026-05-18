@@ -1,17 +1,36 @@
 import { useState, useMemo } from 'react'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts'
 import type { DailySummary, DateRange } from '../shared/types'
 import { PROVIDER_USAGE_SUPPORT } from '../shared/types'
 import { cn } from '@slayzone/ui'
-import { formatTokens, PROVIDER_COLORS, PROVIDER_FALLBACK_COLOR, TOOLTIP_STYLE, TICK_STYLE, GRID_STYLE } from './chart-theme'
+import {
+  formatTokens,
+  PROVIDER_COLORS,
+  PROVIDER_FALLBACK_COLOR,
+  TOOLTIP_STYLE,
+  TICK_STYLE,
+  GRID_STYLE
+} from './chart-theme'
 
 function getDateRangeStart(range: DateRange): Date {
   const now = new Date()
   switch (range) {
-    case '7d': return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7)
-    case '30d': return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30)
-    case '90d': return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 90)
-    case 'all': return new Date(0)
+    case '7d':
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7)
+    case '30d':
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30)
+    case '90d':
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 90)
+    case 'all':
+      return new Date(0)
   }
 }
 
@@ -41,7 +60,10 @@ export function DailyChart({ data, range }: Props) {
     }
 
     const rangeStart = getDateRangeStart(range)
-    const dataStart = data.length > 0 ? new Date(data.reduce((min, d) => d.date < min ? d.date : min, data[0].date)) : rangeStart
+    const dataStart =
+      data.length > 0
+        ? new Date(data.reduce((min, d) => (d.date < min ? d.date : min), data[0].date))
+        : rangeStart
     const start = range === 'all' ? dataStart : rangeStart
     const today = new Date()
     const allDates: string[] = []
@@ -61,7 +83,7 @@ export function DailyChart({ data, range }: Props) {
         }
         return {
           date: date.slice(5),
-          ...Object.fromEntries(providers.map((p) => [p, runningTotal[p] ?? 0])),
+          ...Object.fromEntries(providers.map((p) => [p, runningTotal[p] ?? 0]))
         }
       })
     } else {
@@ -69,7 +91,7 @@ export function DailyChart({ data, range }: Props) {
         const values = byDate.get(date) ?? {}
         return {
           date: date.slice(5),
-          ...Object.fromEntries(providers.map((p) => [p, values[p] ?? 0])),
+          ...Object.fromEntries(providers.map((p) => [p, values[p] ?? 0]))
         }
       })
     }
@@ -97,7 +119,10 @@ export function DailyChart({ data, range }: Props) {
         <div className="flex items-center gap-3">
           {providers.map((provider) => (
             <div key={provider} className="flex items-center gap-1.5">
-              <div className="size-2.5 rounded-full" style={{ backgroundColor: PROVIDER_COLORS[provider] ?? PROVIDER_FALLBACK_COLOR }} />
+              <div
+                className="size-2.5 rounded-full"
+                style={{ backgroundColor: PROVIDER_COLORS[provider] ?? PROVIDER_FALLBACK_COLOR }}
+              />
               <span className="text-xs text-muted-foreground">{provider}</span>
             </div>
           ))}
@@ -106,7 +131,9 @@ export function DailyChart({ data, range }: Props) {
               onClick={() => setCumulative(false)}
               className={cn(
                 'px-2 py-0.5 text-xs font-medium rounded transition-colors',
-                !cumulative ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                !cumulative
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
               Daily
@@ -115,7 +142,9 @@ export function DailyChart({ data, range }: Props) {
               onClick={() => setCumulative(true)}
               className={cn(
                 'px-2 py-0.5 text-xs font-medium rounded transition-colors',
-                cumulative ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                cumulative
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
               Total
@@ -127,30 +156,59 @@ export function DailyChart({ data, range }: Props) {
         <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -12, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" {...GRID_STYLE} />
           <XAxis dataKey="date" tick={TICK_STYLE} />
-          <YAxis
-            tick={TICK_STYLE}
-            tickFormatter={(v) => formatTokens(v)}
-            domain={[0, 'auto']}
-          />
+          <YAxis tick={TICK_STYLE} tickFormatter={(v) => formatTokens(v)} domain={[0, 'auto']} />
           <Tooltip
             content={({ active, payload, label }) => {
               if (!active || !payload?.length) return null
               const [mm, dd] = (label as string).split('-')
-              const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+              const monthNames = [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec'
+              ]
               const dateLabel = `${monthNames[parseInt(mm, 10) - 1]} ${parseInt(dd, 10)}`
               return (
                 <div style={TOOLTIP_STYLE}>
                   <p style={{ marginBottom: 4, fontWeight: 500 }}>{dateLabel}</p>
                   {payload.map((entry) => {
-                    const name = PROVIDER_USAGE_SUPPORT[entry.dataKey as string]?.label ?? entry.dataKey
+                    const name =
+                      PROVIDER_USAGE_SUPPORT[entry.dataKey as string]?.label ?? entry.dataKey
                     const value = entry.value as number
                     return (
-                      <div key={entry.dataKey} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
+                      <div
+                        key={entry.dataKey}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 16,
+                          alignItems: 'center'
+                        }}
+                      >
                         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: PROVIDER_COLORS[entry.dataKey as string] ?? PROVIDER_FALLBACK_COLOR, flexShrink: 0 }} />
+                          <span
+                            style={{
+                              width: 8,
+                              height: 8,
+                              borderRadius: '50%',
+                              backgroundColor:
+                                PROVIDER_COLORS[entry.dataKey as string] ?? PROVIDER_FALLBACK_COLOR,
+                              flexShrink: 0
+                            }}
+                          />
                           {name}
                         </span>
-                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatTokens(value)}</span>
+                        <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                          {formatTokens(value)}
+                        </span>
                       </div>
                     )
                   })}

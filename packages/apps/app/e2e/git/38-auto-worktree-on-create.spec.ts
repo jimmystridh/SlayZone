@@ -1,4 +1,11 @@
-import { test, expect, seed, TEST_PROJECT_PATH, resetApp, ensureGitRepo} from '../fixtures/electron'
+import {
+  test,
+  expect,
+  seed,
+  TEST_PROJECT_PATH,
+  resetApp,
+  ensureGitRepo
+} from '../fixtures/electron'
 import path from 'path'
 
 function slugify(text: string): string {
@@ -44,10 +51,14 @@ test.describe('Auto worktree on task create', () => {
         const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), created.id)
         return task?.worktree_path ?? null
       })
-      .toBe(path.join(path.dirname(TEST_PROJECT_PATH), `${projectFolder}-workspaces`, expectedBranch))
+      .toBe(
+        path.join(path.dirname(TEST_PROJECT_PATH), `${projectFolder}-workspaces`, expectedBranch)
+      )
   })
 
-  test('project override off disables auto-create even when global is on', async ({ mainWindow }) => {
+  test('project override off disables auto-create even when global is on', async ({
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
     const project = await s.createProject({
       name: 'Auto WT Override Off',
@@ -67,7 +78,9 @@ test.describe('Auto worktree on task create', () => {
     expect(task?.worktree_path).toBeNull()
   })
 
-  test('project override on enables auto-create even when global is off', async ({ mainWindow }) => {
+  test('project override on enables auto-create even when global is off', async ({
+    mainWindow
+  }) => {
     const s = seed(mainWindow)
     const project = await s.createProject({
       name: 'Auto WT Override On',
@@ -93,6 +106,8 @@ test.describe('Auto worktree on task create', () => {
         const task = await mainWindow.evaluate((id) => window.api.db.getTask(id), created.id)
         return task?.worktree_path ?? null
       })
-      .toBe(path.join(path.dirname(TEST_PROJECT_PATH), `${projectFolder}-workspaces`, expectedBranch))
+      .toBe(
+        path.join(path.dirname(TEST_PROJECT_PATH), `${projectFolder}-workspaces`, expectedBranch)
+      )
   })
 })

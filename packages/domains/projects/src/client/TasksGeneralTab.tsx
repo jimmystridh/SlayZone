@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Button, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@slayzone/ui'
+import {
+  Button,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@slayzone/ui'
 import type { Project, TaskAutomationConfig } from '@slayzone/projects/shared'
 import { resolveColumns } from '@slayzone/workflow'
 import { SettingsTabIntro } from './project-settings-shared'
@@ -60,7 +68,9 @@ export function TasksGeneralTab({ project, onUpdated }: TasksGeneralTabProps) {
             <SelectContent>
               <SelectItem value="none">Do nothing</SelectItem>
               {columns.map((col) => (
-                <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>
+                <SelectItem key={col.id} value={col.id}>
+                  {col.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -78,7 +88,9 @@ export function TasksGeneralTab({ project, onUpdated }: TasksGeneralTabProps) {
             <SelectContent>
               <SelectItem value="none">Do nothing</SelectItem>
               {columns.map((col) => (
-                <SelectItem key={col.id} value={col.id}>{col.label}</SelectItem>
+                <SelectItem key={col.id} value={col.id}>
+                  {col.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>

@@ -1,9 +1,6 @@
-import { test, expect, seed, resetApp} from '../fixtures/electron'
+import { test, expect, seed, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
-import {
-  getMainSessionId,
-  openTaskTerminal
-} from '../fixtures/terminal'
+import { getMainSessionId, openTaskTerminal } from '../fixtures/terminal'
 
 test.describe('Terminal error handling', () => {
   let projectAbbrev: string
@@ -12,13 +9,20 @@ test.describe('Terminal error handling', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Echo Error', color: '#ef4444', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Echo Error',
+      color: '#ef4444',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
     const t = await s.createTask({ projectId: p.id, title: 'Terminal error task', status: 'todo' })
     taskId = t.id
 
-    await mainWindow.evaluate((id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }), taskId)
+    await mainWindow.evaluate(
+      (id) => window.api.db.updateTask({ id, terminalMode: 'terminal' }),
+      taskId
+    )
     await s.refreshData()
   })
 
@@ -26,7 +30,9 @@ test.describe('Terminal error handling', () => {
     await mainWindow.evaluate(() => window.api.pty.setShellOverride(null))
   })
 
-  test('invalid shell override falls back to the user shell and still allows recreation after reset', async ({ mainWindow }) => {
+  test('invalid shell override falls back to the user shell and still allows recreation after reset', async ({
+    mainWindow
+  }) => {
     const sessionId = getMainSessionId(taskId)
 
     await mainWindow.evaluate(() => window.api.pty.setShellOverride('/definitely/not/a/real/shell'))

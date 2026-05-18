@@ -14,7 +14,13 @@ interface UseChatEffortOpts {
 }
 
 interface ChatEffortApi {
-  setEffort: (opts: { tabId: string; taskId: string; mode: string; cwd: string; chatEffort: AgentEffort }) => Promise<SessionInfoLite>
+  setEffort: (opts: {
+    tabId: string
+    taskId: string
+    mode: string
+    cwd: string
+    chatEffort: AgentEffort
+  }) => Promise<SessionInfoLite>
   getEffort: (taskId: string, mode: string) => Promise<AgentEffort | null>
   getInfo: (tabId: string) => Promise<SessionInfoLite | null>
 }
@@ -52,22 +58,27 @@ export function useChatEffort({ taskId, mode, tabId, cwd }: UseChatEffortOpts) {
         /* keep DEFAULT_CHAT_EFFORT */
       }
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [taskId, mode, tabId])
 
-  const handleEffortChange = useCallback(async (next: AgentEffort) => {
-    if (next === chatEffort || effortChanging) return
-    setEffortChanging(true)
-    try {
-      const info = await getApi().setEffort({ tabId, taskId, mode, cwd, chatEffort: next })
-      if (info && info.chatEffort) setChatEffortState(info.chatEffort)
-      else setChatEffortState(next)
-    } catch (err) {
-      toast(`Effort change failed: ${err instanceof Error ? err.message : String(err)}`)
-    } finally {
-      setEffortChanging(false)
-    }
-  }, [chatEffort, effortChanging, tabId, taskId, mode, cwd])
+  const handleEffortChange = useCallback(
+    async (next: AgentEffort) => {
+      if (next === chatEffort || effortChanging) return
+      setEffortChanging(true)
+      try {
+        const info = await getApi().setEffort({ tabId, taskId, mode, cwd, chatEffort: next })
+        if (info && info.chatEffort) setChatEffortState(info.chatEffort)
+        else setChatEffortState(next)
+      } catch (err) {
+        toast(`Effort change failed: ${err instanceof Error ? err.message : String(err)}`)
+      } finally {
+        setEffortChanging(false)
+      }
+    },
+    [chatEffort, effortChanging, tabId, taskId, mode, cwd]
+  )
 
   return { chatEffort, effortChanging, handleEffortChange }
 }

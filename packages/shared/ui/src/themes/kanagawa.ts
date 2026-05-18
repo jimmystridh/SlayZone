@@ -41,7 +41,7 @@ export const kanagawa: UnifiedThemeDefinition = {
       surface2: '#252530',
       surface3: '#2c2c38',
       modal: '#16161d',
-      modalBorder: 'rgba(220, 215, 186, 0.25)',
+      modalBorder: 'rgba(220, 215, 186, 0.25)'
     },
     terminal: {
       background: '#1f1f28',
@@ -65,7 +65,7 @@ export const kanagawa: UnifiedThemeDefinition = {
       brightBlue: '#7fb4ca',
       brightMagenta: '#938aa9',
       brightCyan: '#7aa89f',
-      brightWhite: '#dcd7ba',
+      brightWhite: '#dcd7ba'
     },
     editor: {
       background: '#1f1f28',
@@ -85,7 +85,7 @@ export const kanagawa: UnifiedThemeDefinition = {
       variable: '#dcd7ba',
       property: '#e6c384',
       link: '#7e9cd8',
-      heading: '#dcd7ba',
-    },
-  },
+      heading: '#dcd7ba'
+    }
+  }
 }

@@ -2,7 +2,12 @@
  * Settings handler contract tests
  * Run with: npx tsx packages/domains/settings/src/main/handlers.test.ts
  */
-import { createTestHarness, test, expect, describe } from '../../../../shared/test-utils/ipc-harness.js'
+import {
+  createTestHarness,
+  test,
+  expect,
+  describe
+} from '../../../../shared/test-utils/ipc-harness.js'
 import { registerSettingsHandlers } from './handlers.js'
 
 const h = await createTestHarness()

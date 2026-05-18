@@ -1,7 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-  Button, Input, Label, Tooltip, TooltipTrigger, TooltipContent, cn,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  Button,
+  Input,
+  Label,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  cn
 } from '@slayzone/ui'
 import type { ProcessEntry } from './ProcessesPanel'
 
@@ -25,7 +35,16 @@ interface ProcessDialogProps {
   onSpawned: (id: string) => void
 }
 
-export function ProcessDialog({ open, onOpenChange, process, taskId, projectId, cwd, onSaved, onSpawned }: ProcessDialogProps) {
+export function ProcessDialog({
+  open,
+  onOpenChange,
+  process,
+  taskId,
+  projectId,
+  cwd,
+  onSaved,
+  onSpawned
+}: ProcessDialogProps) {
   const [form, setForm] = useState<AddFormState>(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -37,7 +56,7 @@ export function ProcessDialog({ open, onOpenChange, process, taskId, projectId, 
         label: process.label,
         command: process.command,
         autoRestart: process.autoRestart,
-        scope: process.taskId === null ? 'project' : 'task',
+        scope: process.taskId === null ? 'project' : 'task'
       })
     } else {
       setForm(EMPTY_FORM)
@@ -64,9 +83,22 @@ export function ProcessDialog({ open, onOpenChange, process, taskId, projectId, 
     try {
       const { tid, pid } = resolveScope()
       if (process) {
-        await window.api.processes.update(process.id, { label: form.label.trim(), command: form.command.trim(), autoRestart: form.autoRestart, taskId: tid, projectId: pid })
+        await window.api.processes.update(process.id, {
+          label: form.label.trim(),
+          command: form.command.trim(),
+          autoRestart: form.autoRestart,
+          taskId: tid,
+          projectId: pid
+        })
       } else {
-        await window.api.processes.create(pid, tid, form.label.trim(), form.command.trim(), cwd ?? '', form.autoRestart)
+        await window.api.processes.create(
+          pid,
+          tid,
+          form.label.trim(),
+          form.command.trim(),
+          cwd ?? '',
+          form.autoRestart
+        )
       }
       onSaved()
       onOpenChange(false)
@@ -85,11 +117,24 @@ export function ProcessDialog({ open, onOpenChange, process, taskId, projectId, 
       const { tid, pid } = resolveScope()
       let id: string
       if (process) {
-        await window.api.processes.update(process.id, { label: form.label.trim(), command: form.command.trim(), autoRestart: form.autoRestart, taskId: tid, projectId: pid })
+        await window.api.processes.update(process.id, {
+          label: form.label.trim(),
+          command: form.command.trim(),
+          autoRestart: form.autoRestart,
+          taskId: tid,
+          projectId: pid
+        })
         await window.api.processes.restart(process.id)
         id = process.id
       } else {
-        id = await window.api.processes.spawn(pid, tid, form.label.trim(), form.command.trim(), cwd ?? '', form.autoRestart)
+        id = await window.api.processes.spawn(
+          pid,
+          tid,
+          form.label.trim(),
+          form.command.trim(),
+          cwd ?? '',
+          form.autoRestart
+        )
       }
       onSpawned(id)
       onOpenChange(false)
@@ -110,12 +155,14 @@ export function ProcessDialog({ open, onOpenChange, process, taskId, projectId, 
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
           {/* Scope */}
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Scope</Label>
+            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Scope
+            </Label>
             <div className="flex gap-1 p-0.5 rounded-lg bg-muted/50 border border-border w-fit">
-              {(['project', 'task'] as const).map(s => (
+              {(['project', 'task'] as const).map((s) => (
                 <button
                   key={s}
-                  onClick={() => setForm(f => ({ ...f, scope: s }))}
+                  onClick={() => setForm((f) => ({ ...f, scope: s }))}
                   className={cn(
                     'px-3 py-1 rounded-md text-xs font-medium transition-colors',
                     form.scope === s
@@ -136,23 +183,29 @@ export function ProcessDialog({ open, onOpenChange, process, taskId, projectId, 
 
           {/* Label */}
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Label</Label>
+            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Label
+            </Label>
             <Input
               ref={labelRef}
               placeholder="e.g. Frontend"
               value={form.label}
-              onChange={e => setForm(f => ({ ...f, label: e.target.value }))}
+              onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
             />
           </div>
 
           {/* Command */}
           <div className="space-y-1.5">
-            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Command</Label>
+            <Label className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Command
+            </Label>
             <Input
               placeholder="e.g. npm run dev"
               value={form.command}
-              onChange={e => setForm(f => ({ ...f, command: e.target.value }))}
-              onKeyDown={e => { if (e.key === 'Enter') void handleSpawn() }}
+              onChange={(e) => setForm((f) => ({ ...f, command: e.target.value }))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void handleSpawn()
+              }}
               className="font-mono"
             />
           </div>
@@ -164,24 +217,29 @@ export function ProcessDialog({ open, onOpenChange, process, taskId, projectId, 
                 <input
                   type="checkbox"
                   checked={form.autoRestart}
-                  onChange={e => setForm(f => ({ ...f, autoRestart: e.target.checked }))}
+                  onChange={(e) => setForm((f) => ({ ...f, autoRestart: e.target.checked }))}
                   className="size-3.5 rounded"
                 />
                 Auto-restart on crash
               </label>
             </TooltipTrigger>
             <TooltipContent side="right" className="max-w-64">
-              Automatically restarts the process if it exits with a non-zero code. Won't restart if you stop it manually.
+              Automatically restarts the process if it exits with a non-zero code. Won't restart if
+              you stop it manually.
             </TooltipContent>
           </Tooltip>
 
           {saveError && (
-            <p className="text-[11px] text-red-500 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">{saveError}</p>
+            <p className="text-[11px] text-red-500 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2">
+              {saveError}
+            </p>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
           <Button variant="outline" onClick={() => void handleSave()} disabled={saving || !isValid}>
             {saving ? '...' : process ? 'Update' : 'Save'}
           </Button>

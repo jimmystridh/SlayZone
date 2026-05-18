@@ -1,9 +1,4 @@
-import type {
-  AgentEvent,
-  ResultEvent,
-  ModelUsage,
-  TokenUsage,
-} from '../../shared/agent-events'
+import type { AgentEvent, ResultEvent, ModelUsage, TokenUsage } from '../../shared/agent-events'
 import type { AgentAdapter, AgentSpawnOpts, SpawnArgs } from './types'
 
 /**
@@ -20,8 +15,10 @@ export const claudeCodeAdapter: AgentAdapter = {
   buildSpawnArgs(opts: AgentSpawnOpts): SpawnArgs {
     const base = [
       '-p',
-      '--input-format', 'stream-json',
-      '--output-format', 'stream-json',
+      '--input-format',
+      'stream-json',
+      '--output-format',
+      'stream-json',
       '--verbose',
       // `stdio` is the SDK's sentinel value for permission_prompt_tool_name —
       // it tells the CLI to route prompt-style tool calls (notably
@@ -31,7 +28,8 @@ export const claudeCodeAdapter: AgentAdapter = {
       // request, surfaces it to the renderer, and writes the user's answer
       // back as a control_response with `behavior:'allow'` + `updatedInput`.
       // Verified mechanism in claude-agent-sdk-python `_internal/client.py`.
-      '--permission-prompt-tool', 'stdio',
+      '--permission-prompt-tool',
+      'stdio'
     ]
     if (opts.resume) {
       base.push('--resume', opts.sessionId)
@@ -87,7 +85,7 @@ export const claudeCodeAdapter: AgentAdapter = {
   serializeUserMessage(text: string, _sessionId: string): string {
     return JSON.stringify({
       type: 'user',
-      message: { role: 'user', content: text },
+      message: { role: 'user', content: text }
     })
   },
 
@@ -95,7 +93,7 @@ export const claudeCodeAdapter: AgentAdapter = {
     return JSON.stringify({
       type: 'control_request',
       request_id: requestId,
-      request,
+      request
     })
   },
 
@@ -106,8 +104,8 @@ export const claudeCodeAdapter: AgentAdapter = {
         response: {
           subtype: 'error',
           request_id: requestId,
-          error: error ?? 'unknown error',
-        },
+          error: error ?? 'unknown error'
+        }
       })
     }
     return JSON.stringify({
@@ -115,8 +113,8 @@ export const claudeCodeAdapter: AgentAdapter = {
       response: {
         subtype: 'success',
         request_id: requestId,
-        response: response ?? {},
-      },
+        response: response ?? {}
+      }
     })
   },
 
@@ -130,17 +128,17 @@ export const claudeCodeAdapter: AgentAdapter = {
             type: 'tool_result',
             tool_use_id: toolUseId,
             content,
-            ...(isError ? { is_error: true } : {}),
-          },
-        ],
-      },
+            ...(isError ? { is_error: true } : {})
+          }
+        ]
+      }
     })
   },
 
   extractSessionId(event: AgentEvent): string | null {
     if (event.kind === 'turn-init') return event.sessionId
     return null
-  },
+  }
 }
 
 // ------- internal parsers ---------
@@ -149,7 +147,10 @@ export const claudeCodeAdapter: AgentAdapter = {
  * Parse Claude Code's stream_event wrapper which envelopes one Anthropic SSE event.
  * Shape: `{"type":"stream_event","event":{...anthropic...},"parent_tool_use_id":null,"session_id":"..."}`.
  */
-function parseStreamEvent(obj: Record<string, unknown>, parent: string | undefined): AgentEvent | null {
+function parseStreamEvent(
+  obj: Record<string, unknown>,
+  parent: string | undefined
+): AgentEvent | null {
   const inner = obj.event as Record<string, unknown> | undefined
   if (!inner || typeof inner !== 'object') return null
   const t = inner.type
@@ -159,16 +160,24 @@ function parseStreamEvent(obj: Record<string, unknown>, parent: string | undefin
       return { kind: 'stream-message-start', messageId: message?.id ?? '', parentToolUseId: parent }
     }
     case 'content_block_start': {
-      const block = inner.content_block as
-        | { type?: string; id?: string; name?: string }
-        | undefined
+      const block = inner.content_block as { type?: string; id?: string; name?: string } | undefined
       const index = typeof inner.index === 'number' ? inner.index : 0
       if (!block) return null
       if (block.type === 'text') {
-        return { kind: 'stream-block-start', blockIndex: index, blockType: 'text', parentToolUseId: parent }
+        return {
+          kind: 'stream-block-start',
+          blockIndex: index,
+          blockType: 'text',
+          parentToolUseId: parent
+        }
       }
       if (block.type === 'thinking') {
-        return { kind: 'stream-block-start', blockIndex: index, blockType: 'thinking', parentToolUseId: parent }
+        return {
+          kind: 'stream-block-start',
+          blockIndex: index,
+          blockType: 'thinking',
+          parentToolUseId: parent
+        }
       }
       if (block.type === 'tool_use') {
         return {
@@ -177,28 +186,58 @@ function parseStreamEvent(obj: Record<string, unknown>, parent: string | undefin
           blockType: 'tool_use',
           toolUseId: block.id,
           toolName: block.name,
-          parentToolUseId: parent,
+          parentToolUseId: parent
         }
       }
       return null
     }
     case 'content_block_delta': {
       const d = inner.delta as
-        | { type?: string; text?: string; thinking?: string; signature?: string; partial_json?: string }
+        | {
+            type?: string
+            text?: string
+            thinking?: string
+            signature?: string
+            partial_json?: string
+          }
         | undefined
       const index = typeof inner.index === 'number' ? inner.index : 0
       if (!d) return null
       if (d.type === 'text_delta') {
-        return { kind: 'stream-block-delta', blockIndex: index, deltaType: 'text', text: d.text ?? '', parentToolUseId: parent }
+        return {
+          kind: 'stream-block-delta',
+          blockIndex: index,
+          deltaType: 'text',
+          text: d.text ?? '',
+          parentToolUseId: parent
+        }
       }
       if (d.type === 'thinking_delta') {
-        return { kind: 'stream-block-delta', blockIndex: index, deltaType: 'thinking', text: d.thinking ?? '', parentToolUseId: parent }
+        return {
+          kind: 'stream-block-delta',
+          blockIndex: index,
+          deltaType: 'thinking',
+          text: d.thinking ?? '',
+          parentToolUseId: parent
+        }
       }
       if (d.type === 'signature_delta') {
-        return { kind: 'stream-block-delta', blockIndex: index, deltaType: 'signature', text: d.signature ?? '', parentToolUseId: parent }
+        return {
+          kind: 'stream-block-delta',
+          blockIndex: index,
+          deltaType: 'signature',
+          text: d.signature ?? '',
+          parentToolUseId: parent
+        }
       }
       if (d.type === 'input_json_delta') {
-        return { kind: 'stream-block-delta', blockIndex: index, deltaType: 'input_json', text: d.partial_json ?? '', parentToolUseId: parent }
+        return {
+          kind: 'stream-block-delta',
+          blockIndex: index,
+          deltaType: 'input_json',
+          text: d.partial_json ?? '',
+          parentToolUseId: parent
+        }
       }
       return null
     }
@@ -224,7 +263,7 @@ function parseSystem(obj: Record<string, unknown>, parent: string | undefined): 
       model: (obj.model as string) ?? '',
       cwd: (obj.cwd as string) ?? '',
       tools: Array.isArray(obj.tools) ? (obj.tools as string[]) : [],
-      permissionMode: (obj.permissionMode as string) ?? undefined,
+      permissionMode: (obj.permissionMode as string) ?? undefined
     }
   }
   if (subtype === 'compact_boundary') {
@@ -233,11 +272,12 @@ function parseSystem(obj: Record<string, unknown>, parent: string | undefined): 
   if (subtype === 'task_started' || subtype === 'task_updated' || subtype === 'task_notification') {
     const usageRaw = (obj.usage ?? null) as Record<string, unknown> | null
     const usage =
-      usageRaw && (usageRaw.total_tokens != null || usageRaw.tool_uses != null || usageRaw.duration_ms != null)
+      usageRaw &&
+      (usageRaw.total_tokens != null || usageRaw.tool_uses != null || usageRaw.duration_ms != null)
         ? {
             totalTokens: toNum(usageRaw.total_tokens),
             toolUses: toNum(usageRaw.tool_uses),
-            durationMs: toNum(usageRaw.duration_ms),
+            durationMs: toNum(usageRaw.duration_ms)
           }
         : undefined
     // All three `task_*` system events map to the same semantic state:
@@ -254,7 +294,7 @@ function parseSystem(obj: Record<string, unknown>, parent: string | undefined): 
       status: typeof obj.status === 'string' ? obj.status : undefined,
       summary: typeof obj.summary === 'string' ? obj.summary : undefined,
       usage,
-      raw: obj,
+      raw: obj
     }
   }
   if (subtype === 'api_retry') {
@@ -263,7 +303,7 @@ function parseSystem(obj: Record<string, unknown>, parent: string | undefined): 
       attempt: (obj.attempt as number) ?? 0,
       maxRetries: (obj.max_retries as number) ?? 0,
       delayMs: (obj.retry_delay_ms as number) ?? 0,
-      error: (obj.error as string) ?? '',
+      error: (obj.error as string) ?? ''
     }
   }
   // Drop noise that has no surface in the chat UI: per-tool hook events, plus
@@ -304,7 +344,7 @@ function parseAssistant(obj: Record<string, unknown>, parent: string | undefined
       kind: 'assistant-text',
       messageId,
       text: block.text ?? '',
-      parentToolUseId: parent,
+      parentToolUseId: parent
     }
   }
   if (block.type === 'thinking') {
@@ -313,7 +353,7 @@ function parseAssistant(obj: Record<string, unknown>, parent: string | undefined
       messageId,
       text: block.thinking ?? '',
       hasSignature: Boolean(block.signature),
-      parentToolUseId: parent,
+      parentToolUseId: parent
     }
   }
   if (block.type === 'tool_use') {
@@ -322,7 +362,7 @@ function parseAssistant(obj: Record<string, unknown>, parent: string | undefined
       id: block.id ?? '',
       name: block.name ?? '',
       input: block.input,
-      parentToolUseId: parent,
+      parentToolUseId: parent
     }
   }
   return { kind: 'unknown', reason: 'unknown-type', raw: obj }
@@ -351,7 +391,7 @@ function parseUser(obj: Record<string, unknown>, parent: string | undefined): Ag
     isError,
     rawContent: rawContent ?? null,
     structured: toolUseResult ?? null,
-    parentToolUseId: parent,
+    parentToolUseId: parent
   }
 }
 
@@ -365,14 +405,14 @@ function parseResult(obj: Record<string, unknown>): ResultEvent {
       outputTokens: toNum(u.outputTokens),
       cacheReadInputTokens: toNum(u.cacheReadInputTokens),
       cacheCreationInputTokens: toNum(u.cacheCreationInputTokens),
-      costUsd: toNum(u.costUSD),
+      costUsd: toNum(u.costUSD)
     }
   }
   const tokenUsage: TokenUsage = {
     inputTokens: toNum(usage.input_tokens),
     outputTokens: toNum(usage.output_tokens),
     cacheReadInputTokens: toNum(usage.cache_read_input_tokens),
-    cacheCreationInputTokens: toNum(usage.cache_creation_input_tokens),
+    cacheCreationInputTokens: toNum(usage.cache_creation_input_tokens)
   }
   return {
     kind: 'result',
@@ -387,7 +427,7 @@ function parseResult(obj: Record<string, unknown>): ResultEvent {
     text: (obj.result as string) ?? null,
     modelUsage,
     usage: tokenUsage,
-    permissionDenials: Array.isArray(obj.permission_denials) ? obj.permission_denials : [],
+    permissionDenials: Array.isArray(obj.permission_denials) ? obj.permission_denials : []
   }
 }
 
@@ -419,7 +459,7 @@ function parseControlRequest(obj: Record<string, unknown>): AgentEvent {
     toolName: typeof request.tool_name === 'string' ? request.tool_name : '',
     toolUseId: typeof request.tool_use_id === 'string' ? request.tool_use_id : '',
     input: request.input ?? null,
-    permissionSuggestions: request.permission_suggestions,
+    permissionSuggestions: request.permission_suggestions
   }
 }
 
@@ -442,13 +482,15 @@ function parseControlResponse(obj: Record<string, unknown>): AgentEvent | null {
   // Strip envelope fields so `data` is just the payload (subtype/request_id are
   // routing metadata, not user data).
   const { subtype: _s, request_id: _r, error: _e, ...data } = response
-  void _s; void _r; void _e
+  void _s
+  void _r
+  void _e
   return {
     kind: 'control-response',
     requestId,
     isError,
     data,
-    error,
+    error
   }
 }
 
@@ -459,7 +501,7 @@ function parseRateLimit(obj: Record<string, unknown>): AgentEvent {
     status: (info.status as string) ?? 'unknown',
     rateLimitType: (info.rateLimitType as string) ?? '',
     resetsAt: typeof info.resetsAt === 'number' ? info.resetsAt : null,
-    overageStatus: (info.overageStatus as string) ?? null,
+    overageStatus: (info.overageStatus as string) ?? null
   }
 }
 

@@ -3,7 +3,10 @@ import { VersionError } from './errors'
 import { parseRow, parseRows } from './parse'
 import type { ArtifactId, ArtifactVersion, VersionRef } from '../shared/types'
 
-export function getLatestVersion(db: DbLike, artifactId: ArtifactId | string): ArtifactVersion | null {
+export function getLatestVersion(
+  db: DbLike,
+  artifactId: ArtifactId | string
+): ArtifactVersion | null {
   const row = db
     .prepare(
       'SELECT * FROM artifact_versions WHERE artifact_id = ? ORDER BY version_num DESC LIMIT 1'
@@ -18,7 +21,10 @@ export function getLatestVersion(db: DbLike, artifactId: ArtifactId | string): A
  * the pointer is unset (pre-v112 data paths, or freshly created artifacts
  * mid-transaction before the pointer gets written).
  */
-export function getCurrentVersion(db: DbLike, artifactId: ArtifactId | string): ArtifactVersion | null {
+export function getCurrentVersion(
+  db: DbLike,
+  artifactId: ArtifactId | string
+): ArtifactVersion | null {
   const row = db
     .prepare(
       `SELECT v.* FROM artifact_versions v

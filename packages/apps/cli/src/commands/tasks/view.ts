@@ -17,17 +17,21 @@ export async function viewAction(idPrefix: string | undefined): Promise<void> {
     process.exit(1)
   }
   if (tasks.length > 1) {
-    console.error(`Ambiguous id prefix "${idPrefix}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous id prefix "${idPrefix}". Matches: ${tasks.map((t) => t.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
 
   const t = tasks[0]
 
-  const tagNames = db.query<{ name: string }>(
-    `SELECT tg.name FROM tags tg JOIN task_tags tt ON tg.id = tt.tag_id
+  const tagNames = db
+    .query<{ name: string }>(
+      `SELECT tg.name FROM tags tg JOIN task_tags tt ON tg.id = tt.tag_id
      WHERE tt.task_id = :tid ORDER BY tg.sort_order, tg.name`,
-    { ':tid': t.id }
-  ).map((r) => r.name)
+      { ':tid': t.id }
+    )
+    .map((r) => r.name)
 
   const blockers = db.query<{ id: string; title: string }>(
     `SELECT t.id, t.title FROM tasks t JOIN task_dependencies td ON t.id = td.task_id
@@ -52,8 +56,10 @@ export async function viewAction(idPrefix: string | undefined): Promise<void> {
     const comment = (t as Record<string, unknown>).blocked_comment
     console.log(`Blocked:  yes${comment ? ` (${comment})` : ''}`)
   }
-  if (blockers.length > 0) console.log(`Blockers: ${blockers.map((b) => `${b.id.slice(0, 8)} (${b.title})`).join(', ')}`)
-  if (blocking.length > 0) console.log(`Blocking: ${blocking.map((b) => `${b.id.slice(0, 8)} (${b.title})`).join(', ')}`)
+  if (blockers.length > 0)
+    console.log(`Blockers: ${blockers.map((b) => `${b.id.slice(0, 8)} (${b.title})`).join(', ')}`)
+  if (blocking.length > 0)
+    console.log(`Blocking: ${blocking.map((b) => `${b.id.slice(0, 8)} (${b.title})`).join(', ')}`)
   console.log(`Created:  ${t.created_at}`)
   if (t.description) console.log(`\n${t.description}`)
 }

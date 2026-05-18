@@ -19,9 +19,14 @@ export function parseDependsOn(frontmatter: Record<string, string>): string[] {
     try {
       const parsed = JSON.parse(trimmed)
       if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean)
-    } catch { /* fall through */ }
+    } catch {
+      /* fall through */
+    }
   }
-  return trimmed.split(',').map(s => s.trim()).filter(Boolean)
+  return trimmed
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
 }
 
 /**
@@ -65,8 +70,8 @@ export function extractImplicitReferences(
  * Returns explicit deps from frontmatter + implicit refs from body text (deduplicated).
  */
 export function buildDependencyGraph(items: AiConfigItem[]): SkillDependency[] {
-  const skills = items.filter(i => i.type === 'skill')
-  const allSlugs = skills.map(i => i.slug)
+  const skills = items.filter((i) => i.type === 'skill')
+  const allSlugs = skills.map((i) => i.slug)
   const deps: SkillDependency[] = []
   const seen = new Set<string>()
 

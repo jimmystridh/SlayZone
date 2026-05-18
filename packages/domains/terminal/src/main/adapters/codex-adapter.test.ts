@@ -20,7 +20,8 @@ function test(name: string, fn: () => void) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`)
     }
   }
 }
@@ -69,14 +70,14 @@ console.log('\nCodexAdapter.detectActivity (modal → idle)\n')
 const EXEC_MODAL = [
   'Allow Electron-as-Node to load native better-sqlite3 outside sandbox for DB test diagnosis?',
   '  1. Yes',
-  '  2. Yes, and don\'t ask again for commands that start with `ELECTRON_RUN_AS_NODE=1 npx electron`',
+  "  2. Yes, and don't ask again for commands that start with `ELECTRON_RUN_AS_NODE=1 npx electron`",
   '  3. No, and tell Codex what to do differently'
 ].join('\n')
 
 const PATCH_MODAL = [
   'Would you like to make the following edits?',
   '  1. Yes, proceed',
-  '  2. Yes, and don\'t ask again for these files',
+  "  2. Yes, and don't ask again for these files",
   '  3. No, and tell Codex what to do differently'
 ].join('\n')
 
@@ -176,7 +177,9 @@ test('detectPrompt ignores working indicator alone', () => {
 console.log('\nCodexAdapter.detectError\n')
 
 test('detects stale codex resume session as SESSION_NOT_FOUND', () => {
-  const result = adapter.detectError('ERROR: No saved session found with ID 019c7a76-280a-7dc0-8af6-affe6cf174b2')
+  const result = adapter.detectError(
+    'ERROR: No saved session found with ID 019c7a76-280a-7dc0-8af6-affe6cf174b2'
+  )
   expect(result?.code).toBe('SESSION_NOT_FOUND')
 })
 
@@ -203,11 +206,15 @@ test('extracts UUID from real /status box-drawing output', () => {
 })
 
 test('extracts UUID from plain Session: line', () => {
-  expect(adapter.detectConversationId('Session: aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee')).toBe('aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee')
+  expect(adapter.detectConversationId('Session: aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee')).toBe(
+    'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+  )
 })
 
 test('extracts UUID from rollout filename format', () => {
-  expect(adapter.detectConversationId('rollout-1234567890-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee.jsonl')).toBe('aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee')
+  expect(
+    adapter.detectConversationId('rollout-1234567890-aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee.jsonl')
+  ).toBe('aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee')
 })
 
 test('falls back to bare UUID when label is mangled by TUI artifacts', () => {

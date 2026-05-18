@@ -7,7 +7,11 @@ interface UpdateToastProps {
   onDismiss: () => void
 }
 
-export function UpdateToast({ version, onRestart, onDismiss }: UpdateToastProps): React.JSX.Element {
+export function UpdateToast({
+  version,
+  onRestart,
+  onDismiss
+}: UpdateToastProps): React.JSX.Element {
   return (
     <AnimatePresence>
       {version && (

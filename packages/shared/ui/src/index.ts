@@ -20,8 +20,19 @@ export { useShortcutStore } from './useShortcutStore'
 export { useShortcutDisplay } from './useShortcutDisplay'
 export { useShortcutAction } from './useShortcutAction'
 export { projectColorBg, type ProjectColorVariant } from './project-color'
-export { WORKTREE_COLORS, hashStr, assignWorktreeColors, assignNewWorktreeColors } from './worktree-color'
-export { useAppearance, AppearanceContext, appearanceDefaults, type AppearanceSettings, type BrowserDeviceDefaults } from './AppearanceContext'
+export {
+  WORKTREE_COLORS,
+  hashStr,
+  assignWorktreeColors,
+  assignNewWorktreeColors
+} from './worktree-color'
+export {
+  useAppearance,
+  AppearanceContext,
+  appearanceDefaults,
+  type AppearanceSettings,
+  type BrowserDeviceDefaults
+} from './AppearanceContext'
 export { getTerminalStateStyle, type TerminalStateStyle } from './terminal-state'
 export { TerminalProgressDot, type TerminalProgressDotProps } from './terminal-progress-dot'
 export {
@@ -35,8 +46,11 @@ export {
   type StatusOption
 } from './task-status'
 export { UndoProvider, useUndo, type UndoableAction } from './use-undo'
-export { useStablePoll, type UseStablePollOptions, type UseStablePollResult } from './use-stable-poll'
-
+export {
+  useStablePoll,
+  type UseStablePollOptions,
+  type UseStablePollResult
+} from './use-stable-poll'
 
 // Components
 export * from './alert-dialog'
@@ -92,7 +106,7 @@ export {
   type UnifiedThemeDefinition,
   type UnifiedThemeVariant,
   type ChromeColors,
-  type TerminalThemeColors,
+  type TerminalThemeColors
 } from './themes'
 export type { EditorThemeColors } from './theme-types'
 

@@ -9,7 +9,7 @@ import { CHAT_SUPPORTED_MODES, type ChatSupportedMode } from '../../shared/types
  * chat lives in `'claude-chat'` which reuses the same adapter object.
  */
 const REGISTRY: Record<ChatSupportedMode, AgentAdapter> = {
-  'claude-chat': claudeCodeAdapter,
+  'claude-chat': claudeCodeAdapter
 }
 
 // Defense-in-depth: catch drift between CHAT_SUPPORTED_MODES and REGISTRY at boot.

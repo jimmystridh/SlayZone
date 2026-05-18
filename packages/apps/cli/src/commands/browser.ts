@@ -30,27 +30,36 @@ async function fetchTabs(taskId: string): Promise<TabRow[]> {
  *  - Otherwise → opaque tabId, passed through.
  *  - undefined → undefined (server falls back to active tab).
  */
-async function resolveTabId(taskId: string, value: string | undefined): Promise<string | undefined> {
+async function resolveTabId(
+  taskId: string,
+  value: string | undefined
+): Promise<string | undefined> {
   if (value == null) return undefined
   if (!/^\d+$/.test(value)) return value
   const idx = parseInt(value, 10)
   const tabs = await fetchTabs(taskId)
-  const match = tabs.find(t => t.idx === idx)
+  const match = tabs.find((t) => t.idx === idx)
   if (!match) {
-    const list = tabs.map(t => `  ${t.idx}: ${t.id}${t.title ? ` — ${t.title}` : ''}`).join('\n')
+    const list = tabs.map((t) => `  ${t.idx}: ${t.id}${t.title ? ` — ${t.title}` : ''}`).join('\n')
     console.error(`Tab index ${idx} not found. Available tabs:\n${list || '  (none)'}`)
     process.exit(1)
   }
   return match.id
 }
 
-interface CommonOpts { panel?: 'visible' | 'hidden'; tab?: string }
+interface CommonOpts {
+  panel?: 'visible' | 'hidden'
+  tab?: string
+}
 
 /** Add `--panel` and `--tab` to a subcommand. Commander does not propagate parent options to children. */
 function withCommonOpts(c: Command, defaultPanel: 'visible' | 'hidden'): Command {
   return c
     .option('--panel <state>', `Panel visibility: visible or hidden (default: ${defaultPanel})`)
-    .option('--tab <idOrIdx>', 'Target tab by 0-based index or opaque tab id (defaults to active tab)')
+    .option(
+      '--tab <idOrIdx>',
+      'Target tab by 0-based index or opaque tab id (defaults to active tab)'
+    )
 }
 
 function panel(opts: CommonOpts, fallback: 'visible' | 'hidden'): 'visible' | 'hidden' {
@@ -69,18 +78,30 @@ export function browserCommand(): Command {
     .option('--panel <state>', 'Panel visibility: visible or hidden (default: visible)')
     .option('--background', 'Open in background (do not switch to the new tab)')
     .option('--json', 'Output as JSON')
-    .action(async (url: string | undefined, opts: { panel?: 'visible' | 'hidden'; background?: boolean; json?: boolean }) => {
-      const taskId = resolveTaskId()
-      const result = await apiPost<{ ok: boolean; tabId: string; idx: number; url: string | null }>(
-        '/api/browser/tabs',
-        { taskId, url, panel: opts.panel ?? 'visible', background: !!opts.background },
-      )
-      if (opts.json) {
-        console.log(JSON.stringify(result, null, 2))
-        return
+    .action(
+      async (
+        url: string | undefined,
+        opts: { panel?: 'visible' | 'hidden'; background?: boolean; json?: boolean }
+      ) => {
+        const taskId = resolveTaskId()
+        const result = await apiPost<{
+          ok: boolean
+          tabId: string
+          idx: number
+          url: string | null
+        }>('/api/browser/tabs', {
+          taskId,
+          url,
+          panel: opts.panel ?? 'visible',
+          background: !!opts.background
+        })
+        if (opts.json) {
+          console.log(JSON.stringify(result, null, 2))
+          return
+        }
+        console.log(`${result.idx}: ${result.tabId}${result.url ? `  ${result.url}` : ''}`)
       }
-      console.log(`${result.idx}: ${result.tabId}${result.url ? `  ${result.url}` : ''}`)
-    })
+    )
 
   cmd
     .command('tabs')
@@ -121,7 +142,12 @@ export function browserCommand(): Command {
     .action(async (url: string, opts: CommonOpts) => {
       const taskId = resolveTaskId()
       const tabId = await resolveTabId(taskId, opts.tab)
-      const result = await apiPost<{ ok: boolean; url: string }>('/api/browser/navigate', { taskId, url, panel: panel(opts, 'visible'), tabId })
+      const result = await apiPost<{ ok: boolean; url: string }>('/api/browser/navigate', {
+        taskId,
+        url,
+        panel: panel(opts, 'visible'),
+        tabId
+      })
       console.log(result.url)
     })
 
@@ -130,7 +156,10 @@ export function browserCommand(): Command {
     .action(async (selector: string, opts: CommonOpts) => {
       const taskId = resolveTaskId()
       const tabId = await resolveTabId(taskId, opts.tab)
-      const result = await apiPost<{ ok: boolean; tag?: string; text?: string }>('/api/browser/click', { taskId, selector, panel: panel(opts, 'hidden'), tabId })
+      const result = await apiPost<{ ok: boolean; tag?: string; text?: string }>(
+        '/api/browser/click',
+        { taskId, selector, panel: panel(opts, 'hidden'), tabId }
+      )
       console.log(`Clicked: <${result.tag}>${result.text ? ` "${result.text}"` : ''}`)
     })
 
@@ -139,7 +168,13 @@ export function browserCommand(): Command {
     .action(async (selector: string, text: string, opts: CommonOpts) => {
       const taskId = resolveTaskId()
       const tabId = await resolveTabId(taskId, opts.tab)
-      await apiPost('/api/browser/type', { taskId, selector, text, panel: panel(opts, 'hidden'), tabId })
+      await apiPost('/api/browser/type', {
+        taskId,
+        selector,
+        text,
+        panel: panel(opts, 'hidden'),
+        tabId
+      })
       console.log('OK')
     })
 
@@ -148,7 +183,12 @@ export function browserCommand(): Command {
     .action(async (code: string, opts: CommonOpts) => {
       const taskId = resolveTaskId()
       const tabId = await resolveTabId(taskId, opts.tab)
-      const { result } = await apiPost<{ ok: boolean; result: unknown }>('/api/browser/eval', { taskId, code, panel: panel(opts, 'hidden'), tabId })
+      const { result } = await apiPost<{ ok: boolean; result: unknown }>('/api/browser/eval', {
+        taskId,
+        code,
+        panel: panel(opts, 'hidden'),
+        tabId
+      })
       console.log(typeof result === 'string' ? result : JSON.stringify(result, null, 2))
     })
 
@@ -160,9 +200,12 @@ export function browserCommand(): Command {
       const tabId = await resolveTabId(taskId, opts.tab)
       const qs = new URLSearchParams({ taskId, panel: panel(opts, 'hidden') })
       if (tabId) qs.set('tabId', tabId)
-      const result = await apiGet<{ url: string; title: string; text: string; interactive: unknown[] }>(
-        `/api/browser/content?${qs}`
-      )
+      const result = await apiGet<{
+        url: string
+        title: string
+        text: string
+        interactive: unknown[]
+      }>(`/api/browser/content?${qs}`)
       if (opts.json) {
         console.log(JSON.stringify(result, null, 2))
         return
@@ -183,7 +226,11 @@ export function browserCommand(): Command {
     .action(async (opts: CommonOpts & { output?: string }) => {
       const taskId = resolveTaskId()
       const tabId = await resolveTabId(taskId, opts.tab)
-      const { path } = await apiPost<{ ok: boolean; path: string }>('/api/browser/screenshot', { taskId, panel: panel(opts, 'hidden'), tabId })
+      const { path } = await apiPost<{ ok: boolean; path: string }>('/api/browser/screenshot', {
+        taskId,
+        panel: panel(opts, 'hidden'),
+        tabId
+      })
       if (opts.output) {
         const { copyFileSync } = await import('fs')
         copyFileSync(path, opts.output)

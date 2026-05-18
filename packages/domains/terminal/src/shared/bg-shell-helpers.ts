@@ -55,7 +55,7 @@ export function extractBgShellSpawn(event: ToolCallEvent): BgShellSpawnSignal | 
     toolUseId: event.id,
     command,
     description: typeof input.description === 'string' ? input.description : undefined,
-    timeout: typeof input.timeout === 'number' ? input.timeout : undefined,
+    timeout: typeof input.timeout === 'number' ? input.timeout : undefined
   }
 }
 
@@ -72,9 +72,7 @@ export function extractShellIdFromSpawnResult(result: ToolResultEvent): string |
   }
   const text = rawContentText(result.rawContent)
   if (!text) return null
-  const m =
-    /shell\s*id\s*[:=]\s*([A-Za-z0-9_-]+)/i.exec(text) ??
-    /\b(bash_\d+)\b/.exec(text)
+  const m = /shell\s*id\s*[:=]\s*([A-Za-z0-9_-]+)/i.exec(text) ?? /\b(bash_\d+)\b/.exec(text)
   return m ? m[1] : null
 }
 
@@ -90,7 +88,7 @@ export function extractBashOutputCall(event: ToolCallEvent): BashOutputSignal | 
   return {
     toolUseId: event.id,
     shellId: id,
-    filter: typeof input.filter === 'string' ? input.filter : undefined,
+    filter: typeof input.filter === 'string' ? input.filter : undefined
   }
 }
 

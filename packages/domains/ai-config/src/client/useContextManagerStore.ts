@@ -89,7 +89,7 @@ const DEFAULTS: PersistedState = {
   skillEditorWidth: null,
   showBlobs: true,
   showLineCount: true,
-  skillGroupBy: 'source',
+  skillGroupBy: 'source'
 }
 
 export const useContextManagerStore = create<ContextManagerViewState>()(
@@ -102,11 +102,25 @@ export const useContextManagerStore = create<ContextManagerViewState>()(
 
     setActive: (level, section) => set({ activeLevel: level, activeSection: section }),
     navigateToMarketplaceRegistry: (registryId) =>
-      set({ activeLevel: 'library' as ConfigLevel, activeSection: 'marketplace', marketplaceDrillRegistryId: registryId, marketplaceDrillEntryId: null }),
+      set({
+        activeLevel: 'library' as ConfigLevel,
+        activeSection: 'marketplace',
+        marketplaceDrillRegistryId: registryId,
+        marketplaceDrillEntryId: null
+      }),
     navigateToMarketplaceEntry: (registryId, entryId) =>
-      set({ activeLevel: 'library' as ConfigLevel, activeSection: 'marketplace', marketplaceDrillRegistryId: registryId, marketplaceDrillEntryId: entryId }),
+      set({
+        activeLevel: 'library' as ConfigLevel,
+        activeSection: 'marketplace',
+        marketplaceDrillRegistryId: registryId,
+        marketplaceDrillEntryId: entryId
+      }),
     navigateToLibrarySkill: (itemId) =>
-      set({ activeLevel: 'library' as ConfigLevel, activeSection: 'skills', pendingLibrarySkillId: itemId }),
+      set({
+        activeLevel: 'library' as ConfigLevel,
+        activeSection: 'skills',
+        pendingLibrarySkillId: itemId
+      }),
     consumePendingLibrarySkillId: () => {
       const id = get().pendingLibrarySkillId
       if (id) set({ pendingLibrarySkillId: null })
@@ -131,7 +145,7 @@ export const useContextManagerStore = create<ContextManagerViewState>()(
         ? (rawGroupBy as SkillGroupBy)
         : (DEFAULTS.skillGroupBy as SkillGroupBy)
       set({ ...DEFAULTS, ...rest, skillGroupBy: groupBy, isLoaded: true })
-    },
+    }
   }))
 )
 
@@ -176,7 +190,7 @@ function pickPersisted(state: ContextManagerViewState): PersistedState {
     skillEditorWidth: state.skillEditorWidth,
     showBlobs: state.showBlobs,
     showLineCount: state.showLineCount,
-    skillGroupBy: state.skillGroupBy,
+    skillGroupBy: state.skillGroupBy
   }
 }
 

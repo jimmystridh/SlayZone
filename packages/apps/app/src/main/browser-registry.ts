@@ -130,7 +130,7 @@ export function listBrowserTabs(taskId: string): BrowserTabInfo[] {
 
 export function waitForBrowserRegistration(
   taskId: string,
-  opts: { tabId?: string; timeoutMs?: number } = {},
+  opts: { tabId?: string; timeoutMs?: number } = {}
 ): Promise<Electron.WebContents> {
   const { tabId, timeoutMs = 10_000 } = opts
   const existing = resolveWc(taskId, tabId)

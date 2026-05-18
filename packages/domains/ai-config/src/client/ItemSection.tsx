@@ -1,16 +1,24 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { AlertTriangle, ChevronDown, ChevronRight, Plus, Loader2, X } from 'lucide-react'
 import {
-  AlertTriangle, ChevronDown, ChevronRight,
-  Plus, Loader2, X
-} from 'lucide-react'
-import {
-  Button, IconButton, Input, Label,
-  Textarea, Tooltip, TooltipContent, TooltipTrigger, cn, toast
+  Button,
+  IconButton,
+  Input,
+  Label,
+  Textarea,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  cn,
+  toast
 } from '@slayzone/ui'
 import { repairSkillFrontmatter } from '../shared'
 import type {
-  AiConfigItem, AiConfigItemType, CliProvider,
-  ProjectSkillStatus, SyncHealth
+  AiConfigItem,
+  AiConfigItemType,
+  CliProvider,
+  ProjectSkillStatus,
+  SyncHealth
 } from '../shared'
 import type { ContextManagerSection } from './ContextManagerSettings'
 import { PROVIDER_PATHS } from '../shared/provider-registry'
@@ -44,13 +52,18 @@ function providerSupportsType(provider: CliProvider): boolean {
   return !!PROVIDER_PATHS[provider]?.skillsDir
 }
 
-
 // ============================================================
 // Hook: useSkillItem
 // ============================================================
 
 function useSkillItem({
-  item, providers, enabledProviders, isLocal, projectId, projectPath, onChanged
+  item,
+  providers,
+  enabledProviders,
+  isLocal,
+  projectId,
+  projectPath,
+  onChanged
 }: {
   item: AiConfigItem
   providers: ProjectSkillStatus['providers']
@@ -86,26 +99,31 @@ function useSkillItem({
   }, [item.content, item.slug])
 
   const providerRows: ProviderRow[] = enabledProviders
-    .filter(p => {
+    .filter((p) => {
       if (!providerSupportsType(p)) return false
       if (isLocal) return true
       const info = providers[p]
       return info?.syncReason !== 'not_linked'
     })
-    .map(p => {
+    .map((p) => {
       const info = providers[p]
       const path = info?.path ?? `${PROVIDER_PATHS[p]?.skillsDir}/${item.slug}/SKILL.md`
       const syncHealth = info?.syncHealth ?? 'not_synced'
       return { provider: p, path, syncHealth }
     })
 
-  const saveContent = useCallback(async (text: string) => {
-    try {
-      await window.api.aiConfig.updateItem({ id: item.id, content: text })
-      setExpectedContents({})
-      onChanged()
-    } catch { /* silent */ }
-  }, [item.id, onChanged])
+  const saveContent = useCallback(
+    async (text: string) => {
+      try {
+        await window.api.aiConfig.updateItem({ id: item.id, content: text })
+        setExpectedContents({})
+        onChanged()
+      } catch {
+        /* silent */
+      }
+    },
+    [item.id, onChanged]
+  )
 
   const handleContentChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value
@@ -114,9 +132,12 @@ function useSkillItem({
     saveTimer.current = setTimeout(() => void saveContent(text), 800)
   }
 
-  useEffect(() => () => {
-    if (saveTimer.current) clearTimeout(saveTimer.current)
-  }, [])
+  useEffect(
+    () => () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+    },
+    []
+  )
 
   const handleSlugSave = async () => {
     setSavingSlug(true)
@@ -142,17 +163,20 @@ function useSkillItem({
     }
   }
 
-  const loadDiskAndExpected = useCallback(async (provider: CliProvider) => {
-    const [disk, expected] = await Promise.all([
-      window.api.aiConfig.readProviderSkill(projectPath, provider, item.id),
-      window.api.aiConfig.getExpectedSkillContent(projectPath, provider, item.id),
-    ])
-    setDiskContents(prev => ({ ...prev, [provider]: disk.exists ? disk.content : '' }))
-    setExpectedContents(prev => ({ ...prev, [provider]: expected }))
-  }, [projectPath, item.id])
+  const loadDiskAndExpected = useCallback(
+    async (provider: CliProvider) => {
+      const [disk, expected] = await Promise.all([
+        window.api.aiConfig.readProviderSkill(projectPath, provider, item.id),
+        window.api.aiConfig.getExpectedSkillContent(projectPath, provider, item.id)
+      ])
+      setDiskContents((prev) => ({ ...prev, [provider]: disk.exists ? disk.content : '' }))
+      setExpectedContents((prev) => ({ ...prev, [provider]: expected }))
+    },
+    [projectPath, item.id]
+  )
 
   const toggleExpanded = (provider: CliProvider) => {
-    setExpandedProviders(prev => {
+    setExpandedProviders((prev) => {
       const next = new Set(prev)
       if (next.has(provider)) {
         next.delete(provider)
@@ -170,7 +194,7 @@ function useSkillItem({
       await window.api.aiConfig.syncLinkedFile(projectId, projectPath, item.id, provider)
       const expected = expectedContents[provider]
       if (expected !== undefined) {
-        setDiskContents(prev => ({ ...prev, [provider]: expected }))
+        setDiskContents((prev) => ({ ...prev, [provider]: expected }))
       }
       onChanged()
     } finally {
@@ -197,7 +221,7 @@ function useSkillItem({
         const expected = expectedContents[provider]
         if (expected !== undefined) updated[provider] = expected
       }
-      setDiskContents(prev => ({ ...prev, ...updated }))
+      setDiskContents((prev) => ({ ...prev, ...updated }))
       onChanged()
     } finally {
       setSyncingAll(false)
@@ -217,15 +241,33 @@ function useSkillItem({
   }
 
   return {
-    item, slug, content, slugDirty, savingSlug, isLocal,
+    item,
+    slug,
+    content,
+    slugDirty,
+    savingSlug,
+    isLocal,
     validation,
     hasValidationErrors,
-    providerRows, expandedProviders, diskContents, expectedContents,
-    syncingProvider, pullingProvider, syncingAll,
-    setSlug: (v: string) => { setSlugRaw(v); setSlugDirty(v !== item.slug) },
-    handleContentChange, handleSlugSave, handleRevert,
+    providerRows,
+    expandedProviders,
+    diskContents,
+    expectedContents,
+    syncingProvider,
+    pullingProvider,
+    syncingAll,
+    setSlug: (v: string) => {
+      setSlugRaw(v)
+      setSlugDirty(v !== item.slug)
+    },
+    handleContentChange,
+    handleSlugSave,
+    handleRevert,
     handleFixFrontmatter,
-    toggleExpanded, handlePush, handlePull, handleSyncAll,
+    toggleExpanded,
+    handlePush,
+    handlePull,
+    handleSyncAll
   }
 }
 
@@ -233,19 +275,43 @@ function useSkillItem({
 // Skill item detail
 // ============================================================
 
-function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId, projectPath, onChanged, onRemove, onGoToLibrary }: {
-  item: AiConfigItem; providers: ProjectSkillStatus['providers']; enabledProviders: CliProvider[]
-  isLocal: boolean; projectId: string; projectPath: string; onChanged: () => void
+function SkillItemDetail({
+  item,
+  providers,
+  enabledProviders,
+  isLocal,
+  projectId,
+  projectPath,
+  onChanged,
+  onRemove,
+  onGoToLibrary
+}: {
+  item: AiConfigItem
+  providers: ProjectSkillStatus['providers']
+  enabledProviders: CliProvider[]
+  isLocal: boolean
+  projectId: string
+  projectPath: string
+  onChanged: () => void
   onRemove: () => void
   onGoToLibrary?: () => void
 }) {
-  const sk = useSkillItem({ item, providers, enabledProviders, isLocal, projectId, projectPath, onChanged })
+  const sk = useSkillItem({
+    item,
+    providers,
+    enabledProviders,
+    isLocal,
+    projectId,
+    projectPath,
+    onChanged
+  })
   const [expanded, setExpanded] = useState(false)
   const status = aggregateProviderSyncHealth(providers)
   const hasPendingSync = hasPendingProviderSync(sk.providerRows.map((row) => row.syncHealth))
-  const validationStatus = sk.validation?.status === 'invalid' || sk.validation?.status === 'warning'
-    ? sk.validation.status
-    : null
+  const validationStatus =
+    sk.validation?.status === 'invalid' || sk.validation?.status === 'warning'
+      ? sk.validation.status
+      : null
   const fixFrontmatterLabel = getSkillFrontmatterActionLabel(sk.validation)
 
   const handleToggleExpanded = () => setExpanded((prev) => !prev)
@@ -266,13 +332,16 @@ function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId
         )}
         onClick={handleToggleExpanded}
       >
-        {expanded
-          ? <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
-          : <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
-        }
+        {expanded ? (
+          <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
+        ) : (
+          <ChevronRight className="size-3 shrink-0 text-muted-foreground" />
+        )}
         <span className="flex-1 truncate font-mono text-xs">
           {item.slug}
-          {isLocal && <span className="ml-1.5 font-sans text-[10px] text-muted-foreground">(local)</span>}
+          {isLocal && (
+            <span className="ml-1.5 font-sans text-[10px] text-muted-foreground">(local)</span>
+          )}
         </span>
         {validationStatus && (
           <span
@@ -290,9 +359,13 @@ function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId
         <StatusBadge syncHealth={status} />
         <IconButton
           aria-label="Remove skill"
-          size="icon-sm" variant="ghost"
+          size="icon-sm"
+          variant="ghost"
           className="size-6 text-muted-foreground hover:text-destructive shrink-0"
-          onClick={(e) => { e.stopPropagation(); onRemove() }}
+          onClick={(e) => {
+            e.stopPropagation()
+            onRemove()
+          }}
         >
           <X className="size-3" />
         </IconButton>
@@ -301,10 +374,7 @@ function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId
       {/* Expanded: stacked edit + sync sections */}
       {expanded && (
         <div className="p-4 space-y-3">
-          <div
-            data-testid={`skill-edit-section-${item.slug}`}
-            className="space-y-3"
-          >
+          <div data-testid={`skill-edit-section-${item.slug}`} className="space-y-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-lg font-semibold leading-tight">Edit</p>
               {!sk.isLocal && (
@@ -343,7 +413,12 @@ function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId
                   onChange={(e) => sk.setSlug(e.target.value)}
                 />
                 {sk.slugDirty && (
-                  <Button data-testid="skill-detail-rename" size="sm" onClick={sk.handleSlugSave} disabled={sk.savingSlug}>
+                  <Button
+                    data-testid="skill-detail-rename"
+                    size="sm"
+                    onClick={sk.handleSlugSave}
+                    disabled={sk.savingSlug}
+                  >
                     {sk.savingSlug ? 'Renaming...' : 'Rename'}
                   </Button>
                 )}
@@ -362,7 +437,9 @@ function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId
                 <div className="rounded border border-destructive/20 bg-destructive/5 px-2.5 py-2">
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-xs font-medium text-destructive">
-                      {sk.validation.status === 'invalid' ? 'Frontmatter is invalid' : 'Frontmatter warning'}
+                      {sk.validation.status === 'invalid'
+                        ? 'Frontmatter is invalid'
+                        : 'Frontmatter warning'}
                     </p>
                     {fixFrontmatterLabel && (
                       <Button
@@ -389,10 +466,7 @@ function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId
             </div>
           </div>
 
-          <div
-            data-testid={`skill-sync-section-${item.slug}`}
-            className="space-y-3"
-          >
+          <div data-testid={`skill-sync-section-${item.slug}`} className="space-y-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <p className="text-lg font-semibold leading-tight">Sync</p>
@@ -400,33 +474,34 @@ function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId
                   <span className="inline-flex size-2 rounded-full bg-amber-500" />
                 )}
               </div>
-              {sk.providerRows.length > 1 && (hasPendingSync || sk.syncingAll || sk.hasValidationErrors) && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      data-testid={`skill-push-all-${sk.item.slug}`}
-                      size="sm"
-                      className="h-7 px-2 text-[11px]"
-                      onClick={sk.handleSyncAll}
-                      disabled={sk.syncingAll || !!sk.syncingProvider || sk.hasValidationErrors}
-                    >
-                      {sk.syncingAll && <Loader2 className="size-3.5 animate-spin" />}
-                      Database → All Files
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {sk.hasValidationErrors
-                      ? 'Fix frontmatter errors before syncing to files.'
-                      : 'Overwrite all provider skill Files'}
-                  </TooltipContent>
-                </Tooltip>
-              )}
+              {sk.providerRows.length > 1 &&
+                (hasPendingSync || sk.syncingAll || sk.hasValidationErrors) && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        data-testid={`skill-push-all-${sk.item.slug}`}
+                        size="sm"
+                        className="h-7 px-2 text-[11px]"
+                        onClick={sk.handleSyncAll}
+                        disabled={sk.syncingAll || !!sk.syncingProvider || sk.hasValidationErrors}
+                      >
+                        {sk.syncingAll && <Loader2 className="size-3.5 animate-spin" />}
+                        Database → All Files
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {sk.hasValidationErrors
+                        ? 'Fix frontmatter errors before syncing to files.'
+                        : 'Overwrite all provider skill Files'}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
             </div>
 
             {sk.providerRows.length > 0 ? (
               <>
                 <div className="space-y-2">
-                  {sk.providerRows.map(row => (
+                  {sk.providerRows.map((row) => (
                     <ProviderFileCard
                       key={row.provider}
                       testIdPrefix="skill"
@@ -449,7 +524,9 @@ function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId
                 </div>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground py-4 text-center">No providers configured</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                No providers configured
+              </p>
             )}
           </div>
         </div>
@@ -463,16 +540,30 @@ function SkillItemDetail({ item, providers, enabledProviders, isLocal, projectId
 // ============================================================
 
 export function ItemSection({
-  type, linkedItems, localItems, enabledProviders,
-  projectId, projectPath, onOpenContextManager, onChanged
+  type,
+  linkedItems,
+  localItems,
+  enabledProviders,
+  projectId,
+  projectPath,
+  onOpenContextManager,
+  onChanged
 }: ItemSectionProps) {
   const [showPicker, setShowPicker] = useState(false)
 
   const allItems = [
-    ...localItems.map(item => ({ item, providers: {} as ProjectSkillStatus['providers'], isLocal: true })),
-    ...linkedItems.map(s => ({ item: s.item, providers: s.providers, isLocal: s.item.scope === 'project' }))
+    ...localItems.map((item) => ({
+      item,
+      providers: {} as ProjectSkillStatus['providers'],
+      isLocal: true
+    })),
+    ...linkedItems.map((s) => ({
+      item: s.item,
+      providers: s.providers,
+      isLocal: s.item.scope === 'project'
+    }))
   ].sort((a, b) => a.item.slug.localeCompare(b.item.slug))
-  const existingLinks = linkedItems.map(s => s.item.id)
+  const existingLinks = linkedItems.map((s) => s.item.id)
 
   const handleRemove = async (itemId: string, isLocal: boolean) => {
     if (isLocal) {
@@ -489,10 +580,17 @@ export function ItemSection({
         {allItems.map(({ item, providers, isLocal }) => (
           <SkillItemDetail
             key={item.id}
-            item={item} providers={providers} enabledProviders={enabledProviders}
-            isLocal={isLocal} projectId={projectId} projectPath={projectPath}
-            onGoToLibrary={!isLocal && onOpenContextManager ? () => onOpenContextManager('skill') : undefined}
-            onChanged={onChanged} onRemove={() => handleRemove(item.id, isLocal)}
+            item={item}
+            providers={providers}
+            enabledProviders={enabledProviders}
+            isLocal={isLocal}
+            projectId={projectId}
+            projectPath={projectPath}
+            onGoToLibrary={
+              !isLocal && onOpenContextManager ? () => onOpenContextManager('skill') : undefined
+            }
+            onChanged={onChanged}
+            onRemove={() => handleRemove(item.id, isLocal)}
           />
         ))}
         <div
@@ -514,7 +612,10 @@ export function ItemSection({
         projectPath={projectPath}
         enabledProviders={enabledProviders}
         existingLinks={existingLinks}
-        onAdded={() => { setShowPicker(false); onChanged() }}
+        onAdded={() => {
+          setShowPicker(false)
+          onChanged()
+        }}
       />
     </div>
   )

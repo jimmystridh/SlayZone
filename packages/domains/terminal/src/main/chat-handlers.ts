@@ -19,13 +19,13 @@ import {
   getSessionTerminalState,
   killAll,
   configureTransport,
-  type ChatSessionInfo,
+  type ChatSessionInfo
 } from './chat-transport-manager'
 import {
   persistChatEvent,
   loadChatEvents,
   getNextSeqForTab,
-  clearChatEventsForTab,
+  clearChatEventsForTab
 } from './chat-events-store'
 import { registerChatQueueHandlers } from './chat-queue-handlers'
 import { clearChatQueue } from './chat-queue-store'
@@ -40,14 +40,18 @@ import { listSkills } from './skills'
 import { listCommands } from './commands'
 import { listAgents } from './agents-registry'
 import { listProjectFiles } from './files-scan'
-import { bumpAutocompleteUsage, getAutocompleteUsage, type UsageMap } from './autocomplete-usage-store'
+import {
+  bumpAutocompleteUsage,
+  getAutocompleteUsage,
+  type UsageMap
+} from './autocomplete-usage-store'
 import type { SkillInfo, CommandInfo, AgentInfo, FileMatch } from '../shared/types'
 import type { AgentEvent } from '../shared/agent-events'
 import {
   rawPermissionModeToChatMode,
   chatModeToFlags as chatModeToFlagsShared,
   chatModeToCliPermissionMode,
-  type ChatMode as ChatModeShared,
+  type ChatMode as ChatModeShared
 } from '../shared/chat-mode'
 import { chatModelToFlags, isChatModel, type ChatModel } from '../shared/chat-model'
 import { chatEffortToFlags, isChatEffort, type ChatEffort } from '../shared/chat-effort'
@@ -169,7 +173,12 @@ function writeChatModel(db: Database, taskId: string, mode: string, chatModel: C
   db.prepare('UPDATE tasks SET provider_config = ? WHERE id = ?').run(JSON.stringify(cfg), taskId)
 }
 
-function writeChatEffort(db: Database, taskId: string, mode: string, chatEffort: ChatEffort | null): void {
+function writeChatEffort(
+  db: Database,
+  taskId: string,
+  mode: string,
+  chatEffort: ChatEffort | null
+): void {
   const row = db.prepare('SELECT provider_config FROM tasks WHERE id = ?').get(taskId) as
     | { provider_config: string | null }
     | undefined
@@ -208,7 +217,6 @@ function writeChatMode(db: Database, taskId: string, mode: string, chatMode: Cha
   db.prepare('UPDATE tasks SET provider_config = ? WHERE id = ?').run(JSON.stringify(cfg), taskId)
 }
 
-
 /**
  * One-shot backfill: every chat-capable task gets `chatMode='bypass'` set on
  * its terminal_mode entry — preserving current default behavior
@@ -226,8 +234,11 @@ function writeChatMode(db: Database, taskId: string, mode: string, chatMode: Cha
  * touched, leaving non-chat modes alone.
  */
 export function backfillChatModes(db: Database): { scanned: number; updated: number } {
-  const rows = db.prepare('SELECT id, terminal_mode, provider_config FROM tasks').all() as
-    | { id: string; terminal_mode: string | null; provider_config: string | null }[]
+  const rows = db.prepare('SELECT id, terminal_mode, provider_config FROM tasks').all() as {
+    id: string
+    terminal_mode: string | null
+    provider_config: string | null
+  }[]
   let scanned = 0
   let updated = 0
   for (const row of rows) {
@@ -251,12 +262,22 @@ export function backfillChatModes(db: Database): { scanned: number; updated: num
       dirty = true
     }
     // Ensure the task's primary terminal_mode has an entry if it's chat-capable.
-    if (row.terminal_mode && supportsChatMode(row.terminal_mode) && cfg[row.terminal_mode]?.chatMode == null) {
-      cfg[row.terminal_mode] = { ...(cfg[row.terminal_mode] ?? {}), chatMode: DEFAULT_CHAT_MODE_LEGACY }
+    if (
+      row.terminal_mode &&
+      supportsChatMode(row.terminal_mode) &&
+      cfg[row.terminal_mode]?.chatMode == null
+    ) {
+      cfg[row.terminal_mode] = {
+        ...(cfg[row.terminal_mode] ?? {}),
+        chatMode: DEFAULT_CHAT_MODE_LEGACY
+      }
       dirty = true
     }
     if (dirty) {
-      db.prepare('UPDATE tasks SET provider_config = ? WHERE id = ?').run(JSON.stringify(cfg), row.id)
+      db.prepare('UPDATE tasks SET provider_config = ? WHERE id = ?').run(
+        JSON.stringify(cfg),
+        row.id
+      )
       updated++
     }
   }
@@ -310,12 +331,14 @@ export function inspectPermissionFlags(flags: string[]): {
   }
   // 'default' mode requires prompts — not safe for chat. Others auto-approve.
   const permissiveModes = ['acceptEdits', 'auto', 'bypassPermissions', 'dontAsk']
-  const modeIsPermissive = permissionModeValue ? permissiveModes.includes(permissionModeValue) : false
+  const modeIsPermissive = permissionModeValue
+    ? permissiveModes.includes(permissionModeValue)
+    : false
   return {
     ok: hasSkipPerms || modeIsPermissive,
     hasSkipPerms,
     hasPermissionMode,
-    permissionModeValue,
+    permissionModeValue
   }
 }
 
@@ -336,7 +359,17 @@ export function inspectPermissionFlags(flags: string[]): {
 async function buildHydrateOpts(
   db: Database,
   opts: ChatCreateOpts,
-  { fresh, chatModeOverride, chatModelOverride, chatEffortOverride }: { fresh: boolean; chatModeOverride?: ChatMode; chatModelOverride?: ChatModel; chatEffortOverride?: ChatEffort | null }
+  {
+    fresh,
+    chatModeOverride,
+    chatModelOverride,
+    chatEffortOverride
+  }: {
+    fresh: boolean
+    chatModeOverride?: ChatMode
+    chatModelOverride?: ChatModel
+    chatEffortOverride?: ChatEffort | null
+  }
 ): Promise<Parameters<typeof hydrateSession>[0]> {
   const providerCfg = readProviderConfig(db, opts.taskId, opts.mode)
   // Flag-resolution priority for chat:
@@ -385,7 +418,7 @@ async function buildHydrateOpts(
   const enrichedPath = getEnrichedPath()
   const subprocessEnv: Record<string, string> = {
     ...buildMcpEnv(db, opts.taskId, opts.mode),
-    ...(enrichedPath ? { PATH: enrichedPath } : {}),
+    ...(enrichedPath ? { PATH: enrichedPath } : {})
   }
 
   return {
@@ -393,7 +426,7 @@ async function buildHydrateOpts(
     taskId: opts.taskId,
     mode: opts.mode,
     cwd: opts.cwd,
-    conversationId: fresh ? null : providerCfg.chatConversationId ?? null,
+    conversationId: fresh ? null : (providerCfg.chatConversationId ?? null),
     providerFlags,
     env: subprocessEnv,
     initialBuffer,
@@ -406,11 +439,15 @@ async function buildHydrateOpts(
     },
     onInvalidResume: () => {
       clearChatConversationId(db, opts.taskId, opts.mode)
-    },
+    }
   }
 }
 
-export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatHandlerOpts = {}): void {
+export function registerChatHandlers(
+  ipcMain: IpcMain,
+  db: Database,
+  opts: ChatHandlerOpts = {}
+): void {
   // Wire SQLite persistence into the transport. Default deps had a no-op
   // persistEvent; configureTransport keeps spawn/whichBinary/broadcast* untouched.
   configureTransport({
@@ -436,9 +473,11 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
         if (info) {
           try {
             const now = Date.now()
-            const res = db.prepare(
-              `UPDATE tasks SET last_interaction_at = ? WHERE id = ? AND (last_interaction_at IS NULL OR last_interaction_at < ?)`
-            ).run(now, info.taskId, now)
+            const res = db
+              .prepare(
+                `UPDATE tasks SET last_interaction_at = ? WHERE id = ? AND (last_interaction_at IS NULL OR last_interaction_at < ?)`
+              )
+              .run(now, info.taskId, now)
             // Notify renderer so the tree-view sort reorders without waiting
             // for an unrelated tasks reload. Skip when UPDATE was a no-op.
             if (res.changes > 0) {
@@ -480,7 +519,7 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
           console.error('[chat-handlers] onChatEvent failed:', err)
         }
       }
-    },
+    }
   })
 
   registerChatQueueHandlers(ipcMain, db)
@@ -527,7 +566,11 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
   // structured-input channel — renderer falls back to chat:send.
   ipcMain.handle(
     'chat:sendToolResult',
-    (_, tabId: string, args: { toolUseId: string; content: string; isError?: boolean }): boolean => {
+    (
+      _,
+      tabId: string,
+      args: { toolUseId: string; content: string; isError?: boolean }
+    ): boolean => {
       return sendToolResult(tabId, args)
     }
   )
@@ -546,7 +589,11 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
       args: {
         requestId: string
         decision:
-          | { behavior: 'allow'; updatedInput?: Record<string, unknown>; updatedPermissions?: unknown[] }
+          | {
+              behavior: 'allow'
+              updatedInput?: Record<string, unknown>
+              updatedPermissions?: unknown[]
+            }
           | { behavior: 'deny'; message: string; interrupt?: boolean }
       }
     ): boolean => {
@@ -577,7 +624,10 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
         const refreshed = getSessionInfo(opts.tabId)
         if (refreshed) return refreshed
       } catch (err) {
-        console.warn('[chat-handlers] interrupt control_request failed, falling back to kill+respawn:', err)
+        console.warn(
+          '[chat-handlers] interrupt control_request failed, falling back to kill+respawn:',
+          err
+        )
         // fall through
       }
     }
@@ -596,28 +646,34 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
   // user-message instead of leaving an `interrupted` marker — Claude CLI parity
   // for "abort an unanswered turn and edit the prompt". Authoritative verdict
   // (`popped`) flows back to the caller so the renderer can restore the input.
-  ipcMain.handle('chat:abortAndPop', async (_, opts: ChatCreateOpts): Promise<{
-    popped: boolean
-    text: string | null
-  }> => {
-    const result = popLastUserMessage(opts.tabId)
-    if (!result.popped) recordInterrupted(opts.tabId)
-    // Stop button discards queued follow-ups alongside the in-flight turn —
-    // matches pre-backend behavior where handleStop did `setQueuedMessages([])`.
-    try {
-      clearChatQueue(db, opts.tabId)
-    } catch (err) {
-      console.error('[chat-handlers] clearChatQueue failed:', err)
+  ipcMain.handle(
+    'chat:abortAndPop',
+    async (
+      _,
+      opts: ChatCreateOpts
+    ): Promise<{
+      popped: boolean
+      text: string | null
+    }> => {
+      const result = popLastUserMessage(opts.tabId)
+      if (!result.popped) recordInterrupted(opts.tabId)
+      // Stop button discards queued follow-ups alongside the in-flight turn —
+      // matches pre-backend behavior where handleStop did `setQueuedMessages([])`.
+      try {
+        clearChatQueue(db, opts.tabId)
+      } catch (err) {
+        console.error('[chat-handlers] clearChatQueue failed:', err)
+      }
+      removeSession(opts.tabId)
+      // Eager respawn after Stop matches Claude CLI parity — user just hit the
+      // big red button on a turn, the implicit expectation is "ready to keep
+      // chatting"; making them wait for spawn on next send is worse UX than the
+      // lazy mode the rest of the app uses for first-ever messages.
+      hydrateSession(await buildHydrateOpts(db, opts, { fresh: false }))
+      await ensureSpawned(opts.tabId)
+      return { popped: result.popped, text: result.text }
     }
-    removeSession(opts.tabId)
-    // Eager respawn after Stop matches Claude CLI parity — user just hit the
-    // big red button on a turn, the implicit expectation is "ready to keep
-    // chatting"; making them wait for spawn on next send is worse UX than the
-    // lazy mode the rest of the app uses for first-ever messages.
-    hydrateSession(await buildHydrateOpts(db, opts, { fresh: false }))
-    await ensureSpawned(opts.tabId)
-    return { popped: result.popped, text: result.text }
-  })
+  )
 
   ipcMain.handle('chat:kill', (_, tabId: string): void => {
     killChat(tabId)
@@ -684,28 +740,23 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
     'chat:inspectPermissions',
     (_, taskId: string, mode: string): ReturnType<typeof inspectPermissionFlags> => {
       const providerCfg = readProviderConfig(db, taskId, mode)
-      const flagsString =
-        providerCfg.flags ?? readTaskModeDefaultFlags(db, mode) ?? ''
+      const flagsString = providerCfg.flags ?? readTaskModeDefaultFlags(db, mode) ?? ''
       return inspectPermissionFlags(parseShellArgs(flagsString))
     }
   )
 
-  ipcMain.handle(
-    'chat:getMode',
-    async (_, taskId: string, mode: string): Promise<ChatMode> => {
-      const cfg = readProviderConfig(db, taskId, mode)
-      const stored = cfg.chatMode ?? DEFAULT_CHAT_MODE_NEW_TASK
-      // Hide stale `auto` from UI when capability is gone — pill would otherwise
-      // show violet, and the next mode change would attempt a forbidden flag.
-      return resolveSafeChatMode(stored)
-    }
-  )
+  ipcMain.handle('chat:getMode', async (_, taskId: string, mode: string): Promise<ChatMode> => {
+    const cfg = readProviderConfig(db, taskId, mode)
+    const stored = cfg.chatMode ?? DEFAULT_CHAT_MODE_NEW_TASK
+    // Hide stale `auto` from UI when capability is gone — pill would otherwise
+    // show violet, and the next mode change would attempt a forbidden flag.
+    return resolveSafeChatMode(stored)
+  })
 
   ipcMain.handle(
     'chat:getAutoEligibility',
     (): Promise<AutoModeEligibility> => getAutoModeEligibility()
   )
-
 
   ipcMain.handle(
     'chat:setMode',
@@ -737,7 +788,7 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
         try {
           await sendControlRequest(opts.tabId, {
             subtype: 'set_permission_mode',
-            mode: cliMode,
+            mode: cliMode
           })
           writeChatMode(db, opts.taskId, opts.mode, safe)
           updateSessionChatMode(opts.tabId, safe)
@@ -769,18 +820,15 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
     }
   )
 
-  ipcMain.handle(
-    'chat:getModel',
-    async (_, taskId: string, mode: string): Promise<ChatModel> => {
-      const cfg = readProviderConfig(db, taskId, mode)
-      const stored = cfg.chatModel
-      if (isChatModel(stored)) return stored
-      // No (or legacy/invalid) stored value → fall back to account default
-      // resolved from `~/.claude/settings.json`. Pro accounts → sonnet,
-      // Max accounts → opus, etc. Hard fallback DEFAULT_CHAT_MODEL.
-      return resolveAccountDefaultModel()
-    }
-  )
+  ipcMain.handle('chat:getModel', async (_, taskId: string, mode: string): Promise<ChatModel> => {
+    const cfg = readProviderConfig(db, taskId, mode)
+    const stored = cfg.chatModel
+    if (isChatModel(stored)) return stored
+    // No (or legacy/invalid) stored value → fall back to account default
+    // resolved from `~/.claude/settings.json`. Pro accounts → sonnet,
+    // Max accounts → opus, etc. Hard fallback DEFAULT_CHAT_MODEL.
+    return resolveAccountDefaultModel()
+  })
 
   ipcMain.handle(
     'chat:setModel',
@@ -807,14 +855,17 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
         try {
           await sendControlRequest(opts.tabId, {
             subtype: 'set_model',
-            model: opts.chatModel,
+            model: opts.chatModel
           })
           writeChatModel(db, opts.taskId, opts.mode, opts.chatModel)
           updateSessionChatModel(opts.tabId, opts.chatModel)
           const refreshed = getSessionInfo(opts.tabId)
           if (refreshed) return refreshed
         } catch (err) {
-          console.warn('[chat-handlers] set_model control_request failed, falling back to kill+respawn:', err)
+          console.warn(
+            '[chat-handlers] set_model control_request failed, falling back to kill+respawn:',
+            err
+          )
           // fall through
         }
       }
@@ -822,21 +873,20 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
       // Fallback: kill + respawn. chatModelOverride bypasses DB so the new
       // child uses the requested model before we persist.
       removeSession(opts.tabId)
-      hydrateSession(await buildHydrateOpts(db, opts, { fresh: false, chatModelOverride: opts.chatModel }))
+      hydrateSession(
+        await buildHydrateOpts(db, opts, { fresh: false, chatModelOverride: opts.chatModel })
+      )
       const created = await ensureSpawned(opts.tabId)
       writeChatModel(db, opts.taskId, opts.mode, opts.chatModel)
       return created
     }
   )
 
-  ipcMain.handle(
-    'chat:getEffort',
-    (_, taskId: string, mode: string): ChatEffort | null => {
-      const cfg = readProviderConfig(db, taskId, mode)
-      const stored = cfg.chatEffort ?? null
-      return isChatEffort(stored) ? stored : null
-    }
-  )
+  ipcMain.handle('chat:getEffort', (_, taskId: string, mode: string): ChatEffort | null => {
+    const cfg = readProviderConfig(db, taskId, mode)
+    const stored = cfg.chatEffort ?? null
+    return isChatEffort(stored) ? stored : null
+  })
 
   ipcMain.handle(
     'chat:setEffort',
@@ -857,7 +907,9 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
       // takes effect on a fresh process. chatEffortOverride bypasses DB so the
       // new child uses the requested level before we persist.
       removeSession(opts.tabId)
-      hydrateSession(await buildHydrateOpts(db, opts, { fresh: false, chatEffortOverride: opts.chatEffort }))
+      hydrateSession(
+        await buildHydrateOpts(db, opts, { fresh: false, chatEffortOverride: opts.chatEffort })
+      )
       const created = await ensureSpawned(opts.tabId)
       writeChatEffort(db, opts.taskId, opts.mode, opts.chatEffort)
       return created
@@ -883,28 +935,22 @@ export function registerChatHandlers(ipcMain: IpcMain, db: Database, opts: ChatH
     }
   )
 
-  ipcMain.handle(
-    'chat:bumpAutocompleteUsage',
-    (_, source: string, name: string): void => {
-      try {
-        bumpAutocompleteUsage(db, source, name)
-      } catch (err) {
-        console.error('[chat-handlers] bumpAutocompleteUsage failed:', err)
-      }
+  ipcMain.handle('chat:bumpAutocompleteUsage', (_, source: string, name: string): void => {
+    try {
+      bumpAutocompleteUsage(db, source, name)
+    } catch (err) {
+      console.error('[chat-handlers] bumpAutocompleteUsage failed:', err)
     }
-  )
+  })
 
-  ipcMain.handle(
-    'chat:getAutocompleteUsage',
-    (): UsageMap => {
-      try {
-        return getAutocompleteUsage(db)
-      } catch (err) {
-        console.error('[chat-handlers] getAutocompleteUsage failed:', err)
-        return {}
-      }
+  ipcMain.handle('chat:getAutocompleteUsage', (): UsageMap => {
+    try {
+      return getAutocompleteUsage(db)
+    } catch (err) {
+      console.error('[chat-handlers] getAutocompleteUsage failed:', err)
+      return {}
     }
-  )
+  })
 }
 
 /** Call on app quit to reap child processes. */

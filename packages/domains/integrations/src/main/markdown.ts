@@ -67,7 +67,10 @@ export function markdownToHtml(md: string): string {
     }
 
     // Paragraph — convert single newlines to <br>
-    const lines = trimmed.split('\n').map((l) => inline(l)).join('<br>')
+    const lines = trimmed
+      .split('\n')
+      .map((l) => inline(l))
+      .join('<br>')
     html.push(`<p>${lines}</p>`)
   }
 
@@ -101,12 +104,24 @@ export function htmlToMarkdown(html: string): string {
   if (!html) return ''
   let s = html
   // Code blocks
-  s = s.replace(/<pre><code>([\s\S]*?)<\/code><\/pre>/g, (_m, code) => `\`\`\`\n${unescapeHtml(code)}\n\`\`\``)
+  s = s.replace(
+    /<pre><code>([\s\S]*?)<\/code><\/pre>/g,
+    (_m, code) => `\`\`\`\n${unescapeHtml(code)}\n\`\`\``
+  )
   // Headings
-  s = s.replace(/<h([123])[^>]*>(.*?)<\/h\1>/g, (_m, level, content) => `${'#'.repeat(Number(level))} ${stripTags(content)}`)
+  s = s.replace(
+    /<h([123])[^>]*>(.*?)<\/h\1>/g,
+    (_m, level, content) => `${'#'.repeat(Number(level))} ${stripTags(content)}`
+  )
   // Task list items
-  s = s.replace(/<li data-type="taskItem" data-checked="true"[^>]*><p>(.*?)<\/p><\/li>/g, '- [x] $1')
-  s = s.replace(/<li data-type="taskItem" data-checked="false"[^>]*><p>(.*?)<\/p><\/li>/g, '- [ ] $1')
+  s = s.replace(
+    /<li data-type="taskItem" data-checked="true"[^>]*><p>(.*?)<\/p><\/li>/g,
+    '- [x] $1'
+  )
+  s = s.replace(
+    /<li data-type="taskItem" data-checked="false"[^>]*><p>(.*?)<\/p><\/li>/g,
+    '- [ ] $1'
+  )
   // List items
   s = s.replace(/<li><p>(.*?)<\/p><\/li>/g, '- $1')
   // Remove list wrappers

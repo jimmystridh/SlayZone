@@ -21,7 +21,7 @@ function makeTaskDetailData(overrides: Partial<TaskDetailData> = {}): TaskDetail
       terminal_mode: 'claude-code',
       panel_visibility: null,
       browser_tabs: null,
-      is_temporary: false,
+      is_temporary: false
     } as any,
     project: { id: 'proj-1', name: 'Test', path: '/tmp', color: '#000' } as any,
     tags: [{ id: 'tag-1', name: 'bug', color: '#f00' }] as any[],
@@ -29,9 +29,20 @@ function makeTaskDetailData(overrides: Partial<TaskDetailData> = {}): TaskDetail
     subTasks: [],
     parentTask: null,
     projectPathMissing: false,
-    panelVisibility: { terminal: true, browser: false, diff: false, settings: true, editor: false, artifacts: false, processes: false },
-    browserTabs: { tabs: [{ id: 'default', url: 'about:blank', title: 'New Tab' }], activeTabId: 'default' },
-    ...overrides,
+    panelVisibility: {
+      terminal: true,
+      browser: false,
+      diff: false,
+      settings: true,
+      editor: false,
+      artifacts: false,
+      processes: false
+    },
+    browserTabs: {
+      tabs: [{ id: 'default', url: 'about:blank', title: 'New Tab' }],
+      activeTabId: 'default'
+    },
+    ...overrides
   }
 }
 
@@ -78,7 +89,7 @@ describe('TaskDetailDataLoader', () => {
     expect(receivedProps).toHaveBeenCalledWith(
       expect.objectContaining({
         taskId: 'task-1',
-        initialData: data,
+        initialData: data
       })
     )
   })
@@ -95,14 +106,16 @@ describe('TaskDetailDataLoader', () => {
     })
 
     expect(screen.getByTestId('not-found')).toBeDefined()
-    expect(receivedProps).toHaveBeenCalledWith(
-      expect.objectContaining({ initialData: null })
-    )
+    expect(receivedProps).toHaveBeenCalledWith(expect.objectContaining({ initialData: null }))
   })
 
   it('shows skeleton fallback while suspended, then resolves', async () => {
     let resolve!: (v: TaskDetailData | null) => void
-    fetchFn.mockReturnValue(new Promise<TaskDetailData | null>((r) => { resolve = r }))
+    fetchFn.mockReturnValue(
+      new Promise<TaskDetailData | null>((r) => {
+        resolve = r
+      })
+    )
 
     await act(async () => {
       render(
@@ -126,8 +139,18 @@ describe('TaskDetailDataLoader', () => {
   it('passes all TaskDetailData fields through to TaskDetailPage', async () => {
     const data = makeTaskDetailData({
       projectPathMissing: true,
-      panelVisibility: { terminal: false, browser: true, diff: false, settings: false, editor: true, processes: false },
-      browserTabs: { tabs: [{ id: 'x', url: 'http://localhost:3000', title: 'Dev' }], activeTabId: 'x' },
+      panelVisibility: {
+        terminal: false,
+        browser: true,
+        diff: false,
+        settings: false,
+        editor: true,
+        processes: false
+      },
+      browserTabs: {
+        tabs: [{ id: 'x', url: 'http://localhost:3000', title: 'Dev' }],
+        activeTabId: 'x'
+      }
     })
     fetchFn.mockResolvedValue(data)
 

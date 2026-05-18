@@ -49,12 +49,19 @@ export function migrateV127DiskDir(oldDir: string, newDir: string): V127DiskRepo
     const srcPath = join(oldDir, name)
     const dstPath = join(newDir, name)
     let srcStat
-    try { srcStat = statSync(srcPath) } catch { continue }
+    try {
+      srcStat = statSync(srcPath)
+    } catch {
+      continue
+    }
 
     if (!srcStat.isDirectory()) {
       // Stray file at root (e.g. .DS_Store). Move only if no conflict.
       if (existsSync(dstPath)) conflicts++
-      else { renameSync(srcPath, dstPath); filesMoved++ }
+      else {
+        renameSync(srcPath, dstPath)
+        filesMoved++
+      }
       continue
     }
 
@@ -69,7 +76,11 @@ export function migrateV127DiskDir(oldDir: string, newDir: string): V127DiskRepo
       const sFile = join(srcPath, fname)
       const dFile = join(dstPath, fname)
       let s
-      try { s = statSync(sFile) } catch { continue }
+      try {
+        s = statSync(sFile)
+      } catch {
+        continue
+      }
       if (!s.isFile()) continue
       if (existsSync(dFile)) {
         conflicts++
@@ -78,10 +89,19 @@ export function migrateV127DiskDir(oldDir: string, newDir: string): V127DiskRepo
         filesMoved++
       }
     }
-    try { rmdirSync(srcPath) } catch { /* non-empty after merge: leave */ }
+    try {
+      rmdirSync(srcPath)
+    } catch {
+      /* non-empty after merge: leave */
+    }
   }
 
   let oldDirRemoved = false
-  try { rmdirSync(oldDir); oldDirRemoved = true } catch { /* leave for manual recovery */ }
+  try {
+    rmdirSync(oldDir)
+    oldDirRemoved = true
+  } catch {
+    /* leave for manual recovery */
+  }
   return { mode: 'merge', taskDirsMoved, filesMoved, conflicts, oldDirRemoved }
 }

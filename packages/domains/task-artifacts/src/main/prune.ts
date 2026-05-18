@@ -1,7 +1,13 @@
 import { BlobStore } from './blob-store'
 import type { DbLike, TxnRunner } from './db'
 import { getCurrentVersion, listVersions } from './resolve'
-import type { ArtifactId, ArtifactVersion, ContentHash, PruneOptions, PruneReport } from '../shared/types'
+import type {
+  ArtifactId,
+  ArtifactVersion,
+  ContentHash,
+  PruneOptions,
+  PruneReport
+} from '../shared/types'
 
 /**
  * Removes orphan blobs — files in the blob store with no version row pointing

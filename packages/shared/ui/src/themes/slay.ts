@@ -41,7 +41,7 @@ export const slay: UnifiedThemeDefinition = {
       surface2: '#2c313c',
       surface3: '#343a45',
       modal: '#202329',
-      modalBorder: 'rgba(255, 255, 255, 0.25)',
+      modalBorder: 'rgba(255, 255, 255, 0.25)'
     },
     terminal: {
       background: '#282c34',
@@ -65,7 +65,7 @@ export const slay: UnifiedThemeDefinition = {
       brightBlue: '#83a5d6',
       brightMagenta: '#bc99d4',
       brightCyan: '#83beb1',
-      brightWhite: '#eaeaea',
+      brightWhite: '#eaeaea'
     },
     editor: {
       background: '#282c34',
@@ -85,8 +85,8 @@ export const slay: UnifiedThemeDefinition = {
       variable: '#ffffff',
       property: '#e06c75',
       link: '#61afef',
-      heading: '#ffffff',
-    },
+      heading: '#ffffff'
+    }
   },
   light: {
     chrome: {
@@ -126,7 +126,7 @@ export const slay: UnifiedThemeDefinition = {
       surface2: 'oklch(0.97 0 0)',
       surface3: 'oklch(1 0 0)',
       modal: 'oklch(1 0 0)',
-      modalBorder: 'oklch(0 0 0 / 35%)',
+      modalBorder: 'oklch(0 0 0 / 35%)'
     },
     terminal: {
       background: '#f4f4f5',
@@ -150,7 +150,7 @@ export const slay: UnifiedThemeDefinition = {
       brightBlue: '#3b82f6',
       brightMagenta: '#8b5cf6',
       brightCyan: '#06b6d4',
-      brightWhite: '#52525b',
+      brightWhite: '#52525b'
     },
     editor: {
       background: '#f4f4f5',
@@ -170,7 +170,7 @@ export const slay: UnifiedThemeDefinition = {
       variable: '#27272a',
       property: '#dc2626',
       link: '#2563eb',
-      heading: '#27272a',
-    },
-  },
+      heading: '#27272a'
+    }
+  }
 }

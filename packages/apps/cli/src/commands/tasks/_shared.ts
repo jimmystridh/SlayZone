@@ -31,12 +31,15 @@ export function buildProviderConfig(db: SlayDb): Record<string, { flags: string 
   let rows: { id: string; default_flags: string | null }[] = []
   try {
     rows = db.query('SELECT id, default_flags FROM terminal_modes WHERE enabled = 1')
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   if (rows.length === 0) {
-    rows = DEFAULT_TERMINAL_MODES
-      .filter((m) => m.enabled)
-      .map((m) => ({ id: m.id, default_flags: m.defaultFlags ?? '' }))
+    rows = DEFAULT_TERMINAL_MODES.filter((m) => m.enabled).map((m) => ({
+      id: m.id,
+      default_flags: m.defaultFlags ?? ''
+    }))
   }
 
   const config: Record<string, { flags: string }> = {}
@@ -54,7 +57,11 @@ export interface TemplateRow extends Record<string, unknown> {
   provider_config: string | null
 }
 
-export function resolveTaskTemplate(db: SlayDb, projectId: string, templateRef?: string): TemplateRow | null {
+export function resolveTaskTemplate(
+  db: SlayDb,
+  projectId: string,
+  templateRef?: string
+): TemplateRow | null {
   if (templateRef) {
     // Try ID prefix first
     let rows = db.query<TemplateRow>(
@@ -63,7 +70,9 @@ export function resolveTaskTemplate(db: SlayDb, projectId: string, templateRef?:
     )
     if (rows.length === 1) return rows[0]
     if (rows.length > 1) {
-      console.error(`Ambiguous template id "${templateRef}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`)
+      console.error(
+        `Ambiguous template id "${templateRef}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`
+      )
       process.exit(1)
     }
     // Try name match
@@ -125,7 +134,9 @@ export function printTasks(tasks: TaskRow[], blockedIds?: Set<string>) {
   for (const t of tasks) {
     const id = String(t.id).slice(0, 8).padEnd(idW)
     const status = String(t.status).padEnd(statusW)
-    const project = String(t.project_name ?? '').slice(0, 16).padEnd(16)
+    const project = String(t.project_name ?? '')
+      .slice(0, 16)
+      .padEnd(16)
     const prefix = blockedIds?.has(t.id) ? '[B] ' : ''
     console.log(`${id}  ${status}  ${project}  ${prefix}${t.title}`)
   }

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type MouseEvent as ReactMouseEvent
+} from 'react'
 import { File, FilePlus, Trash2 } from 'lucide-react'
 import { Button, Input, Textarea, cn } from '@slayzone/ui'
 import type { CliProvider, ComputerFileEntry } from '../shared'
@@ -13,7 +21,10 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
   const [loading, setLoading] = useState(true)
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [content, setContent] = useState('')
-  const [creatingFile, setCreatingFile] = useState<{ provider: CliProvider; category: 'skill' } | null>(null)
+  const [creatingFile, setCreatingFile] = useState<{
+    provider: CliProvider
+    category: 'skill'
+  } | null>(null)
   const [newFileName, setNewFileName] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -26,7 +37,9 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
     }
   }, [])
 
-  useEffect(() => { void loadFiles() }, [loadFiles])
+  useEffect(() => {
+    void loadFiles()
+  }, [loadFiles])
 
   const openFile = async (entry: ComputerFileEntry) => {
     // Create file if it doesn't exist
@@ -39,7 +52,6 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
       setContent(text)
 
       setSelectedPath(entry.path)
-
     } catch {
       // silent
     }
@@ -48,7 +60,6 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
   const autoSave = useCallback(async (path: string, text: string) => {
     try {
       await window.api.aiConfig.writeContextFile(path, text, '')
-
     } catch {
       // silent
     }
@@ -63,9 +74,12 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
     saveTimer.current = setTimeout(() => void autoSave(path, text), 800)
   }
 
-  useEffect(() => () => {
-    if (saveTimer.current) clearTimeout(saveTimer.current)
-  }, [])
+  useEffect(
+    () => () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current)
+    },
+    []
+  )
 
   const deleteFile = async (entry: ComputerFileEntry) => {
     try {
@@ -134,7 +148,10 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
   }
 
   return (
-    <div ref={containerRef} className="flex h-full w-full overflow-hidden rounded-lg border bg-surface-3">
+    <div
+      ref={containerRef}
+      className="flex h-full w-full overflow-hidden rounded-lg border bg-surface-3"
+    >
       {/* Left: file list */}
       <div className="flex flex-col overflow-y-auto p-3" style={{ width: splitWidth }}>
         <div className="flex-1 space-y-5">
@@ -158,7 +175,9 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
 
               return (
                 <div key={provider} data-testid={`computer-files-provider-${provider}`}>
-                  <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{spec.label}</p>
+                  <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {spec.label}
+                  </p>
                   <div className="space-y-0.5">
                     {instructions.map((entry) => (
                       <FileRow
@@ -194,7 +213,13 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
                           size="sm"
                           variant="ghost"
                           className="h-6 text-[10px]"
-                          onClick={() => { setCreatingFile({ provider: provider as CliProvider, category: 'skill' }); setNewFileName('') }}
+                          onClick={() => {
+                            setCreatingFile({
+                              provider: provider as CliProvider,
+                              category: 'skill'
+                            })
+                            setNewFileName('')
+                          }}
                         >
                           <FilePlus className="mr-0.5 size-3" /> Skill
                         </Button>
@@ -226,15 +251,33 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
               autoFocus
             />
             <div className="flex gap-1">
-              <Button data-testid="computer-files-create" size="sm" className="h-6 flex-1 text-[11px]" onClick={handleCreateFile}>Create</Button>
-              <Button size="sm" variant="ghost" className="h-6 flex-1 text-[11px]" onClick={() => setCreatingFile(null)}>Cancel</Button>
+              <Button
+                data-testid="computer-files-create"
+                size="sm"
+                className="h-6 flex-1 text-[11px]"
+                onClick={handleCreateFile}
+              >
+                Create
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 flex-1 text-[11px]"
+                onClick={() => setCreatingFile(null)}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         )}
       </div>
 
       {/* Drag handle */}
-      <div className="relative flex w-3 shrink-0 cursor-col-resize items-center justify-center" onMouseDown={onDragStart} onDoubleClick={() => setSplitWidth(350)}>
+      <div
+        className="relative flex w-3 shrink-0 cursor-col-resize items-center justify-center"
+        onMouseDown={onDragStart}
+        onDoubleClick={() => setSplitWidth(350)}
+      >
         <div className="h-full w-px bg-border" />
       </div>
 
@@ -257,7 +300,12 @@ export function ComputerContextFiles({ filter }: ComputerContextFilesProps = {})
   )
 }
 
-function InstructionsFileList({ entries, providerSections, selectedPath, onOpen }: {
+function InstructionsFileList({
+  entries,
+  providerSections,
+  selectedPath,
+  onOpen
+}: {
   entries: ComputerFileEntry[]
   providerSections: { provider: CliProvider; spec: (typeof COMPUTER_PROVIDER_PATHS)[string] }[]
   selectedPath: string | null
@@ -293,7 +341,11 @@ function InstructionsFileList({ entries, providerSections, selectedPath, onOpen 
                 : 'border-transparent hover:bg-muted/50 text-muted-foreground'
             )}
           >
-            {entry.exists ? <File className="size-4 shrink-0" /> : <FilePlus className="size-4 shrink-0" />}
+            {entry.exists ? (
+              <File className="size-4 shrink-0" />
+            ) : (
+              <FilePlus className="size-4 shrink-0" />
+            )}
             <span className="min-w-0 truncate font-mono text-sm">{relativePath}</span>
           </button>
         )
@@ -302,7 +354,14 @@ function InstructionsFileList({ entries, providerSections, selectedPath, onOpen 
   )
 }
 
-function FileRow({ entry, selected, onClick, onDelete, indent, providerLabel }: {
+function FileRow({
+  entry,
+  selected,
+  onClick,
+  onDelete,
+  indent,
+  providerLabel
+}: {
   entry: ComputerFileEntry
   selected: boolean
   onClick: () => void
@@ -322,13 +381,20 @@ function FileRow({ entry, selected, onClick, onDelete, indent, providerLabel }: 
     >
       <div className="flex items-center gap-1.5">
         <button className="flex min-w-0 flex-1 items-center gap-1.5" onClick={onClick}>
-          {entry.exists ? <File className="size-3.5 shrink-0" /> : <FilePlus className="size-3.5 shrink-0" />}
+          {entry.exists ? (
+            <File className="size-3.5 shrink-0" />
+          ) : (
+            <FilePlus className="size-3.5 shrink-0" />
+          )}
           <span className="min-w-0 truncate font-mono">{fileName}</span>
         </button>
         {onDelete && (
           <button
             className="hidden rounded p-0.5 text-muted-foreground hover:text-destructive group-hover:block"
-            onClick={(e) => { e.stopPropagation(); onDelete() }}
+            onClick={(e) => {
+              e.stopPropagation()
+              onDelete()
+            }}
             title="Delete"
           >
             <Trash2 className="size-3" />

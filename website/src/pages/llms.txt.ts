@@ -11,7 +11,7 @@ export const GET = async ({ site }: APIContext) => {
   const featureLines = features
     .map(
       (feature) =>
-        `- [${feature.title}](${url(featurePath(feature))}): ${oneLine(feature.shortDescription)}`,
+        `- [${feature.title}](${url(featurePath(feature))}): ${oneLine(feature.shortDescription)}`
     )
     .join('\n')
 
@@ -19,7 +19,7 @@ export const GET = async ({ site }: APIContext) => {
   const headToHeadLines = competitors
     .map(
       (c) =>
-        `- [${c.editorial!.title}](${url(`/comparison/${c.slug}`)}): ${oneLine(c.editorial!.summary)}`,
+        `- [${c.editorial!.title}](${url(`/comparison/${c.slug}`)}): ${oneLine(c.editorial!.summary)}`
     )
     .join('\n')
 
@@ -47,6 +47,6 @@ ${headToHeadLines}
 `
 
   return new Response(body, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' }
   })
 }

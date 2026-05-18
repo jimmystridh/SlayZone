@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { LoopConfig, CriteriaType, LoopStatus } from '@slayzone/terminal/shared'
-import { makeLoopController, stripAnsi, checkCriteria, isLoopActive } from '@slayzone/terminal/shared'
+import {
+  makeLoopController,
+  stripAnsi,
+  checkCriteria,
+  isLoopActive
+} from '@slayzone/terminal/shared'
 import { usePty } from './PtyContext'
 
 // Re-exports preserve existing client-side import paths.
@@ -28,24 +33,30 @@ export function useLoopMode({ sessionId, onConfigChange }: UseLoopModeOptions) {
     const controller = makeLoopController<number>(
       {
         markBoundary: () => getLastSeq(sessionId),
-        send: (prompt) => { window.api.pty.submit(sessionId, prompt) },
+        send: (prompt) => {
+          window.api.pty.submit(sessionId, prompt)
+        },
         readOutputSince: async (seq) => {
           const result = await window.api.pty.getBufferSince(sessionId, seq)
           if (!result) return null
-          return result.chunks.map(c => c.data).join('')
+          return result.chunks.map((c) => c.data).join('')
         },
-        subscribeIdle: (cb) => subscribeState(sessionId, (newState) => {
-          if (newState === 'idle') cb()
-        }),
-        subscribeExit: (cb) => subscribeExit(sessionId, () => cb()),
+        subscribeIdle: (cb) =>
+          subscribeState(sessionId, (newState) => {
+            if (newState === 'idle') cb()
+          }),
+        subscribeExit: (cb) => subscribeExit(sessionId, () => cb())
       },
       {
         onStatus: setStatus,
-        onIteration: setIteration,
-      },
+        onIteration: setIteration
+      }
     )
     controllerRef.current = controller
-    return () => { controller.dispose(); controllerRef.current = null }
+    return () => {
+      controller.dispose()
+      controllerRef.current = null
+    }
   }, [sessionId, subscribeState, subscribeExit, getLastSeq])
 
   const startLoop = useCallback((loopConfig: LoopConfig) => {
@@ -53,9 +64,15 @@ export function useLoopMode({ sessionId, onConfigChange }: UseLoopModeOptions) {
     controllerRef.current?.start(loopConfig)
   }, [])
 
-  const pauseLoop = useCallback(() => { controllerRef.current?.pause() }, [])
-  const resumeLoop = useCallback(() => { controllerRef.current?.resume() }, [])
-  const stopLoop = useCallback(() => { controllerRef.current?.stop() }, [])
+  const pauseLoop = useCallback(() => {
+    controllerRef.current?.pause()
+  }, [])
+  const resumeLoop = useCallback(() => {
+    controllerRef.current?.resume()
+  }, [])
+  const stopLoop = useCallback(() => {
+    controllerRef.current?.stop()
+  }, [])
 
   return { status, iteration, startLoop, pauseLoop, resumeLoop, stopLoop }
 }

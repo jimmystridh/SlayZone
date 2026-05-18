@@ -20,11 +20,17 @@ export function loadBoardDataOp(db: Database): BoardData {
       ORDER BY t."order" ASC, t.created_at DESC`)
     .all() as Record<string, unknown>[]
 
-  const projectRows = db.prepare('SELECT * FROM projects ORDER BY sort_order').all() as Record<string, unknown>[]
+  const projectRows = db.prepare('SELECT * FROM projects ORDER BY sort_order').all() as Record<
+    string,
+    unknown
+  >[]
 
   const tagRows = db.prepare('SELECT * FROM tags ORDER BY sort_order, name').all()
 
-  const taskTagRows = db.prepare('SELECT task_id, tag_id FROM task_tags').all() as { task_id: string; tag_id: string }[]
+  const taskTagRows = db.prepare('SELECT task_id, tag_id FROM task_tags').all() as {
+    task_id: string
+    tag_id: string
+  }[]
   const taskTagMap: Record<string, string[]> = {}
   for (const row of taskTagRows) {
     if (!taskTagMap[row.task_id]) taskTagMap[row.task_id] = []

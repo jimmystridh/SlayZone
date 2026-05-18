@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { TerminalModeInfo, CreateTerminalModeInput, UpdateTerminalModeInput } from '@slayzone/terminal/shared'
+import type {
+  TerminalModeInfo,
+  CreateTerminalModeInput,
+  UpdateTerminalModeInput
+} from '@slayzone/terminal/shared'
 
 export function useTerminalModes() {
   const [modes, setModes] = useState<TerminalModeInfo[]>([])

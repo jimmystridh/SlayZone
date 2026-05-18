@@ -1,4 +1,4 @@
-import { test, expect, seed, goHome, clickProject, resetApp} from '../fixtures/electron'
+import { test, expect, seed, goHome, clickProject, resetApp } from '../fixtures/electron'
 import { TEST_PROJECT_PATH } from '../fixtures/electron'
 
 test.describe('Advanced filters & group by', () => {
@@ -7,11 +7,20 @@ test.describe('Advanced filters & group by', () => {
   test.beforeAll(async ({ mainWindow }) => {
     await resetApp(mainWindow)
     const s = seed(mainWindow)
-    const p = await s.createProject({ name: 'Adv Filter Test', color: '#14b8a6', path: TEST_PROJECT_PATH })
+    const p = await s.createProject({
+      name: 'Adv Filter Test',
+      color: '#14b8a6',
+      path: TEST_PROJECT_PATH
+    })
     projectAbbrev = p.name.slice(0, 2).toUpperCase()
 
     // Seed tasks with various priorities
-    await s.createTask({ projectId: p.id, title: 'Urgent filter task', status: 'todo', priority: 1 })
+    await s.createTask({
+      projectId: p.id,
+      title: 'Urgent filter task',
+      status: 'todo',
+      priority: 1
+    })
     await s.createTask({ projectId: p.id, title: 'Low filter task 2', status: 'todo', priority: 4 })
 
     // Seed task with past due date (overdue)
@@ -43,7 +52,10 @@ test.describe('Advanced filters & group by', () => {
   test('priority filter shows only matching tasks', async ({ mainWindow }) => {
     // Find priority filter — it's a Radix Select in the filter bar
     // The filter bar has multiple selects; priority one shows "Priority" or "All"
-    const priorityTrigger = mainWindow.getByRole('combobox').filter({ hasText: /Priority|All/ }).first()
+    const priorityTrigger = mainWindow
+      .getByRole('combobox')
+      .filter({ hasText: /Priority|All/ })
+      .first()
 
     if (await priorityTrigger.isVisible().catch(() => false)) {
       await priorityTrigger.click()
@@ -61,7 +73,10 @@ test.describe('Advanced filters & group by', () => {
   })
 
   test('due date filter shows overdue tasks', async ({ mainWindow }) => {
-    const dueDateTrigger = mainWindow.getByRole('combobox').filter({ hasText: /Due|All/ }).nth(1)
+    const dueDateTrigger = mainWindow
+      .getByRole('combobox')
+      .filter({ hasText: /Due|All/ })
+      .nth(1)
 
     if (await dueDateTrigger.isVisible().catch(() => false)) {
       await dueDateTrigger.click()
@@ -94,7 +109,9 @@ test.describe('Advanced filters & group by', () => {
       await mainWindow.getByRole('option', { name: /Status/i }).click()
 
       // Verify status columns restored
-      await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({ timeout: 3_000 })
+      await expect(mainWindow.locator('h3').getByText('Inbox', { exact: true })).toBeVisible({
+        timeout: 3_000
+      })
     }
   })
 })

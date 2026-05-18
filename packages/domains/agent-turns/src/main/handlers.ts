@@ -7,12 +7,16 @@ import {
   listTurnFilesCached,
   listTreeBlobsCached,
   listWorkingChangedFiles,
-  getHeadSha,
+  getHeadSha
 } from './git-snapshot'
 import type { AgentTurnRange } from '../shared/types'
 
 function canonical(p: string): string {
-  try { return realpathSync(p) } catch { return p }
+  try {
+    return realpathSync(p)
+  } catch {
+    return p
+  }
 }
 
 /**

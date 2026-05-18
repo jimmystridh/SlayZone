@@ -22,7 +22,8 @@ const failures = []
 for (const url of targets) {
   try {
     const res = await fetch(url, { method: 'HEAD', redirect: 'manual' })
-    if (res.status !== 200) failures.push({ url, status: res.status, location: res.headers.get('location') ?? '' })
+    if (res.status !== 200)
+      failures.push({ url, status: res.status, location: res.headers.get('location') ?? '' })
   } catch (e) {
     failures.push({ url, status: 'ERR', location: String(e) })
   }
@@ -30,7 +31,8 @@ for (const url of targets) {
 
 if (failures.length) {
   console.error(`[check-urls] ${failures.length}/${targets.length} URL(s) not 200:`)
-  for (const f of failures) console.error(`  ${f.status} ${f.url}${f.location ? ` → ${f.location}` : ''}`)
+  for (const f of failures)
+    console.error(`  ${f.status} ${f.url}${f.location ? ` → ${f.location}` : ''}`)
   process.exit(1)
 }
 

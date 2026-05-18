@@ -19,7 +19,7 @@ import {
   TooltipTrigger,
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from '@slayzone/ui'
 import { Plus, Trash2, Save } from 'lucide-react'
 import type { TestCategory, TestProfile, CreateTestCategoryInput, TestLabel } from '../shared/types'
@@ -33,20 +33,37 @@ interface TestsTabProps {
 }
 
 const CUSTOM_VALUE = '__custom__'
-const COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280']
+const COLORS = [
+  '#ef4444',
+  '#f97316',
+  '#eab308',
+  '#22c55e',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
+  '#6b7280'
+]
 
 function matchProfile(categories: TestCategory[], profiles: TestProfile[]): string {
   for (const p of profiles) {
     if (p.categories.length !== categories.length) continue
-    const match = p.categories.every((pc, i) =>
-      categories[i] && pc.name === categories[i].name && pc.pattern === categories[i].pattern && pc.color === categories[i].color
+    const match = p.categories.every(
+      (pc, i) =>
+        categories[i] &&
+        pc.name === categories[i].name &&
+        pc.pattern === categories[i].pattern &&
+        pc.color === categories[i].color
     )
     if (match) return p.id
   }
   return CUSTOM_VALUE
 }
 
-export function TestsTab({ projectId, groupBy, onGroupByChange }: TestsTabProps): React.JSX.Element {
+export function TestsTab({
+  projectId,
+  groupBy,
+  onGroupByChange
+}: TestsTabProps): React.JSX.Element {
   const [profiles, setProfiles] = useState<TestProfile[]>([])
   const [categories, setCategories] = useState<TestCategory[]>([])
   const [labels, setLabels] = useState<TestLabel[]>([])
@@ -62,7 +79,9 @@ export function TestsTab({ projectId, groupBy, onGroupByChange }: TestsTabProps)
     setProfiles(profs)
   }, [projectId])
 
-  useEffect(() => { reload() }, [reload])
+  useEffect(() => {
+    reload()
+  }, [reload])
 
   const selectedProfile = matchProfile(categories, profiles)
 
@@ -166,7 +185,13 @@ export function TestsTab({ projectId, groupBy, onGroupByChange }: TestsTabProps)
           <CardAction>
             <div className="flex items-center gap-2">
               {userProfiles.some((p) => p.id === selectedProfile) && (
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => deleteProfile(selectedProfile)} title="Delete profile">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => deleteProfile(selectedProfile)}
+                  title="Delete profile"
+                >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               )}
@@ -183,9 +208,23 @@ export function TestsTab({ projectId, groupBy, onGroupByChange }: TestsTabProps)
                     <TooltipContent>Save as profile</TooltipContent>
                   </Tooltip>
                   <PopoverContent className="w-64 p-3" align="end">
-                    <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); saveAsProfile(fd.get('name') as string) }} className="flex items-center gap-2">
-                      <Input name="name" className="h-8 text-sm" placeholder="Profile name" autoFocus />
-                      <Button type="submit" size="sm" className="h-8 shrink-0">Save</Button>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        const fd = new FormData(e.currentTarget)
+                        saveAsProfile(fd.get('name') as string)
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Input
+                        name="name"
+                        className="h-8 text-sm"
+                        placeholder="Profile name"
+                        autoFocus
+                      />
+                      <Button type="submit" size="sm" className="h-8 shrink-0">
+                        Save
+                      </Button>
                     </form>
                   </PopoverContent>
                 </Popover>
@@ -208,7 +247,13 @@ export function TestsTab({ projectId, groupBy, onGroupByChange }: TestsTabProps)
                   <SelectItem value={CUSTOM_VALUE}>Custom</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={addCategory} title="Add category">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={addCategory}
+                title="Add category"
+              >
                 <Plus className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -238,10 +283,16 @@ export function TestsTab({ projectId, groupBy, onGroupByChange }: TestsTabProps)
                 defaultValue={cat.pattern}
                 placeholder="e.g. **/*.test.ts"
                 onBlur={(e) => {
-                  if (e.target.value !== cat.pattern) updateCategory(cat.id, 'pattern', e.target.value)
+                  if (e.target.value !== cat.pattern)
+                    updateCategory(cat.id, 'pattern', e.target.value)
                 }}
               />
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => deleteCategory(cat.id)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => deleteCategory(cat.id)}
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -257,7 +308,13 @@ export function TestsTab({ projectId, groupBy, onGroupByChange }: TestsTabProps)
             <CardDescription>Manually tag test files.</CardDescription>
           </div>
           <CardAction>
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={addLabel} title="Add label">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={addLabel}
+              title="Add label"
+            >
               <Plus className="h-3.5 w-3.5" />
             </Button>
           </CardAction>
@@ -281,7 +338,12 @@ export function TestsTab({ projectId, groupBy, onGroupByChange }: TestsTabProps)
                   if (e.target.value !== label.name) updateLabel(label.id, 'name', e.target.value)
                 }}
               />
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => deleteLabel(label.id)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => deleteLabel(label.id)}
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>

@@ -15,7 +15,7 @@ export interface IpcTelemetryEntry<E extends TelemetryEventName = TelemetryEvent
 // Helper for bare events (no payload)
 const bare = <E extends TelemetryEventName>(event: E): IpcTelemetryEntry<E> => ({
   event,
-  props: () => ({} as TelemetryEventProps[E])
+  props: () => ({}) as TelemetryEventProps[E]
 })
 
 export const IPC_TELEMETRY_MAP: Record<string, IpcTelemetryEntry> = {
@@ -112,5 +112,5 @@ export const IPC_TELEMETRY_MAP: Record<string, IpcTelemetryEntry> = {
     event: 'data_exported',
     props: () => ({ format: 'slay' })
   },
-  'exportImport:import': bare('data_imported'),
+  'exportImport:import': bare('data_imported')
 }

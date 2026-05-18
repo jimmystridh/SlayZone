@@ -18,7 +18,7 @@ function rowToMessage(row: Row): QueuedChatMessage {
     send: row.send,
     original: row.original,
     position: row.position,
-    createdAt: row.created_at,
+    createdAt: row.created_at
   }
 }
 

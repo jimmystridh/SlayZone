@@ -22,7 +22,9 @@ export function getAllowedStatusesText(columns: ColumnConfig[] | null): string {
 
 export function buildDefaultProviderConfig(db: Database): ProviderConfig {
   const providerConfig: ProviderConfig = {}
-  const allModes = db.prepare('SELECT id, default_flags FROM terminal_modes WHERE enabled = 1').all() as Array<{ id: string; default_flags: string | null }>
+  const allModes = db
+    .prepare('SELECT id, default_flags FROM terminal_modes WHERE enabled = 1')
+    .all() as Array<{ id: string; default_flags: string | null }>
   for (const row of allModes) {
     providerConfig[row.id] = { flags: row.default_flags ?? '' }
   }

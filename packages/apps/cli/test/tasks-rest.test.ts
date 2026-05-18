@@ -45,22 +45,60 @@ const dbPath = path.join(tmpDir, 'slayzone.dev.sqlite')
 
 const db = new Database(dbPath)
 for (const pragma of DB_PRAGMAS) db.pragma(pragma)
-const migrationsPath = path.resolve(import.meta.dirname, '../../../apps/app/src/main/db/migrations.ts')
+const migrationsPath = path.resolve(
+  import.meta.dirname,
+  '../../../apps/app/src/main/db/migrations.ts'
+)
 const mod = await import(migrationsPath)
 mod.runMigrations(db)
 
 const projectId = crypto.randomUUID()
-db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(projectId, 'CLIREST', '#000', tmpDir)
+db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(
+  projectId,
+  'CLIREST',
+  '#000',
+  tmpDir
+)
 
 let notifyCount = 0
 const app = express()
 app.use(express.json())
-registerCreateTaskRoute(app, { db, notifyRenderer: () => { notifyCount++ } })
-registerUpdateTaskRoute(app, { db, notifyRenderer: () => { notifyCount++ } })
-registerArchiveTaskRoute(app, { db, notifyRenderer: () => { notifyCount++ } })
-registerDeleteTaskRoute(app, { db, notifyRenderer: () => { notifyCount++ } })
-registerUnarchiveTaskRoute(app, { db, notifyRenderer: () => { notifyCount++ } })
-registerOpenTaskRoute(app, { db, notifyRenderer: () => { notifyCount++ } } as never)
+registerCreateTaskRoute(app, {
+  db,
+  notifyRenderer: () => {
+    notifyCount++
+  }
+})
+registerUpdateTaskRoute(app, {
+  db,
+  notifyRenderer: () => {
+    notifyCount++
+  }
+})
+registerArchiveTaskRoute(app, {
+  db,
+  notifyRenderer: () => {
+    notifyCount++
+  }
+})
+registerDeleteTaskRoute(app, {
+  db,
+  notifyRenderer: () => {
+    notifyCount++
+  }
+})
+registerUnarchiveTaskRoute(app, {
+  db,
+  notifyRenderer: () => {
+    notifyCount++
+  }
+})
+registerOpenTaskRoute(app, {
+  db,
+  notifyRenderer: () => {
+    notifyCount++
+  }
+} as never)
 
 // Capture app:open-task broadcasts + window show/focus calls.
 const openTaskBroadcasts: Array<{ taskId: string; background: boolean }> = []
@@ -72,12 +110,16 @@ const fakeWin = {
       if (channel === 'app:open-task') {
         openTaskBroadcasts.push({ taskId: args[0] as string, background: args[1] as boolean })
       }
-    },
+    }
   },
   isMinimized: () => false,
   restore: () => {},
-  show: () => { showCalled++ },
-  focus: () => { focusCalled++ },
+  show: () => {
+    showCalled++
+  },
+  focus: () => {
+    focusCalled++
+  }
 }
 ;(BrowserWindow as unknown as { getAllWindows: () => unknown[] }).getAllWindows = () => [fakeWin]
 function resetOpenSpies(): void {
@@ -87,15 +129,22 @@ function resetOpenSpies(): void {
 }
 const rest = await mountRestApp(app)
 
-interface CliResult { exitCode: number | null; stdout: string; stderr: string }
+interface CliResult {
+  exitCode: number | null
+  stdout: string
+  stderr: string
+}
 
-function runCli(args: string[], envOverrides: Record<string, string | undefined> = {}): Promise<CliResult> {
+function runCli(
+  args: string[],
+  envOverrides: Record<string, string | undefined> = {}
+): Promise<CliResult> {
   return new Promise((resolve) => {
     const env: Record<string, string> = {
-      ...process.env as Record<string, string>,
+      ...(process.env as Record<string, string>),
       SLAYZONE_DB_PATH: dbPath,
       SLAYZONE_DEV: '1',
-      SLAYZONE_MCP_PORT: String(rest.port),
+      SLAYZONE_MCP_PORT: String(rest.port)
     }
     for (const [k, v] of Object.entries(envOverrides)) {
       if (v === undefined) delete env[k]
@@ -104,8 +153,12 @@ function runCli(args: string[], envOverrides: Record<string, string | undefined>
     const p = spawn('node', [SLAY_BIN, ...args], { env, stdio: ['ignore', 'pipe', 'pipe'] })
     let stdout = ''
     let stderr = ''
-    p.stdout.on('data', (d) => { stdout += d.toString() })
-    p.stderr.on('data', (d) => { stderr += d.toString() })
+    p.stdout.on('data', (d) => {
+      stdout += d.toString()
+    })
+    p.stderr.on('data', (d) => {
+      stderr += d.toString()
+    })
     p.on('close', (code) => resolve({ exitCode: code, stdout, stderr }))
   })
 }
@@ -119,7 +172,9 @@ await describe('CLI tasks create → REST', () => {
     spy.stop()
     expect(r.exitCode).toBe(0)
     expect(r.stdout.startsWith('Created:')).toBe(true)
-    const row = db.prepare('SELECT id, title FROM tasks WHERE title = ?').get('From CLI') as { id: string; title: string } | undefined
+    const row = db.prepare('SELECT id, title FROM tasks WHERE title = ?').get('From CLI') as
+      | { id: string; title: string }
+      | undefined
     expect(row?.title).toBe('From CLI')
     expect(spy.calls.length).toBe(1)
     const emits = __ipcEmitCalls.filter((c) => c[0] === 'db:tasks:create:done')
@@ -128,9 +183,22 @@ await describe('CLI tasks create → REST', () => {
   })
 
   test('happy: --description, --priority, --status forwarded through REST', async () => {
-    const r = await runCli(['tasks', 'create', 'Detailed', '--project', 'CLIREST', '--description', 'desc text', '--priority', '1', '--status', 'todo'])
+    const r = await runCli([
+      'tasks',
+      'create',
+      'Detailed',
+      '--project',
+      'CLIREST',
+      '--description',
+      'desc text',
+      '--priority',
+      '1',
+      '--status',
+      'todo'
+    ])
     expect(r.exitCode).toBe(0)
-    const row = db.prepare('SELECT title, description, priority, status FROM tasks WHERE title = ?')
+    const row = db
+      .prepare('SELECT title, description, priority, status FROM tasks WHERE title = ?')
       .get('Detailed') as { title: string; description: string; priority: number; status: string }
     expect(row.priority).toBe(1)
     expect(row.status).toBe('todo')
@@ -147,8 +215,9 @@ await describe('CLI tasks create → REST', () => {
 await describe('CLI tasks update → REST', () => {
   test('happy: PATCH /api/tasks/:id; DB updates; taskEvents fires', async () => {
     const id = crypto.randomUUID()
-    db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)')
-      .run(id, projectId, 'OrigTitle', 'todo', 3, 0)
+    db.prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(id, projectId, 'OrigTitle', 'todo', 3, 0)
     __resetIpcEmitCalls()
     const spy = spyTaskEvents(taskEvents, 'task:updated')
     const r = await runCli(['tasks', 'update', id, '--title', 'NewTitle'])
@@ -169,9 +238,11 @@ await describe('CLI tasks update --worktree-path', () => {
       encoding: 'utf-8',
       env: {
         ...process.env,
-        GIT_AUTHOR_NAME: 'Test', GIT_AUTHOR_EMAIL: 't@t.com',
-        GIT_COMMITTER_NAME: 'Test', GIT_COMMITTER_EMAIL: 't@t.com',
-      },
+        GIT_AUTHOR_NAME: 'Test',
+        GIT_AUTHOR_EMAIL: 't@t.com',
+        GIT_COMMITTER_NAME: 'Test',
+        GIT_COMMITTER_EMAIL: 't@t.com'
+      }
     }).trim()
   }
 
@@ -183,21 +254,31 @@ await describe('CLI tasks update --worktree-path', () => {
     git('git -c commit.gpgsign=false commit -qm init', wtProjectDir)
 
     const wtProjectId = crypto.randomUUID()
-    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
-      .run(wtProjectId, 'WTPROJ', '#000', wtProjectDir)
+    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(
+      wtProjectId,
+      'WTPROJ',
+      '#000',
+      wtProjectDir
+    )
 
     const wtPath = path.join(os.tmpdir(), `slay-wt-${crypto.randomUUID().slice(0, 8)}`)
     git(`git worktree add -b feature-x ${wtPath}`, wtProjectDir)
 
     const taskId = crypto.randomUUID()
-    db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)')
-      .run(taskId, wtProjectId, 'Link me', 'todo', 3, 0)
+    db.prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(taskId, wtProjectId, 'Link me', 'todo', 3, 0)
 
     const r = await runCli(['tasks', 'update', taskId, '--worktree-path', wtPath])
     expect(r.exitCode).toBe(0)
 
-    const row = db.prepare('SELECT worktree_path, worktree_parent_branch, repo_name FROM tasks WHERE id = ?')
-      .get(taskId) as { worktree_path: string; worktree_parent_branch: string; repo_name: string | null }
+    const row = db
+      .prepare('SELECT worktree_path, worktree_parent_branch, repo_name FROM tasks WHERE id = ?')
+      .get(taskId) as {
+      worktree_path: string
+      worktree_parent_branch: string
+      repo_name: string | null
+    }
     expect(row.worktree_path).toBe(path.resolve(wtPath))
     expect(row.worktree_parent_branch).toBe('main')
     expect(row.repo_name).toBeNull()
@@ -216,21 +297,31 @@ await describe('CLI tasks update --worktree-path', () => {
     git('git -c commit.gpgsign=false commit -qm init', childRepo)
 
     const wtProjectId = crypto.randomUUID()
-    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
-      .run(wtProjectId, 'WTMULTI', '#000', wtProjectDir)
+    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(
+      wtProjectId,
+      'WTMULTI',
+      '#000',
+      wtProjectDir
+    )
 
     const wtPath = path.join(os.tmpdir(), `slay-wt-${crypto.randomUUID().slice(0, 8)}`)
     git(`git worktree add -b feature-y ${wtPath}`, childRepo)
 
     const taskId = crypto.randomUUID()
-    db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)')
-      .run(taskId, wtProjectId, 'Multi link', 'todo', 3, 0)
+    db.prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(taskId, wtProjectId, 'Multi link', 'todo', 3, 0)
 
     const r = await runCli(['tasks', 'update', taskId, '--worktree-path', wtPath])
     expect(r.exitCode).toBe(0)
 
-    const row = db.prepare('SELECT worktree_path, worktree_parent_branch, repo_name FROM tasks WHERE id = ?')
-      .get(taskId) as { worktree_path: string; worktree_parent_branch: string; repo_name: string | null }
+    const row = db
+      .prepare('SELECT worktree_path, worktree_parent_branch, repo_name FROM tasks WHERE id = ?')
+      .get(taskId) as {
+      worktree_path: string
+      worktree_parent_branch: string
+      repo_name: string | null
+    }
     expect(row.worktree_path).toBe(path.resolve(wtPath))
     expect(row.worktree_parent_branch).toBe('main')
     expect(row.repo_name).toBe('svc-a')
@@ -242,8 +333,9 @@ await describe('CLI tasks update --worktree-path', () => {
   test('error: path not a git worktree', async () => {
     const bogus = fs.mkdtempSync(path.join(os.tmpdir(), 'slay-wt-bogus-'))
     const taskId = crypto.randomUUID()
-    db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)')
-      .run(taskId, projectId, 'Bogus link', 'todo', 3, 0)
+    db.prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(taskId, projectId, 'Bogus link', 'todo', 3, 0)
     const r = await runCli(['tasks', 'update', taskId, '--worktree-path', bogus])
     expect(r.exitCode).toBe(1)
     expect(r.stderr.includes('Not a git worktree')).toBe(true)
@@ -258,8 +350,12 @@ await describe('CLI tasks update --worktree-path', () => {
     git('git -c commit.gpgsign=false commit -qm init', wtProjectDir)
 
     const wtProjectId = crypto.randomUUID()
-    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)')
-      .run(wtProjectId, 'WTORPH', '#000', wtProjectDir)
+    db.prepare('INSERT INTO projects (id, name, color, path) VALUES (?, ?, ?, ?)').run(
+      wtProjectId,
+      'WTORPH',
+      '#000',
+      wtProjectDir
+    )
 
     // Worktree under a foreign repo
     const foreignRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'slay-wt-foreign-'))
@@ -271,8 +367,9 @@ await describe('CLI tasks update --worktree-path', () => {
     git(`git worktree add -b feature-z ${wtPath}`, foreignRepo)
 
     const taskId = crypto.randomUUID()
-    db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)')
-      .run(taskId, wtProjectId, 'Orphan link', 'todo', 3, 0)
+    db.prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(taskId, wtProjectId, 'Orphan link', 'todo', 3, 0)
 
     const r = await runCli(['tasks', 'update', taskId, '--worktree-path', wtPath])
     expect(r.exitCode).toBe(1)
@@ -287,14 +384,17 @@ await describe('CLI tasks update --worktree-path', () => {
 await describe('CLI tasks archive → REST', () => {
   test('happy: POST /api/tasks/:id/archive; DB archived_at set; taskEvents fires', async () => {
     const id = crypto.randomUUID()
-    db.prepare('INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)')
-      .run(id, projectId, 'ToArchive', 'todo', 3, 0)
+    db.prepare(
+      'INSERT INTO tasks (id, project_id, title, status, priority, "order") VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(id, projectId, 'ToArchive', 'todo', 3, 0)
     __resetIpcEmitCalls()
     const spy = spyTaskEvents(taskEvents, 'task:archived')
     const r = await runCli(['tasks', 'archive', id])
     spy.stop()
     expect(r.exitCode).toBe(0)
-    const row = db.prepare('SELECT archived_at FROM tasks WHERE id = ?').get(id) as { archived_at: string | null }
+    const row = db.prepare('SELECT archived_at FROM tasks WHERE id = ?').get(id) as {
+      archived_at: string | null
+    }
     expect(row.archived_at !== null).toBe(true)
     expect(spy.calls.length).toBe(1)
   })
@@ -337,14 +437,18 @@ await describe('CLI tasks open → REST /api/open-task', () => {
 await describe('CLI app-down path', () => {
   test('apiPost exits with helpful stderr when REST unreachable', async () => {
     // Reserved port 1 — connection refused immediately
-    const r = await runCli(['tasks', 'create', 'Lost', '--project', 'CLIREST'], { SLAYZONE_MCP_PORT: '1' })
+    const r = await runCli(['tasks', 'create', 'Lost', '--project', 'CLIREST'], {
+      SLAYZONE_MCP_PORT: '1'
+    })
     expect(r.exitCode).toBe(1)
     expect(r.stderr.includes('not running') || r.stderr.includes('could not connect')).toBe(true)
   })
 
   test('exits when no MCP port configured at all (env unset, settings empty)', async () => {
     db.prepare("DELETE FROM settings WHERE key = 'mcp_server_port'").run()
-    const r = await runCli(['tasks', 'create', 'Lost2', '--project', 'CLIREST'], { SLAYZONE_MCP_PORT: undefined })
+    const r = await runCli(['tasks', 'create', 'Lost2', '--project', 'CLIREST'], {
+      SLAYZONE_MCP_PORT: undefined
+    })
     expect(r.exitCode).toBe(1)
     expect(r.stderr.includes('MCP port not found')).toBe(true)
   })

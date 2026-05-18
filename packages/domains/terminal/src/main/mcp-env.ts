@@ -16,7 +16,7 @@ import { HOOK_SUPPORTED_AGENT_IDS, type AgentId, type TerminalMode } from '../sh
 export function buildMcpEnv(
   db: Database | null | undefined,
   taskId: string | undefined,
-  mode?: TerminalMode,
+  mode?: TerminalMode
 ): Record<string, string> {
   const env: Record<string, string> = {}
   if (taskId) {

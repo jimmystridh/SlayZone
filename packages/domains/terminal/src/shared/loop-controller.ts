@@ -1,7 +1,14 @@
 import type { LoopConfig } from './types'
 import { checkCriteria } from './ansi'
 
-export type LoopStatus = 'idle' | 'running' | 'paused' | 'passed' | 'stopped' | 'error' | 'max-reached'
+export type LoopStatus =
+  | 'idle'
+  | 'running'
+  | 'paused'
+  | 'passed'
+  | 'stopped'
+  | 'error'
+  | 'max-reached'
 
 export function isLoopActive(status: LoopStatus): boolean {
   return status === 'running'
@@ -42,7 +49,7 @@ export interface LoopHandlers {
  */
 export function makeLoopController<Marker>(
   transport: LoopTransport<Marker>,
-  handlers: LoopHandlers,
+  handlers: LoopHandlers
 ): LoopController {
   let active = false
   let disposed = false
@@ -51,8 +58,13 @@ export function makeLoopController<Marker>(
   let marker: Marker | null = null
   let pendingTimer: ReturnType<typeof setTimeout> | null = null
 
-  const setStatus = (s: LoopStatus) => { if (!disposed) handlers.onStatus(s) }
-  const setIter = (n: number) => { iteration = n; if (!disposed) handlers.onIteration(n) }
+  const setStatus = (s: LoopStatus) => {
+    if (!disposed) handlers.onStatus(s)
+  }
+  const setIter = (n: number) => {
+    iteration = n
+    if (!disposed) handlers.onIteration(n)
+  }
 
   const runIteration = (): void => {
     pendingTimer = null
@@ -113,9 +125,23 @@ export function makeLoopController<Marker>(
       setStatus('idle')
       runIteration()
     },
-    pause: () => { active = false; cancelPending(); setStatus('paused') },
-    resume: () => { active = true; setStatus('idle'); runIteration() },
-    stop: () => { active = false; cancelPending(); iteration = 0; if (!disposed) handlers.onIteration(0); setStatus('stopped') },
+    pause: () => {
+      active = false
+      cancelPending()
+      setStatus('paused')
+    },
+    resume: () => {
+      active = true
+      setStatus('idle')
+      runIteration()
+    },
+    stop: () => {
+      active = false
+      cancelPending()
+      iteration = 0
+      if (!disposed) handlers.onIteration(0)
+      setStatus('stopped')
+    },
     dispose: () => {
       // Tear down: cancel scheduled work + unsubscribe transport hooks.
       // `disposed` flag silences any in-flight async work that lands after
@@ -125,6 +151,6 @@ export function makeLoopController<Marker>(
       cancelPending()
       unsubIdle()
       unsubExit()
-    },
+    }
   }
 }

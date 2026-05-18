@@ -15,7 +15,7 @@ export const getStaticPaths = (async () => {
   const canons = await listEditorialCompetitors()
   return canons.map((canon) => ({
     params: { competitor: canon.slug },
-    props: { canon },
+    props: { canon }
   }))
 }) satisfies GetStaticPaths
 
@@ -28,7 +28,7 @@ const editorial = competitor.editorial!
 
 const competitorHeroes = import.meta.glob<{ default: ImageMetadata }>(
   '../../../../comparison/*/assets/homepage-hero.png',
-  { eager: true },
+  { eager: true }
 )
 const competitorHeroPath = `../../../../comparison/${competitor.slug}/assets/homepage-hero.png`
 const competitorHero = competitorHeroes[competitorHeroPath]?.default
@@ -40,7 +40,7 @@ const competitorHeroAsset = competitor.assets?.[0]
 const allRows = buildHeadToHeadRows(competitor)
 const scorecardRows = buildHeadToHeadRows(
   competitor,
-  editorial.scorecard_axes as HeadToHeadAxisKey[],
+  editorial.scorecard_axes as HeadToHeadAxisKey[]
 )
 const factBadges = [`Last checked ${competitor.last_checked}`]
 

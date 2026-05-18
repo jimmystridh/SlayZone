@@ -17,11 +17,13 @@ export function useTaskTagIds(
     const refresh = (): void => {
       window.api.taskTags
         .getTagsForTask(taskId)
-        .then(tags => setTagIds(tags.map(t => t.id)))
+        .then((tags) => setTagIds(tags.map((t) => t.id)))
         .catch(() => {})
     }
     const cleanup = window.api?.app?.onTasksChanged?.(refresh)
-    return () => { cleanup?.() }
+    return () => {
+      cleanup?.()
+    }
   }, [taskId])
 
   return { tagIds, setTagIds }

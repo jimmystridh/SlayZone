@@ -19,7 +19,12 @@ export class VersionError extends Error {
     this.details = details
   }
 
-  toJSON(): { name: string; code: VersionErrorCode; message: string; details: Record<string, unknown> } {
+  toJSON(): {
+    name: string
+    code: VersionErrorCode
+    message: string
+    details: Record<string, unknown>
+  } {
     return { name: this.name, code: this.code, message: this.message, details: this.details }
   }
 }

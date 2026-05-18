@@ -3,7 +3,15 @@ import archiver from 'archiver'
 import crypto from 'crypto'
 import fs from 'fs'
 import path from 'path'
-import { openDb, notifyApp, postJson, getArtifactsDir, getDataDir, getMcpPort, type SlayDb } from '../../db'
+import {
+  openDb,
+  notifyApp,
+  postJson,
+  getArtifactsDir,
+  getDataDir,
+  getMcpPort,
+  type SlayDb
+} from '../../db'
 import {
   BlobStore,
   createVersion,
@@ -18,7 +26,7 @@ import {
   diffVersions,
   pruneVersions,
   nodeSqliteTxn,
-  isVersionError,
+  isVersionError
 } from '@slayzone/task-artifacts/main'
 import {
   getExtensionFromTitle,
@@ -27,7 +35,7 @@ import {
   canExportAsPdf,
   canExportAsPng,
   canExportAsHtml,
-  type RenderMode,
+  type RenderMode
 } from '@slayzone/task/shared/types'
 import { apiPost } from '../../api'
 import { cliAuthor } from './_shared'
@@ -63,7 +71,9 @@ function resolveArtifact(db: SlayDb, prefix: string): ArtifactRow {
     process.exit(1)
   }
   if (rows.length > 1) {
-    console.error(`Ambiguous artifact id "${prefix}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous artifact id "${prefix}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
   return rows[0]
@@ -84,7 +94,9 @@ function resolveTaskForArtifact(db: SlayDb, taskOpt?: string): { id: string; tit
     process.exit(1)
   }
   if (rows.length > 1) {
-    console.error(`Ambiguous task id "${ref}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous task id "${ref}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
   return rows[0]
@@ -100,13 +112,20 @@ function resolveFolder(db: SlayDb, prefix: string): ArtifactFolderRow {
     process.exit(1)
   }
   if (rows.length > 1) {
-    console.error(`Ambiguous folder id "${prefix}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`)
+    console.error(
+      `Ambiguous folder id "${prefix}". Matches: ${rows.map((r) => r.id.slice(0, 8)).join(', ')}`
+    )
     process.exit(1)
   }
   return rows[0]
 }
 
-function artifactFilePath(artifactsDir: string, taskId: string, artifactId: string, title: string): string {
+function artifactFilePath(
+  artifactsDir: string,
+  taskId: string,
+  artifactId: string,
+  title: string
+): string {
   const ext = getExtensionFromTitle(title) || '.txt'
   return path.join(artifactsDir, taskId, `${artifactId}${ext}`)
 }
@@ -116,17 +135,23 @@ function printArtifacts(artifacts: ArtifactRow[], folders?: ArtifactFolderRow[])
     console.log('No artifacts.')
     return
   }
-  const folderMap = new Map((folders ?? []).map(f => [f.id, f.name]))
+  const folderMap = new Map((folders ?? []).map((f) => [f.id, f.name]))
   const idW = 9
   const titleW = 24
   const modeW = 16
   const folderW = 14
-  console.log(`${'ID'.padEnd(idW)}  ${'TITLE'.padEnd(titleW)}  ${'FOLDER'.padEnd(folderW)}  ${'MODE'.padEnd(modeW)}  CREATED`)
-  console.log(`${'-'.repeat(idW)}  ${'-'.repeat(titleW)}  ${'-'.repeat(folderW)}  ${'-'.repeat(modeW)}  ${'-'.repeat(20)}`)
+  console.log(
+    `${'ID'.padEnd(idW)}  ${'TITLE'.padEnd(titleW)}  ${'FOLDER'.padEnd(folderW)}  ${'MODE'.padEnd(modeW)}  CREATED`
+  )
+  console.log(
+    `${'-'.repeat(idW)}  ${'-'.repeat(titleW)}  ${'-'.repeat(folderW)}  ${'-'.repeat(modeW)}  ${'-'.repeat(20)}`
+  )
   for (const a of artifacts) {
     const id = a.id.slice(0, 8).padEnd(idW)
     const title = a.title.slice(0, titleW).padEnd(titleW)
-    const folder = (a.folder_id ? (folderMap.get(a.folder_id) ?? '?') : '').slice(0, folderW).padEnd(folderW)
+    const folder = (a.folder_id ? (folderMap.get(a.folder_id) ?? '?') : '')
+      .slice(0, folderW)
+      .padEnd(folderW)
     const mode = getEffectiveRenderMode(a.title, a.render_mode as RenderMode | null).padEnd(modeW)
     const created = a.created_at.slice(0, 19)
     console.log(`${id}  ${title}  ${folder}  ${mode}  ${created}`)
@@ -139,7 +164,7 @@ function printArtifactTree(artifacts: ArtifactRow[], folders: ArtifactFolderRow[
     return
   }
   // Build folder path map
-  const byId = new Map(folders.map(f => [f.id, f]))
+  const byId = new Map(folders.map((f) => [f.id, f]))
   function folderPath(id: string): string {
     const f = byId.get(id)
     if (!f) return '?'
@@ -215,7 +240,10 @@ interface SearchResult {
 const MAX_SCAN_BYTES = 5_000_000
 const SNIPPET_MAX = 200
 
-function compileMatcher(query: string, opts: { regex?: boolean; caseSensitive?: boolean }): SearchMatcher {
+function compileMatcher(
+  query: string,
+  opts: { regex?: boolean; caseSensitive?: boolean }
+): SearchMatcher {
   if (opts.regex) {
     try {
       const re = new RegExp(query, opts.caseSensitive ? '' : 'i')
@@ -239,7 +267,11 @@ function sanitizeSnippet(s: string): string {
   return cleaned.length > SNIPPET_MAX ? cleaned.slice(0, SNIPPET_MAX) + '…' : cleaned
 }
 
-function scanContentForMatches(content: string, matcher: SearchMatcher, maxMatches: number): SearchMatch[] {
+function scanContentForMatches(
+  content: string,
+  matcher: SearchMatcher,
+  maxMatches: number
+): SearchMatch[] {
   const lines = content.split('\n')
   const out: SearchMatch[] = []
   for (let i = 0; i < lines.length; i++) {
@@ -249,7 +281,7 @@ function scanContentForMatches(content: string, matcher: SearchMatcher, maxMatch
         line: i + 1,
         snippet: sanitizeSnippet(lines[i]),
         contextBefore: i > 0 ? sanitizeSnippet(lines[i - 1]) : null,
-        contextAfter: i + 1 < lines.length ? sanitizeSnippet(lines[i + 1]) : null,
+        contextAfter: i + 1 < lines.length ? sanitizeSnippet(lines[i + 1]) : null
       })
       if (out.length >= maxMatches) break
     }
@@ -266,7 +298,9 @@ function loadArtifactContent(
   const version = getCurrentVersion(raw, artifactId)
   if (!version) return null
   if (version.size > MAX_SCAN_BYTES) {
-    process.stderr.write(`[skipped large artifact] ${artifactLabel} (${(version.size / 1_000_000).toFixed(1)}MB)\n`)
+    process.stderr.write(
+      `[skipped large artifact] ${artifactLabel} (${(version.size / 1_000_000).toFixed(1)}MB)\n`
+    )
     return null
   }
   try {
@@ -277,7 +311,11 @@ function loadArtifactContent(
   }
 }
 
-function printSearchResultsHuman(results: SearchResult[], scannedCount: number, truncated: boolean): void {
+function printSearchResultsHuman(
+  results: SearchResult[],
+  scannedCount: number,
+  truncated: boolean
+): void {
   if (results.length === 0) {
     console.log('No matches.')
     return
@@ -309,7 +347,9 @@ function printSearchResultsJson(results: SearchResult[]): void {
 export function artifactsSubcommand(): Command {
   // Deprecated alias: `slay tasks assets` still works for one release.
   if (process.argv[3] === 'assets') {
-    console.error('[deprecated] `slay tasks assets` is deprecated. Use `slay tasks artifacts`. Will be removed next release.')
+    console.error(
+      '[deprecated] `slay tasks assets` is deprecated. Use `slay tasks artifacts`. Will be removed next release.'
+    )
   }
 
   const cmd = new Command('artifacts')
@@ -473,12 +513,13 @@ export function artifactsSubcommand(): Command {
       const folderId = opts.folder ? resolveFolder(db, opts.folder).id : null
       const id = crypto.randomUUID()
       const now = new Date().toISOString()
-      const maxOrder = db.query<{ m: number | null }>(
-        folderId
-          ? `SELECT MAX("order") as m FROM task_artifacts WHERE task_id = :taskId AND folder_id = :folderId`
-          : `SELECT MAX("order") as m FROM task_artifacts WHERE task_id = :taskId AND folder_id IS NULL`,
-        folderId ? { ':taskId': task.id, ':folderId': folderId } : { ':taskId': task.id }
-      )[0]?.m ?? -1
+      const maxOrder =
+        db.query<{ m: number | null }>(
+          folderId
+            ? `SELECT MAX("order") as m FROM task_artifacts WHERE task_id = :taskId AND folder_id = :folderId`
+            : `SELECT MAX("order") as m FROM task_artifacts WHERE task_id = :taskId AND folder_id IS NULL`,
+          folderId ? { ':taskId': task.id, ':folderId': folderId } : { ':taskId': task.id }
+        )[0]?.m ?? -1
 
       db.run(
         `INSERT INTO task_artifacts (id, task_id, folder_id, title, render_mode, "order", created_at, updated_at)
@@ -490,7 +531,7 @@ export function artifactsSubcommand(): Command {
           ':title': title,
           ':renderMode': opts.renderMode ?? null,
           ':order': maxOrder + 1,
-          ':now': now,
+          ':now': now
         }
       )
 
@@ -518,7 +559,7 @@ export function artifactsSubcommand(): Command {
       createVersion(raw, nodeSqliteTxn(raw), blobStore, {
         artifactId: id,
         bytes,
-        author: cliAuthor(),
+        author: cliAuthor()
       })
 
       db.close()
@@ -527,7 +568,21 @@ export function artifactsSubcommand(): Command {
       if (openPort) await postJson(openPort, `/api/open-artifact/${id}`)
 
       if (opts.json) {
-        console.log(JSON.stringify({ id, task_id: task.id, title, render_mode: opts.renderMode ?? null, order: maxOrder + 1, created_at: now, updated_at: now }, null, 2))
+        console.log(
+          JSON.stringify(
+            {
+              id,
+              task_id: task.id,
+              title,
+              render_mode: opts.renderMode ?? null,
+              order: maxOrder + 1,
+              created_at: now,
+              updated_at: now
+            },
+            null,
+            2
+          )
+        )
       } else {
         console.log(`Created: ${id.slice(0, 8)}  ${title}`)
       }
@@ -550,10 +605,11 @@ export function artifactsSubcommand(): Command {
       const id = crypto.randomUUID()
       const title = opts.title ?? path.basename(sourcePath)
       const now = new Date().toISOString()
-      const maxOrder = db.query<{ m: number | null }>(
-        `SELECT MAX("order") as m FROM task_artifacts WHERE task_id = :taskId`,
-        { ':taskId': task.id }
-      )[0]?.m ?? -1
+      const maxOrder =
+        db.query<{ m: number | null }>(
+          `SELECT MAX("order") as m FROM task_artifacts WHERE task_id = :taskId`,
+          { ':taskId': task.id }
+        )[0]?.m ?? -1
 
       db.run(
         `INSERT INTO task_artifacts (id, task_id, title, "order", created_at, updated_at)
@@ -572,7 +628,7 @@ export function artifactsSubcommand(): Command {
       createVersion(raw, nodeSqliteTxn(raw), blobStore, {
         artifactId: id,
         bytes: fs.readFileSync(fp),
-        author: cliAuthor(),
+        author: cliAuthor()
       })
 
       db.close()
@@ -581,7 +637,13 @@ export function artifactsSubcommand(): Command {
       if (openPort) await postJson(openPort, `/api/open-artifact/${id}`)
 
       if (opts.json) {
-        console.log(JSON.stringify({ id, task_id: task.id, title, order: maxOrder + 1, created_at: now, updated_at: now }, null, 2))
+        console.log(
+          JSON.stringify(
+            { id, task_id: task.id, title, order: maxOrder + 1, created_at: now, updated_at: now },
+            null,
+            2
+          )
+        )
       } else {
         console.log(`Uploaded: ${id.slice(0, 8)}  ${title}`)
       }
@@ -603,7 +665,9 @@ export function artifactsSubcommand(): Command {
       const artifact = resolveArtifact(db, artifactId)
 
       const sets: string[] = []
-      const params: Record<string, string | number | bigint | null | Uint8Array> = { ':id': artifact.id }
+      const params: Record<string, string | number | bigint | null | Uint8Array> = {
+        ':id': artifact.id
+      }
 
       if (opts.title !== undefined) {
         sets.push('title = :title')
@@ -613,7 +677,7 @@ export function artifactsSubcommand(): Command {
         sets.push('render_mode = :renderMode')
         params[':renderMode'] = opts.renderMode
       }
-      sets.push("updated_at = :now")
+      sets.push('updated_at = :now')
       params[':now'] = new Date().toISOString()
 
       db.run(`UPDATE task_artifacts SET ${sets.join(', ')} WHERE id = :id`, params)
@@ -639,7 +703,12 @@ export function artifactsSubcommand(): Command {
 
       const newTitle = opts.title ?? artifact.title
       if (opts.json) {
-        const updated = { ...artifact, title: newTitle, render_mode: opts.renderMode ?? artifact.render_mode, updated_at: params[':now'] }
+        const updated = {
+          ...artifact,
+          title: newTitle,
+          render_mode: opts.renderMode ?? artifact.render_mode,
+          updated_at: params[':now']
+        }
         console.log(JSON.stringify(updated, null, 2))
       } else {
         console.log(`Updated: ${artifact.id.slice(0, 8)}  ${newTitle}`)
@@ -650,7 +719,10 @@ export function artifactsSubcommand(): Command {
   cmd
     .command('write <artifactId>')
     .description('Replace artifact content from stdin')
-    .option('--mutate-version [ref]', 'Bare: autosave to current (auto-branches if locked). With ref: bypass lock and mutate the target version in place')
+    .option(
+      '--mutate-version [ref]',
+      'Bare: autosave to current (auto-branches if locked). With ref: bypass lock and mutate the target version in place'
+    )
     .action(async (artifactId: string, opts: { mutateVersion?: boolean | string }) => {
       const db = openDb()
       const artifact = resolveArtifact(db, artifactId)
@@ -667,14 +739,28 @@ export function artifactsSubcommand(): Command {
       const raw = db.raw()
       const txn = nodeSqliteTxn(raw)
       try {
-        const v = typeof opts.mutateVersion === 'string'
-          ? mutateVersion(raw, txn, blobStore, { artifactId: artifact.id, ref: opts.mutateVersion, bytes, author: cliAuthor() })
-          : opts.mutateVersion === true
-            ? saveCurrent(raw, txn, blobStore, { artifactId: artifact.id, bytes, author: cliAuthor() })
-            : createVersion(raw, txn, blobStore, { artifactId: artifact.id, bytes, author: cliAuthor() })
+        const v =
+          typeof opts.mutateVersion === 'string'
+            ? mutateVersion(raw, txn, blobStore, {
+                artifactId: artifact.id,
+                ref: opts.mutateVersion,
+                bytes,
+                author: cliAuthor()
+              })
+            : opts.mutateVersion === true
+              ? saveCurrent(raw, txn, blobStore, {
+                  artifactId: artifact.id,
+                  bytes,
+                  author: cliAuthor()
+                })
+              : createVersion(raw, txn, blobStore, {
+                  artifactId: artifact.id,
+                  bytes,
+                  author: cliAuthor()
+                })
         db.run(`UPDATE task_artifacts SET updated_at = :now WHERE id = :id`, {
           ':id': artifact.id,
-          ':now': new Date().toISOString(),
+          ':now': new Date().toISOString()
         })
         db.close()
         await notifyApp()
@@ -693,7 +779,10 @@ export function artifactsSubcommand(): Command {
   cmd
     .command('append <artifactId>')
     .description('Append to artifact content from stdin')
-    .option('--mutate-version [ref]', 'Bare: autosave to current (auto-branches if locked). With ref: bypass lock and mutate the target version in place')
+    .option(
+      '--mutate-version [ref]',
+      'Bare: autosave to current (auto-branches if locked). With ref: bypass lock and mutate the target version in place'
+    )
     .action(async (artifactId: string, opts: { mutateVersion?: boolean | string }) => {
       const db = openDb()
       const artifact = resolveArtifact(db, artifactId)
@@ -710,14 +799,28 @@ export function artifactsSubcommand(): Command {
       const raw = db.raw()
       const txn = nodeSqliteTxn(raw)
       try {
-        const v = typeof opts.mutateVersion === 'string'
-          ? mutateVersion(raw, txn, blobStore, { artifactId: artifact.id, ref: opts.mutateVersion, bytes: fullBytes, author: cliAuthor() })
-          : opts.mutateVersion === true
-            ? saveCurrent(raw, txn, blobStore, { artifactId: artifact.id, bytes: fullBytes, author: cliAuthor() })
-            : createVersion(raw, txn, blobStore, { artifactId: artifact.id, bytes: fullBytes, author: cliAuthor() })
+        const v =
+          typeof opts.mutateVersion === 'string'
+            ? mutateVersion(raw, txn, blobStore, {
+                artifactId: artifact.id,
+                ref: opts.mutateVersion,
+                bytes: fullBytes,
+                author: cliAuthor()
+              })
+            : opts.mutateVersion === true
+              ? saveCurrent(raw, txn, blobStore, {
+                  artifactId: artifact.id,
+                  bytes: fullBytes,
+                  author: cliAuthor()
+                })
+              : createVersion(raw, txn, blobStore, {
+                  artifactId: artifact.id,
+                  bytes: fullBytes,
+                  author: cliAuthor()
+                })
         db.run(`UPDATE task_artifacts SET updated_at = :now WHERE id = :id`, {
           ':id': artifact.id,
-          ':now': new Date().toISOString(),
+          ':now': new Date().toISOString()
         })
         db.close()
         await notifyApp()
@@ -775,23 +878,44 @@ export function artifactsSubcommand(): Command {
       const parentId = opts.parent ? resolveFolder(db, opts.parent).id : null
       const id = crypto.randomUUID()
       const now = new Date().toISOString()
-      const maxOrder = db.query<{ m: number | null }>(
-        parentId
-          ? `SELECT MAX("order") as m FROM artifact_folders WHERE task_id = :taskId AND parent_id = :parentId`
-          : `SELECT MAX("order") as m FROM artifact_folders WHERE task_id = :taskId AND parent_id IS NULL`,
-        parentId ? { ':taskId': task.id, ':parentId': parentId } : { ':taskId': task.id }
-      )[0]?.m ?? -1
+      const maxOrder =
+        db.query<{ m: number | null }>(
+          parentId
+            ? `SELECT MAX("order") as m FROM artifact_folders WHERE task_id = :taskId AND parent_id = :parentId`
+            : `SELECT MAX("order") as m FROM artifact_folders WHERE task_id = :taskId AND parent_id IS NULL`,
+          parentId ? { ':taskId': task.id, ':parentId': parentId } : { ':taskId': task.id }
+        )[0]?.m ?? -1
 
       db.run(
         `INSERT INTO artifact_folders (id, task_id, parent_id, name, "order", created_at)
          VALUES (:id, :taskId, :parentId, :name, :order, :now)`,
-        { ':id': id, ':taskId': task.id, ':parentId': parentId, ':name': name, ':order': maxOrder + 1, ':now': now }
+        {
+          ':id': id,
+          ':taskId': task.id,
+          ':parentId': parentId,
+          ':name': name,
+          ':order': maxOrder + 1,
+          ':now': now
+        }
       )
       db.close()
       await notifyApp()
 
       if (opts.json) {
-        console.log(JSON.stringify({ id, task_id: task.id, parent_id: parentId, name, order: maxOrder + 1, created_at: now }, null, 2))
+        console.log(
+          JSON.stringify(
+            {
+              id,
+              task_id: task.id,
+              parent_id: parentId,
+              name,
+              order: maxOrder + 1,
+              created_at: now
+            },
+            null,
+            2
+          )
+        )
       } else {
         console.log(`Created folder: ${id.slice(0, 8)}  ${name}`)
       }
@@ -838,17 +962,16 @@ export function artifactsSubcommand(): Command {
             console.error('Cannot move folder into its own descendant')
             process.exit(1)
           }
-          const row: { parent_id: string | null } | undefined = db.query<{ parent_id: string | null }>(
-            `SELECT parent_id FROM artifact_folders WHERE id = :id`,
-            { ':id': cur }
-          )[0]
+          const row: { parent_id: string | null } | undefined = db.query<{
+            parent_id: string | null
+          }>(`SELECT parent_id FROM artifact_folders WHERE id = :id`, { ':id': cur })[0]
           cur = row?.parent_id ?? null
         }
       }
-      db.run(
-        `UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`,
-        { ':parentId': targetParentId, ':id': folder.id }
-      )
+      db.run(`UPDATE artifact_folders SET parent_id = :parentId WHERE id = :id`, {
+        ':parentId': targetParentId,
+        ':id': folder.id
+      })
       db.close()
       await notifyApp()
 
@@ -875,10 +998,11 @@ export function artifactsSubcommand(): Command {
         targetFolderId = folder.id
         targetName = folder.name
       }
-      db.run(
-        `UPDATE task_artifacts SET folder_id = :folderId, updated_at = :now WHERE id = :id`,
-        { ':folderId': targetFolderId, ':now': new Date().toISOString(), ':id': artifact.id }
-      )
+      db.run(`UPDATE task_artifacts SET folder_id = :folderId, updated_at = :now WHERE id = :id`, {
+        ':folderId': targetFolderId,
+        ':now': new Date().toISOString(),
+        ':id': artifact.id
+      })
       db.close()
       await notifyApp()
 
@@ -897,7 +1021,9 @@ export function artifactsSubcommand(): Command {
     .option('--output <path>', 'Output file path (default: ./<filename>)')
     .option('--task <id>', 'Task ID for zip (or $SLAYZONE_TASK_ID)')
     .option('--json', 'Output as JSON')
-    .addHelpText('after', `
+    .addHelpText(
+      'after',
+      `
 Download Types by Render Mode:
   raw   — always available (copies original file)
   pdf   — markdown, code, html, svg, mermaid
@@ -906,7 +1032,8 @@ Download Types by Render Mode:
   zip   — all artifacts in task (no artifactId needed)
 
 pdf/png/html require the SlayZone app to be running.
-`)
+`
+    )
     .action(async (artifactId: string | undefined, opts) => {
       const validTypes = ['raw', 'pdf', 'png', 'html', 'zip']
       if (!validTypes.includes(opts.type)) {
@@ -937,7 +1064,7 @@ pdf/png/html require the SlayZone app to be running.
         const outputPath = opts.output ? path.resolve(opts.output) : path.resolve('artifacts.zip')
         fs.mkdirSync(path.dirname(outputPath), { recursive: true })
 
-        const byId = new Map(folders.map(f => [f.id, f]))
+        const byId = new Map(folders.map((f) => [f.id, f]))
         function folderPath(id: string): string {
           const f = byId.get(id)
           if (!f) return ''
@@ -973,7 +1100,9 @@ pdf/png/html require the SlayZone app to be running.
 
       // --- Non-zip: artifactId required ---
       if (!artifactId) {
-        console.error(`Artifact ID required for --type ${opts.type}. Use --type zip for task-level download.`)
+        console.error(
+          `Artifact ID required for --type ${opts.type}. Use --type zip for task-level download.`
+        )
         process.exit(1)
       }
 
@@ -1007,12 +1136,16 @@ pdf/png/html require the SlayZone app to be running.
       // --- PDF / PNG / HTML (requires app) ---
       const available = getAvailableExportTypes(mode)
       if (!available.includes(opts.type)) {
-        console.error(`Cannot export "${artifact.title}" (${mode}) as ${opts.type}.\nAvailable types for ${mode}: ${available.join(', ')}`)
+        console.error(
+          `Cannot export "${artifact.title}" (${mode}) as ${opts.type}.\nAvailable types for ${mode}: ${available.join(', ')}`
+        )
         process.exit(1)
       }
 
       const ext = opts.type
-      const outputPath = opts.output ? path.resolve(opts.output) : path.resolve(`${baseName}.${ext}`)
+      const outputPath = opts.output
+        ? path.resolve(opts.output)
+        : path.resolve(`${baseName}.${ext}`)
       await apiPost(`/api/artifacts/${artifact.id}/export/${opts.type}`, { outputPath })
 
       if (opts.json) {
@@ -1053,7 +1186,9 @@ pdf/png/html require the SlayZone app to be running.
         const hash = v.content_hash.slice(0, 8)
         const name = (v.name ?? '').padEnd(16).slice(0, 16)
         const author = ((v.author_id ?? v.author_type ?? '') as string).padEnd(16).slice(0, 16)
-        console.log(`v${String(v.version_num).padEnd(3)} ${hash}  ${String(v.size).padStart(5)}  ${name}  ${author}  ${v.created_at}`)
+        console.log(
+          `v${String(v.version_num).padEnd(3)} ${hash}  ${String(v.size).padStart(5)}  ${name}  ${author}  ${v.created_at}`
+        )
       }
     })
 
@@ -1085,48 +1220,57 @@ pdf/png/html require the SlayZone app to be running.
     .description('Diff two versions (b defaults to latest). Colorized unless --no-color.')
     .option('--no-color', 'Plain output')
     .option('--json', 'Output as JSON')
-    .action(async (artifactId: string, a: string, b: string | undefined, opts: { color: boolean; json?: boolean }) => {
-      const db = openDb()
-      const artifact = resolveArtifact(db, artifactId)
-      const blobStore = new BlobStore(getDataDir())
-      const raw = db.raw()
-      try {
-        const result = diffVersions(raw, blobStore, { artifactId: artifact.id, a, b })
-        db.close()
-        if (opts.json) {
-          console.log(JSON.stringify(result, null, 2))
-          return
-        }
-        if (result.kind === 'binary') {
-          console.log(`(binary)`)
-          console.log(`  a: ${result.a.hash.slice(0, 8)}  ${result.a.size} bytes`)
-          console.log(`  b: ${result.b.hash.slice(0, 8)}  ${result.b.size} bytes`)
-          return
-        }
-        const useColor = opts.color !== false && process.stdout.isTTY
-        const RED = useColor ? '\x1b[31m' : ''
-        const GREEN = useColor ? '\x1b[32m' : ''
-        const RESET = useColor ? '\x1b[0m' : ''
-        for (const hunk of result.hunks) {
-          for (const line of hunk.lines) {
-            if (line.kind === 'add') process.stdout.write(`${GREEN}+${line.text}${RESET}\n`)
-            else if (line.kind === 'del') process.stdout.write(`${RED}-${line.text}${RESET}\n`)
-            else process.stdout.write(` ${line.text}\n`)
+    .action(
+      async (
+        artifactId: string,
+        a: string,
+        b: string | undefined,
+        opts: { color: boolean; json?: boolean }
+      ) => {
+        const db = openDb()
+        const artifact = resolveArtifact(db, artifactId)
+        const blobStore = new BlobStore(getDataDir())
+        const raw = db.raw()
+        try {
+          const result = diffVersions(raw, blobStore, { artifactId: artifact.id, a, b })
+          db.close()
+          if (opts.json) {
+            console.log(JSON.stringify(result, null, 2))
+            return
           }
+          if (result.kind === 'binary') {
+            console.log(`(binary)`)
+            console.log(`  a: ${result.a.hash.slice(0, 8)}  ${result.a.size} bytes`)
+            console.log(`  b: ${result.b.hash.slice(0, 8)}  ${result.b.size} bytes`)
+            return
+          }
+          const useColor = opts.color !== false && process.stdout.isTTY
+          const RED = useColor ? '\x1b[31m' : ''
+          const GREEN = useColor ? '\x1b[32m' : ''
+          const RESET = useColor ? '\x1b[0m' : ''
+          for (const hunk of result.hunks) {
+            for (const line of hunk.lines) {
+              if (line.kind === 'add') process.stdout.write(`${GREEN}+${line.text}${RESET}\n`)
+              else if (line.kind === 'del') process.stdout.write(`${RED}-${line.text}${RESET}\n`)
+              else process.stdout.write(` ${line.text}\n`)
+            }
+          }
+        } catch (err) {
+          db.close()
+          if (isVersionError(err)) {
+            console.error(`Error [${err.code}]: ${err.message}`)
+            process.exit(1)
+          }
+          throw err
         }
-      } catch (err) {
-        db.close()
-        if (isVersionError(err)) {
-          console.error(`Error [${err.code}]: ${err.message}`)
-          process.exit(1)
-        }
-        throw err
       }
-    })
+    )
 
   versions
     .command('set-current <artifactId> <version>')
-    .description('Set the current (HEAD) version. Next UI save branches from here if the target is locked.')
+    .description(
+      'Set the current (HEAD) version. Next UI save branches from here if the target is locked.'
+    )
     .option('--json', 'Output as JSON')
     .action(async (artifactId: string, version: string, opts: { json?: boolean }) => {
       const db = openDb()
@@ -1147,7 +1291,9 @@ pdf/png/html require the SlayZone app to be running.
         if (opts.json) {
           console.log(JSON.stringify(v, null, 2))
         } else {
-          console.log(`Current: v${v.version_num}${v.name ? ` (${v.name})` : ''}  ${v.content_hash.slice(0, 8)}`)
+          console.log(
+            `Current: v${v.version_num}${v.name ? ` (${v.name})` : ''}  ${v.content_hash.slice(0, 8)}`
+          )
         }
       } catch (err) {
         db.close()
@@ -1176,7 +1322,9 @@ pdf/png/html require the SlayZone app to be running.
       if (opts.json) {
         console.log(JSON.stringify(v, null, 2))
       } else {
-        console.log(`v${v.version_num}${v.name ? ` (${v.name})` : ''}  ${v.content_hash.slice(0, 8)}`)
+        console.log(
+          `v${v.version_num}${v.name ? ` (${v.name})` : ''}  ${v.content_hash.slice(0, 8)}`
+        )
       }
     })
 
@@ -1200,7 +1348,7 @@ pdf/png/html require the SlayZone app to be running.
           bytes,
           name: opts.name ?? null,
           honorUnchanged: true,
-          author: cliAuthor(),
+          author: cliAuthor()
         })
         db.close()
         if (opts.json) {
@@ -1223,29 +1371,36 @@ pdf/png/html require the SlayZone app to be running.
     .description('Set, change, or clear (omit newName) the name of a version')
     .option('--clear', 'Clear the name')
     .option('--json', 'Output as JSON')
-    .action(async (artifactId: string, versionRef: string, newName: string | undefined, opts: { clear?: boolean; json?: boolean }) => {
-      const db = openDb()
-      const artifact = resolveArtifact(db, artifactId)
-      const raw = db.raw()
-      const txn = nodeSqliteTxn(raw)
-      try {
-        const target = opts.clear ? null : (newName ?? null)
-        const v = renameVersion(raw, txn, artifact.id, versionRef, target)
-        db.close()
-        if (opts.json) {
-          console.log(JSON.stringify(v, null, 2))
-        } else {
-          console.log(`Renamed v${v.version_num}: ${target ?? '(no name)'}`)
+    .action(
+      async (
+        artifactId: string,
+        versionRef: string,
+        newName: string | undefined,
+        opts: { clear?: boolean; json?: boolean }
+      ) => {
+        const db = openDb()
+        const artifact = resolveArtifact(db, artifactId)
+        const raw = db.raw()
+        const txn = nodeSqliteTxn(raw)
+        try {
+          const target = opts.clear ? null : (newName ?? null)
+          const v = renameVersion(raw, txn, artifact.id, versionRef, target)
+          db.close()
+          if (opts.json) {
+            console.log(JSON.stringify(v, null, 2))
+          } else {
+            console.log(`Renamed v${v.version_num}: ${target ?? '(no name)'}`)
+          }
+        } catch (err) {
+          db.close()
+          if (isVersionError(err)) {
+            console.error(`Error [${err.code}]: ${err.message}`)
+            process.exit(1)
+          }
+          throw err
         }
-      } catch (err) {
-        db.close()
-        if (isVersionError(err)) {
-          console.error(`Error [${err.code}]: ${err.message}`)
-          process.exit(1)
-        }
-        throw err
       }
-    })
+    )
 
   versions
     .command('prune <artifactId>')
@@ -1255,35 +1410,48 @@ pdf/png/html require the SlayZone app to be running.
     .option('--no-keep-current', 'Allow deleting the current (HEAD) version')
     .option('--dry-run', 'Show what would be deleted without modifying')
     .option('--json', 'Output as JSON')
-    .action(async (artifactId: string, opts: { keepLast: number; keepNamed: boolean; keepCurrent: boolean; dryRun?: boolean; json?: boolean }) => {
-      const db = openDb()
-      const artifact = resolveArtifact(db, artifactId)
-      const blobStore = new BlobStore(getDataDir())
-      const raw = db.raw()
-      const txn = nodeSqliteTxn(raw)
-      try {
-        const report = pruneVersions(raw, txn, blobStore, artifact.id, {
-          keepLast: opts.keepLast,
-          keepNamed: opts.keepNamed,
-          keepCurrent: opts.keepCurrent,
-          dryRun: opts.dryRun,
-        })
-        db.close()
-        if (opts.json) {
-          console.log(JSON.stringify(report, null, 2))
-        } else {
-          const verb = opts.dryRun ? 'would delete' : 'deleted'
-          console.log(`${verb} ${report.deletedVersions} versions, ${report.deletedBlobs} blobs (kept ${report.keptNamed} named)`)
+    .action(
+      async (
+        artifactId: string,
+        opts: {
+          keepLast: number
+          keepNamed: boolean
+          keepCurrent: boolean
+          dryRun?: boolean
+          json?: boolean
         }
-      } catch (err) {
-        db.close()
-        if (isVersionError(err)) {
-          console.error(`Error [${err.code}]: ${err.message}`)
-          process.exit(1)
+      ) => {
+        const db = openDb()
+        const artifact = resolveArtifact(db, artifactId)
+        const blobStore = new BlobStore(getDataDir())
+        const raw = db.raw()
+        const txn = nodeSqliteTxn(raw)
+        try {
+          const report = pruneVersions(raw, txn, blobStore, artifact.id, {
+            keepLast: opts.keepLast,
+            keepNamed: opts.keepNamed,
+            keepCurrent: opts.keepCurrent,
+            dryRun: opts.dryRun
+          })
+          db.close()
+          if (opts.json) {
+            console.log(JSON.stringify(report, null, 2))
+          } else {
+            const verb = opts.dryRun ? 'would delete' : 'deleted'
+            console.log(
+              `${verb} ${report.deletedVersions} versions, ${report.deletedBlobs} blobs (kept ${report.keptNamed} named)`
+            )
+          }
+        } catch (err) {
+          db.close()
+          if (isVersionError(err)) {
+            console.error(`Error [${err.code}]: ${err.message}`)
+            process.exit(1)
+          }
+          throw err
         }
-        throw err
       }
-    })
+    )
 
   cmd.addCommand(versions)
 

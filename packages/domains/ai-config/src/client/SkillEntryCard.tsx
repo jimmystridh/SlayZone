@@ -13,7 +13,16 @@ interface SkillEntryCardProps {
   installing?: boolean
 }
 
-export function SkillEntryCard({ entry, onAddToLibrary, onAddToProject, onUpdate, onUninstall, onPreview, hasProject, installing }: SkillEntryCardProps) {
+export function SkillEntryCard({
+  entry,
+  onAddToLibrary,
+  onAddToProject,
+  onUpdate,
+  onUninstall,
+  onPreview,
+  hasProject,
+  installing
+}: SkillEntryCardProps) {
   const isInLibrary = !!entry.installed_library_item_id
   const isInProject = !!entry.installed_project_item_id
   const hasUpdate = !!entry.has_update

@@ -40,13 +40,21 @@ export interface TransportDeps {
     signal: string | null
   ) => void
   /** Broadcast state transitions on `pty:state-change` so the existing UI reflects chat activity. */
-  broadcastStateChange: (sessionId: string, newState: ChatTerminalState, oldState: ChatTerminalState) => void
+  broadcastStateChange: (
+    sessionId: string,
+    newState: ChatTerminalState,
+    oldState: ChatTerminalState
+  ) => void
   /**
    * Notify main-process global state listeners (e.g. task-automation). Default
    * no-op. chat-handlers wires this to pty-manager's listener set so chat
    * activity drives the same auto-status rules as PTY sessions.
    */
-  onStateChange?: (sessionId: string, newState: ChatTerminalState, oldState: ChatTerminalState) => void
+  onStateChange?: (
+    sessionId: string,
+    newState: ChatTerminalState,
+    oldState: ChatTerminalState
+  ) => void
   /**
    * Called for every event appended to a session's buffer. Default no-op.
    * chat-handlers wires this to persist events to SQLite so chat history
@@ -59,7 +67,9 @@ export interface TransportDeps {
  * Default broadcast uses Electron's BrowserWindow. We require it lazily so that
  * non-electron test runs can import this module without pulling in `electron`.
  */
-function electronBroadcast(channel: 'chat:event' | 'chat:exit' | 'pty:state-change'): (...args: unknown[]) => void {
+function electronBroadcast(
+  channel: 'chat:event' | 'chat:exit' | 'pty:state-change'
+): (...args: unknown[]) => void {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { BrowserWindow } = require('electron') as typeof import('electron')
@@ -89,7 +99,7 @@ const defaultDeps: TransportDeps = {
   },
   persistEvent: () => {
     // No-op default: persistence is wired in main via configureTransport().
-  },
+  }
 }
 
 let deps: TransportDeps = defaultDeps
@@ -356,7 +366,7 @@ function commitEvent(session: Session, event: AgentEvent): void {
   if (
     event.kind === 'assistant-text' ||
     event.kind === 'tool-call' ||
-    event.kind === 'result' && !event.isError
+    (event.kind === 'result' && !event.isError)
   ) {
     session.sawHealthyTurn = true
   }
@@ -449,7 +459,7 @@ async function respawnFresh(session: Session): Promise<void> {
     // Don't loop: disable retry on the second attempt.
     autoRetryOnInvalidResume: false,
     initialBuffer: carriedBuffer,
-    initialNextSeq: carriedNextSeq,
+    initialNextSeq: carriedNextSeq
   }
   try {
     hydrateSession(nextOpts)
@@ -607,7 +617,7 @@ export function hydrateSession(opts: CreateChatOpts): ChatSessionInfo {
     onInvalidResume: opts.onInvalidResume,
     staged: [],
     flushingStaged: false,
-    awaitingUserInput: false,
+    awaitingUserInput: false
   }
   sessions.set(opts.tabId, session)
 
@@ -701,14 +711,14 @@ async function spawnSubprocess(session: Session): Promise<void> {
     sessionId,
     resume: Boolean(opts.conversationId),
     cwd: opts.cwd,
-    providerFlags: opts.providerFlags,
+    providerFlags: opts.providerFlags
   })
 
   const child = deps.spawn(binary, args, {
     cwd: opts.cwd,
     env: { ...process.env, ...opts.env },
     stdio: ['pipe', 'pipe', 'pipe'],
-    shell: false,
+    shell: false
   })
 
   session.child = child
@@ -779,7 +789,7 @@ async function spawnSubprocess(session: Session): Promise<void> {
     ) {
       const line = session.adapter.serializeControlResponse({
         requestId: ev.requestId,
-        response: { behavior: 'deny', message: 'Plan mode requires explicit approval' },
+        response: { behavior: 'deny', message: 'Plan mode requires explicit approval' }
       })
       if (line != null) {
         try {
@@ -853,7 +863,7 @@ async function spawnSubprocess(session: Session): Promise<void> {
     handleEvent(session, {
       kind: 'error',
       message: err.message,
-      detail: { name: err.name },
+      detail: { name: err.name }
     })
   })
 }
@@ -888,7 +898,7 @@ export function sendToolResult(
     toolUseId: args.toolUseId,
     content: args.content,
     isError: args.isError,
-    sessionId: session.sessionId,
+    sessionId: session.sessionId
   })
   if (line == null) return false
   session.child.stdin?.write(line + '\n')
@@ -982,7 +992,11 @@ export function respondToPermissionRequest(
   args: {
     requestId: string
     decision:
-      | { behavior: 'allow'; updatedInput?: Record<string, unknown>; updatedPermissions?: unknown[] }
+      | {
+          behavior: 'allow'
+          updatedInput?: Record<string, unknown>
+          updatedPermissions?: unknown[]
+        }
       | { behavior: 'deny'; message: string; interrupt?: boolean }
   }
 ): boolean {
@@ -991,7 +1005,7 @@ export function respondToPermissionRequest(
   if (!session.adapter.serializeControlResponse) return false
   const line = session.adapter.serializeControlResponse({
     requestId: args.requestId,
-    response: args.decision as unknown as Record<string, unknown>,
+    response: args.decision as unknown as Record<string, unknown>
   })
   if (line == null) return false
   try {
@@ -1158,7 +1172,7 @@ function toInfo(session: Session): ChatSessionInfo {
     ended: session.ended,
     chatMode: session.chatMode,
     chatModel: session.chatModel,
-    chatEffort: session.chatEffort,
+    chatEffort: session.chatEffort
   }
 }
 
@@ -1194,7 +1208,7 @@ export function listChatSessions(): ChatSessionStateEntry[] {
       taskId: session.taskId,
       mode: session.mode,
       lastOutputTime: session.lastOutputTime,
-      state: session.terminalState,
+      state: session.terminalState
     })
   }
   return result

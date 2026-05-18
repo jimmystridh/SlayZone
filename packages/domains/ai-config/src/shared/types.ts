@@ -145,7 +145,17 @@ export interface SyncConflict {
 
 export interface RootInstructionsResult {
   content: string
-  providerHealth: Partial<Record<CliProvider, { health: SyncHealth; reason: SyncReason | null; contentHash?: string | null; lineCount?: number | null }>>
+  providerHealth: Partial<
+    Record<
+      CliProvider,
+      {
+        health: SyncHealth
+        reason: SyncReason | null
+        contentHash?: string | null
+        lineCount?: number | null
+      }
+    >
+  >
 }
 
 export interface ProviderFileContent {
@@ -156,12 +166,17 @@ export interface ProviderFileContent {
 
 export interface ProjectSkillStatus {
   item: AiConfigItem
-  providers: Partial<Record<CliProvider, {
-    path: string
-    syncHealth: SyncHealth
-    syncReason: SyncReason | null
-    diskContent?: string
-  }>>
+  providers: Partial<
+    Record<
+      CliProvider,
+      {
+        path: string
+        syncHealth: SyncHealth
+        syncReason: SyncReason | null
+        diskContent?: string
+      }
+    >
+  >
 }
 
 // Computer-level file management (~/.provider/...)

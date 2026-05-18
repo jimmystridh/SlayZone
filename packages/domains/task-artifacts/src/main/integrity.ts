@@ -22,9 +22,7 @@ export function checkIntegrity(
   const sql = scope.artifactId
     ? 'SELECT * FROM artifact_versions WHERE artifact_id = ? ORDER BY artifact_id, version_num'
     : 'SELECT * FROM artifact_versions ORDER BY artifact_id, version_num'
-  const rows = scope.artifactId
-    ? db.prepare(sql).all(scope.artifactId)
-    : db.prepare(sql).all()
+  const rows = scope.artifactId ? db.prepare(sql).all(scope.artifactId) : db.prepare(sql).all()
   const versions = parseRows(rows)
 
   const issues: IntegrityIssue[] = []
@@ -35,7 +33,7 @@ export function checkIntegrity(
         version_id: v.id,
         version_num: v.version_num,
         content_hash: v.content_hash,
-        problem: 'blob_missing',
+        problem: 'blob_missing'
       })
       continue
     }
@@ -45,7 +43,7 @@ export function checkIntegrity(
         version_id: v.id,
         version_num: v.version_num,
         content_hash: v.content_hash,
-        problem: 'size_mismatch',
+        problem: 'size_mismatch'
       })
       continue
     }
@@ -55,7 +53,7 @@ export function checkIntegrity(
         version_id: v.id,
         version_num: v.version_num,
         content_hash: v.content_hash,
-        problem: 'hash_mismatch',
+        problem: 'hash_mismatch'
       })
     }
   }

@@ -8,7 +8,7 @@ import {
   extractShellIdFromSpawnResult,
   extractBashOutputCall,
   extractKillShellCall,
-  extractBashOutputResult,
+  extractBashOutputResult
 } from './bg-shell-helpers'
 
 let passed = 0
@@ -42,7 +42,7 @@ function expect<T>(actual: T) {
     },
     toBeTruthy() {
       if (!actual) throw new Error(`Expected truthy, got ${JSON.stringify(actual)}`)
-    },
+    }
   }
 }
 
@@ -50,20 +50,20 @@ const call = (id: string, name: string, input: unknown): ToolCallEvent => ({
   kind: 'tool-call',
   id,
   name,
-  input,
+  input
 })
 
 const result = (
   toolUseId: string,
   rawContent: unknown,
   structured: unknown = null,
-  isError = false,
+  isError = false
 ): ToolResultEvent => ({
   kind: 'tool-result',
   toolUseId,
   isError,
   rawContent,
-  structured,
+  structured
 })
 
 console.log('\nbg-shell-helpers tests\n')
@@ -73,8 +73,8 @@ test('extractBgShellSpawn — flagged Bash → spawn signal', () => {
     call('t1', 'Bash', {
       command: 'pnpm dev',
       run_in_background: true,
-      description: 'dev server',
-    }),
+      description: 'dev server'
+    })
   )
   expect(sig?.toolUseId).toBe('t1')
   expect(sig?.command).toBe('pnpm dev')
@@ -82,15 +82,13 @@ test('extractBgShellSpawn — flagged Bash → spawn signal', () => {
 })
 
 test('extractBgShellSpawn — Bash without flag → null', () => {
-  const sig = extractBgShellSpawn(
-    call('t1', 'Bash', { command: 'ls', run_in_background: false }),
-  )
+  const sig = extractBgShellSpawn(call('t1', 'Bash', { command: 'ls', run_in_background: false }))
   expect(sig).toBeNull()
 })
 
 test('extractBgShellSpawn — non-Bash → null', () => {
   const sig = extractBgShellSpawn(
-    call('t1', 'Read', { file_path: '/tmp/x', run_in_background: true }),
+    call('t1', 'Read', { file_path: '/tmp/x', run_in_background: true })
   )
   expect(sig).toBeNull()
 })
@@ -102,14 +100,14 @@ test('extractShellIdFromSpawnResult — structured.shellId', () => {
 
 test('extractShellIdFromSpawnResult — text "shell ID: bash_2"', () => {
   const id = extractShellIdFromSpawnResult(
-    result('t1', 'Command running in background with shell ID: bash_2'),
+    result('t1', 'Command running in background with shell ID: bash_2')
   )
   expect(id).toBe('bash_2')
 })
 
 test('extractShellIdFromSpawnResult — content blocks array', () => {
   const id = extractShellIdFromSpawnResult(
-    result('t1', [{ type: 'text', text: 'started bash_5 ok' }]),
+    result('t1', [{ type: 'text', text: 'started bash_5 ok' }])
   )
   expect(id).toBe('bash_5')
 })
@@ -138,8 +136,8 @@ test('extractBashOutputResult — structured running', () => {
     result('t1', '', {
       status: 'running',
       stdout: 'tick\n',
-      stderr: '',
-    }),
+      stderr: ''
+    })
   )
   expect(sig.status).toBe('running')
   expect(sig.stdout).toBe('tick\n')
@@ -148,7 +146,7 @@ test('extractBashOutputResult — structured running', () => {
 
 test('extractBashOutputResult — structured completed w/ exit code', () => {
   const sig = extractBashOutputResult(
-    result('t1', '', { status: 'completed', exitCode: 0, stdout: 'done\n' }),
+    result('t1', '', { status: 'completed', exitCode: 0, stdout: 'done\n' })
   )
   expect(sig.status).toBe('completed')
   expect(sig.exitCode).toBe(0)
@@ -156,7 +154,7 @@ test('extractBashOutputResult — structured completed w/ exit code', () => {
 
 test('extractBashOutputResult — text fallback "Status: completed / Exit code: 1"', () => {
   const sig = extractBashOutputResult(
-    result('t1', 'Status: completed\nExit code: 1\n<stdout>\noops\n</stdout>'),
+    result('t1', 'Status: completed\nExit code: 1\n<stdout>\noops\n</stdout>')
   )
   expect(sig.status).toBe('completed')
   expect(sig.exitCode).toBe(1)

@@ -11,14 +11,19 @@ export function registerArchiveManyTaskRoute(app: Express, deps: RestApiDeps): v
     try {
       input = archiveManyInputSchema.parse(req.body)
     } catch (err) {
-      const msg = err instanceof ZodError ? err.issues.map((i) => i.message).join('; ') : err instanceof Error ? err.message : String(err)
+      const msg =
+        err instanceof ZodError
+          ? err.issues.map((i) => i.message).join('; ')
+          : err instanceof Error
+            ? err.message
+            : String(err)
       res.status(400).json({ ok: false, error: msg })
       return
     }
     try {
       await archiveManyTasksOp(deps.db, input.ids, {
         ipcMain,
-        onMutation: deps.notifyRenderer,
+        onMutation: deps.notifyRenderer
       })
       res.json({ ok: true, data: null })
     } catch (err) {

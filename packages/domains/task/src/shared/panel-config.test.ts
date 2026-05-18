@@ -23,7 +23,8 @@ function test(name: string, fn: () => void) {
 function expect(actual: unknown) {
   return {
     toBe(expected: unknown) {
-      if (actual !== expected) throw new Error(`Expected ${String(actual)} to be ${String(expected)}`)
+      if (actual !== expected)
+        throw new Error(`Expected ${String(actual)} to be ${String(expected)}`)
     },
     toBeDefined() {
       if (actual === undefined) throw new Error('Expected value to be defined')
@@ -32,7 +33,7 @@ function expect(actual: unknown) {
       if (JSON.stringify(actual) !== JSON.stringify(expected)) {
         throw new Error(`Expected ${JSON.stringify(actual)} to equal ${JSON.stringify(expected)}`)
       }
-    },
+    }
   }
 }
 
@@ -44,9 +45,9 @@ test('migrates legacy blocked panels to inferred handoff protocol and host scope
         id: 'web:legacy',
         name: 'Legacy Figma',
         baseUrl: 'https://www.figma.com/file/123',
-        blockDesktopHandoff: true,
-      },
-    ],
+        blockDesktopHandoff: true
+      }
+    ]
   }
 
   const merged = mergePredefinedWebPanels(config)
@@ -60,7 +61,7 @@ test('does not re-add deleted predefined panels', () => {
   const config: PanelConfig = {
     viewEnabled: {},
     webPanels: [],
-    deletedPredefined: ['web:figma'],
+    deletedPredefined: ['web:figma']
   }
 
   const merged = mergePredefinedWebPanels(config)
@@ -72,7 +73,7 @@ test('mergePanelOrder renames legacy "assets" id to "artifacts" preserving posit
   const config: PanelConfig = {
     viewEnabled: { task: { assets: false }, home: {} },
     webPanels: [],
-    order: ['terminal', 'browser', 'editor', 'assets', 'git', 'settings', 'processes'],
+    order: ['terminal', 'browser', 'editor', 'assets', 'git', 'settings', 'processes']
   }
   const merged = mergePanelOrder(config)
   expect(merged.order?.indexOf('artifacts')).toBe(3)
@@ -85,7 +86,7 @@ test('mergePanelOrder dedupes when both legacy "assets" and "artifacts" are pres
   const config: PanelConfig = {
     viewEnabled: { task: { assets: false, artifacts: true }, home: {} },
     webPanels: [],
-    order: ['terminal', 'assets', 'artifacts', 'git'],
+    order: ['terminal', 'assets', 'artifacts', 'git']
   }
   const merged = mergePanelOrder(config)
   // legacy 'assets' renames to 'artifacts' at idx 1, dup 'artifacts' at idx 2 dropped.

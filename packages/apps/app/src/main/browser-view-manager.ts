@@ -7,18 +7,23 @@ import { WEBVIEW_DESKTOP_HANDOFF_SCRIPT } from '../shared/webview-desktop-handof
 import {
   buildBrowserLinkContextMenuItems,
   normalizeBrowserLinkContextMenuInput,
-  type BrowserLinkContextMenuAction,
+  type BrowserLinkContextMenuAction
 } from './browser-link-context-menu'
 import {
   BROWSER_CREATE_TASK_FROM_LINK_BRIDGE_KEY,
   BROWSER_CREATE_TASK_FROM_LINK_INSTALLED_KEY,
-  buildBrowserCreateTaskFromLinkCaptureScript,
+  buildBrowserCreateTaskFromLinkCaptureScript
 } from '../shared/browser-link-task-capture-script'
 
 /** Cmd+key combos that always pass through to the webpage (clipboard, undo, scroll). */
 const BROWSER_DEFAULT_PASSTHROUGH = new Set([
-  'c', 'v', 'x', 'a', 'z',    // clipboard + undo
-  'arrowup', 'arrowdown',       // scroll to top/bottom
+  'c',
+  'v',
+  'x',
+  'a',
+  'z', // clipboard + undo
+  'arrowup',
+  'arrowdown' // scroll to top/bottom
 ])
 
 // Ensure the modified-link capture listener exists on every document swap.
@@ -114,7 +119,9 @@ export class BrowserViewManager {
   private chromeExtensions: ElectronChromeExtensions | null = null
   private lastCreateTaskFromLinkSignature = ''
   private lastCreateTaskFromLinkAt = 0
-  private onHandoffPolicyChange: ((wcId: number, policy: DesktopHandoffPolicy | null) => void) | null = null
+  private onHandoffPolicyChange:
+    | ((wcId: number, policy: DesktopHandoffPolicy | null) => void)
+    | null = null
 
   setMainWindow(win: BrowserWindow) {
     this.mainWindow = win
@@ -159,8 +166,8 @@ export class BrowserViewManager {
         contextIsolation: true,
         nodeIntegration: false,
         session: session.fromPartition(partition),
-        preload: join(__dirname, '../preload/browser-chrome-preload.js'),
-      },
+        preload: join(__dirname, '../preload/browser-chrome-preload.js')
+      }
     })
 
     const initialPolicy = opts.desktopHandoffPolicy ?? null
@@ -179,7 +186,7 @@ export class BrowserViewManager {
       desktopHandoffPolicy: initialPolicy,
       currentWindow: null,
       locked: false,
-      debuggerAttachedByLock: false,
+      debuggerAttachedByLock: false
     }
 
     this.views.set(viewId, entry)
@@ -221,7 +228,11 @@ export class BrowserViewManager {
     if (!entry) return
 
     // Unregister from Chrome extension system before destroying (browser tabs only)
-    if (entry.kind !== 'web-panel' && this.chromeExtensions && !entry.view.webContents.isDestroyed()) {
+    if (
+      entry.kind !== 'web-panel' &&
+      this.chromeExtensions &&
+      !entry.view.webContents.isDestroyed()
+    ) {
       this.chromeExtensions.removeTab(entry.view.webContents)
     }
 
@@ -333,17 +344,29 @@ export class BrowserViewManager {
         await wc.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: true })
       } else {
         if (wc.debugger.isAttached()) {
-          try { await wc.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: false }) } catch { /* ignore */ }
+          try {
+            await wc.debugger.sendCommand('Input.setIgnoreInputEvents', { ignore: false })
+          } catch {
+            /* ignore */
+          }
         }
         if (entry.debuggerAttachedByLock && wc.debugger.isAttached()) {
-          try { wc.debugger.detach() } catch { /* ignore */ }
+          try {
+            wc.debugger.detach()
+          } catch {
+            /* ignore */
+          }
         }
         entry.debuggerAttachedByLock = false
       }
     } catch (err) {
       console.warn('[browser-view-manager] syncLockState failed:', err)
       if (entry.debuggerAttachedByLock && wc.debugger.isAttached()) {
-        try { wc.debugger.detach() } catch { /* ignore */ }
+        try {
+          wc.debugger.detach()
+        } catch {
+          /* ignore */
+        }
       }
       entry.debuggerAttachedByLock = false
     }
@@ -448,7 +471,9 @@ export class BrowserViewManager {
     // Re-apply on each navigation — visual zoom limits are per-frame and reset
     // when a new main frame document is committed.
     wc.on('did-finish-load', apply)
-    wc.on('did-frame-finish-load', (_e, isMainFrame) => { if (isMainFrame) apply() })
+    wc.on('did-frame-finish-load', (_e, isMainFrame) => {
+      if (isMainFrame) apply()
+    })
   }
 
   focus(viewId: string): void {
@@ -457,13 +482,20 @@ export class BrowserViewManager {
     wc.focus()
   }
 
-  findInPage(viewId: string, text: string, options?: { forward?: boolean; findNext?: boolean; matchCase?: boolean }): number | null {
+  findInPage(
+    viewId: string,
+    text: string,
+    options?: { forward?: boolean; findNext?: boolean; matchCase?: boolean }
+  ): number | null {
     const wc = this.getWebContents(viewId)
     if (!wc) return null
     return wc.findInPage(text, options)
   }
 
-  stopFindInPage(viewId: string, action: 'clearSelection' | 'keepSelection' | 'activateSelection'): void {
+  stopFindInPage(
+    viewId: string,
+    action: 'clearSelection' | 'keepSelection' | 'activateSelection'
+  ): void {
     const wc = this.getWebContents(viewId)
     if (!wc) return
     wc.stopFindInPage(action)
@@ -535,13 +567,23 @@ export class BrowserViewManager {
   }> {
     const out: ReturnType<BrowserViewManager['listViews']> = []
     for (const [viewId, entry] of this.views) {
-      const win = entry.currentWindow && !entry.currentWindow.isDestroyed() ? entry.currentWindow : this.mainWindow
+      const win =
+        entry.currentWindow && !entry.currentWindow.isDestroyed()
+          ? entry.currentWindow
+          : this.mainWindow
       let nativelyAttached = false
       try {
-        nativelyAttached = !!win && !win.isDestroyed() && win.contentView.children.includes(entry.view)
-      } catch { /* ignore */ }
+        nativelyAttached =
+          !!win && !win.isDestroyed() && win.contentView.children.includes(entry.view)
+      } catch {
+        /* ignore */
+      }
       let url = ''
-      try { url = entry.view.webContents.isDestroyed() ? '<destroyed>' : entry.view.webContents.getURL() } catch { /* ignore */ }
+      try {
+        url = entry.view.webContents.isDestroyed() ? '<destroyed>' : entry.view.webContents.getURL()
+      } catch {
+        /* ignore */
+      }
       out.push({
         viewId,
         taskId: entry.taskId,
@@ -551,7 +593,7 @@ export class BrowserViewManager {
         nativelyAttached,
         currentWindowId: entry.currentWindow ? entry.currentWindow.webContents.id : null,
         url,
-        partition: entry.partition,
+        partition: entry.partition
       })
     }
     return out
@@ -656,7 +698,7 @@ export class BrowserViewManager {
         type: 'mouseMoved',
         x: point.x,
         y: point.y,
-        modifiers: modifierMask,
+        modifiers: modifierMask
       })
       await wc.debugger.sendCommand('Input.dispatchMouseEvent', {
         type: 'mousePressed',
@@ -664,7 +706,7 @@ export class BrowserViewManager {
         y: point.y,
         button: 'left',
         clickCount: 1,
-        modifiers: modifierMask,
+        modifiers: modifierMask
       })
       await wc.debugger.sendCommand('Input.dispatchMouseEvent', {
         type: 'mouseReleased',
@@ -672,7 +714,7 @@ export class BrowserViewManager {
         y: point.y,
         button: 'left',
         clickCount: 1,
-        modifiers: modifierMask,
+        modifiers: modifierMask
       })
       return true
     } finally {
@@ -680,7 +722,10 @@ export class BrowserViewManager {
     }
   }
 
-  emitCreateTaskFromLinkForWebContents(webContentsId: number, payload: BrowserCreateTaskFromLinkPayload): boolean {
+  emitCreateTaskFromLinkForWebContents(
+    webContentsId: number,
+    payload: BrowserCreateTaskFromLinkPayload
+  ): boolean {
     for (const [viewId, entry] of this.views) {
       if (entry.view.webContents.id !== webContentsId) continue
       return this.emitCreateTaskFromLinkForView(viewId, payload)
@@ -689,13 +734,19 @@ export class BrowserViewManager {
     return false
   }
 
-  emitCreateTaskFromLinkForView(viewId: string, payload: BrowserCreateTaskFromLinkPayload): boolean {
+  emitCreateTaskFromLinkForView(
+    viewId: string,
+    payload: BrowserCreateTaskFromLinkPayload
+  ): boolean {
     const entry = this.views.get(viewId)
     if (!entry || !this.mainWindow || this.mainWindow.isDestroyed()) return false
 
     const signature = `${viewId}::${payload.url}::${payload.linkText ?? ''}`
     const now = Date.now()
-    if (signature === this.lastCreateTaskFromLinkSignature && now - this.lastCreateTaskFromLinkAt < 300) {
+    if (
+      signature === this.lastCreateTaskFromLinkSignature &&
+      now - this.lastCreateTaskFromLinkAt < 300
+    ) {
       return false
     }
     this.lastCreateTaskFromLinkSignature = signature
@@ -706,7 +757,7 @@ export class BrowserViewManager {
       taskId: entry.taskId,
       url: payload.url,
       linkText: payload.linkText,
-      source: payload.source,
+      source: payload.source
     }
 
     this.mainWindow.webContents.send('browser:create-task-from-link', intent)
@@ -730,7 +781,7 @@ export class BrowserViewManager {
         return this.emitCreateTaskFromLinkForView(viewId, {
           url: normalizedInput.linkURL,
           linkText: normalizedInput.linkText || undefined,
-          source: 'link-context-menu',
+          source: 'link-context-menu'
         })
       case 'open-link-in-new-tab':
         if (!this.mainWindow || this.mainWindow.isDestroyed()) return false
@@ -739,7 +790,7 @@ export class BrowserViewManager {
           type: 'new-tab-request',
           url: normalizedInput.linkURL,
           background: false,
-          taskId: entry.taskId,
+          taskId: entry.taskId
         })
         return true
       case 'copy-link':
@@ -758,7 +809,9 @@ export class BrowserViewManager {
     const wc = this.getWebContents(viewId)
     if (!wc || !wc.mainFrame) return
 
-    const payload = await wc.mainFrame.executeJavaScript(`
+    const payload = await wc.mainFrame
+      .executeJavaScript(
+        `
       (() => {
         const element = document.elementFromPoint(${point.x}, ${point.y})
         if (!element || typeof element.closest !== 'function') return null
@@ -779,19 +832,21 @@ export class BrowserViewManager {
           linkText: linkText || undefined,
         }
       })()
-    `, true).catch(() => null)
+    `,
+        true
+      )
+      .catch(() => null)
 
     if (!payload || typeof payload !== 'object') return
     const url = 'url' in payload && typeof payload.url === 'string' ? payload.url : ''
     if (!/^https?:\/\//i.test(url)) return
-    const linkText = 'linkText' in payload && typeof payload.linkText === 'string'
-      ? payload.linkText
-      : undefined
+    const linkText =
+      'linkText' in payload && typeof payload.linkText === 'string' ? payload.linkText : undefined
 
     this.emitCreateTaskFromLinkForView(viewId, {
       url,
       linkText,
-      source: 'modified-link-click',
+      source: 'modified-link-click'
     })
   }
 
@@ -824,7 +879,9 @@ export class BrowserViewManager {
       if (!entry.desktopHandoffPolicy) return
       try {
         if (url && new URL(url).hostname.endsWith('.google.com')) return
-      } catch { /* invalid URL — inject */ }
+      } catch {
+        /* invalid URL — inject */
+      }
       wc.mainFrame.executeJavaScript(WEBVIEW_DESKTOP_HANDOFF_SCRIPT).catch(() => {})
     }
     wc.on('did-navigate', (_event, url) => inject(url))
@@ -848,7 +905,9 @@ export class BrowserViewManager {
     try {
       // addChildView is a no-op if already a child (just reorders to top)
       win.contentView.addChildView(entry.view)
-    } catch { /* view may be destroyed */ }
+    } catch {
+      /* view may be destroyed */
+    }
   }
 
   private removeFromWindow(entry: ViewEntry): void {
@@ -856,7 +915,9 @@ export class BrowserViewManager {
     if (!win || win.isDestroyed()) return
     try {
       win.contentView.removeChildView(entry.view)
-    } catch { /* view may already be removed */ }
+    } catch {
+      /* view may already be removed */
+    }
   }
 
   /**
@@ -868,15 +929,27 @@ export class BrowserViewManager {
     if (!entry || newWindow.isDestroyed()) return false
     const oldWin = this.windowFor(entry)
     if (oldWin && !oldWin.isDestroyed() && oldWin !== newWindow) {
-      try { oldWin.contentView.removeChildView(entry.view) } catch { /* ignore */ }
+      try {
+        oldWin.contentView.removeChildView(entry.view)
+      } catch {
+        /* ignore */
+      }
     }
     entry.currentWindow = newWindow
     // Only attach when the view is logically shown. Force-attaching a hidden
     // WCV (e.g. background-task panel under display:none) on every window-focus
     // event surfaces it on top of the active task's UI.
     if (entry.visible && !this.allHidden) {
-      try { newWindow.contentView.addChildView(entry.view) } catch { return false }
-      try { entry.view.setBounds(this.normalizeViewBounds(entry.bounds)) } catch { /* ignore */ }
+      try {
+        newWindow.contentView.addChildView(entry.view)
+      } catch {
+        return false
+      }
+      try {
+        entry.view.setBounds(this.normalizeViewBounds(entry.bounds))
+      } catch {
+        /* ignore */
+      }
     }
     return true
   }
@@ -886,7 +959,7 @@ export class BrowserViewManager {
       x: Math.max(0, Math.floor(bounds.x)),
       y: Math.max(0, Math.floor(bounds.y)),
       width: Math.max(1, Math.floor(bounds.width)),
-      height: Math.max(1, Math.floor(bounds.height)),
+      height: Math.max(1, Math.floor(bounds.height))
     }
   }
 
@@ -936,7 +1009,12 @@ export class BrowserViewManager {
         }
         // Link clicks and other dispositions — emit event for renderer routing
         if (/^https?:\/\//i.test(details.url)) {
-          send({ viewId, type: 'web-panel:popup-request', url: details.url, disposition: details.disposition })
+          send({
+            viewId,
+            type: 'web-panel:popup-request',
+            url: details.url,
+            disposition: details.disposition
+          })
         }
         return { action: 'deny' }
       })
@@ -950,12 +1028,16 @@ export class BrowserViewManager {
               type: 'new-tab-request',
               url: details.url,
               background: details.disposition === 'background-tab',
-              taskId: entry.taskId,
+              taskId: entry.taskId
             })
           }
           return { action: 'deny' }
         }
-        if (details.disposition === 'new-window' && details.features && /^https?:\/\//i.test(details.url)) {
+        if (
+          details.disposition === 'new-window' &&
+          details.features &&
+          /^https?:\/\//i.test(details.url)
+        ) {
           return { action: 'allow', overrideBrowserWindowOptions: { autoHideMenuBar: true } }
         }
         return { action: 'deny' }
@@ -1011,7 +1093,7 @@ export class BrowserViewManager {
             alt: false,
             meta: false,
             control: false,
-            kind: entry.kind,
+            kind: entry.kind
           })
         }
         return
@@ -1067,7 +1149,7 @@ export class BrowserViewManager {
         alt: Boolean(input.alt),
         meta: Boolean(input.meta),
         control: Boolean(input.control),
-        kind: entry.kind,
+        kind: entry.kind
       })
     })
 
@@ -1086,7 +1168,7 @@ export class BrowserViewManager {
         type: 'did-navigate',
         url: url.replace(/^slz-file:\/\//, 'file://'),
         canGoBack: wc.navigationHistory.canGoBack(),
-        canGoForward: wc.navigationHistory.canGoForward(),
+        canGoForward: wc.navigationHistory.canGoForward()
       })
       // Cross-process navigation drops the CDP session and the ignore flag —
       // re-apply lock so OS-origin input stays blocked.
@@ -1099,7 +1181,7 @@ export class BrowserViewManager {
         type: 'did-navigate',
         url: url.replace(/^slz-file:\/\//, 'file://'),
         canGoBack: wc.navigationHistory.canGoBack(),
-        canGoForward: wc.navigationHistory.canGoForward(),
+        canGoForward: wc.navigationHistory.canGoForward()
       })
     })
 
@@ -1139,7 +1221,7 @@ export class BrowserViewManager {
         type: 'did-fail-load',
         errorCode,
         errorDescription,
-        url: validatedURL,
+        url: validatedURL
       })
     })
 
@@ -1156,14 +1238,14 @@ export class BrowserViewManager {
         type: 'found-in-page',
         activeMatchOrdinal: result.activeMatchOrdinal,
         matches: result.matches,
-        finalUpdate: result.finalUpdate,
+        finalUpdate: result.finalUpdate
       })
     })
 
     wc.on('context-menu', (event, params) => {
       const input = {
         linkURL: params.linkURL,
-        linkText: params.linkText,
+        linkText: params.linkText
       }
       let items = buildBrowserLinkContextMenuItems(input)
       // Web panels have no tabs — filter out "Open in new tab"
@@ -1174,10 +1256,14 @@ export class BrowserViewManager {
 
       event.preventDefault()
 
-      const menu = Menu.buildFromTemplate(items.map((item) => ({
-        label: item.label,
-        click: () => { this.runLinkContextMenuAction(viewId, input, item.action) },
-      })))
+      const menu = Menu.buildFromTemplate(
+        items.map((item) => ({
+          label: item.label,
+          click: () => {
+            this.runLinkContextMenuAction(viewId, input, item.action)
+          }
+        }))
+      )
 
       menu.popup({ window: this.mainWindow ?? undefined })
     })

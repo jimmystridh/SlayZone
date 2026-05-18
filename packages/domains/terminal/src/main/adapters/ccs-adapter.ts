@@ -1,4 +1,11 @@
-import { defaultEncodeSubmit, type TerminalAdapter, type PromptInfo, type ActivityState, type ErrorInfo, type ValidationResult } from './types'
+import {
+  defaultEncodeSubmit,
+  type TerminalAdapter,
+  type PromptInfo,
+  type ActivityState,
+  type ErrorInfo,
+  type ValidationResult
+} from './types'
 import { whichBinary, validateShellEnv } from '../shell-env'
 
 /**
@@ -44,7 +51,11 @@ export class CcsAdapter implements TerminalAdapter {
     }
     const questionMatch = stripped.match(/[^\n]*\?\s*$/m)
     if (questionMatch) {
-      return { type: 'question', text: questionMatch[0].trim(), position: data.indexOf(questionMatch[0]) }
+      return {
+        type: 'question',
+        text: questionMatch[0].trim(),
+        position: data.indexOf(questionMatch[0])
+      }
     }
     return null
   }

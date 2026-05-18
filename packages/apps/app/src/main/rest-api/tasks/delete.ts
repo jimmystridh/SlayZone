@@ -11,7 +11,7 @@ export function registerDeleteTaskRoute(app: Express, deps: RestApiDeps): void {
       const input = deleteTaskInputSchema.parse({ id: req.params.id })
       const result = deleteTaskOp(deps.db, input.id, {
         ipcMain,
-        onMutation: deps.notifyRenderer,
+        onMutation: deps.notifyRenderer
       })
       if (result === false) {
         res.status(404).json({ ok: false, error: 'Task not found' })

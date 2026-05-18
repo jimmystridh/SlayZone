@@ -96,7 +96,10 @@ function ConvexAuthBridge({ children }: { children: React.ReactNode }): React.JS
             })
 
             if (signInResult.ok && signInResult.code && signInResult.verifier) {
-              window.localStorage.setItem(namespacedVerifierKey(AUTH_STORAGE_NAMESPACE), signInResult.verifier)
+              window.localStorage.setItem(
+                namespacedVerifierKey(AUTH_STORAGE_NAMESPACE),
+                signInResult.verifier
+              )
               await completeOAuthCode(signInResult.code)
               return
             }
@@ -107,7 +110,9 @@ function ConvexAuthBridge({ children }: { children: React.ReactNode }): React.JS
 
           const result = await actions.signIn('github', { redirectTo: OAUTH_REDIRECT_URI })
           if (!result.signingIn && !result.redirect) {
-            setLastError('GitHub sign-in returned no redirect URL. Check Convex auth env vars and provider setup.')
+            setLastError(
+              'GitHub sign-in returned no redirect URL. Check Convex auth env vars and provider setup.'
+            )
           }
         } catch (error) {
           setLastError(error instanceof Error ? error.message : 'Sign-in failed')
@@ -143,8 +148,11 @@ function ConvexAuthBridge({ children }: { children: React.ReactNode }): React.JS
   useEffect(() => {
     if (!isAuthenticated) return
     const sync = (): void => {
-      window.api.leaderboard?.getLocalStats()
-        .then((stats) => { if (stats.days.length > 0) syncDailyStats({ days: stats.days }) })
+      window.api.leaderboard
+        ?.getLocalStats()
+        .then((stats) => {
+          if (stats.days.length > 0) syncDailyStats({ days: stats.days })
+        })
         .catch(() => {})
     }
     sync()
@@ -155,9 +163,17 @@ function ConvexAuthBridge({ children }: { children: React.ReactNode }): React.JS
   return <LeaderboardAuthContext.Provider value={value}>{children}</LeaderboardAuthContext.Provider>
 }
 
-export function ConvexAuthBootstrap({ children }: { children: React.ReactNode }): React.JSX.Element {
+export function ConvexAuthBootstrap({
+  children
+}: {
+  children: React.ReactNode
+}): React.JSX.Element {
   if (!convexClient) {
-    return <LeaderboardAuthContext.Provider value={defaultState}>{children}</LeaderboardAuthContext.Provider>
+    return (
+      <LeaderboardAuthContext.Provider value={defaultState}>
+        {children}
+      </LeaderboardAuthContext.Provider>
+    )
   }
 
   return (

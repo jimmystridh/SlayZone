@@ -102,15 +102,25 @@ function resolveEnrichedPath(): string | null {
   // Interactive login shell first — sources .zshrc/.bashrc where pnpm/nvm add PATH
   try {
     const args = getShellStartupArgs(shell)
-    const result = execFileSync(shell, [...args, '-c', cmd], { timeout: 5000, encoding: 'utf-8' }).trim()
+    const result = execFileSync(shell, [...args, '-c', cmd], {
+      timeout: 5000,
+      encoding: 'utf-8'
+    }).trim()
     if (result) return result
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
 
   // Fallback: login only — sources .zprofile/.bash_profile
   try {
-    const result = execFileSync(shell, ['-l', '-c', cmd], { timeout: 5000, encoding: 'utf-8' }).trim()
+    const result = execFileSync(shell, ['-l', '-c', cmd], {
+      timeout: 5000,
+      encoding: 'utf-8'
+    }).trim()
     if (result) return result
-  } catch { /* fall through */ }
+  } catch {
+    /* fall through */
+  }
 
   return null
 }
@@ -148,7 +158,10 @@ const PTY_FD_SOFT_LIMIT = 65535
  * No-ops on Windows (ulimit unavailable) and when the current soft limit is
  * already at or above the target (never lowers an intentionally-raised limit).
  */
-export function wrapShellWithUlimit(shell: string, args: string[]): { file: string; args: string[] } {
+export function wrapShellWithUlimit(
+  shell: string,
+  args: string[]
+): { file: string; args: string[] } {
   if (platform() === 'win32') return { file: shell, args }
   const quoted = [shell, ...args].map(quoteForShell).join(' ')
   // The inner `if` guards against lowering: if `ulimit -n` reports "unlimited"
