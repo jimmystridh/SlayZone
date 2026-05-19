@@ -8,10 +8,25 @@ export type StateChangeCallback = (
   oldState: TerminalState
 ) => void
 
+/** Diagnostic trace of every transition decision the machine makes.
+ *  Pure observation — must not influence state. Optional so production paths
+ *  with no logger attached pay zero overhead. */
+export type StateTraceCallback = (event: StateTraceEvent) => void
+
+export type StateTraceEvent =
+  | { kind: 'request'; sessionId: string; fromState: TerminalState; toState: TerminalState; hadPending: TerminalState | null }
+  | { kind: 'skipped_same'; sessionId: string; state: TerminalState }
+  | { kind: 'immediate'; sessionId: string; fromState: TerminalState; toState: TerminalState }
+  | { kind: 'queued'; sessionId: string; fromState: TerminalState; toState: TerminalState; debounceMs: number }
+  | { kind: 'canceled'; sessionId: string; canceledTarget: TerminalState; reason: 'new_request' | 'unregister' | 'dispose' }
+  | { kind: 'fired'; sessionId: string; fromState: TerminalState; toState: TerminalState }
+
 const DEBOUNCE_DEFAULT = 100
 
 interface SessionState {
   state: TerminalState
+  /** Target the pending debounce timer will apply when it fires. null if no timer. */
+  pendingTarget: TerminalState | null
 }
 
 /**
@@ -25,17 +40,21 @@ export class StateMachine {
   private sessions = new Map<string, SessionState>()
   private timers = new Map<string, ReturnType<typeof setTimeout>>()
   private onChange: StateChangeCallback
+  private onTrace: StateTraceCallback | undefined
 
-  constructor(onChange: StateChangeCallback) {
+  constructor(onChange: StateChangeCallback, onTrace?: StateTraceCallback) {
     this.onChange = onChange
+    this.onTrace = onTrace
   }
 
   register(sessionId: string, initialState: TerminalState): void {
-    this.sessions.set(sessionId, { state: initialState })
+    this.sessions.set(sessionId, { state: initialState, pendingTarget: null })
   }
 
   unregister(sessionId: string): void {
+    const pending = this.sessions.get(sessionId)?.pendingTarget ?? null
     this.clearTimer(sessionId)
+    if (pending) this.onTrace?.({ kind: 'canceled', sessionId, canceledTarget: pending, reason: 'unregister' })
     this.sessions.delete(sessionId)
   }
 
@@ -47,23 +66,41 @@ export class StateMachine {
     const session = this.sessions.get(sessionId)
     if (!session) return
 
-    this.clearTimer(sessionId)
+    const hadPending = session.pendingTarget
+    this.onTrace?.({ kind: 'request', sessionId, fromState: session.state, toState: newState, hadPending })
 
-    if (session.state === newState) return
+    if (hadPending) {
+      this.clearTimer(sessionId)
+      this.onTrace?.({ kind: 'canceled', sessionId, canceledTarget: hadPending, reason: 'new_request' })
+    }
+
+    if (session.state === newState) {
+      this.onTrace?.({ kind: 'skipped_same', sessionId, state: session.state })
+      return
+    }
 
     if (newState === 'running') {
       const oldState = session.state
       session.state = newState
+      this.onTrace?.({ kind: 'immediate', sessionId, fromState: oldState, toState: newState })
       this.onChange(sessionId, newState, oldState)
     } else {
+      session.pendingTarget = newState
+      this.onTrace?.({ kind: 'queued', sessionId, fromState: session.state, toState: newState, debounceMs: DEBOUNCE_DEFAULT })
       this.timers.set(
         sessionId,
         setTimeout(() => {
           this.timers.delete(sessionId)
           const session = this.sessions.get(sessionId)
-          if (!session || session.state === newState) return
+          if (!session) return
+          session.pendingTarget = null
+          if (session.state === newState) {
+            this.onTrace?.({ kind: 'skipped_same', sessionId, state: session.state })
+            return
+          }
           const oldState = session.state
           session.state = newState
+          this.onTrace?.({ kind: 'fired', sessionId, fromState: oldState, toState: newState })
           this.onChange(sessionId, newState, oldState)
         }, DEBOUNCE_DEFAULT)
       )
@@ -76,7 +113,11 @@ export class StateMachine {
   }
 
   dispose(): void {
-    for (const timer of this.timers.values()) clearTimeout(timer)
+    for (const [sessionId, timer] of this.timers.entries()) {
+      clearTimeout(timer)
+      const pending = this.sessions.get(sessionId)?.pendingTarget ?? null
+      if (pending) this.onTrace?.({ kind: 'canceled', sessionId, canceledTarget: pending, reason: 'dispose' })
+    }
     this.timers.clear()
     this.sessions.clear()
   }
@@ -87,6 +128,8 @@ export class StateMachine {
       clearTimeout(pending)
       this.timers.delete(sessionId)
     }
+    const session = this.sessions.get(sessionId)
+    if (session) session.pendingTarget = null
   }
 }
 

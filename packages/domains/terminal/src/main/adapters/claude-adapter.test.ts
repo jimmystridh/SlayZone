@@ -41,28 +41,45 @@ test('transitionOnInput is not explicitly false (uses TUI default = idle clock g
   expect(adapter.transitionOnInput !== false).toBe(true)
 })
 
-test('idleTimeoutMs is a tight 5s fallback (active completion-stamp signal is primary)', () => {
-  // The active 'idle' signal handles the common case (completion stamp in
-  // chunk → instant flip). This timer is a safety net for chunks where the
-  // stamp is missing or scrolled off. 5s is small because Claude's animated
-  // spinner emits bullet glyphs every ~100ms during real work — the timer
-  // only elapses when output truly stops.
-  expect(adapter.idleTimeoutMs).toBe(5000)
+test('idleTimeoutMs is a 5-minute safety net (hooks + interrupt marker are primary)', () => {
+  // Hook events (Stop, Notification, SessionEnd) drive working→idle on the
+  // happy path. detectActivity catches the user-interrupt marker. This timer
+  // only fires when both paths miss — e.g. user disabled the SlayZone hook
+  // entry or notify.sh is gone. 5s (the legacy spinner-era value) was too
+  // tight: a single long Bash run >5s tripped a false running→idle mid-turn.
+  expect(adapter.idleTimeoutMs).toBe(5 * 60 * 1000)
 })
 
 console.log('\nClaudeAdapter.detectActivity\n')
 
-test('detectActivity is a no-op — hook events are the source of truth', () => {
+test('detectActivity ignores spinner/completion text — hooks are the source of truth', () => {
   // Legacy bullet/spinner regex was retired in favor of Claude Code hooks
   // (see rest-api/agent-hook.ts + notify.sh). detectActivity must return
-  // null for every input so the state machine is exclusively hook-driven.
-  // Inputs below all matched the old regex and previously promoted state.
+  // null for these spinner-style outputs so the state machine is hook-driven.
   expect(adapter.detectActivity('· Thinking...', 'unknown')).toBe(null)
   expect(adapter.detectActivity('✻ Clauding...', 'unknown')).toBe(null)
   expect(adapter.detectActivity('·\x1b[1CBefuddling…', 'unknown')).toBe(null)
   expect(adapter.detectActivity('✻ Cooked for 56s', 'unknown')).toBe(null)
   expect(adapter.detectActivity('· Cogitated for 4m 24s', 'unknown')).toBe(null)
   expect(adapter.detectActivity('Some random text', 'unknown')).toBe(null)
+})
+
+test('detectActivity matches the user-interrupt marker → idle', () => {
+  // Claude does NOT fire the Stop hook when the user presses ESC during the
+  // pure thinking phase. The TUI prints `⎿  Interrupted · What should Claude
+  // do instead?` after the interrupt — that line is the evidence-based signal
+  // that claude actually stopped. Match anchors on the ⎿ box-drawing glyph
+  // (U+23BF) + literal "Interrupted" so generic uses of the word elsewhere
+  // (e.g. user prompt content, log files) don't false-trigger.
+  expect(adapter.detectActivity('⎿  Interrupted · What should Claude do instead?', 'unknown'))
+    .toBe('idle')
+  // ANSI-wrapped marker still matches (claude colors the glyph red).
+  expect(adapter.detectActivity('\x1b[38;2;153;153;153m  ⎿  Interrupted · What\x1b[39m', 'unknown'))
+    .toBe('idle')
+  // Word "Interrupted" alone (no ⎿ glyph) does NOT match — avoids false
+  // positives from user prompt content or unrelated log output.
+  expect(adapter.detectActivity('the build was Interrupted by ctrl-c', 'unknown')).toBe(null)
+  expect(adapter.detectActivity('Interrupted', 'unknown')).toBe(null)
 })
 
 console.log('\nClaudeAdapter.detectPrompt\n')

@@ -38,11 +38,29 @@ export class ClaudeAdapter implements TerminalAdapter {
   }
 
   /**
-   * Activity detection is delegated to Claude Code hooks — see
-   * `rest-api/agent-hook.ts` and `notify.sh`. This method exists only to
-   * satisfy the `TerminalAdapter` interface contract.
+   * Activity detection is hook-driven for the working→idle path — see
+   * `rest-api/agent-hook.ts` and `notify.sh`. The ONE exception is the
+   * user-interrupt path: claude does NOT fire the `Stop` hook when the user
+   * presses ESC during the pure thinking phase (no tool call in flight),
+   * confirmed via diagnostic trace. Without an output signal the spinner
+   * would stick until the 5-min `idleTimeoutMs` silence-timer fallback.
+   *
+   * Claude's TUI prints `⎿  Interrupted · What should Claude do instead?`
+   * (with the box-drawing ⎿ glyph, U+23BF) immediately after the user
+   * interrupts. We match that marker — anchored on the glyph + literal
+   * "Interrupted" — and return `'idle'` so the state machine flips
+   * `running → idle` via the existing `activityToTerminalState` path.
+   *
+   * Architectural debt: deliberately reintroduces narrow output parsing
+   * after we retired the bullet-glyph spinner regex. Justified because
+   * (a) hooks fail upstream, (b) silence-timer is too slow, (c) signal is
+   * evidence-based (claude actually printed it), (d) scope is one regex,
+   * one direction. Remove if Anthropic fixes Stop-on-ESC. Tracking:
+   * https://github.com/anthropics/claude-code/issues (TODO: file).
    */
-  detectActivity(_data: string, _current: ActivityState): ActivityState | null {
+  detectActivity(data: string, _current: ActivityState): ActivityState | null {
+    const stripped = data.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '')
+    if (/⎿\s+Interrupted/.test(stripped)) return 'idle'
     return null
   }
 

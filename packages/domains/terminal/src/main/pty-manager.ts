@@ -29,7 +29,8 @@ import {
   shouldRefreshIdleClock,
   shouldFlipToIdle,
   shouldFlipToRunningOnInput,
-  recordWorkingDetection
+  recordWorkingDetection,
+  type StateTraceEvent
 } from './state-machine'
 import {
   quoteForShell,
@@ -234,13 +235,55 @@ function emitInputSubmit(sessionId: string, taskId: string, line: string): void 
 function notifySessionChange(): void {
   for (const cb of sessionChangeListeners) cb()
 }
+/**
+ * Diagnostic tracer for every state-machine decision. Lets us see WHY a
+ * pending `running → idle` transition (e.g. from a Stop hook) gets dropped:
+ * was it canceled by a subsequent same-target request, by an unregister, or
+ * did it fire and the state still didn't reach the renderer? Pure
+ * observation — must not influence state.
+ *
+ * Temporary instrumentation for the "PTY stuck on running after ESC" bug.
+ * Strip once the root cause is fixed and the fix has a regression test.
+ */
+function traceStateMachine(event: StateTraceEvent): void {
+  const session = sessions.get(event.sessionId)
+  const taskId = session?.taskId
+  const payload: Record<string, unknown> = { kind: event.kind }
+  if (event.kind === 'request') {
+    payload.from = event.fromState
+    payload.to = event.toState
+    payload.hadPending = event.hadPending
+  } else if (event.kind === 'skipped_same') {
+    payload.state = event.state
+  } else if (event.kind === 'immediate' || event.kind === 'fired') {
+    payload.from = event.fromState
+    payload.to = event.toState
+  } else if (event.kind === 'queued') {
+    payload.from = event.fromState
+    payload.to = event.toState
+    payload.debounceMs = event.debounceMs
+  } else if (event.kind === 'canceled') {
+    payload.canceledTarget = event.canceledTarget
+    payload.reason = event.reason
+  }
+  recordDiagnosticEvent({
+    level: 'info',
+    source: 'pty',
+    event: `pty.state_machine_${event.kind}`,
+    sessionId: event.sessionId,
+    taskId,
+    message: event.kind,
+    payload
+  })
+}
+
 const stateMachine = new StateMachine((sessionId, newState, oldState) => {
   const session = sessions.get(sessionId)
   if (!session) return
   // Sync session.state for debounced transitions (timer fires after transitionState returns)
   session.state = newState
   emitStateChange(session, sessionId, newState, oldState)
-})
+}, traceStateMachine)
 
 // Maximum buffer size (5MB) per session
 const MAX_BUFFER_SIZE = 750 * 1024
@@ -1552,6 +1595,22 @@ export function submitPty(sessionId: string, text: string): boolean {
 export function writePty(sessionId: string, data: string): boolean {
   const session = sessions.get(sessionId)
   if (!session) return false
+
+  // Observation only: ESC bytes in stdin are the user's interrupt key for
+  // claude-code (and codex). Log as a precise anchor so we can correlate
+  // user keystrokes against subsequent hook arrivals (or their absence).
+  // Pure passive — does NOT change state.
+  if (data.includes('\x1b')) {
+    recordDiagnosticEvent({
+      level: 'info',
+      source: 'pty',
+      event: 'pty.user_esc_input',
+      sessionId,
+      taskId: session.taskId,
+      message: 'esc-byte-written',
+      payload: { currentState: session.state, mode: session.mode, bytes: data.length }
+    })
+  }
 
   // Buffer input to detect commands
   session.inputBuffer += data

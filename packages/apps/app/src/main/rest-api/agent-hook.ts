@@ -80,6 +80,21 @@ function claudeCodeHookToTerminalState(hookEvent: string, raw?: unknown): Termin
   }
 }
 
+/** Stringify + clamp for diagnostic storage. Keeps raw hook payloads from
+ *  blowing up the diagnostics DB while still capturing tool_name,
+ *  stop_hook_active, transcript_path, etc. Returns the original on
+ *  serialization failure so we still log something useful. */
+function truncateForDiag(value: unknown, maxChars: number): string {
+  if (value == null) return ''
+  let s: string
+  try {
+    s = typeof value === 'string' ? value : JSON.stringify(value)
+  } catch {
+    s = String(value)
+  }
+  return s.length <= maxChars ? s : s.slice(0, maxChars) + '…[truncated]'
+}
+
 const PayloadSchema = z.object({
   agentId: z.enum(['claude-code', 'codex', 'gemini', 'opencode']),
   hookEvent: z.string().min(1),
@@ -141,7 +156,14 @@ export function registerAgentHookRoute(
           sessionId,
           taskId: parsed.data.taskId,
           message: parsed.data.hookEvent,
-          payload: { agentId: parsed.data.agentId, mappedState: newState ?? 'mark-active' }
+          // Include raw payload (truncated) so we can see stop_hook_active,
+          // tool_name, tool_response, transcript_path, etc. Temporary
+          // instrumentation for the "PTY stuck on running after ESC" bug.
+          payload: {
+            agentId: parsed.data.agentId,
+            mappedState: newState ?? 'mark-active',
+            raw: truncateForDiag(parsed.data.raw, 4096),
+          }
         })
         if (newState) {
           bridge.transition(sessionId, newState, parsed.data.hookEvent)
