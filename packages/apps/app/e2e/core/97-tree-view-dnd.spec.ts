@@ -985,17 +985,16 @@ test.describe('TreeView drag and drop', () => {
     )
     if (!rootDone) throw new Error('failed to create rootDone')
     try {
-      // Lock rootDone's order ABOVE rootTodo's so the visible group order is
-      // deterministic: in_progress (top, A) → done (middle, B) → todo (bottom,
-      // C). Without this, rootDone defaults to order=0 (tied with rootA), and
-      // `groupTreeRows` byKey insertion order can place 'done' group above
-      // 'in_progress' depending on tasks-array iteration order.
+      // Lock `order` for ALL roots so the visible group order is deterministic:
+      // in_progress (top, A) → done (middle) → todo (bottom). Without this,
+      // rootDone defaults to order=0 (tied with rootA), and `groupTreeRows`
+      // byKey insertion order can place 'done' group above 'in_progress'
+      // depending on tasks-array iteration order. UpdateTaskInput has no
+      // `order` field, so use `reorderTasks` (raw SQL UPDATE).
       await mainWindow.evaluate(
-        async ({ d, td }) => {
-          await window.api.db.updateTask({ id: d, order: 2.5 })
-          await window.api.db.updateTask({ id: td, order: 3 })
-        },
-        { d: rootDone.id, td: rootTodo }
+        ({ a, b, c, d, td }) =>
+          window.api.db.reorderTasks([a, b, c, d, td]),
+        { a: rootA, b: rootB, c: rootC, d: rootDone.id, td: rootTodo }
       )
       await seed(mainWindow).refreshData()
       await expect(taskRow(mainWindow, rootDone.id)).toBeVisible({ timeout: 5_000 })
