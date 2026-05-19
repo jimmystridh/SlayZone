@@ -1573,6 +1573,9 @@ importers:
         specifier: ^4
         version: 4.3.5
     devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.13
+        version: 7.6.13
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.8
