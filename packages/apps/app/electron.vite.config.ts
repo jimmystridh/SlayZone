@@ -2,6 +2,7 @@ import { resolve } from 'path'
 import { readFileSync, readdirSync, existsSync } from 'fs'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
+import reactSwc from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { loadEnv } from 'vite'
@@ -100,14 +101,14 @@ export default defineConfig(({ mode }) => {
         }
       },
       plugins: [
-        // React Compiler runs babel AST analysis on every .tsx. Its purpose is
-        // prod-runtime memoization injection, so gate it to prod builds only
-        // — saves several seconds on dev cold start + 50-200ms per HMR cycle.
-        react({
-          babel: {
-            plugins: mode === 'production' ? ['babel-plugin-react-compiler'] : []
-          }
-        }),
+        // Dev uses the SWC (Rust) React transform for Fast Refresh — ~20x
+        // faster per .tsx than Babel, cutting cold-start and HMR latency.
+        // Prod stays on Babel `plugin-react`: the React Compiler memoization
+        // pass is a Babel plugin with no SWC equivalent, and it only matters
+        // for prod-runtime memoization anyway.
+        mode === 'production'
+          ? react({ babel: { plugins: ['babel-plugin-react-compiler'] } })
+          : reactSwc(),
         tailwindcss(),
         // Bundle analyzer is a rollup plugin; only useful at build time.
         mode === 'production' &&
