@@ -2620,20 +2620,37 @@ function App(): React.JSX.Element {
                                               ?.path ??
                                             null
                                           const w = homePanel.homeResolvedWidths[id] ?? 400
+                                          // Boundary resize: the handle before this
+                                          // panel transfers width with the panel to
+                                          // its left (the previous visible panel).
+                                          const visibleHomePanelIds =
+                                            homePanel.orderedHomePanelIds.filter(
+                                              (v) => homePanel.homePanelVisibility[v]
+                                            )
+                                          const leftHomeId =
+                                            i > 0 ? visibleHomePanelIds[i - 1] : undefined
+                                          const homeMinWidth = (pid: string): number =>
+                                            pid === 'kanban' ? 400 : 200
                                           return (
                                             <React.Fragment key={id}>
-                                              {i > 0 && (
+                                              {i > 0 && leftHomeId && (
                                                 <ResizeHandle
-                                                  width={w}
-                                                  minWidth={id === 'kanban' ? 400 : 200}
-                                                  onWidthChange={(w) =>
+                                                  leftWidth={
+                                                    homePanel.homeResolvedWidths[leftHomeId] ?? 400
+                                                  }
+                                                  rightWidth={w}
+                                                  leftMinWidth={homeMinWidth(leftHomeId)}
+                                                  rightMinWidth={homeMinWidth(id)}
+                                                  onResize={(lw, rw) =>
                                                     updatePanelSizes({
-                                                      [HOME_PANEL_SIZE_KEY[id]]: w
+                                                      [HOME_PANEL_SIZE_KEY[leftHomeId]]: lw,
+                                                      [HOME_PANEL_SIZE_KEY[id]]: rw
                                                     })
                                                   }
-                                                  onReset={() =>
+                                                  onReset={() => {
+                                                    resetPanelSize(HOME_PANEL_SIZE_KEY[leftHomeId])
                                                     resetPanelSize(HOME_PANEL_SIZE_KEY[id])
-                                                  }
+                                                  }}
                                                 />
                                               )}
                                               <div
@@ -2865,10 +2882,24 @@ function App(): React.JSX.Element {
                     globalAgentPanelState.isOpen &&
                     !hideSidebarPanel && (
                       <ResizeHandle
-                        width={globalAgentPanelState.panelWidth}
-                        minWidth={GLOBAL_AGENT_PANEL_MIN_WIDTH}
-                        maxWidth={GLOBAL_AGENT_PANEL_MAX_WIDTH}
-                        onWidthChange={(w) => setGlobalAgentPanelState({ panelWidth: w })}
+                        // Edge side panel against the flex-1 main area. The boundary
+                        // handle needs two widths; model the left (main) side as
+                        // effectively unbounded so the drag just resizes this panel
+                        // and the flex-1 main absorbs the slack. 100_000 is large
+                        // enough that the left clamp never binds yet keeps the
+                        // `total - newLeft` arithmetic exact. Max is enforced here.
+                        leftWidth={100_000}
+                        rightWidth={globalAgentPanelState.panelWidth}
+                        leftMinWidth={0}
+                        rightMinWidth={GLOBAL_AGENT_PANEL_MIN_WIDTH}
+                        onResize={(_lw, rw) =>
+                          setGlobalAgentPanelState({
+                            panelWidth: Math.min(
+                              GLOBAL_AGENT_PANEL_MAX_WIDTH,
+                              Math.max(GLOBAL_AGENT_PANEL_MIN_WIDTH, rw)
+                            )
+                          })
+                        }
                         onDragStart={() => setIsSidePanelResizing(true)}
                         onDragEnd={() => setIsSidePanelResizing(false)}
                         onReset={() =>
@@ -2908,10 +2939,20 @@ function App(): React.JSX.Element {
                   )}
                   {agentStatusState.isLocked && (
                     <ResizeHandle
-                      width={agentStatusState.panelWidth}
-                      minWidth={AGENT_STATUS_PANEL_MIN_WIDTH}
-                      maxWidth={AGENT_STATUS_PANEL_MAX_WIDTH}
-                      onWidthChange={(w) => setAgentStatusState({ panelWidth: w })}
+                      // Edge side panel — left side modeled as unbounded (see the
+                      // GlobalAgentSidePanel handle above); max enforced here.
+                      leftWidth={100_000}
+                      rightWidth={agentStatusState.panelWidth}
+                      leftMinWidth={0}
+                      rightMinWidth={AGENT_STATUS_PANEL_MIN_WIDTH}
+                      onResize={(_lw, rw) =>
+                        setAgentStatusState({
+                          panelWidth: Math.min(
+                            AGENT_STATUS_PANEL_MAX_WIDTH,
+                            Math.max(AGENT_STATUS_PANEL_MIN_WIDTH, rw)
+                          )
+                        })
+                      }
                       onDragStart={() => setIsSidePanelResizing(true)}
                       onDragEnd={() => setIsSidePanelResizing(false)}
                       onReset={() =>
