@@ -201,6 +201,7 @@ import {
   registerPtyHandlers,
   registerUsageHandlers,
   killAllPtys,
+  shutdownAllPtys,
   killPtysByTaskId,
   onTaskReachedTerminal,
   startIdleChecker,
@@ -212,6 +213,7 @@ import {
   onPtyInputSubmit,
   registerChatHandlers,
   shutdownChatTransports,
+  killAllChatTransports,
   setOnHostKillHandler,
   broadcastRespawnRequest,
   backfillChatModes,
@@ -291,7 +293,8 @@ import {
   listForTask,
   listAllProcesses,
   killTaskProcesses,
-  killAllProcesses
+  killAllProcesses,
+  shutdownAllProcesses
 } from './process-manager'
 import { createStatsPoller } from './pid-stats'
 import { registerExportImportHandlers } from './export-import'
@@ -433,9 +436,10 @@ let discoveryPoller: NodeJS.Timeout | null = null
 let mcpCleanup: (() => void) | null = null
 let trpcCleanup: (() => void) | null = null
 let sidecarCleanup: (() => void) | null = null
-let quitSubprocessCleanupStarted = false
 let quitDrainComplete = false
-const QUIT_SUBPROCESS_DRAIN_MS = 750
+let quitSubprocessCleanupPromise: Promise<void> | null = null
+const QUIT_SUBPROCESS_TERM_GRACE_MS = 1500
+const QUIT_SUBPROCESS_HARD_TIMEOUT_MS = 5000
 type OAuthCallbackPayload = { code?: string; error?: string }
 const oauthCallbackQueue: OAuthCallbackPayload[] = []
 const oauthCallbackWaiters = new Set<(payload: OAuthCallbackPayload) => void>()
@@ -454,22 +458,41 @@ type ProtocolClientStatus = {
   reason: ProtocolClientStatusReason
 }
 
-function shutdownSubprocessesForQuit(): void {
-  if (quitSubprocessCleanupStarted) return
-  quitSubprocessCleanupStarted = true
-  const steps: Array<[string, () => void]> = [
-    ['beginTerminalShutdown', beginTerminalShutdown],
-    ['killAllPtys', killAllPtys],
-    ['shutdownChatTransports', shutdownChatTransports],
-    ['killAllProcesses', killAllProcesses]
-  ]
-  for (const [name, fn] of steps) {
-    try {
-      fn()
-    } catch (err) {
-      console.error(`[main] quit subprocess cleanup failed in ${name}:`, err)
-    }
+function shutdownSubprocessesForQuit(): Promise<void> {
+  if (quitSubprocessCleanupPromise) return quitSubprocessCleanupPromise
+  const opts = {
+    termGraceMs: QUIT_SUBPROCESS_TERM_GRACE_MS,
+    hardTimeoutMs: QUIT_SUBPROCESS_HARD_TIMEOUT_MS
   }
+  quitSubprocessCleanupPromise = (async () => {
+    try {
+      beginTerminalShutdown()
+    } catch (err) {
+      console.error('[main] quit subprocess cleanup failed in beginTerminalShutdown:', err)
+    }
+    const steps: Array<[string, () => Promise<unknown>]> = [
+      ['shutdownAllPtys', () => shutdownAllPtys(opts)],
+      ['shutdownChatTransports', () => shutdownChatTransports(opts)],
+      ['shutdownAllProcesses', () => shutdownAllProcesses(opts)]
+    ]
+    const results = await Promise.all(
+      steps.map(async ([name, fn]) => {
+        try {
+          return [name, await fn()] as const
+        } catch (err) {
+          console.error(`[main] quit subprocess cleanup failed in ${name}:`, err)
+          return [name, null] as const
+        }
+      })
+    )
+    recordDiagnosticEvent({
+      level: 'info',
+      source: 'main',
+      event: 'app.quit_subprocess_shutdown',
+      payload: Object.fromEntries(results)
+    })
+  })()
+  return quitSubprocessCleanupPromise
 }
 let protocolClientStatus: ProtocolClientStatus = {
   scheme: APP_PROTOCOL_SCHEME,
@@ -2890,7 +2913,7 @@ div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:1
       ipcMain.handle('app:reset-for-test', async () => {
         // 1. Kill running processes
         killAllPtys()
-        shutdownChatTransports()
+        killAllChatTransports()
         stopIdleChecker()
         killAllProcesses()
 
@@ -3241,16 +3264,14 @@ app.on('window-all-closed', () => {
 app.on('before-quit', (event) => {
   if (quitDrainComplete) return
   event.preventDefault()
-  shutdownSubprocessesForQuit()
-  setTimeout(() => {
+  void shutdownSubprocessesForQuit().finally(() => {
     quitDrainComplete = true
     app.quit()
-  }, QUIT_SUBPROCESS_DRAIN_MS)
+  })
 })
 
 // Clean up database connection and active processes before quitting
 app.on('will-quit', () => {
-  shutdownSubprocessesForQuit()
   oauthCallbackQueue.length = 0
   oauthCallbackWaiters.clear()
   if (linearSyncPoller) {

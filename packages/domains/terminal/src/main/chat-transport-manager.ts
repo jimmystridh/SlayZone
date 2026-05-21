@@ -98,7 +98,9 @@ function electronBroadcast(
     }
   } catch {
     // Non-electron context (tests run under tsx). No-op broadcast.
-    return () => {}
+    return () => {
+      // no-op
+    }
   }
 }
 
@@ -149,12 +151,28 @@ export function setSpawnedTabRecorder(fn: SpawnedSetter | null): void {
 /**
  * Shutdown gate. When true, the exit handler does NOT clear `was_spawned`
  * so the next boot can auto-restart this chat session. Composition root
- * MUST set this true in `will-quit` before calling `shutdownChatTransports`.
+ * MUST set this true during app quit before calling `shutdownChatTransports`.
  */
 let isShuttingDown = false
 export function setShuttingDown(v: boolean): void {
   isShuttingDown = v
 }
+
+export interface ShutdownOptions {
+  termGraceMs?: number
+  hardTimeoutMs?: number
+}
+
+export interface TransportShutdownResult {
+  total: number
+  exited: number
+  killed: number
+  timedOut: number
+  errors: Array<{ id: string; phase: string; message: string }>
+}
+
+const DEFAULT_SHUTDOWN_TERM_GRACE_MS = 1500
+const DEFAULT_SHUTDOWN_HARD_TIMEOUT_MS = 5000
 
 /** Production-side dep injection (e.g. wire persistEvent to SQLite at startup). */
 export function configureTransport(override: Partial<TransportDeps>): void {
@@ -786,6 +804,9 @@ export interface CreateChatOpts {
  * down and replaced.
  */
 export function hydrateSession(opts: CreateChatOpts): ChatSessionInfo {
+  if (isShuttingDown) {
+    throw new ChatTransportError('Cannot hydrate chat session while app is shutting down.')
+  }
   // Refuse duplicate sessions for one tab.
   const existing = sessions.get(opts.tabId)
   if (existing) {
@@ -910,6 +931,9 @@ const inFlightSpawns = new Map<string, Promise<ChatSessionInfo>>()
  * does the work, others await its promise.
  */
 export async function ensureSpawned(tabId: string): Promise<ChatSessionInfo> {
+  if (isShuttingDown) {
+    throw new ChatTransportError('Cannot spawn chat session while app is shutting down.')
+  }
   const session = sessions.get(tabId)
   if (!session) {
     throw new ChatTransportError(
@@ -1385,6 +1409,104 @@ export function killAll(): void {
   for (const tabId of sessions.keys()) kill(tabId)
 }
 
+function toErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
+
+function forceFinalizeForShutdown(session: Session): void {
+  clearWatchdog(session)
+  session.ended = true
+  session.child = null
+  try {
+    session.driver?.dispose()
+  } catch (err) {
+    console.error('[chat-transport] shutdown driver.dispose threw:', err)
+  }
+  session.driver = null
+  transitionState(session, 'dead')
+  clearSessionUserInputMark(`${session.taskId}:${session.tabId}`)
+}
+
+function shutdownSession(
+  session: Session,
+  opts: Required<ShutdownOptions>
+): Promise<{
+  id: string
+  exited: boolean
+  killed: boolean
+  timedOut: boolean
+  errors: TransportShutdownResult['errors']
+}> {
+  return new Promise((resolve) => {
+    const errors: TransportShutdownResult['errors'] = []
+    const child = session.child
+    const id = session.tabId
+    if (session.ended || !child) {
+      forceFinalizeForShutdown(session)
+      resolve({ id, exited: true, killed: false, timedOut: false, errors })
+      return
+    }
+
+    let settled = false
+    let killed = false
+    let termTimer: ReturnType<typeof setTimeout> | null = null
+    let hardTimer: ReturnType<typeof setTimeout> | null = null
+
+    const cleanup = (): void => {
+      if (termTimer) clearTimeout(termTimer)
+      if (hardTimer) clearTimeout(hardTimer)
+      child.off('exit', onExit)
+    }
+    const settle = (timedOut: boolean): void => {
+      if (settled) return
+      settled = true
+      cleanup()
+      if (timedOut) forceFinalizeForShutdown(session)
+      resolve({ id, exited: !timedOut, killed, timedOut, errors })
+    }
+    const recordError = (phase: string, err: unknown): void => {
+      errors.push({ id, phase, message: toErrorMessage(err) })
+    }
+    const onExit = (): void => settle(false)
+
+    child.once('exit', onExit)
+    clearWatchdog(session)
+    try {
+      child.kill('SIGTERM')
+    } catch (err) {
+      recordError('sigterm', err)
+    }
+    termTimer = setTimeout(() => {
+      killed = true
+      try {
+        child.kill('SIGKILL')
+      } catch (err) {
+        recordError('sigkill', err)
+      }
+    }, opts.termGraceMs)
+    termTimer.unref?.()
+    hardTimer = setTimeout(() => settle(true), opts.hardTimeoutMs)
+    hardTimer.unref?.()
+  })
+}
+
+export async function shutdownAll(options: ShutdownOptions = {}): Promise<TransportShutdownResult> {
+  setShuttingDown(true)
+  const opts: Required<ShutdownOptions> = {
+    termGraceMs: options.termGraceMs ?? DEFAULT_SHUTDOWN_TERM_GRACE_MS,
+    hardTimeoutMs: options.hardTimeoutMs ?? DEFAULT_SHUTDOWN_HARD_TIMEOUT_MS
+  }
+  const targets = Array.from(sessions.values()).filter((session) => !session.ended)
+  const results = await Promise.all(targets.map((session) => shutdownSession(session, opts)))
+  return {
+    total: results.length,
+    exited: results.filter((r) => r.exited).length,
+    killed: results.filter((r) => r.killed).length,
+    timedOut: results.filter((r) => r.timedOut).length,
+    errors: results.flatMap((r) => r.errors)
+  }
+}
+
 /** Kill every live chat session bound to a given taskId. Mirrors
  *  `killPtysByTaskId` for chat transports — invoked when a task reaches a
  *  terminal status (e.g. `done`) so the agent panel can't keep showing it. */
@@ -1440,6 +1562,7 @@ export function __resetForTests(): void {
   for (const session of sessions.values()) clearWatchdog(session)
   sessions.clear()
   inFlightSpawns.clear()
+  isShuttingDown = false
 }
 
 /**

@@ -1302,6 +1302,81 @@ await test('spawnedSetter: shutdown gate preserves was_spawned on exit', async (
   }
 })
 
+await test('shutdownAll: waits for chat exits and preserves warm flags', async () => {
+  await setup()
+  const fake = makeFakeChild()
+  const kills: string[] = []
+  fake.kill = (sig?: string) => {
+    kills.push(sig ?? '')
+    setImmediate(() => fake.emit('exit', null, sig ?? null))
+    return true
+  }
+  const recorder: Array<{ tabId: string; v: boolean }> = []
+  mgr.setSpawnedTabRecorder((tabId, v) => recorder.push({ tabId, v }))
+  mgr.setTransportDepsForTests({
+    whichBinary: async () => '/fake/claude',
+    spawn: () => fake as unknown as ChildProcess,
+    broadcastEvent: () => {},
+    broadcastExit: () => {},
+    broadcastStateChange: () => {}
+  })
+  try {
+    await createChat({
+      tabId: 'tab-shutdown',
+      taskId: 'task-shutdown',
+      mode: 'claude-chat',
+      cwd: '/tmp',
+      conversationId: null,
+      providerFlags: []
+    })
+    mgr.setShuttingDown(true)
+    const result = await mgr.shutdownAll({ termGraceMs: 50, hardTimeoutMs: 200 })
+    expect(result.total).toBe(1)
+    expect(result.exited).toBe(1)
+    expect(result.timedOut).toBe(0)
+    expect(kills[0]).toBe('SIGTERM')
+    expect(recorder.filter((r) => r.v === false).length).toBe(0)
+  } finally {
+    mgr.setShuttingDown(false)
+    mgr.setSpawnedTabRecorder(null)
+  }
+})
+
+await test('shutdownAll: escalates stuck chat process and resolves', async () => {
+  await setup()
+  const fake = makeFakeChild()
+  const kills: string[] = []
+  fake.kill = (sig?: string) => {
+    kills.push(sig ?? '')
+    return true
+  }
+  mgr.setTransportDepsForTests({
+    whichBinary: async () => '/fake/claude',
+    spawn: () => fake as unknown as ChildProcess,
+    broadcastEvent: () => {},
+    broadcastExit: () => {},
+    broadcastStateChange: () => {}
+  })
+  await createChat({
+    tabId: 'tab-stuck',
+    taskId: 'task-shutdown',
+    mode: 'claude-chat',
+    cwd: '/tmp',
+    conversationId: null,
+    providerFlags: []
+  })
+  mgr.setShuttingDown(true)
+  try {
+    const result = await mgr.shutdownAll({ termGraceMs: 5, hardTimeoutMs: 25 })
+    expect(result.total).toBe(1)
+    expect(result.timedOut).toBe(1)
+    expect(kills.includes('SIGTERM')).toBe(true)
+    expect(kills.includes('SIGKILL')).toBe(true)
+  } finally {
+    mgr.setShuttingDown(false)
+  }
+})
+
 await test('codex-chat: a fatal driver-start failure kills the subprocess + goes dead', async () => {
   await setup()
   const stateChanges: string[] = []

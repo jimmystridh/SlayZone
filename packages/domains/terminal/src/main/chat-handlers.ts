@@ -18,8 +18,11 @@ import {
   getSessionInfo,
   getSessionTerminalState,
   killAll,
+  shutdownAll,
   configureTransport,
-  type ChatSessionInfo
+  type ChatSessionInfo,
+  type ShutdownOptions,
+  type TransportShutdownResult
 } from './chat-transport-manager'
 import {
   persistChatEvent,
@@ -751,7 +754,12 @@ export function registerChatHandlers(
       // codex-chat governs permissions through the JSON-RPC approval protocol,
       // not CLI flags — the flag-based safety check doesn't apply.
       if (mode === 'codex-chat') {
-        return { ok: true, hasSkipPerms: false, hasPermissionMode: false, permissionModeValue: null }
+        return {
+          ok: true,
+          hasSkipPerms: false,
+          hasPermissionMode: false,
+          permissionModeValue: null
+        }
       }
       const providerCfg = readProviderConfig(db, taskId, mode)
       const flagsString = providerCfg.flags ?? readTaskModeDefaultFlags(db, mode) ?? ''
@@ -801,8 +809,7 @@ export function registerChatHandlers(
       // CLI permission_mode value (bypass → null → fallback). For codex-chat
       // the runtime mode itself rides the control request — the driver applies
       // it to the next `turn/start`, no respawn.
-      const cliMode =
-        opts.mode === 'codex-chat' ? safe : chatModeToCliPermissionMode(safe)
+      const cliMode = opts.mode === 'codex-chat' ? safe : chatModeToCliPermissionMode(safe)
       const liveInfo = getSessionInfo(opts.tabId)
       if (cliMode && liveState && liveState !== 'not-spawned' && liveInfo && !liveInfo.ended) {
         try {
@@ -975,6 +982,11 @@ export function registerChatHandlers(
 }
 
 /** Call on app quit to reap child processes. */
-export function shutdownChatTransports(): void {
+export function shutdownChatTransports(opts?: ShutdownOptions): Promise<TransportShutdownResult> {
+  return shutdownAll(opts)
+}
+
+/** Test/reset helper: kill chats without entering app-shutdown mode. */
+export function killAllChatTransports(): void {
   killAll()
 }
