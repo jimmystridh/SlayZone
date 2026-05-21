@@ -182,7 +182,7 @@ import { BrowserPanel, type BrowserPanelHandle } from '@slayzone/task-browser'
 import { FileEditorView, type FileEditorViewHandle } from '@slayzone/file-editor/client'
 import type { EditorOpenFilesState, OpenFileOptions } from '@slayzone/file-editor/shared'
 import { track } from '@slayzone/telemetry/client'
-import { usePanelSizes, resolveWidths } from './usePanelSizes'
+import { usePanelSizes, resolveWidths, minWidthFor } from './usePanelSizes'
 import { usePanelConfig } from './usePanelConfig'
 import { useSubTasks } from './useSubTasks'
 import { usePanelOwnership } from './usePanelOwnership'
@@ -718,8 +718,12 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     return m
   }, [orderedTaskIds])
   const panelOrderStyle = (id: string): { order: number } => ({ order: panelOrderIdx[id] ?? 0 })
-  const getFirstVisibleTaskPanelId = (): string | null =>
-    orderedTaskIds.find((id) => panelVisibility[id] && !ownership.hasOtherOwner(id)) ?? null
+  // Visible panels in display order — used to find a resize handle's left neighbor.
+  const visiblePanelOrder = orderedTaskIds.filter((id) => panelVisibility[id])
+  const getLeftNeighborId = (id: string): string | null => {
+    const i = visiblePanelOrder.indexOf(id)
+    return i > 0 ? visiblePanelOrder[i - 1] : null
+  }
 
   // Drag-reorder of the PanelToggle button row. Receives the reordered subset of
   // task-view panel ids (only the buttons actually shown) and merges it back into
@@ -821,6 +825,27 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
     () => resolveWidths(panelSizes, panelVisibility, containerWidth),
     [panelSizes, panelVisibility, containerWidth]
   )
+
+  // Renders the divider before `panelId`. Resizing transfers width between the
+  // panel and its left neighbor, so the boundary moves cleanly no matter how
+  // panels are arranged. Returns null when `panelId` is the first visible panel.
+  const renderResizeHandle = (panelId: string): React.ReactNode => {
+    const leftId = getLeftNeighborId(panelId)
+    if (!leftId) return null
+    return (
+      <ResizeHandle
+        leftWidth={resolvedWidths[leftId] ?? 200}
+        rightWidth={resolvedWidths[panelId] ?? 200}
+        leftMinWidth={minWidthFor(leftId)}
+        rightMinWidth={minWidthFor(panelId)}
+        onResize={(lw, rw) => updatePanelSizes({ [leftId]: lw, [panelId]: rw })}
+        onDragStart={() => setIsResizing(true)}
+        onDragEnd={() => setIsResizing(false)}
+        onReset={resetAllPanels}
+        style={panelOrderStyle(panelId)}
+      />
+    )
+  }
 
   // Terminal API (exposed via onReady callback)
   const terminalApiRef = useRef<{
@@ -2821,6 +2846,9 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
               </div>
             )}
 
+            {/* Resize handle before Terminal */}
+            {!compact && panelVisibility.terminal && renderResizeHandle('terminal')}
+
             {/* Terminal Panel */}
             {(compact || panelVisibility.terminal) && (
               <div
@@ -3309,17 +3337,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
             )}
 
             {/* Non-terminal panels hidden in compact mode */}
-            {!compact && panelVisibility.browser && getFirstVisibleTaskPanelId() !== 'browser' && (
-              <ResizeHandle
-                width={resolvedWidths.browser ?? 200}
-                minWidth={200}
-                onWidthChange={(w) => updatePanelSizes({ browser: w })}
-                onDragStart={() => setIsResizing(true)}
-                onDragEnd={() => setIsResizing(false)}
-                onReset={resetAllPanels}
-                style={panelOrderStyle('browser')}
-              />
-            )}
+            {!compact && panelVisibility.browser && renderResizeHandle('browser')}
 
             {/* Browser Panel */}
             {!compact && panelVisibility.browser && (
@@ -3361,17 +3379,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
             )}
 
             {/* Resize handle before Editor */}
-            {!compact && panelVisibility.editor && getFirstVisibleTaskPanelId() !== 'editor' && (
-              <ResizeHandle
-                width={resolvedWidths.editor ?? 250}
-                minWidth={250}
-                onWidthChange={(w) => updatePanelSizes({ editor: w })}
-                onDragStart={() => setIsResizing(true)}
-                onDragEnd={() => setIsResizing(false)}
-                onReset={resetAllPanels}
-                style={panelOrderStyle('editor')}
-              />
-            )}
+            {!compact && panelVisibility.editor && renderResizeHandle('editor')}
 
             {/* File Editor Panel */}
             {!compact && panelVisibility.editor && (
@@ -3405,19 +3413,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
             )}
 
             {/* Resize handle before Artifacts */}
-            {!compact &&
-              panelVisibility.artifacts &&
-              getFirstVisibleTaskPanelId() !== 'artifacts' && (
-                <ResizeHandle
-                  width={resolvedWidths.artifacts ?? 300}
-                  minWidth={200}
-                  onWidthChange={(w) => updatePanelSizes({ artifacts: w })}
-                  onDragStart={() => setIsResizing(true)}
-                  onDragEnd={() => setIsResizing(false)}
-                  onReset={resetAllPanels}
-                  style={panelOrderStyle('artifacts')}
-                />
-              )}
+            {!compact && panelVisibility.artifacts && renderResizeHandle('artifacts')}
 
             {/* Artifacts Panel */}
             {!compact && panelVisibility.artifacts && (
@@ -3455,20 +3451,9 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
             {!compact &&
               enabledWebPanels.map((wp) => {
                 if (!panelVisibility[wp.id]) return null
-                const hasLeftNeighbor = getFirstVisibleTaskPanelId() !== wp.id
                 return (
                   <div key={wp.id} className="contents">
-                    {hasLeftNeighbor && (
-                      <ResizeHandle
-                        width={resolvedWidths[wp.id] ?? 200}
-                        minWidth={200}
-                        onWidthChange={(w) => updatePanelSizes({ [wp.id]: w })}
-                        onDragStart={() => setIsResizing(true)}
-                        onDragEnd={() => setIsResizing(false)}
-                        onReset={resetAllPanels}
-                        style={panelOrderStyle(wp.id)}
-                      />
-                    )}
+                    {renderResizeHandle(wp.id)}
                     <div
                       data-panel-id={wp.id}
                       className={cn(
@@ -3509,17 +3494,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
               })}
 
             {/* Resize handle before Diff */}
-            {!compact && panelVisibility.diff && getFirstVisibleTaskPanelId() !== 'diff' && (
-              <ResizeHandle
-                width={resolvedWidths.diff ?? 50}
-                minWidth={50}
-                onWidthChange={(w) => updatePanelSizes({ diff: w })}
-                onDragStart={() => setIsResizing(true)}
-                onDragEnd={() => setIsResizing(false)}
-                onReset={resetAllPanels}
-                style={panelOrderStyle('diff')}
-              />
-            )}
+            {!compact && panelVisibility.diff && renderResizeHandle('diff')}
 
             {/* Git Panel */}
             {!compact && panelVisibility.diff && (
@@ -3571,19 +3546,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
             )}
 
             {/* Resize handle before Settings */}
-            {!compact &&
-              panelVisibility.settings &&
-              getFirstVisibleTaskPanelId() !== 'settings' && (
-                <ResizeHandle
-                  width={resolvedWidths.settings ?? 440}
-                  minWidth={200}
-                  onWidthChange={(w) => updatePanelSizes({ settings: w })}
-                  onDragStart={() => setIsResizing(true)}
-                  onDragEnd={() => setIsResizing(false)}
-                  onReset={resetAllPanels}
-                  style={panelOrderStyle('settings')}
-                />
-              )}
+            {!compact && panelVisibility.settings && renderResizeHandle('settings')}
 
             {/* Settings Panel */}
             {!compact && panelVisibility.settings && (
@@ -4055,19 +4018,7 @@ export const TaskDetailPage = React.memo(function TaskDetailPage({
             )}
 
             {/* Resize handle before Processes */}
-            {!compact &&
-              panelVisibility.processes &&
-              getFirstVisibleTaskPanelId() !== 'processes' && (
-                <ResizeHandle
-                  width={resolvedWidths.processes ?? 300}
-                  minWidth={200}
-                  onWidthChange={(w) => updatePanelSizes({ processes: w })}
-                  onDragStart={() => setIsResizing(true)}
-                  onDragEnd={() => setIsResizing(false)}
-                  onReset={resetAllPanels}
-                  style={panelOrderStyle('processes')}
-                />
-              )}
+            {!compact && panelVisibility.processes && renderResizeHandle('processes')}
 
             {/* Processes Panel */}
             {!compact && panelVisibility.processes && (
