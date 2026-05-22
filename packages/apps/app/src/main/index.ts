@@ -1934,7 +1934,7 @@ div{text-align:center}h1{font-size:14px;font-weight:500;color:#aaa}p{font-size:1
     // name the dynamic in-process tRPC WS port exactly (a static meta tag
     // can't). Registered before any window loads — createWindow() runs at the
     // end of whenReady — so every app document is covered.
-    attachRendererCsp(session.defaultSession, awaitTrpcPort)
+    attachRendererCsp(session.defaultSession, awaitTrpcPort, is.dev)
 
     // Block external app protocol launches from webviews by registering no-op handlers.
     // External protocol URLs (figma://, slack://, etc.) bypass will-navigate entirely —

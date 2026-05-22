@@ -5,7 +5,7 @@
  * WebSocket server, which binds an OS-assigned port (see ws-server.ts). A
  * static policy cannot name that port, so the CSP is layered:
  *
- *   1. A wildcard-port floor (`RENDERER_CSP_FLOOR`) is injected into the HTML
+ *   1. A wildcard-port floor (`buildCspFloor`) is injected into the HTML
  *      as a `<meta>` tag at build time (see electron.vite.config.ts). This
  *      guarantees the document always has a CSP, even if the header below
  *      never lands (e.g. a `file://` load that skips webRequest).
@@ -18,15 +18,25 @@
  * of runtime imports so the build config can import it.
  */
 
-/** Directives that never depend on runtime state. */
-const STATIC_DIRECTIVES = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "worker-src 'self' blob:",
-  "frame-src 'self' slz-file:",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https: slz-file:"
-]
+/**
+ * Directives that never depend on the runtime tRPC port.
+ *
+ * `dev` relaxes `script-src`: Vite's dev server injects the React Fast Refresh
+ * preamble as an *inline* `<script type="module">`, which a bare `script-src
+ * 'self'` blocks — leaving `$RefreshSig$`/`$RefreshReg$` undefined and crashing
+ * the first refresh-transformed module to evaluate. Prod is fully bundled with
+ * no inline scripts, so it keeps the strict `'self'`.
+ */
+function staticDirectives(dev: boolean): string[] {
+  return [
+    "default-src 'self'",
+    dev ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self'",
+    "worker-src 'self' blob:",
+    "frame-src 'self' slz-file:",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https: slz-file:"
+  ]
+}
 
 /** Fixed remote origins the renderer talks to (PostHog, Convex, GitHub). */
 const REMOTE_CONNECT_SRC = [
@@ -40,19 +50,25 @@ const REMOTE_CONNECT_SRC = [
 ]
 
 /** Assembles a full policy string from the connection target for the tRPC WS. */
-function assembleCsp(trpcConnectSrc: string): string {
+function assembleCsp(trpcConnectSrc: string, dev: boolean): string {
   const connectSrc = ['connect-src', "'self'", trpcConnectSrc, ...REMOTE_CONNECT_SRC]
     .filter(Boolean)
     .join(' ')
-  return [...STATIC_DIRECTIVES, connectSrc].join('; ')
+  return [...staticDirectives(dev), connectSrc].join('; ')
 }
 
 /**
  * The build-time floor: a complete policy whose `connect-src` allows the tRPC
  * WS on any loopback port. Injected as a `<meta>` tag so the document is never
  * left without a CSP; the runtime header narrows the port to an exact match.
+ *
+ * `dev` must match the build mode — the meta floor and the runtime header are
+ * enforced as an intersection, so both layers need the dev `script-src`
+ * relaxation or the stricter one still blocks Vite's inline preamble.
  */
-export const RENDERER_CSP_FLOOR = assembleCsp('ws://127.0.0.1:*')
+export function buildCspFloor(dev: boolean): string {
+  return assembleCsp('ws://127.0.0.1:*', dev)
+}
 
 /**
  * Builds the runtime CSP string with the tRPC WS port named exactly. When
@@ -60,8 +76,8 @@ export const RENDERER_CSP_FLOOR = assembleCsp('ws://127.0.0.1:*')
  * applies, tRPC just stays blocked until a port is known (the renderer defers
  * its WS connect on the same signal).
  */
-export function buildRendererCsp(trpcPort: number | undefined): string {
-  return assembleCsp(trpcPort && trpcPort > 0 ? `ws://127.0.0.1:${trpcPort}` : '')
+export function buildRendererCsp(trpcPort: number | undefined, dev: boolean): string {
+  return assembleCsp(trpcPort && trpcPort > 0 ? `ws://127.0.0.1:${trpcPort}` : '', dev)
 }
 
 /**
@@ -76,7 +92,8 @@ export function buildRendererCsp(trpcPort: number | undefined): string {
  */
 export function attachRendererCsp(
   sess: Electron.Session,
-  getTrpcPort: () => Promise<number>
+  getTrpcPort: () => Promise<number>,
+  dev: boolean
 ): void {
   sess.webRequest.onHeadersReceived((details, callback) => {
     if (details.resourceType !== 'mainFrame') {
@@ -89,7 +106,7 @@ export function attachRendererCsp(
       for (const key of Object.keys(headers)) {
         if (key.toLowerCase() === 'content-security-policy') delete headers[key]
       }
-      headers['Content-Security-Policy'] = [buildRendererCsp(port)]
+      headers['Content-Security-Policy'] = [buildRendererCsp(port, dev)]
       callback({ responseHeaders: headers })
     })
   })

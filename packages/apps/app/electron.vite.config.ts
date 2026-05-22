@@ -6,7 +6,7 @@ import reactSwc from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { loadEnv, type Plugin } from 'vite'
-import { RENDERER_CSP_FLOOR } from './src/main/renderer-csp'
+import { buildCspFloor } from './src/main/renderer-csp'
 
 const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'))
 const slayzoneDeps = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).filter((d) =>
@@ -21,14 +21,14 @@ const root = resolve(__dirname, '../../..')
 // process emits an exact-port CSP header at runtime (see main/renderer-csp.ts);
 // this build-time floor guarantees the document always has a policy even if
 // that header never lands. Both layers are built from the same source module.
-function cspFloorPlugin(): Plugin {
+function cspFloorPlugin(dev: boolean): Plugin {
   return {
     name: 'slayzone:csp-floor',
     transformIndexHtml() {
       return [
         {
           tag: 'meta',
-          attrs: { 'http-equiv': 'Content-Security-Policy', content: RENDERER_CSP_FLOOR },
+          attrs: { 'http-equiv': 'Content-Security-Policy', content: buildCspFloor(dev) },
           injectTo: 'head-prepend'
         }
       ]
@@ -130,7 +130,7 @@ export default defineConfig(({ mode }) => {
           ? react({ babel: { plugins: ['babel-plugin-react-compiler'] } })
           : reactSwc(),
         tailwindcss(),
-        cspFloorPlugin(),
+        cspFloorPlugin(mode !== 'production'),
         // Bundle analyzer is a rollup plugin; only useful at build time.
         mode === 'production' &&
           visualizer({ filename: 'bundle-report.html', gzipSize: true, template: 'treemap' })
