@@ -126,14 +126,14 @@ export function diag(
   ring.push(rec)
   if (ring.length > RING_CAP) ring.shift()
 
-  const tag = `[term-diag] ${sessionId.slice(0, 8)} ${event}${rec.site ? `:${rec.site}` : ''}`
-  const detail = geom
-    ? `cell=${geom.cellDeviceW}x${geom.cellDeviceH}dev/${geom.cellCssW}x${geom.cellCssH}css dpr=${geom.dpr} ${geom.cols}x${geom.rows}`
-    : 'no-geom'
+  // Only the dirty case is logged — the actionable one. Every other event is
+  // recorded silently in the ring buffer; inspect it via window.__slayzone_terminalDiag.
   if (rec.dirty) {
+    const detail = geom
+      ? `cell=${geom.cellDeviceW}x${geom.cellDeviceH}dev/${geom.cellCssW}x${geom.cellCssH}css dpr=${geom.dpr} ${geom.cols}x${geom.rows}`
+      : 'no-geom'
+    const tag = `[term-diag] ${sessionId.slice(0, 8)} ${event}${rec.site ? `:${rec.site}` : ''}`
     console.warn(`${tag} ⚠ DIRTY-ATLAS (cell changed, no correction) — ${detail}`)
-  } else {
-    console.log(`${tag} — ${detail}`)
   }
 }
 
