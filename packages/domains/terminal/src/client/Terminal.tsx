@@ -272,6 +272,8 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
     })
   }, [sessionId])
 
+  const wasActiveRef = useRef(isActive)
+
   const [ptyState, setPtyState] = useState<TerminalState>(() => getState(sessionId))
 
   const clearBufferWithoutRestart = useCallback(async (): Promise<void> => {
@@ -1004,6 +1006,27 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
     return subscribeState(sessionId, (newState) => setPtyState(newState))
   }, [sessionId, getState, subscribeState])
 
+  // Re-rasterize the WebGL atlas on isActive false→true. A task switch is a
+  // CSS visibility:hidden flip — no fit() fires on its own — so the atlas
+  // built before hide can desync from the renderer's cell metrics by the
+  // time the user returns. Mirrors the resize-needed handler shape: fit()
+  // re-measures the cell, scheduleAtlasCorrection() re-rasterizes against
+  // the new measurement.
+  useEffect(() => {
+    if (
+      isActive &&
+      !wasActiveRef.current &&
+      fitAddonRef.current &&
+      terminalRef.current &&
+      webglAddonRef.current
+    ) {
+      fitAddonRef.current.fit()
+      diag(sessionId, 'fit', { site: 'reactivate', terminal: terminalRef.current })
+      scheduleAtlasCorrection()
+    }
+    wasActiveRef.current = isActive
+  }, [isActive, sessionId, scheduleAtlasCorrection])
+
   // Re-fit terminal when PTY dimensions need resync (e.g., after floating agent reattach)
   useEffect(() => {
     return window.api.pty.onResizeNeeded((sid) => {
@@ -1112,25 +1135,95 @@ export const Terminal = forwardRef<TerminalHandle, TerminalProps>(function Termi
     }
   }, [initTerminal, sessionId, scheduleAtlasCorrection])
 
-  // Update font size at runtime when setting changes
+  // Update font size at runtime when setting changes.
+  // Await the font at the NEW size before fitting — otherwise fit() measures
+  // a fallback face's cell metrics, the WebGL atlas tiles freeze at those
+  // dimensions, and FOUT swap-in produces smeared adjacent tiles. Bounded so
+  // a slow/missing font cannot block the fit indefinitely. Mirrors the
+  // cold-start await at the top of initTerminal.
   useEffect(() => {
     const t = terminalRef.current
     if (!t) return
     t.options.fontSize = terminalFontSize
-    fitAddonRef.current?.fit()
-    diag(sessionId, 'fit', { site: 'font-size', terminal: t })
-    scheduleAtlasCorrection()
-  }, [terminalFontSize, sessionId, scheduleAtlasCorrection])
+    let cancelled = false
+    void (async () => {
+      await Promise.race([
+        document.fonts
+          .load(`${terminalFontSize}px ${terminalFontFamily}`)
+          .catch(() => undefined),
+        new Promise((resolve) => setTimeout(resolve, 1500))
+      ])
+      if (cancelled) return
+      const tCurrent = terminalRef.current
+      if (!tCurrent) return
+      fitAddonRef.current?.fit()
+      diag(sessionId, 'fit', { site: 'font-size', terminal: tCurrent })
+      scheduleAtlasCorrection()
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [terminalFontSize, terminalFontFamily, sessionId, scheduleAtlasCorrection])
 
-  // Update font family at runtime
+  // Update font family at runtime.
+  // Same FOUT race as font-size: await the new face before fit() so the
+  // atlas rasterizes against the correct cell metrics.
   useEffect(() => {
     const t = terminalRef.current
     if (!t) return
     t.options.fontFamily = terminalFontFamily
-    fitAddonRef.current?.fit()
-    diag(sessionId, 'fit', { site: 'font-family', terminal: t })
-    scheduleAtlasCorrection()
-  }, [terminalFontFamily, sessionId, scheduleAtlasCorrection])
+    let cancelled = false
+    void (async () => {
+      await Promise.race([
+        document.fonts
+          .load(`${terminalFontSize}px ${terminalFontFamily}`)
+          .catch(() => undefined),
+        new Promise((resolve) => setTimeout(resolve, 1500))
+      ])
+      if (cancelled) return
+      const tCurrent = terminalRef.current
+      if (!tCurrent) return
+      fitAddonRef.current?.fit()
+      diag(sessionId, 'fit', { site: 'font-family', terminal: tCurrent })
+      scheduleAtlasCorrection()
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [terminalFontFamily, terminalFontSize, sessionId, scheduleAtlasCorrection])
+
+  // Fit-independent atlas correction.
+  //
+  // The WebGL glyph atlas can go stale with no JS-visible signal: macOS / Metal
+  // (and other compositors) evict the atlas texture during long GPU idle, and
+  // xterm exposes no event when this happens. The fit-triggered corrections in
+  // the four useEffects above never fire for a terminal that sits visible-but-
+  // idle, so the next paint reads dead tiles and the screen renders mangled
+  // glyphs over correct layout — the v0.32.2 fix does not catch this.
+  //
+  // Re-correct on real return-to-foreground signals (visibility, focus) plus a
+  // low-frequency heartbeat that catches the silent-eviction-while-visible
+  // case. Render-only (`clearTextureAtlas` + `refresh`), no SIGWINCH. Gated on
+  // active tab + visible document + WebGL addon present so hidden / DOM-renderer
+  // terminals cost nothing. See working-notes/terminal-webgl-scramble.md.
+  useEffect(() => {
+    const tryCorrect = (): void => {
+      if (!webglAddonRef.current) return
+      if (!isActiveRef.current) return
+      if (document.visibilityState !== 'visible') return
+      scheduleAtlasCorrection()
+    }
+
+    const interval = window.setInterval(tryCorrect, 30_000)
+    document.addEventListener('visibilitychange', tryCorrect)
+    window.addEventListener('focus', tryCorrect)
+
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', tryCorrect)
+      window.removeEventListener('focus', tryCorrect)
+    }
+  }, [scheduleAtlasCorrection])
 
   // Update scrollback buffer at runtime.
   useEffect(() => {

@@ -116,11 +116,21 @@ export function diag(
     const k = cellKey(geom)
     if (k) lastCorrectedCellKey.set(sessionId, k)
   } else if (event === 'fit') {
-    const corrected = lastCorrectedCellKey.get(sessionId)
-    const now = cellKey(geom)
-    // Dirty only if the atlas was corrected at least once AND this fit moved
-    // the cell off that target. A fit before any correction is just startup.
-    rec.dirty = corrected !== undefined && now !== undefined && corrected !== now
+    // `init` = the first fit after a fresh xterm allocation. Any prior
+    // `lastCorrectedCellKey` value belongs to a now-disposed addon (cache miss
+    // / restart / mode-change re-init), so comparing it against the new init
+    // geometry is noise, not a stale-atlas signal. Reset the baseline and
+    // never flag dirty for an init.
+    if (opts.site === 'init') {
+      lastCorrectedCellKey.delete(sessionId)
+      rec.dirty = false
+    } else {
+      const corrected = lastCorrectedCellKey.get(sessionId)
+      const now = cellKey(geom)
+      // Dirty only if the atlas was corrected at least once AND this fit moved
+      // the cell off that target. A fit before any correction is just startup.
+      rec.dirty = corrected !== undefined && now !== undefined && corrected !== now
+    }
   }
 
   ring.push(rec)
